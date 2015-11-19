@@ -45,8 +45,8 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
         id_T const gid = p.id;
         if(bc.vec[gid])
         {
-          elemMat_c(i,i) = 1.;
-          elemRhs_c(i) = h[i];
+          elemMat_c(i,i) = J;
+          elemRhs_c(i) = J*h[i];
         }
       }
     }

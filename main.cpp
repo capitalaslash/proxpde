@@ -42,7 +42,7 @@ int main()
   buildMesh1D(meshPtr, origin, length, numPts);
 
   // bc setup
-  bc_set left, right;
+  bc_ess left, right;
   left.insert(0);
   left.init(numPts);
   left.value = [] (Point const&) {return 10.;};
@@ -50,7 +50,7 @@ int main()
   right.init(numPts);
   right.value = [] (Point const&) {return 0.;};
 
-  std::vector<bc_set> bcs {left, right};
+  std::vector<bc_ess> bcs {left, right};
 
   // uint const n = 5;
   // uint const m = n*n;

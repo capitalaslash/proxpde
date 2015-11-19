@@ -6,7 +6,7 @@
 
 typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 
-class bc_set: public std::set<id_T>
+class bc_ess: public std::set<id_T>
 {
 public:
   void init(uint const numPts)

@@ -32,6 +32,7 @@ class Line
 {
 public:
   static uint const numPts = 2;
+  typedef Eigen::Vector2d localVec_T;
   typedef Eigen::Matrix2d localMat_T;
   typedef std::array<Point*,numPts> pointList_T;
 

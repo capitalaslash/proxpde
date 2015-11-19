@@ -52,7 +52,7 @@ public:
   static constexpr double _refVolume = 2.L;
 };
 
-std::array<scalarFun_T,Line::numPts> const shapeFuns =
+std::array<scalarFun_T,Line::numPts> const Line::shapeFuns =
 {
   [] (Point const & p) { return 0.5*(1-p(0)); },
   [] (Point const & p) { return 0.5*(1+p(0)); }

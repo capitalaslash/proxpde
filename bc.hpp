@@ -18,6 +18,11 @@ public:
     }
   }
 
+  bool is_constrained(Point const& p) const
+  {
+    return vec[p.id];
+  }
+
   bool_array vec;
   scalarFun_T value;
 };

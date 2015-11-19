@@ -29,8 +29,7 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
       for(uint i=0; i<Line::numPts; ++i)
       {
         Point const& p = *e.pointList[i];
-        id_T const gid = p.id;
-        if(bc.vec[gid])
+        if(bc.is_constrained(p))
         {
           h(i) = bc.value(p);
           C(i,i) = 0.;
@@ -41,9 +40,7 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
 
       for(uint i=0; i<Line::numPts; ++i)
       {
-        Point const& p = *e.pointList[i];
-        id_T const gid = p.id;
-        if(bc.vec[gid])
+        if(bc.is_constrained(*e.pointList[i]))
         {
           elemMat_c(i,i) = J;
           elemRhs_c(i) = J*h[i];

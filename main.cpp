@@ -66,54 +66,55 @@ int main()
   {
     double J = Line::_refVolume / e.volume();
 
+    Line::localVec_T elemRhs = Line::localVec_T::Zero(Line::numPts, 1);
+
     // A_constrained = C^T A C
     // b_constrained = C^T (b-Ah)
-    Eigen::Array<bool,Line::numPts,1> bcs_local =
-      Eigen::Array<bool,Line::numPts,1>::Constant(Line::numPts, false);
-    Line::localMat_T bc_mask = Eigen::Matrix2d::Identity(2,2);
+    // C clear constrained rows/cols
+    // h is the vector of local constraint values
+
+    Line::localMat_T elemMat_c = J*e.gradMat;
+    Line::localVec_T elemRhs_c = elemRhs;
 
     for(auto& bc: bcs)
     {
-      Eigen::Array<bool,Line::numPts,1> bc_local =
-        Eigen::Array<bool,Line::numPts,1>::Constant(Line::numPts, false);
+      Line::localMat_T C = Line::localMat_T::Identity(Line::numPts, Line::numPts);
+      Line::localVec_T h = Line::localVec_T::Zero(Line::numPts, 1);
       for(uint i=0; i<Line::numPts; ++i)
       {
-        bc_local(i) = bc_local(i) || bc.vec(e.pointList[i]->id);
-        bcs_local(i) = bcs_local(i) || bc.vec(e.pointList[i]->id);
+        Point const& p = *e.pointList[i];
+        id_T const gid = p.id;
+        if(bc.vec[gid])
+        {
+          h(i) = bc.value(p);
+          C(i,i) = 0.;
+        }
       }
+      elemMat_c = C * elemMat_c * C;
+      elemRhs_c = C * (elemRhs_c - J*e.gradMat * h);
 
       for(uint i=0; i<Line::numPts; ++i)
       {
-        if(bc_local[i])
+        Point const& p = *e.pointList[i];
+        id_T const gid = p.id;
+        if(bc.vec[gid])
         {
-          bc_mask(i,i) = 0;
-          for(uint j=0; j<Line::numPts; ++j)
-          {
-            if(j!=i)
-              b[e.pointList[j]->id] -= J*e.gradMat(j,i)*bc.value(Point());
-            else
-              b[e.pointList[j]->id] = bc.value(Point());
-          }
+          elemMat_c(i,i) = 1.;
+          elemRhs_c(i) = h[i];
         }
       }
     }
 
-    Line::localMat_T localMat = bc_mask * J*e.gradMat * bc_mask;
-
-    for(uint i=0; i<Line::numPts; ++i)
-    {
-      if(bcs_local[i])
-        localMat(i,i) = 1.0;
-    }
 
     for(uint i=0; i<Line::numPts; ++i)
     {
       const id_T id_i = e.pointList[i]->id;
+      b(id_i) += elemRhs_c(i);
       for(uint j=0; j<Line::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;
         coefficients.push_back(
-          Tri(id_i, id_j, localMat(i,j)) );
+          Tri(id_i, id_j, elemMat_c(i,j)) );
       }
     }
   }

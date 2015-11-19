@@ -93,3 +93,27 @@ public:
   elementList_T elementList;
   connList_T _connList;
 };
+
+void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
+                   Point const& origin,
+                   Point const& length,
+                   uint const numPts)
+{
+  Point const h(length.coord / (numPts-1));
+  meshPtr->pointList.reserve(numPts);
+  for(uint p=0; p<numPts; ++p)
+  {
+    meshPtr->pointList.emplace_back(origin.coord + p * h.coord, p);
+  }
+
+  uint const numElems = numPts-1;
+  meshPtr->elementList.reserve(numElems);
+  for(uint e=0; e<numElems; ++e)
+  {
+    meshPtr->elementList.emplace_back(
+      std::array<Point*,Line::numPts>{
+        &meshPtr->pointList[e], &meshPtr->pointList[e+1]});
+  }
+
+  meshPtr->buildConnectivity();
+}

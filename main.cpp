@@ -7,9 +7,18 @@
 #include "bc.hpp"
 #include "fe.hpp"
 
+enum SolverType
+{
+  CHOLESKY,
+  BICGSTAB,
+  SPARSELU
+};
+
 int main()
 {
-  uint const numPts = 3;
+  SolverType solver_type = SPARSELU;
+
+  uint const numPts = 11;
   Point const origin(0., 0., 0.);
   Point const length(1., 0., 0.);
 
@@ -53,9 +62,33 @@ int main()
   // std::cout << "=====" << std::endl;
   // fout.close();
 
-  // Eigen::SimplicialCholesky<Mat> solver(A);
-  Eigen::BiCGSTAB<Mat> solver(A);
-  Vec x = solver.solve(b);
+  Vec x;
+  switch(solver_type)
+  {
+    case CHOLESKY:
+    {
+      Eigen::SimplicialCholesky<Mat> solver(A);
+      x = solver.solve(b);
+      break;
+    }
+    case BICGSTAB:
+    {
+      Eigen::SimplicialCholesky<Mat> solver(A);
+      x = solver.solve(b);
+    }
+    case SPARSELU:
+    {
+      Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+      // Compute the ordering permutation vector from the structural pattern of A
+      solver.analyzePattern(A);
+      // Compute the numerical factorization
+      solver.factorize(A);
+
+      x = solver.solve(b);
+    }
+
+  }
+
 
   std::cout<< "x:\n" << x << std::endl;
 

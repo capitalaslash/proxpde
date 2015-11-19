@@ -40,6 +40,11 @@ public:
     pointList(pl)
     {}
 
+  Point midpoint() const
+  {
+    return Point(0.5*(pointList[1]->coord+pointList[0]->coord));
+  }
+
   double volume() const
   {
     return (pointList[1]->coord-pointList[0]->coord).norm();

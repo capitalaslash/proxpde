@@ -48,7 +48,7 @@ int main()
   left.value = [] (Point const&) {return 10.;};
   right.insert(numPts-1);
   right.init(numPts);
-  right.value = [] (Point const&) {return 0.;};
+  right.value = [] (Point const&) {return 5.;};
 
   std::vector<bc_ess> bcs {left, right};
 

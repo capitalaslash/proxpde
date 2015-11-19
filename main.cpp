@@ -123,26 +123,6 @@ int main()
 
   Mat A(m,m);
   A.setFromTriplets(coefficients.begin(), coefficients.end());
-
-  std::cout << "------\nBC" << std::endl;
-
-  // const double penalty = 1.e6;
-
-  // left
-  // A.coeffRef(0, 0) += 1.*penalty;
-  // b(0) += 10.*penalty;
-  // A.coeffRef(0, 0) = 1.;
-  // A.coeffRef(0, 1) = 0.;
-  // b(0) = 10.;
-
-  // right
-  // A.coeffRef(m-1, m-1) += 1.*penalty;
-  // b(m-1) += 0.*penalty;
-  // A.coeffRef(m-1, m-1) = 1.;
-  // A.coeffRef(m-1, m-2) = 0.;
-
-  std::cout << "------\nBC" << std::endl;
-
   std::cout << "A:\n" << A << std::endl;
 
   // std::ofstream fout("output.m");
@@ -163,8 +143,6 @@ int main()
   Vec x = solver.solve(b);
 
   std::cout<< "x:\n" << x << std::endl;
-
-  // saveAsBitmap(x, n, "output.jpg");
 
   return 0;
 }

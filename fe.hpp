@@ -3,7 +3,14 @@
 #include "def.hpp"
 #include "geo.hpp"
 
+double rectangleInt(Line const& e, id_T i, scalarFun_T rhs)
+{
+  // volume * shape fun midpoint * rhs fun midpoint
+  return e.volume()*Line::shapeFuns[i](Point())*rhs(e.midpoint());
+}
+
 void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
+                  scalarFun_T const& rhs,
                   std::vector<bc_ess> const& bcs,
                   std::vector<Tri>& coefficients,
                   Vec& b)
@@ -52,6 +59,7 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
     {
       const id_T id_i = e.pointList[i]->id;
       b(id_i) += elemRhs_c(i);
+      b(id_i) += rectangleInt(e, i, rhs);
       for(uint j=0; j<Line::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;

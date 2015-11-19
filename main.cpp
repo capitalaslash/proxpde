@@ -30,10 +30,10 @@ int main()
   bc_ess left, right;
   left.insert(0);
   left.init(numPts);
-  left.value = [] (Point const&) {return 10.;};
+  left.value = [] (Point const&) {return 0.;};
   right.insert(numPts-1);
   right.init(numPts);
-  right.value = [] (Point const&) {return 5.;};
+  right.value = [] (Point const&) {return 0.;};
 
   std::vector<bc_ess> bcs {left, right};
 
@@ -41,7 +41,9 @@ int main()
   coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
   Vec b = Vec::Zero(numPts);
 
-  buildProblem(meshPtr, bcs, coefficients, b);
+  scalarFun_T rhs = [] (Point const&) {return 8.;};
+
+  buildProblem(meshPtr, rhs, bcs, coefficients, b);
 
   std::cout << "b:\n" << b << std::endl;
 

@@ -7,6 +7,20 @@
 #include "bc.hpp"
 #include "fe.hpp"
 
+scalarFun_T rhs = [] (Vec3 const& p)
+{
+  return M_PI*std::sin(M_PI*p(0));
+};
+// scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
+// scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+
+scalarFun_T exact_sol = [] (Vec3 const& p)
+{
+  return std::sin(M_PI*p(0))/M_PI + p(0);
+};
+// scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
+// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
+
 enum SolverType
 {
   CHOLESKY,
@@ -18,7 +32,7 @@ int main()
 {
   SolverType solver_type = SPARSELU;
 
-  uint const numPts = 11;
+  uint const numPts = 5;
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0., 0.);
 
@@ -41,7 +55,6 @@ int main()
   coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
   Vec b = Vec::Zero(numPts);
 
-  scalarFun_T rhs = [] (Vec3 const& p) {return M_PI*std::sin(M_PI*p(0));};
 
   buildProblem(meshPtr, rhs, bcs, coefficients, b);
 
@@ -95,7 +108,7 @@ int main()
   for(uint i=0; i<numPts; ++i)
   {
     double x = exact(i);
-    exact(i) = std::sin(M_PI*x)/M_PI + x;
+    exact(i) = exact_sol(Vec3(x, 0., 0.));
   }
 
   Vec error = sol - exact;

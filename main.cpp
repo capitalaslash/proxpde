@@ -7,20 +7,20 @@
 #include "bc.hpp"
 #include "fe.hpp"
 
-// scalarFun_T rhs = [] (Vec3 const& p)
-// {
-//   return M_PI*std::sin(M_PI*p(0));
-// };
-// scalarFun_T exact_sol = [] (Vec3 const& p)
-// {
-//   return std::sin(M_PI*p(0))/M_PI + p(0);
-// };
+scalarFun_T rhs = [] (Vec3 const& p)
+{
+  return M_PI*std::sin(M_PI*p(0));
+};
+scalarFun_T exact_sol = [] (Vec3 const& p)
+{
+  return std::sin(M_PI*p(0))/M_PI + p(0);
+};
 
 // scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
 
-scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
-scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
+// scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
 enum SolverType
 {
@@ -48,7 +48,7 @@ int main()
   right.insert(numPts-1);
   right.value = [] (Vec3 const&) {return 0.;};
 
-  bc_list bcs {left, right};
+  bc_list bcs {left};
   bcs.init(numPts);
 
   std::vector<Tri> coefficients;

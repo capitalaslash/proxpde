@@ -19,8 +19,8 @@ int main()
   SolverType solver_type = SPARSELU;
 
   uint const numPts = 11;
-  Point const origin(0., 0., 0.);
-  Point const length(1., 0., 0.);
+  Vec3 const origin(0., 0., 0.);
+  Vec3 const length(1., 0., 0.);
 
   std::shared_ptr<Mesh1D> meshPtr(new Mesh1D);
 
@@ -30,10 +30,10 @@ int main()
   bc_ess left, right;
   left.insert(0);
   left.init(numPts);
-  left.value = [] (Point const&) {return 0.;};
+  left.value = [] (Vec3 const&) {return 0.;};
   right.insert(numPts-1);
   right.init(numPts);
-  right.value = [] (Point const&) {return 0.;};
+  right.value = [] (Vec3 const&) {return 0.;};
 
   std::vector<bc_ess> bcs {left, right};
 
@@ -41,7 +41,7 @@ int main()
   coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
   Vec b = Vec::Zero(numPts);
 
-  scalarFun_T rhs = [] (Point const&) {return 8.;};
+  scalarFun_T rhs = [] (Vec3 const&) {return 8.;};
 
   buildProblem(meshPtr, rhs, bcs, coefficients, b);
 

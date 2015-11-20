@@ -9,14 +9,12 @@
 class Point
 {
 public:
-  typedef Eigen::Vector3d coord_T;
-
-  explicit Point(coord_T const & c = coord_T::Zero(3), id_T const i = -1):
+  explicit Point(Vec3 const & c = Vec3::Zero(3), id_T const i = -1):
     coord(c),
     id(i)
   {}
     explicit Point(double const x, double const y, double const z, id_T const i = -1):
-      Point(coord_T(x, y, z), i)
+      Point(Vec3(x, y, z), i)
     {}
 
   double operator()(uint const i) const
@@ -24,7 +22,7 @@ public:
     return this->coord(i);
   }
 
-  coord_T coord;
+  Vec3 coord;
   id_T id;
 };
 
@@ -40,9 +38,9 @@ public:
     pointList(pl)
     {}
 
-  Point midpoint() const
+  Vec3 midpoint() const
   {
-    return Point(0.5*(pointList[1]->coord+pointList[0]->coord));
+    return Vec3(0.5*(pointList[1]->coord+pointList[0]->coord));
   }
 
   double volume() const
@@ -59,8 +57,8 @@ public:
 
 std::array<scalarFun_T,Line::numPts> const Line::shapeFuns =
 {
-  [] (Point const & p) { return 0.5*(1-p(0)); },
-  [] (Point const & p) { return 0.5*(1+p(0)); }
+  [] (Vec3 const & p) { return 0.5*(1-p(0)); },
+  [] (Vec3 const & p) { return 0.5*(1+p(0)); }
 };
 
 Line::localMat_T const Line::reactMat =
@@ -100,15 +98,15 @@ public:
 };
 
 void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
-                   Point const& origin,
-                   Point const& length,
+                   Vec3 const& origin,
+                   Vec3 const& length,
                    uint const numPts)
 {
-  Point const h(length.coord / (numPts-1));
+  Vec3 const h = length / (numPts-1);
   meshPtr->pointList.reserve(numPts);
   for(uint p=0; p<numPts; ++p)
   {
-    meshPtr->pointList.emplace_back(origin.coord + p * h.coord, p);
+    meshPtr->pointList.emplace_back(origin + p * h, p);
   }
 
   uint const numElems = numPts-1;
@@ -116,8 +114,7 @@ void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
   for(uint e=0; e<numElems; ++e)
   {
     meshPtr->elementList.emplace_back(
-      std::array<Point*,Line::numPts>{
-        &meshPtr->pointList[e], &meshPtr->pointList[e+1]});
+      Line::pointList_T{&meshPtr->pointList[e], &meshPtr->pointList[e+1]});
   }
 
   meshPtr->buildConnectivity();

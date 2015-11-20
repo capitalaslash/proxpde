@@ -8,8 +8,9 @@ typedef uint id_T;
 typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;
 typedef Eigen::VectorXd Vec;
+typedef Eigen::Vector3d Vec3;
 typedef Eigen::Triplet<double> Tri;
 
 class Point;
-typedef std::function<double(Point const&)> scalarFun_T;
-typedef std::function<Point(Point const&)> vectorFun_T;
+typedef std::function<double(Vec3 const&)> scalarFun_T;
+typedef std::function<Vec3(Vec3 const&)> vectorFun_T;

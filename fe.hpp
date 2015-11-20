@@ -6,7 +6,7 @@
 double rectangleInt(Line const& e, id_T i, scalarFun_T rhs)
 {
   // volume * shape fun midpoint * rhs fun midpoint
-  return e.volume()*Line::shapeFuns[i](Point())*rhs(e.midpoint());
+  return e.volume()*Line::shapeFuns[i](Vec3::Zero(3))*rhs(e.midpoint());
 }
 
 void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
@@ -38,7 +38,7 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
         Point const& p = *e.pointList[i];
         if(bc.is_constrained(p))
         {
-          h(i) = bc.value(p);
+          h(i) = bc.value(p.coord);
           C(i,i) = 0.;
         }
       }

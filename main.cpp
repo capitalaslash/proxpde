@@ -35,13 +35,13 @@ int main()
   right.init(numPts);
   right.value = [] (Vec3 const&) {return 0.;};
 
-  std::vector<bc_ess> bcs {left, right};
+  std::vector<bc_ess> bcs {left};
 
   std::vector<Tri> coefficients;
   coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
   Vec b = Vec::Zero(numPts);
 
-  scalarFun_T rhs = [] (Vec3 const&) {return 8.;};
+  scalarFun_T rhs = [] (Vec3 const& p) {return M_PI*std::sin(M_PI*p(0));};
 
   buildProblem(meshPtr, rhs, bcs, coefficients, b);
 

@@ -64,19 +64,19 @@ int main()
   // std::cout << "=====" << std::endl;
   // fout.close();
 
-  Vec x;
+  Vec sol;
   switch(solver_type)
   {
     case CHOLESKY:
     {
       Eigen::SimplicialCholesky<Mat> solver(A);
-      x = solver.solve(b);
+      sol = solver.solve(b);
       break;
     }
     case BICGSTAB:
     {
       Eigen::SimplicialCholesky<Mat> solver(A);
-      x = solver.solve(b);
+      sol = solver.solve(b);
     }
     case SPARSELU:
     {
@@ -86,13 +86,12 @@ int main()
       // Compute the numerical factorization
       solver.factorize(A);
 
-      x = solver.solve(b);
+      sol = solver.solve(b);
     }
-
   }
+  std::cout<< "sol:\n" << sol << std::endl;
 
 
-  std::cout<< "x:\n" << x << std::endl;
 
   return 0;
 }

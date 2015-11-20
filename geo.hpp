@@ -9,13 +9,20 @@
 class Point
 {
 public:
-  explicit Point(Vec3 const & c = Vec3::Zero(3), id_T const i = -1):
+  explicit Point(Vec3 const & c = Vec3::Zero(3),
+                 id_T const i = -1,
+                 marker_T const m = -1):
     coord(c),
-    id(i)
+    id(i),
+    marker(m)
   {}
-    explicit Point(double const x, double const y, double const z, id_T const i = -1):
-      Point(Vec3(x, y, z), i)
-    {}
+  explicit Point(double const x,
+                 double const y,
+                 double const z,
+                 id_T const i = -1,
+                 marker_T const m = -1):
+    Point(Vec3(x, y, z), i, m)
+  {}
 
   double operator()(uint const i) const
   {
@@ -24,6 +31,7 @@ public:
 
   Vec3 coord;
   id_T id;
+  marker_T marker;
 };
 
 class Line

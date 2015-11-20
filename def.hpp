@@ -4,6 +4,7 @@
 #include <Eigen/Sparse>
 
 typedef uint id_T;
+typedef uint marker_T;
 
 typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;

@@ -42,11 +42,8 @@ int main()
   buildMesh1D(meshPtr, origin, length, numPts);
 
   // bc setup
-  bc_ess left, right;
-  left.insert(0);
-  left.value = [] (Vec3 const&) {return 0.;};
-  right.insert(numPts-1);
-  right.value = [] (Vec3 const&) {return 0.;};
+  bc_ess  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
+  bc_ess right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 0.;});
 
   bc_list bcs {left};
   bcs.init(numPts);

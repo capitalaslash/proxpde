@@ -9,6 +9,20 @@ typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 class bc_ess: public std::set<id_T>
 {
 public:
+  bc_ess(Mesh1D const& mesh, marker_T m, scalarFun_T v):
+    marker(m),
+    value(v)
+  {
+    for(auto& p: mesh.pointList)
+    {
+      if(p.marker == marker)
+      {
+        this->insert(p.id);
+        std::cout << "inserting " << p.id << " " << p.marker << " " << marker << std::endl;
+      }
+    }
+  }
+
   void init(uint const numPts)
   {
     vec = bool_array::Constant(numPts, false);
@@ -23,8 +37,9 @@ public:
     return vec[p.id];
   }
 
-  bool_array vec;
+  marker_T marker;
   scalarFun_T value;
+  bool_array vec;
 };
 
 class bc_list: public std::vector<bc_ess>

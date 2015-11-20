@@ -11,7 +11,7 @@ double rectangleInt(Line const& e, id_T i, scalarFun_T rhs)
 
 void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
                   scalarFun_T const& rhs,
-                  std::vector<bc_ess> const& bcs,
+                  bc_list const& bcs,
                   std::vector<Tri>& coefficients,
                   Vec& b)
 {
@@ -59,7 +59,7 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
     {
       const id_T id_i = e.pointList[i]->id;
       b(id_i) += elemRhs_c(i);
-      if(!bcs[0].is_constrained(*e.pointList[i]))
+      if(!bcs.is_constrained(*e.pointList[i]))
       {
         b(id_i) += rectangleInt(e, i, rhs)/J;
       }

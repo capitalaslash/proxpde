@@ -7,19 +7,20 @@
 #include "bc.hpp"
 #include "fe.hpp"
 
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-// scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
-// scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+// scalarFun_T rhs = [] (Vec3 const& p)
+// {
+//   return M_PI*std::sin(M_PI*p(0));
+// };
+// scalarFun_T exact_sol = [] (Vec3 const& p)
+// {
+//   return std::sin(M_PI*p(0))/M_PI + p(0);
+// };
 
-scalarFun_T exact_sol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
+// scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
+
+scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
 enum SolverType
 {
@@ -43,18 +44,16 @@ int main()
   // bc setup
   bc_ess left, right;
   left.insert(0);
-  left.init(numPts);
   left.value = [] (Vec3 const&) {return 0.;};
   right.insert(numPts-1);
-  right.init(numPts);
   right.value = [] (Vec3 const&) {return 0.;};
 
-  std::vector<bc_ess> bcs {left};
+  bc_list bcs {left, right};
+  bcs.init(numPts);
 
   std::vector<Tri> coefficients;
   coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
   Vec b = Vec::Zero(numPts);
-
 
   buildProblem(meshPtr, rhs, bcs, coefficients, b);
 

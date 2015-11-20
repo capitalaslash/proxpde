@@ -91,7 +91,15 @@ int main()
   }
   std::cout<< "sol:\n" << sol << std::endl;
 
+  Vec exact = Eigen::ArrayXd::LinSpaced(numPts, origin(0), origin(0)+length(0));
+  for(uint i=0; i<numPts; ++i)
+  {
+    double x = exact(i);
+    exact(i) = std::sin(M_PI*x)/M_PI + x;
+  }
 
+  Vec error = sol - exact;
+  std::cout << "error: " << error.norm() << std::endl;
 
   return 0;
 }

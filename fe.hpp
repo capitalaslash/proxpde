@@ -59,7 +59,10 @@ void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
     {
       const id_T id_i = e.pointList[i]->id;
       b(id_i) += elemRhs_c(i);
-      b(id_i) += rectangleInt(e, i, rhs);
+      if(!bcs[0].is_constrained(*e.pointList[i]))
+      {
+        b(id_i) += rectangleInt(e, i, rhs)/J;
+      }
       for(uint j=0; j<Line::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;

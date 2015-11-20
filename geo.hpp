@@ -105,6 +105,12 @@ public:
   connList_T _connList;
 };
 
+enum side
+{
+  LEFT,
+  RIGHT
+};
+
 void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
                    Vec3 const& origin,
                    Vec3 const& length,
@@ -116,6 +122,8 @@ void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
   {
     meshPtr->pointList.emplace_back(origin + p * h, p);
   }
+  meshPtr->pointList[0].marker = side::LEFT;
+  meshPtr->pointList[numPts-1].marker = side::RIGHT;
 
   uint const numElems = numPts-1;
   meshPtr->elementList.reserve(numElems);

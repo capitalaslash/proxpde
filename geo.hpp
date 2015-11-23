@@ -58,7 +58,7 @@ public:
 
   pointList_T pointList;
   static std::array<scalarFun_T,numPts> const shapeFuns;
-  static localMat_T const reactMat;
+  static localMat_T const massMat;
   static localMat_T const gradMat;
   static constexpr double _refVolume = 2.L;
 };
@@ -69,7 +69,7 @@ std::array<scalarFun_T,Line::numPts> const Line::shapeFuns =
   [] (Vec3 const & p) { return 0.5*(1+p(0)); }
 };
 
-Line::localMat_T const Line::reactMat =
+Line::localMat_T const Line::massMat =
   (Eigen::Matrix2d() << 2.L/3, 1.L/3,
                         1.L/3, 2.L/3 ).finished();
 Line::localMat_T const Line::gradMat =

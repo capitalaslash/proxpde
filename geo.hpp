@@ -76,13 +76,14 @@ Line::localMat_T const Line::gradMat =
   (Eigen::Matrix2d() <<  0.5L, -0.5L,
                         -0.5L,  0.5L ).finished();
 
-class Mesh1D
+template <class Elem>
+class Mesh
 {
 public:
   typedef std::vector<Point> pointList_T;
   typedef std::vector<Line> elementList_T;
-  typedef std::array<id_T,2> elementConn_T;
-  typedef std::vector<std::array<id_T,2>> connList_T;
+  typedef std::array<id_T,Elem::numPts> elementConn_T;
+  typedef std::vector<std::array<id_T,Elem::numPts>> connList_T;
 
   void buildConnectivity()
   {
@@ -111,10 +112,10 @@ enum side
   RIGHT
 };
 
-void buildMesh1D(std::shared_ptr<Mesh1D> meshPtr,
-                   Vec3 const& origin,
-                   Vec3 const& length,
-                   uint const numPts)
+void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 uint const numPts)
 {
   Vec3 const h = length / (numPts-1);
   meshPtr->pointList.reserve(numPts);

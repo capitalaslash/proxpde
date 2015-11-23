@@ -48,7 +48,7 @@ double gauss3Int(Line const& e, id_T i, scalarFun_T rhs)
   return sum;
 }
 
-void buildProblem(std::shared_ptr<Mesh1D> const meshPtr,
+void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
                   scalarFun_T const& rhs,
                   bc_list const& bcs,
                   std::vector<Tri>& coefficients,

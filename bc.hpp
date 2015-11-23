@@ -9,7 +9,7 @@ typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 class bc_ess: public std::set<id_T>
 {
 public:
-  bc_ess(Mesh1D const& mesh, marker_T m, scalarFun_T v):
+  bc_ess(Mesh<Line> const& mesh, marker_T m, scalarFun_T v):
     marker(m),
     value(v)
   {

@@ -29,6 +29,8 @@ enum SolverType
   SPARSELU
 };
 
+typedef Line ElemType;
+
 int main()
 {
   SolverType solver_type = SPARSELU;
@@ -37,7 +39,7 @@ int main()
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0., 0.);
 
-  std::shared_ptr<Mesh1D> meshPtr(new Mesh1D);
+  std::shared_ptr<Mesh<ElemType>> meshPtr(new Mesh<ElemType>);
 
   buildMesh1D(meshPtr, origin, length, numPts);
 
@@ -49,7 +51,7 @@ int main()
   bcs.init(numPts);
 
   std::vector<Tri> coefficients;
-  coefficients.reserve((numPts-1)*Line::numPts*Line::numPts);
+  coefficients.reserve((numPts-1)*ElemType::numPts*ElemType::numPts);
   Vec b = Vec::Zero(numPts);
 
   buildProblem(meshPtr, rhs, bcs, coefficients, b);

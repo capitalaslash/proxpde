@@ -41,7 +41,8 @@ int main()
 
   std::shared_ptr<Mesh<ElemType>> meshPtr(new Mesh<ElemType>);
 
-  buildMesh1D(meshPtr, origin, length, numPts);
+  MeshBuilder<ElemType> meshBuilder;
+  meshBuilder.build(meshPtr, origin, length, {numPts, 0, 0});
 
   // bc setup
   bc_ess  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});

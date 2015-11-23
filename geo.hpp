@@ -136,3 +136,24 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
 
   meshPtr->buildConnectivity();
 }
+
+template <class Elem>
+struct MeshBuilder
+{
+  void build(std::shared_ptr<Mesh<Line>> meshPtr,
+            Vec3 const& origin,
+            Vec3 const& length,
+            std::array<uint, 3> const numPts);
+};
+
+template <>
+struct MeshBuilder<Line>
+{
+  void build(std::shared_ptr<Mesh<Line>> meshPtr,
+            Vec3 const& origin,
+            Vec3 const& length,
+            std::array<uint, 3> const numPts)
+  {
+    buildMesh1D(meshPtr, origin, length, numPts[0]);
+  }
+};

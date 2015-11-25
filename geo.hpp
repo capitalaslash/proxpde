@@ -34,7 +34,13 @@ public:
   marker_T marker;
 };
 
-class Line
+struct GeoElem
+{
+  virtual Vec3 midpoint() const = 0;
+  virtual double volume() const = 0;
+};
+
+class Line: public GeoElem
 {
 public:
   static uint const numPts = 2U;

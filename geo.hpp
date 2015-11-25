@@ -37,7 +37,7 @@ public:
 class Line
 {
 public:
-  static uint const numPts = 2;
+  static uint const numPts = 2U;
   typedef Eigen::Vector2d localVec_T;
   typedef Eigen::Matrix2d localMat_T;
   typedef std::array<Point*,numPts> pointList_T;
@@ -57,24 +57,7 @@ public:
   }
 
   pointList_T pointList;
-  static std::array<scalarFun_T,numPts> const shapeFuns;
-  static localMat_T const massMat;
-  static localMat_T const gradMat;
-  static constexpr double _refVolume = 2.L;
 };
-
-std::array<scalarFun_T,Line::numPts> const Line::shapeFuns =
-{
-  [] (Vec3 const & p) { return 0.5*(1-p(0)); },
-  [] (Vec3 const & p) { return 0.5*(1+p(0)); }
-};
-
-Line::localMat_T const Line::massMat =
-  (Eigen::Matrix2d() << 2.L/3, 1.L/3,
-                        1.L/3, 2.L/3 ).finished();
-Line::localMat_T const Line::gradMat =
-  (Eigen::Matrix2d() <<  0.5L, -0.5L,
-                        -0.5L,  0.5L ).finished();
 
 template <class Elem>
 class Mesh

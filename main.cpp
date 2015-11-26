@@ -48,6 +48,7 @@ int main()
   bc_ess  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
   bc_ess right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 0.;});
 
+  // right bc not used here
   bc_list bcs {left};
   bcs.init(numPts);
 

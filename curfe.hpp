@@ -18,8 +18,8 @@ struct CurFE
     {
       for(uint q=0; q<QR::numPts; ++q)
       {
-        phi(i, q) = RefFE::phiFun[i](QR::n[q]);
-        dphi(i, q) = RefFE::dphiFun[i](QR::n[q]);
+        phiRef(i, q) = RefFE::phiFun[i](QR::n[q]);
+        dphiRef(i, q) = RefFE::dphiFun[i](QR::n[q]);
       }
     }
   }
@@ -47,6 +47,15 @@ struct CurFE
     massMat = RefFE::massMat * Jm1;
     stiffMat = RefFE::gradMat * Jm1;
 
+    for(uint i=0; i<RefFE::numPts; ++i)
+    {
+      for(uint q=0; q<QR::numPts; ++q)
+      {
+        phi(i,q) = phiRef(i,q);
+        dphi(i,q) = dphiRef(i,q) * Jm1;
+      }
+    }
+
     // for(uint i=0; i<RefFE::numPts; ++i)
     // {
     //   phiFun[i]  = [this, i] (Vec3 const & p)
@@ -66,6 +75,8 @@ struct CurFE
   double Jm1;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
+  Eigen::Array<double, RefFE::numPts, QR::numPts> phiRef;
+  Eigen::Array<Vec3, RefFE::numPts, QR::numPts> dphiRef;
   Eigen::Array<double, RefFE::numPts, QR::numPts> phi;
   Eigen::Array<Vec3, RefFE::numPts, QR::numPts> dphi;
   // std::array<scalarFun_T,RefFE::numPts> phiFun;

@@ -31,12 +31,12 @@ enum SolverType
 };
 
 typedef Line ElemType;
+const SolverType solver_type = SPARSELU;
 
 int main()
 {
-  SolverType solver_type = SPARSELU;
-
   uint const numPts = 5;
+  // uint const numElems = numPts-1;
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0., 0.);
 
@@ -53,17 +53,13 @@ int main()
   bc_list bcs {left};
   bcs.init(numPts);
 
-  std::vector<Tri> coefficients;
-  coefficients.reserve((numPts-1)*ElemType::numPts*ElemType::numPts);
+  Mat A(numPts,numPts);
   Vec b = Vec::Zero(numPts);
 
-  buildProblem(meshPtr, rhs, bcs, coefficients, b);
+  buildProblem(meshPtr, rhs, bcs, A, b);
 
-  std::cout << "b:\n" << b << std::endl;
-
-  Mat A(numPts,numPts);
-  A.setFromTriplets(coefficients.begin(), coefficients.end());
   std::cout << "A:\n" << A << std::endl;
+  std::cout << "b:\n" << b << std::endl;
 
   // std::ofstream fout("output.m");
   // for( int k=0; k<A.outerSize(); k++)

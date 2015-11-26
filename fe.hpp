@@ -1,17 +1,22 @@
 #pragma once
 
 #include "def.hpp"
-#include "geo.hpp"
 #include "qr.hpp"
 #include "curfe.hpp"
+
 void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
                   scalarFun_T const& rhs,
                   bc_list const& bcs,
-                  std::vector<Tri>& coefficients,
+                  Mat& A,
                   Vec& b)
 {
   typedef CurFE<RefLineP1,GaussQR<3>> curFE_T;
   curFE_T curFE;
+
+  std::vector<Tri> coefficients;
+  // sparsity pattern
+  coefficients.reserve(meshPtr->pointList.size() * 3); // 3 = 2*dim+1
+
   for(auto &e: meshPtr->elementList)
   {
     // --- set current fe ---
@@ -75,12 +80,7 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
         const id_T id_j = e.pointList[j]->id;
         coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));
       }
-
-      // // neumann bc
-      // if(id_i == meshPtr->pointList.size()-1)
-      // {
-      //   b(id_i) += 1.;
-      // }
     }
   }
+  A.setFromTriplets(coefficients.begin(), coefficients.end());
 }

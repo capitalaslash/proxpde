@@ -7,9 +7,10 @@
 template <typename RefFE, typename QR>
 struct CurFE
 {
-  typedef Eigen::Matrix2d LocalMat_T;
   typedef RefFE RefFE_T;
   typedef QR QR_T;
+  typedef Eigen::Matrix<double,RefFE::numPts,RefFE::numPts> LocalMat_T;
+  typedef Eigen::Matrix<double,RefFE::numPts,1> LocalVec_T;
 
   CurFE()
   {

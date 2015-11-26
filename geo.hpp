@@ -9,7 +9,7 @@
 class Point
 {
 public:
-  explicit Point(Vec3 const & c = Vec3::Zero(3),
+  explicit Point(Vec3 const & c = Vec3::Zero(),
                  id_T const i = -1,
                  marker_T const m = -1):
     coord(c),

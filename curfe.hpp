@@ -26,21 +26,22 @@ struct CurFE
   void reinit(GeoElem const & elem)
   {
     J = elem.volume() / RefFE::volume;
+    Jm1 = 1. / J;
     map = [this, &elem] (Vec3 const & p)
     {
       return elem.midpoint() + J * p;
     };
     imap = [this, &elem] (Vec3 const & p)
     {
-      return (p - elem.midpoint()) / J;
+      return (p - elem.midpoint()) * Jm1;
     };
     for(uint q=0; q<QR::numPts; ++q)
     {
-      JxW[q] = J*QR::w[q];
+      JxW[q] = J * QR::w[q];
       qpoint[q] = map(QR::n[q]);
     }
-    massMat = RefFE::massMat / J;
-    stiffMat = RefFE::gradMat / J;
+    massMat = RefFE::massMat * Jm1;
+    stiffMat = RefFE::gradMat * Jm1;
     for(uint i=0; i<RefFE::numPts; ++i)
     {
       phiFun[i]  = [this, i] (Vec3 const & p)
@@ -49,7 +50,7 @@ struct CurFE
       };
       dphiFun[i] = [this, i] (Vec3 const & p)
       {
-        return RefFE::dphiFun[i](imap(p))/J;
+        return RefFE::dphiFun[i](imap(p)) * Jm1;
       };
     }
   }
@@ -57,6 +58,7 @@ struct CurFE
   vectorFun_T map;
   vectorFun_T imap;
   double J;
+  double Jm1;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
   Eigen::Array<double, RefFE::numPts, QR::numPts> phi;

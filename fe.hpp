@@ -16,8 +16,6 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
   {
     curFE.reinit(e);
 
-    // double const J = curFE.J;
-
     Line::localVec_T elemRhs = Line::localVec_T::Zero(Line::numPts, 1);
 
     // A_constrained = C^T A C
@@ -48,8 +46,8 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
       {
         if(bc.is_constrained(*e.pointList[i]))
         {
-          elemMat_c(i,i) = 1./curFE.J;
-          elemRhs_c(i) = h[i]/curFE.J;
+          elemMat_c(i,i) = curFE.Jm1;
+          elemRhs_c(i) = h[i] * curFE.Jm1;
         }
       }
     }
@@ -60,8 +58,6 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
       b(id_i) += elemRhs_c(i);
       if(!bcs.is_constrained(*e.pointList[i]))
       {
-        // b(id_i) += J * rectangleInt(e, i, rhs);
-        // b(id_i) += J * gauss3Int(e, curFE.phi[i], rhs);
         for(uint q=0; q<FE_T::QR_T::numPts; ++q)
         {
           double const f = rhs(curFE.qpoint[q]);

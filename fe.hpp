@@ -10,21 +10,21 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
                   std::vector<Tri>& coefficients,
                   Vec& b)
 {
-  typedef CurFE<RefLineP1,GaussQR<3>> FE_T;
-  FE_T curFE;
+  typedef CurFE<RefLineP1,GaussQR<3>> curFE_T;
+  curFE_T curFE;
   for(auto &e: meshPtr->elementList)
   {
     // --- set current fe ---
     curFE.reinit(e);
+    curFE_T::LocalMat_T Ke = curFE_T::LocalMat_T::Zero();
+    curFE_T::LocalVec_T Fe = curFE_T::LocalVec_T::Zero();
 
     // --- build local matrix and rhs ---
-    FE_T::LocalMat_T elemMat_c = curFE.stiffMat;
-    FE_T::LocalVec_T elemRhs_c = FE_T::LocalVec_T::Zero();
-
-    for(uint q=0; q<FE_T::QR_T::numPts; ++q)
+    Ke = curFE.stiffMat;
+    for(uint q=0; q<curFE_T::QR_T::numPts; ++q)
     {
       double const f = rhs(curFE.qpoint[q]);
-      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
       {
         const id_T id_i = e.pointList[i]->id;
         b(id_i) += (1-bcs.vec[id_i])*curFE.JxW[q]*curFE.phi(i, q) * f;
@@ -39,9 +39,9 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
 
     for(auto& bc: bcs)
     {
-      FE_T::LocalMat_T C = FE_T::LocalMat_T::Identity();
-      FE_T::LocalVec_T h = FE_T::LocalVec_T::Zero();
-      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
+      curFE_T::LocalMat_T C = curFE_T::LocalMat_T::Identity();
+      curFE_T::LocalVec_T h = curFE_T::LocalVec_T::Zero();
+      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
       {
         Point const& p = *e.pointList[i];
         if(bc.is_constrained(p))
@@ -50,28 +50,28 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
           C(i,i) = 0.;
         }
       }
-      elemMat_c = C * elemMat_c * C;
-      elemRhs_c = C * (elemRhs_c - curFE.stiffMat * h);
+      Ke = C * Ke * C;
+      Fe = C * (Fe - curFE.stiffMat * h);
 
-      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
       {
         if(bc.is_constrained(*e.pointList[i]))
         {
-          elemMat_c(i,i) = curFE.Jm1;
-          elemRhs_c(i) = h[i] * curFE.Jm1;
+          Ke(i,i) = curFE.Jm1;
+          Fe(i) = h[i] * curFE.Jm1;
         }
       }
     }
 
     // --- store local values in global matrix and rhs ---
-    for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
+    for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
     {
       const id_T id_i = e.pointList[i]->id;
-      b(id_i) += elemRhs_c(i);
-      for(uint j=0; j<FE_T::RefFE_T::numPts; ++j)
+      b(id_i) += Fe(i);
+      for(uint j=0; j<curFE_T::RefFE_T::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;
-        coefficients.push_back(Tri(id_i, id_j, elemMat_c(i,j)));
+        coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));
       }
 
       // // neumann bc

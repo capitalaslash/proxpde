@@ -26,8 +26,7 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
       double const f = rhs(curFE.qpoint[q]);
       for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
       {
-        const id_T id_i = e.pointList[i]->id;
-        b(id_i) += (1-bcs.vec[id_i])*curFE.JxW[q]*curFE.phi(i, q) * f;
+        Fe(i) += curFE.JxW[q]*curFE.phi(i, q) * f;
       }
     }
 

@@ -14,23 +14,34 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
   FE_T curFE;
   for(auto &e: meshPtr->elementList)
   {
+    // --- set current fe ---
     curFE.reinit(e);
 
-    Line::localVec_T elemRhs = Line::localVec_T::Zero(Line::numPts, 1);
+    // --- build local matrix and rhs ---
+    FE_T::LocalMat_T elemMat_c = curFE.stiffMat;
+    FE_T::LocalVec_T elemRhs_c = FE_T::LocalVec_T::Zero();
 
+    for(uint q=0; q<FE_T::QR_T::numPts; ++q)
+    {
+      double const f = rhs(curFE.qpoint[q]);
+      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
+      {
+        const id_T id_i = e.pointList[i]->id;
+        b(id_i) += (1-bcs.vec[id_i])*curFE.JxW[q]*curFE.phi(i, q) * f;
+      }
+    }
+
+    // --- apply bc ---
     // A_constrained = C^T A C
     // b_constrained = C^T (b-Ah)
     // C clear constrained rows/cols
     // h is the vector of local constraint values
 
-    Line::localMat_T elemMat_c = curFE.stiffMat;
-    Line::localVec_T elemRhs_c = elemRhs;
-
     for(auto& bc: bcs)
     {
-      Line::localMat_T C = Line::localMat_T::Identity(Line::numPts, Line::numPts);
-      Line::localVec_T h = Line::localVec_T::Zero(Line::numPts, 1);
-      for(uint i=0; i<Line::numPts; ++i)
+      FE_T::LocalMat_T C = FE_T::LocalMat_T::Identity();
+      FE_T::LocalVec_T h = FE_T::LocalVec_T::Zero();
+      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
       {
         Point const& p = *e.pointList[i];
         if(bc.is_constrained(p))
@@ -42,7 +53,7 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
       elemMat_c = C * elemMat_c * C;
       elemRhs_c = C * (elemRhs_c - curFE.stiffMat * h);
 
-      for(uint i=0; i<Line::numPts; ++i)
+      for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
       {
         if(bc.is_constrained(*e.pointList[i]))
         {
@@ -52,23 +63,12 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
       }
     }
 
-    for(uint i=0; i<Line::numPts; ++i)
+    // --- store local values in global matrix and rhs ---
+    for(uint i=0; i<FE_T::RefFE_T::numPts; ++i)
     {
       const id_T id_i = e.pointList[i]->id;
       b(id_i) += elemRhs_c(i);
-      if(!bcs.is_constrained(*e.pointList[i]))
-      {
-        for(uint q=0; q<FE_T::QR_T::numPts; ++q)
-        {
-          double const f = rhs(curFE.qpoint[q]);
-          b(id_i) += curFE.JxW[q]*curFE.phi(i, q) * f;
-        }
-      }
-    }
-    for(uint i=0; i<Line::numPts; ++i)
-    {
-      const id_T id_i = e.pointList[i]->id;
-      for(uint j=0; j<Line::numPts; ++j)
+      for(uint j=0; j<FE_T::RefFE_T::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;
         coefficients.push_back(Tri(id_i, id_j, elemMat_c(i,j)));

@@ -10,11 +10,18 @@ struct RefLineP1
   typedef Eigen::Matrix2d LocalMat_T;
   typedef std::array<Point*,numPts> PointList_T;
 
+  static std::array<Vec3,numPts> const points;
   static std::array<scalarFun_T,numPts> const phiFun;
   static std::array<vectorFun_T,numPts> const dphiFun;
   static LocalMat_T const massMat;
   static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
+};
+
+std::array<Vec3,RefLineP1::numPts> const RefLineP1::points =
+{
+  Vec3(-1.L, 0., 0.),
+  Vec3( 1.L, 0., 0.)
 };
 
 std::array<scalarFun_T,RefLineP1::numPts> const RefLineP1::phiFun =

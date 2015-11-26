@@ -44,11 +44,11 @@ class Line: public GeoElem
 {
 public:
   static uint const numPts = 2U;
-  typedef Eigen::Vector2d localVec_T;
-  typedef Eigen::Matrix2d localMat_T;
-  typedef std::array<Point*,numPts> pointList_T;
+  typedef Eigen::Vector2d LocalVec_T;
+  typedef Eigen::Matrix2d LocalMat_T;
+  typedef std::array<Point*,numPts> PointList_T;
 
-  explicit Line(pointList_T const&& pl = {nullptr, nullptr}):
+  explicit Line(PointList_T const&& pl = {nullptr, nullptr}):
     pointList(pl)
     {}
 
@@ -62,24 +62,24 @@ public:
     return (pointList[1]->coord-pointList[0]->coord).norm();
   }
 
-  pointList_T pointList;
+  PointList_T pointList;
 };
 
 template <class Elem>
 class Mesh
 {
 public:
-  typedef std::vector<Point> pointList_T;
-  typedef std::vector<Line> elementList_T;
-  typedef std::array<id_T,Elem::numPts> elementConn_T;
-  typedef std::vector<std::array<id_T,Elem::numPts>> connList_T;
+  typedef std::vector<Point> PointList_T;
+  typedef std::vector<Line> ElementList_T;
+  typedef std::array<id_T,Elem::numPts> ElementConn_T;
+  typedef std::vector<std::array<id_T,Elem::numPts>> ConnList_T;
 
   void buildConnectivity()
   {
     _connList.reserve(elementList.size());
     for(auto& l: elementList)
     {
-      elementConn_T elemConn;
+      ElementConn_T elemConn;
       uint counter = 0;
       for(auto& p: l.pointList)
       {
@@ -90,9 +90,9 @@ public:
     }
   }
 
-  pointList_T pointList;
-  elementList_T elementList;
-  connList_T _connList;
+  PointList_T pointList;
+  ElementList_T elementList;
+  ConnList_T _connList;
 };
 
 enum side
@@ -120,7 +120,7 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
   for(uint e=0; e<numElems; ++e)
   {
     meshPtr->elementList.emplace_back(
-      Line::pointList_T{&meshPtr->pointList[e], &meshPtr->pointList[e+1]});
+      Line::PointList_T{&meshPtr->pointList[e], &meshPtr->pointList[e+1]});
   }
 
   meshPtr->buildConnectivity();

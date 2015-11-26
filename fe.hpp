@@ -20,13 +20,16 @@ void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
     curFE_T::LocalVec_T Fe = curFE_T::LocalVec_T::Zero();
 
     // --- build local matrix and rhs ---
-    Ke = curFE.stiffMat;
     for(uint q=0; q<curFE_T::QR_T::numPts; ++q)
     {
       double const f = rhs(curFE.qpoint[q]);
       for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
       {
-        Fe(i) += curFE.JxW[q]*curFE.phi(i, q) * f;
+        Fe(i) += curFE.JxW[q] * curFE.phi(i, q) * f;
+        for(uint j=0; j<curFE_T::RefFE_T::numPts; ++j)
+        {
+          Ke(i,j) += curFE.JxW[q] * (curFE.dphi(j, q).dot(curFE.dphi(i, q)));
+        }
       }
     }
 

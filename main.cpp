@@ -20,6 +20,7 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
 
 // scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
 enum SolverType

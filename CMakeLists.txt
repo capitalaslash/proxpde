@@ -16,6 +16,7 @@ add_executable(main
   geo.hpp
   geo.cpp
   reffe.hpp
+  reffe.cpp
   qr.hpp
   curfe.hpp
   bc.hpp

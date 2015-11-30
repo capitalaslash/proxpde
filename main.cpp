@@ -32,7 +32,10 @@ enum SolverType
 
 typedef Line Elem_T;
 typedef Mesh<Elem_T> Mesh_T;
-typedef FESpace<Mesh_T,RefLineP1,GaussQR<3>> FESpace_T;
+typedef FESpace<
+          Mesh_T,
+          FEType<Elem_T,1>::RefFE_T,
+          GaussQR<3>> FESpace_T;
 const SolverType solver_type = SPARSELU;
 
 int main()

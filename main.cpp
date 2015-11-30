@@ -32,6 +32,7 @@ enum SolverType
 
 typedef Line Elem_T;
 typedef Mesh<Elem_T> Mesh_T;
+typedef FESpace<Mesh_T,RefLineP1,GaussQR<3>> FESpace_T;
 const SolverType solver_type = SPARSELU;
 
 int main()
@@ -57,7 +58,9 @@ int main()
   Mat A(numPts,numPts);
   Vec b = Vec::Zero(numPts);
 
-  buildProblem(meshPtr, rhs, bcs, A, b);
+  FESpace_T feSpace(meshPtr);
+
+  buildProblem(feSpace, rhs, bcs, A, b);
 
   std::cout << "A:\n" << A << std::endl;
   std::cout << "b:\n" << b << std::endl;

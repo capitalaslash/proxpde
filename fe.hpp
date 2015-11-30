@@ -4,8 +4,6 @@
 #include "qr.hpp"
 #include "curfe.hpp"
 
-template <typename Mesh>
-void buildProblem(std::shared_ptr<Mesh> const meshPtr,
 template <typename Mesh,
           typename RefFE,
           typename QR>
@@ -24,33 +22,38 @@ struct FESpace
   CurFE_T curFE;
 };
 
+template <typename FESpace>
+void buildProblem(FESpace feSpace,
                   scalarFun_T const& rhs,
-                  bc_list<Mesh> const& bcs,
+                  bc_list<typename FESpace::Mesh_T> const& bcs,
                   Mat& A,
                   Vec& b)
 {
-  typedef CurFE<RefLineP1,GaussQR<3>> curFE_T;
-  curFE_T curFE;
+  typedef typename FESpace::CurFE_T CurFE_T;
+  typedef typename CurFE_T::LocalMat_T LMat_T;
+  typedef typename CurFE_T::LocalVec_T LVec_T;
+
+  CurFE_T & curFE = feSpace.curFE;
 
   std::vector<Tri> coefficients;
   // sparsity pattern
-  coefficients.reserve(meshPtr->pointList.size() * 3); // 3 = 2*dim+1
+  coefficients.reserve(feSpace.meshPtr->pointList.size() * 3); // 3 = 2*dim+1
 
-  for(auto &e: meshPtr->elementList)
+  for(auto &e: feSpace.meshPtr->elementList)
   {
     // --- set current fe ---
     curFE.reinit(e);
-    curFE_T::LocalMat_T Ke = curFE_T::LocalMat_T::Zero();
-    curFE_T::LocalVec_T Fe = curFE_T::LocalVec_T::Zero();
+    LMat_T Ke = LMat_T::Zero();
+    LVec_T Fe = LVec_T::Zero();
 
     // --- build local matrix and rhs ---
-    for(uint q=0; q<curFE_T::QR_T::numPts; ++q)
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       double const f = rhs(curFE.qpoint[q]);
-      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
       {
         Fe(i) += curFE.JxW[q] * curFE.phi(i, q) * f;
-        for(uint j=0; j<curFE_T::RefFE_T::numPts; ++j)
+        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
         {
           Ke(i,j) += curFE.JxW[q] * (curFE.dphi(j, q).dot(curFE.dphi(i, q)));
         }
@@ -65,9 +68,9 @@ struct FESpace
 
     for(auto& bc: bcs)
     {
-      curFE_T::LocalMat_T C = curFE_T::LocalMat_T::Identity();
-      curFE_T::LocalVec_T h = curFE_T::LocalVec_T::Zero();
-      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
+      LMat_T C = LMat_T::Identity();
+      LVec_T h = LVec_T::Zero();
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
       {
         Point const& p = *e.pointList[i];
         if(bc.is_constrained(p))
@@ -79,7 +82,7 @@ struct FESpace
       Ke = C * Ke * C;
       Fe = C * (Fe - curFE.stiffMat * h);
 
-      for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
       {
         if(bc.is_constrained(*e.pointList[i]))
         {
@@ -90,11 +93,11 @@ struct FESpace
     }
 
     // --- store local values in global matrix and rhs ---
-    for(uint i=0; i<curFE_T::RefFE_T::numPts; ++i)
+    for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
     {
       const id_T id_i = e.pointList[i]->id;
       b(id_i) += Fe(i);
-      for(uint j=0; j<curFE_T::RefFE_T::numPts; ++j)
+      for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
       {
         const id_T id_j = e.pointList[j]->id;
         coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));

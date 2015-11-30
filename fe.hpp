@@ -4,9 +4,10 @@
 #include "qr.hpp"
 #include "curfe.hpp"
 
-void buildProblem(std::shared_ptr<Mesh<Line>> const meshPtr,
+template <typename Mesh>
+void buildProblem(std::shared_ptr<Mesh> const meshPtr,
                   scalarFun_T const& rhs,
-                  bc_list const& bcs,
+                  bc_list<Mesh> const& bcs,
                   Mat& A,
                   Vec& b)
 {

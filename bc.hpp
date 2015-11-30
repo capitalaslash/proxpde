@@ -6,10 +6,11 @@
 
 typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 
+template <typename Mesh>
 class bc_ess
 {
 public:
-  bc_ess(Mesh<Line> const& mesh, marker_T m, scalarFun_T v):
+  bc_ess(Mesh const& mesh, marker_T m, scalarFun_T v):
     marker(m),
     value(v)
   {
@@ -43,11 +44,12 @@ public:
   std::set<id_T> point_set;
 };
 
-class bc_list: public std::vector<bc_ess>
+template <typename Mesh>
+class bc_list: public std::vector<bc_ess<Mesh>>
 {
 public:
-  bc_list(std::initializer_list<bc_ess> list):
-    std::vector<bc_ess>(list)
+  bc_list(std::initializer_list<bc_ess<Mesh>> list):
+    std::vector<bc_ess<Mesh>>(list)
     {}
 
   void init(uint const numPts)

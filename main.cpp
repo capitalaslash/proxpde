@@ -30,7 +30,8 @@ enum SolverType
   SPARSELU
 };
 
-typedef Line ElemType;
+typedef Line Elem_T;
+typedef Mesh<Elem_T> Mesh_T;
 const SolverType solver_type = SPARSELU;
 
 int main()
@@ -40,17 +41,17 @@ int main()
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0., 0.);
 
-  std::shared_ptr<Mesh<ElemType>> meshPtr(new Mesh<ElemType>);
+  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
 
-  MeshBuilder<ElemType> meshBuilder;
+  MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts, 0, 0});
 
   // bc setup
-  bc_ess  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_ess right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 0.;});
+  bc_ess<Mesh_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
+  bc_ess<Mesh_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 0.;});
 
   // right bc not used here
-  bc_list bcs {left};
+  bc_list<Mesh_T> bcs {left};
   bcs.init(numPts);
 
   Mat A(numPts,numPts);

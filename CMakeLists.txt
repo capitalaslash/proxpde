@@ -10,5 +10,16 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 
 # find_package(Qt5Gui)
 
-add_executable(main main.cpp)
+add_executable(main
+  main.cpp
+  def.hpp
+  geo.hpp
+  reffe.hpp
+  qr.hpp
+  curfe.hpp
+  bc.hpp
+  fe.hpp
+)
+
 # target_link_libraries(main Qt5::Gui)
+

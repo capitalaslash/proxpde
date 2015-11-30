@@ -6,6 +6,24 @@
 
 template <typename Mesh>
 void buildProblem(std::shared_ptr<Mesh> const meshPtr,
+template <typename Mesh,
+          typename RefFE,
+          typename QR>
+struct FESpace
+{
+  typedef Mesh Mesh_T;
+  typedef RefFE RefFE_T;
+  typedef QR QR_T;
+  typedef CurFE<RefFE,QR> CurFE_T;
+
+  explicit FESpace(std::shared_ptr<Mesh> const mesh):
+    meshPtr(mesh)
+  {}
+
+  std::shared_ptr<Mesh> const meshPtr;
+  CurFE_T curFE;
+};
+
                   scalarFun_T const& rhs,
                   bc_list<Mesh> const& bcs,
                   Mat& A,

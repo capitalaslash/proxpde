@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
@@ -12,6 +14,5 @@ typedef Eigen::VectorXd Vec;
 typedef Eigen::Vector3d Vec3;
 typedef Eigen::Triplet<double> Tri;
 
-class Point;
 typedef std::function<double(Vec3 const&)> scalarFun_T;
 typedef std::function<Vec3(Vec3 const&)> vectorFun_T;

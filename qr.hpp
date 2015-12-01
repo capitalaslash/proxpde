@@ -36,3 +36,12 @@ template<> std::array<Vec3,3> const GaussQR<Line,3>::n =
   Vec3(       0., 0., 0.),
   Vec3( sqrt35th, 0., 0.)
 };
+
+template<> Eigen::Array<double,3,1> const GaussQR<Triangle,3>::w =
+    Eigen::Array<double,3,1>::Constant(1.L/6);
+template<> std::array<Vec3,3> const GaussQR<Triangle,3>::n =
+{
+  Vec3(0.5, 0.0, 0.),
+  Vec3(0.5, 0.5, 0.),
+  Vec3(0.0, 0.5, 0.)
+};

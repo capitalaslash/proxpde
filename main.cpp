@@ -112,12 +112,13 @@ int main()
   }
   std::cout<< "sol:\n" << sol << std::endl;
 
-  Vec exact = Eigen::ArrayXd::LinSpaced(numPts, origin(0), origin(0)+length(0));
-  for(uint i=0; i<numPts; ++i)
-  {
-    double x = exact(i);
-    exact(i) = exact_sol(Vec3(x, 0., 0.));
-  }
+  Vec exact = Vec::Zero(numPts);
+  for(uint j=0; j<numPts_y; ++j)
+    for(uint i=0; i<numPts_x; ++i)
+    {
+      uint const pos = i + j*numPts_x;
+      exact(pos) = exact_sol(meshPtr->pointList[pos].coord);
+    }
 
   Vec error = sol - exact;
   std::cout << "error: " << error.norm() << std::endl;

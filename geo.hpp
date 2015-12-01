@@ -156,6 +156,19 @@ public:
   ConnList_T _connList;
 };
 
+template <typename Elem>
+std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
+{
+  out << "point list\n----------" << std::endl;
+  for(auto &p: mesh.pointList)
+    out << p << std::endl;
+  out << "\nelement list\n------------" << std::endl;
+  for(auto &e: mesh.elementList)
+    out << e << std::endl;
+  out << "\n------------" << std::endl;
+  return out;
+}
+
 enum side
 {
   LEFT,

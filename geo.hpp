@@ -34,6 +34,13 @@ public:
   marker_T marker;
 };
 
+inline std::ostream& operator<<(std::ostream& out, Point const & p)
+{
+  out << "(" << p.coord[0] << "," << p.coord[1] << "," << p.coord[2] << "), id: "
+      << p.id << ", m: " << p.marker;
+  return out;
+}
+
 struct GeoElem
 {
   virtual Vec3 midpoint() const = 0;

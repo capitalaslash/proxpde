@@ -171,8 +171,10 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
 
 enum side
 {
-  LEFT,
-  RIGHT
+  BOTTOM,
+  RIGHT,
+  TOP,
+  LEFT
 };
 
 void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,

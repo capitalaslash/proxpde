@@ -54,3 +54,17 @@ RefLineP2::LocalMat_T const RefLineP2::gradMat =
   (Eigen::Matrix3d() << 0., 0., 0.,
                         0., 0., 0.,
                         0., 0., 0. ).finished();
+
+std::array<scalarFun_T,RefTriangleP1::numPts> const RefTriangleP1::phiFun =
+{
+  [] (Vec3 const & p) { return 1.L - p(0) - p(1); },
+  [] (Vec3 const & p) { return p(0); },
+  [] (Vec3 const & p) { return p(1); }
+};
+
+std::array<vectorFun_T,RefTriangleP1::numPts> const RefTriangleP1::dphiFun =
+{
+  [] (Vec3 const & p) { return Vec3(-1.L, -1.L, 0.0); },
+  [] (Vec3 const & p) { return Vec3( 1.L,  0.0, 0.0); },
+  [] (Vec3 const & p) { return Vec3( 0.0,  1.L, 0.0); }
+};

@@ -14,8 +14,8 @@ std::array<scalarFun_T,RefLineP1::numPts> const RefLineP1::phiFun =
 
 std::array<vectorFun_T,RefLineP1::numPts> const RefLineP1::dphiFun =
 {
-  [] (Vec3 const & p) { return Vec3( 0.5L, 0.0, 0.0); },
-  [] (Vec3 const & p) { return Vec3(-0.5L, 0.0, 0.0); }
+  [] (Vec3 const & p) { return Vec3(-0.5L, 0.0, 0.0); },
+  [] (Vec3 const & p) { return Vec3(+0.5L, 0.0, 0.0); }
 };
 
 RefLineP1::LocalMat_T const RefLineP1::massMat =

@@ -97,6 +97,33 @@ public:
   }
 };
 
+class Triangle: public GeoElem
+{
+public:
+  static uint const numPts = 3U;
+  typedef std::array<Point*,numPts> PointList_T;
+
+  explicit Triangle(std::initializer_list<Point*> list, id_T id):
+    GeoElem(list, id)
+  {}
+
+  Vec3 midpoint() const
+  {
+    return Vec3((pointList[0]->coord
+                +pointList[1]->coord
+                +pointList[2]->coord)/3.);
+  }
+
+  Vec3 origin() const
+  {
+    return pointList[0]->coord;
+  }
+
+  double volume() const
+  {
+    return ((pointList[1]->coord-pointList[0]->coord).cross(
+            (pointList[2]->coord-pointList[0]->coord))).norm();
+  }
 };
 
 template <class Elem>

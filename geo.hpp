@@ -58,6 +58,17 @@ struct GeoElem
   id_T id;
 };
 
+inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
+{
+  out << "(";
+  for(auto & p: e.pointList)
+  {
+    out << p->id << ", ";
+  }
+  out << "\b\b), " << "id: " << e.id;
+  return out;
+}
+
 class Line: public GeoElem
 {
 public:

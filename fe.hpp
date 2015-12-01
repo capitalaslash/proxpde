@@ -19,6 +19,12 @@ struct FEType<Line,2>
   typedef RefLineP2 RefFE_T;
 };
 
+template <>
+struct FEType<Triangle,1>
+{
+  typedef RefTriangleP1 RefFE_T;
+};
+
 template <typename Mesh,
           typename RefFE,
           typename QR>
@@ -101,11 +107,15 @@ void buildProblem(FESpace feSpace,
       {
         if(bc.is_constrained(*e.pointList[i]))
         {
-          Ke(i,i) = curFE.Jm1;
-          Fe(i) = h[i] * curFE.Jm1;
+          Ke(i,i) = 1.0;
+          Fe(i) = h[i];
         }
       }
     }
+
+    std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+    std::cout << "Ke:\n" << Ke << std::endl;
+    std::cout << "Fe:\n" << Fe << std::endl;
 
     // --- store local values in global matrix and rhs ---
     for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)

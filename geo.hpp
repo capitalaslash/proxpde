@@ -51,6 +51,7 @@ struct GeoElem
   {}
 
   virtual Vec3 midpoint() const = 0;
+  virtual Vec3 origin() const = 0;
   virtual double volume() const = 0;
 
   PointList_T pointList;
@@ -72,6 +73,11 @@ public:
   Vec3 midpoint() const
   {
     return Vec3(0.5*(pointList[1]->coord+pointList[0]->coord));
+  }
+
+  Vec3 origin() const
+  {
+    return this->midpoint();
   }
 
   double volume() const

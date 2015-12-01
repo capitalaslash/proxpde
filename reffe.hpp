@@ -5,6 +5,7 @@
 
 struct RefLineP1
 {
+  static uint const dim = 1U;
   static uint const numPts = 2U;
   typedef Line GeoElem_T;
   typedef Eigen::Vector2d LocalVec_T;
@@ -21,6 +22,7 @@ struct RefLineP1
 
 struct RefLineP2
 {
+  static uint const dim = 1U;
   static uint const numPts = 3U;
   typedef Line GeoElem_T;
   typedef Eigen::Vector3d LocalVec_T;

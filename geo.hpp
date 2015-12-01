@@ -182,23 +182,40 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
                  Vec3 const& length,
                  uint const numPts);
 
+void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 std::array<uint, 2> const numPts);
+
 template <class Elem>
 struct MeshBuilder
 {
   void build(std::shared_ptr<Mesh<Line>> meshPtr,
-            Vec3 const& origin,
-            Vec3 const& length,
-            std::array<uint, 3> const numPts);
+             Vec3 const& origin,
+             Vec3 const& length,
+             std::array<uint, 3> const numPts);
 };
 
 template <>
 struct MeshBuilder<Line>
 {
   void build(std::shared_ptr<Mesh<Line>> meshPtr,
-            Vec3 const& origin,
-            Vec3 const& length,
-            std::array<uint, 3> const numPts)
+             Vec3 const& origin,
+             Vec3 const& length,
+             std::array<uint, 3> const numPts)
   {
     buildMesh1D(meshPtr, origin, length, numPts[0]);
+  }
+};
+
+template <>
+struct MeshBuilder<Triangle>
+{
+  void build(std::shared_ptr<Mesh<Triangle>> meshPtr,
+             Vec3 const& origin,
+             Vec3 const& length,
+             std::array<uint, 3> const numPts)
+  {
+    buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
   }
 };

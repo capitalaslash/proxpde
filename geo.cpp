@@ -18,8 +18,8 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
   meshPtr->elementList.reserve(numElems);
   for(uint e=0; e<numElems; ++e)
   {
-    meshPtr->elementList.emplace_back(
-      Line::PointList_T{&meshPtr->pointList[e], &meshPtr->pointList[e+1]});
+    Line line({&meshPtr->pointList[e], &meshPtr->pointList[e+1]}, e);
+    meshPtr->elementList.push_back(std::move(line));
   }
 
   meshPtr->buildConnectivity();

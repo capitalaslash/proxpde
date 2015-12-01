@@ -43,8 +43,18 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 
 struct GeoElem
 {
+  typedef std::vector<Point*> PointList_T;
+
+  explicit GeoElem(std::initializer_list<Point*> list, id_T i):
+    pointList(list),
+    id(i)
+  {}
+
   virtual Vec3 midpoint() const = 0;
   virtual double volume() const = 0;
+
+  PointList_T pointList;
+  id_T id;
 };
 
 class Line: public GeoElem
@@ -53,11 +63,11 @@ public:
   static uint const numPts = 2U;
   typedef Eigen::Vector2d LocalVec_T;
   typedef Eigen::Matrix2d LocalMat_T;
-  typedef std::array<Point*,numPts> PointList_T;
+  typedef std::vector<Point*> PointList_T;
 
-  explicit Line(PointList_T const&& pl = {nullptr, nullptr}):
-    pointList(pl)
-    {}
+  explicit Line(std::initializer_list<Point*> list, id_T id):
+    GeoElem(list, id)
+  {}
 
   Vec3 midpoint() const
   {
@@ -68,8 +78,8 @@ public:
   {
     return (pointList[1]->coord-pointList[0]->coord).norm();
   }
+};
 
-  PointList_T pointList;
 };
 
 template <class Elem>

@@ -130,6 +130,7 @@ template <typename Elem>
 class Mesh
 {
 public:
+  typedef Elem Elem_T;
   typedef std::vector<Point> PointList_T;
   typedef std::vector<Elem> ElementList_T;
   typedef std::array<id_T,Elem::numPts> ElementConn_T;

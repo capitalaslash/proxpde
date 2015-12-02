@@ -24,5 +24,4 @@ add_executable(main
   iomanager.hpp
 )
 
-# target_link_libraries(main Qt5::Gui)
-
+add_executable(eigen_test EXCLUDE_FROM_ALL test.cpp)

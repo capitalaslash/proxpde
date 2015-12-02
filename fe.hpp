@@ -25,6 +25,12 @@ struct FEType<Triangle,1>
   typedef RefTriangleP1 RefFE_T;
 };
 
+template <>
+struct FEType<Quad,1>
+{
+  typedef RefQuadQ1 RefFE_T;
+};
+
 template <typename Mesh,
           typename RefFE,
           typename QR>

@@ -31,23 +31,22 @@ enum SolverType
   SPARSELU
 };
 
-typedef Triangle Elem_T;
+typedef Quad Elem_T;
 typedef Mesh<Elem_T> Mesh_T;
 typedef FESpace<
           Mesh_T,
           FEType<Elem_T,1>::RefFE_T,
-          GaussQR<Elem_T,3>> FESpace_T;
+          GaussQR<Elem_T,9>> FESpace_T;
 const SolverType solver_type = SPARSELU;
 
 int main()
 {
-  uint const numPts_x = 11;
-  uint const numPts_y = 11;
+  uint const numPts_x = 21;
+  uint const numPts_y = 2;
   uint const numPts = numPts_x*numPts_y;
 
-  // uint const numElems = numPts-1;
   Vec3 const origin(0., 0., 0.);
-  Vec3 const length(1., 1., 0.);
+  Vec3 const length(1., 0.02, 0.);
 
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
 

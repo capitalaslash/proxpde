@@ -58,19 +58,36 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
   for(uint j=0; j<numPts[1]-1; ++j)
     for(uint i=0; i<numPts[0]-1; ++i)
     {
-      uint const base = i + j*numPts[0];
-      Triangle tri_b({&meshPtr->pointList[base],
-                      &meshPtr->pointList[base+1],
-                      &meshPtr->pointList[base+numPts[0]+1]},
-                     counter++);
-      Triangle tri_t({&meshPtr->pointList[base],
-                      &meshPtr->pointList[base+numPts[0]+1],
-                      &meshPtr->pointList[base+numPts[0]]},
-                     counter++);
-      meshPtr->elementList.push_back(std::move(tri_b));
-      meshPtr->elementList.push_back(std::move(tri_t));
-  }
-
+      id_T const base = i + j*numPts[0];
+      std::array<id_T,3> triplet_b, triplet_t;
+      if((i-0.5*(numPts[0]-2))*(j-0.5*(numPts[1]-2)) > 0)
+      {
+        triplet_b[0] = base;
+        triplet_b[1] = base+1;
+        triplet_b[2] = base+numPts[0]+1;
+        triplet_t[0] = base;
+        triplet_t[1] = base+numPts[0]+1;
+        triplet_t[2] = base+numPts[0];
+      }
+      else
+      {
+        triplet_b[0] = base;
+        triplet_b[1] = base+1;
+        triplet_b[2] = base+numPts[0];
+        triplet_t[0] = base+1;
+        triplet_t[1] = base+numPts[0]+1;
+        triplet_t[2] = base+numPts[0];
+      }
+      meshPtr->elementList.emplace_back(
+        Triangle{{&meshPtr->pointList[triplet_b[0]],
+                  &meshPtr->pointList[triplet_b[1]],
+                  &meshPtr->pointList[triplet_b[2]]},
+                 counter++});
+      meshPtr->elementList.emplace_back(
+        Triangle{{&meshPtr->pointList[triplet_t[0]],
+                  &meshPtr->pointList[triplet_t[1]],
+                  &meshPtr->pointList[triplet_t[2]]},
+                 counter++});
+    }
   meshPtr->buildConnectivity();
-
 }

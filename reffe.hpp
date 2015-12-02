@@ -48,3 +48,15 @@ struct RefTriangleP1
   static std::array<vectorFun_T,numPts> const dphiFun;
   static double constexpr volume = 0.5L;
 };
+
+struct RefQuadQ1
+{
+  static uint const dim = 2U;
+  static uint const numPts = 4U;
+  typedef Eigen::Matrix<double,numPts,1> LocalVec_T;
+  typedef Eigen::Matrix<double,numPts,numPts> LocalMat_T;
+
+  static std::array<scalarFun_T,numPts> const phiFun;
+  static std::array<vectorFun_T,numPts> const dphiFun;
+  static double constexpr volume = 4.L;
+};

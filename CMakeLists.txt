@@ -21,6 +21,7 @@ add_executable(main
   curfe.hpp
   bc.hpp
   fe.hpp
+  iomanager.hpp
 )
 
 # target_link_libraries(main Qt5::Gui)

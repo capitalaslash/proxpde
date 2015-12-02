@@ -6,6 +6,7 @@
 #include "geo.hpp"
 #include "bc.hpp"
 #include "fe.hpp"
+#include "iomanager.hpp"
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {
@@ -111,6 +112,10 @@ int main()
     }
   }
   std::cout<< "sol:\n" << sol << std::endl;
+
+  IOManager<Mesh_T> io(meshPtr);
+
+  io.print(sol);
 
   Vec exact = Vec::Zero(numPts);
   for(uint j=0; j<numPts_y; ++j)

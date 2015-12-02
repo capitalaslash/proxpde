@@ -45,3 +45,19 @@ template<> std::array<Vec3,3> const GaussQR<Triangle,3>::n =
   Vec3(0.5, 0.5, 0.),
   Vec3(0.0, 0.5, 0.)
 };
+
+template<> Eigen::Array<double,9,1> const GaussQR<Quad,9>::w = (Eigen::Array<double,9,1>() <<
+  25.L/81, 40.L/81, 25.L/81, 40.L/81, 64.L/81, 40.L/81, 25.L/81, 40.L/81, 25.L/81).finished();
+
+template<> std::array<Vec3,9> const GaussQR<Quad,9>::n =
+{
+  Vec3(-sqrt35th, -sqrt35th, 0.),
+  Vec3(       0., -sqrt35th, 0.),
+  Vec3( sqrt35th, -sqrt35th, 0.),
+  Vec3(-sqrt35th,        0., 0.),
+  Vec3(       0.,        0., 0.),
+  Vec3( sqrt35th,        0., 0.),
+  Vec3(-sqrt35th,  sqrt35th, 0.),
+  Vec3(       0.,  sqrt35th, 0.),
+  Vec3( sqrt35th,  sqrt35th, 0.)
+};

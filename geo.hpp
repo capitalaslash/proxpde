@@ -126,6 +126,36 @@ public:
   }
 };
 
+class Quad: public GeoElem
+{
+public:
+  static uint const numPts = 4U;
+  typedef std::array<Point*,numPts> PointList_T;
+
+  explicit Quad(std::initializer_list<Point*> list, id_T id):
+    GeoElem(list, id)
+  {}
+
+  Vec3 midpoint() const
+  {
+    return Vec3(0.25*(pointList[0]->coord
+                     +pointList[1]->coord
+                     +pointList[2]->coord
+                     +pointList[3]->coord));
+  }
+
+  Vec3 origin() const
+  {
+    return midpoint();
+  }
+
+  double volume() const
+  {
+    return ((pointList[2]->coord-pointList[0]->coord).cross(
+            (pointList[3]->coord-pointList[1]->coord))).norm();
+  }
+};
+
 template <typename Elem>
 class Mesh
 {

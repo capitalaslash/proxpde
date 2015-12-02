@@ -26,73 +26,46 @@ struct CurFE
 
   void reinit(GeoElem const & elem)
   {
-    J = Eigen::Matrix<double,RefFE::dim,RefFE::dim>::Zero();
-    for(uint i=0; i<RefFE::dim; ++i)
-      for(uint j=0; j<RefFE::dim; ++j)
-        for(uint n=0; n<RefFE::numPts; ++n)
-        {
-          double const pn_i = elem.pointList[n]->coord(i);
-          double const dphin_j = RefFE::dphiFun[n](elem.pointList[n]->coord)(j);
-          J(i,j) += pn_i * dphin_j;
-        }
-    std::cout << "J:\n" << J << std::endl;
-    detJ = J.determinant();
-    JmT = J.inverse().transpose();
-
-    Eigen::Matrix<double,3,3> J3d = Eigen::Matrix<double,3,3>::Identity();
-    for(uint i=0; i<RefFE::dim; ++i)
-      for(uint j=0; j<RefFE::dim; ++j)
-        J3d(i,j) = J(i,j);
-    map = [&J3d, &elem] (Vec3 const & p)
-    {
-      return elem.origin() + J3d * p;
-    };
-    // imap = [this, &elem] (Vec3 const & p)
-    // {
-    //   return (p - elem.midpoint()) * Jm1;
-    // };
-
+    std::array<Eigen::Matrix<double,3,3>,QR::numPts> J3d,JmT3d;
     for(uint q=0; q<QR::numPts; ++q)
     {
-      JxW[q] = detJ * QR::w[q];
-      qpoint[q] = map(QR::n[q]);
-    }
+      J[q] = Eigen::Matrix<double,RefFE::dim,RefFE::dim>::Zero();
+      for(uint n=0; n<RefFE::numPts; ++n)
+        for(uint i=0; i<RefFE::dim; ++i)
+          for(uint j=0; j<RefFE::dim; ++j)
+          {
+            double const pn_i = elem.pointList[n]->coord(i);
+            double const dphin_j = RefFE::dphiFun[n](QR::n[q])(j);
+            J[q](i,j) += pn_i * dphin_j;
+          }
+      detJ[q] = J[q].determinant();
+      JmT[q] = J[q].inverse().transpose();
 
-    // massMat = RefFE::massMat * Jm1;
-    // stiffMat = RefFE::gradMat * Jm1;
+      J3d[q] = Eigen::Matrix<double,3,3>::Identity();
+      for(uint i=0; i<RefFE::dim; ++i)
+        for(uint j=0; j<RefFE::dim; ++j)
+          J3d[q](i,j) = J[q](i,j);
+      JmT3d[q] = Eigen::Matrix<double,3,3>::Identity();
+      for(uint i=0; i<RefFE::dim; ++i)
+        for(uint j=0; j<RefFE::dim; ++j)
+          JmT3d[q](i,j) = JmT[q](i,j);
 
-    Eigen::Matrix<double,3,3> JmT3d = Eigen::Matrix<double,3,3>::Identity();
-    for(uint i=0; i<RefFE::dim; ++i)
-      for(uint j=0; j<RefFE::dim; ++j)
-        JmT3d(i,j) = JmT(i,j);
+      JxW[q] = detJ[q] * QR::w[q];
+      qpoint[q] = elem.origin() + J3d[q] * QR::n[q];
 
-    for(uint i=0; i<RefFE::numPts; ++i)
-    {
-      for(uint q=0; q<QR::numPts; ++q)
+      for(uint i=0; i<RefFE::numPts; ++i)
       {
         phi(i,q) = phiRef(i,q);
-        dphi(i,q) = JmT3d * dphiRef(i,q);
+        dphi(i,q) = JmT3d[q] * dphiRef(i,q);
       }
     }
-
-    // for(uint i=0; i<RefFE::numPts; ++i)
-    // {
-    //   phiFun[i]  = [this, i] (Vec3 const & p)
-    //   {
-    //     return RefFE::phiFun[i](imap(p));
-    //   };
-    //   dphiFun[i] = [this, i] (Vec3 const & p)
-    //   {
-    //     return RefFE::dphiFun[i](imap(p)) * Jm1;
-    //   };
-    // }
   }
 
   vectorFun_T map;
   // vectorFun_T imap;
-  Eigen::Matrix<double,RefFE::dim,RefFE::dim> J;
-  double detJ;
-  Eigen::Matrix<double,RefFE::dim,RefFE::dim> JmT;
+  std::array<Eigen::Matrix<double,RefFE::dim,RefFE::dim>,QR::numPts> J;
+  std::array<double,QR::numPts> detJ;
+  std::array<Eigen::Matrix<double,RefFE::dim,RefFE::dim>,QR::numPts> JmT;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
   Eigen::Array<double, RefFE::numPts, QR::numPts> phiRef;

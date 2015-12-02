@@ -26,46 +26,37 @@ struct CurFE
 
   void reinit(GeoElem const & elem)
   {
-    std::array<Eigen::Matrix<double,3,3>,QR::numPts> J3d,JmT3d;
+    uint const dim = RefFE::dim;
+    uint const codim = 3-dim;
     for(uint q=0; q<QR::numPts; ++q)
     {
-      J[q] = Eigen::Matrix<double,RefFE::dim,RefFE::dim>::Zero();
+      J[q] = Eigen::Matrix3d::Zero();
       for(uint n=0; n<RefFE::numPts; ++n)
-        for(uint i=0; i<RefFE::dim; ++i)
-          for(uint j=0; j<RefFE::dim; ++j)
-          {
-            double const pn_i = elem.pointList[n]->coord(i);
-            double const dphin_j = RefFE::dphiFun[n](QR::n[q])(j);
-            J[q](i,j) += pn_i * dphin_j;
-          }
+      {
+        J[q] += elem.pointList[n]->coord * RefFE::dphiFun[n](QR::n[q]).transpose();
+      }
+      // fill extra dimension with identity
+      J[q].block(dim,dim,codim,codim) = Eigen::Matrix<double,codim,codim>::Identity();
+
       detJ[q] = J[q].determinant();
       JmT[q] = J[q].inverse().transpose();
 
-      J3d[q] = Eigen::Matrix<double,3,3>::Identity();
-      for(uint i=0; i<RefFE::dim; ++i)
-        for(uint j=0; j<RefFE::dim; ++j)
-          J3d[q](i,j) = J[q](i,j);
-      JmT3d[q] = Eigen::Matrix<double,3,3>::Identity();
-      for(uint i=0; i<RefFE::dim; ++i)
-        for(uint j=0; j<RefFE::dim; ++j)
-          JmT3d[q](i,j) = JmT[q](i,j);
-
       JxW[q] = detJ[q] * QR::w[q];
-      qpoint[q] = elem.origin() + J3d[q] * QR::n[q];
+      qpoint[q] = elem.origin() + J[q] * QR::n[q];
 
       for(uint i=0; i<RefFE::numPts; ++i)
       {
         phi(i,q) = phiRef(i,q);
-        dphi(i,q) = JmT3d[q] * dphiRef(i,q);
+        dphi(i,q) = JmT[q] * dphiRef(i,q);
       }
     }
   }
 
   vectorFun_T map;
   // vectorFun_T imap;
-  std::array<Eigen::Matrix<double,RefFE::dim,RefFE::dim>,QR::numPts> J;
+  std::array<Eigen::Matrix3d,QR::numPts> J;
   std::array<double,QR::numPts> detJ;
-  std::array<Eigen::Matrix<double,RefFE::dim,RefFE::dim>,QR::numPts> JmT;
+  std::array<Eigen::Matrix3d,QR::numPts> JmT;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
   Eigen::Array<double, RefFE::numPts, QR::numPts> phiRef;

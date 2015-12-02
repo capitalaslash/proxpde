@@ -218,6 +218,11 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
                  Vec3 const& length,
                  std::array<uint, 2> const numPts);
 
+void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 std::array<uint, 2> const numPts);
+
 template <class Elem>
 struct MeshBuilder
 {
@@ -243,6 +248,18 @@ template <>
 struct MeshBuilder<Triangle>
 {
   void build(std::shared_ptr<Mesh<Triangle>> meshPtr,
+             Vec3 const& origin,
+             Vec3 const& length,
+             std::array<uint, 3> const numPts)
+  {
+    buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
+  }
+};
+
+template <>
+struct MeshBuilder<Quad>
+{
+  void build(std::shared_ptr<Mesh<Quad>> meshPtr,
              Vec3 const& origin,
              Vec3 const& length,
              std::array<uint, 3> const numPts)

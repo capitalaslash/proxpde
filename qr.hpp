@@ -79,3 +79,12 @@ template<> std::array<Vec3,2> const TrapQR<Line>::n =
   Vec3( 1., 0., 0.)
 };
 
+template<> Eigen::Array<double,3,1> const TrapQR<Triangle>::w =
+  Eigen::Array<double,3,1>::Constant(1.L/6);
+template<> std::array<Vec3,3> const TrapQR<Triangle>::n =
+{
+  Vec3( 0., 0., 0.),
+  Vec3( 1., 0., 0.),
+  Vec3( 0., 1., 0.)
+};
+

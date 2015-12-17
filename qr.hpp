@@ -61,3 +61,21 @@ template<> std::array<Vec3,9> const GaussQR<Quad,9>::n =
   Vec3(       0.,  sqrt35th, 0.),
   Vec3( sqrt35th,  sqrt35th, 0.)
 };
+
+template <typename GeoElem>
+struct TrapQR
+{
+  static uint const numPts = GeoElem::numPts;
+
+  static Eigen::Array<double,GeoElem::numPts,1> const w;
+  static std::array<Vec3,GeoElem::numPts> const n;
+};
+
+template<> Eigen::Array<double,2,1> const TrapQR<Line>::w =
+  Eigen::Array<double,2,1>::Constant(1.L);
+template<> std::array<Vec3,2> const TrapQR<Line>::n =
+{
+  Vec3(-1., 0., 0.),
+  Vec3( 1., 0., 0.)
+};
+

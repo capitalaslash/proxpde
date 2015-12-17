@@ -88,3 +88,12 @@ template<> std::array<Vec3,3> const TrapQR<Triangle>::n =
   Vec3( 0., 1., 0.)
 };
 
+template<> Eigen::Array<double,4,1> const TrapQR<Quad>::w =
+  Eigen::Array<double,4,1>::Constant(1.L);
+template<> std::array<Vec3,4> const TrapQR<Quad>::n =
+{
+  Vec3(-1.,-1., 0.),
+  Vec3(-1., 1., 0.),
+  Vec3( 1.,-1., 0.),
+  Vec3( 1., 1., 0.)
+};

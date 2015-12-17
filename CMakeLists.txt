@@ -24,4 +24,4 @@ add_executable(main
   iomanager.hpp
 )
 
-add_executable(eigen_test EXCLUDE_FROM_ALL test.cpp)
+add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)

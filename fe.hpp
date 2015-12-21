@@ -49,8 +49,61 @@ struct FESpace
   CurFE_T curFE;
 };
 
+template <typename CurFE>
+struct Assembly
+{
+  typedef CurFE CurFE_T;
+  typedef typename CurFE_T::LocalMat_T LMat_T;
+  typedef typename CurFE_T::LocalVec_T LVec_T;
+
+  explicit Assembly(scalarFun_T const & r, CurFE_T & cfe):
+    rhs(r),
+    curFE(cfe)
+  {}
+
+  void reinit(GeoElem const & elem)
+  {
+    curFE.reinit(elem);
+  }
+
+  virtual void build(LMat_T & Ke, LVec_T & Fe) = 0;
+
+  scalarFun_T const & rhs;
+  CurFE_T & curFE;
+};
+
+template <typename CurFE>
+struct AssemblyStiffness: public Assembly<CurFE>
+{
+  typedef CurFE CurFE_T;
+  typedef Assembly<CurFE> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyStiffness(scalarFun_T const & r, CurFE_T & cfe):
+    Assembly<CurFE>(r, cfe)
+  {}
+
+  void build(LMat_T & Ke, LVec_T & Fe)
+  {
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      double const f = this->rhs(this->curFE.qpoint[q]);
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      {
+        Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
+        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        {
+          Ke(i,j) += this->curFE.JxW[q] * (this->curFE.dphi(j, q).dot(this->curFE.dphi(i, q)));
+        }
+      }
+    }
+  }
+};
+
 template <typename FESpace>
 void buildProblem(FESpace feSpace,
+                  Assembly<typename FESpace::CurFE_T> & assembly,
                   scalarFun_T const& rhs,
                   bc_list<typename FESpace::Mesh_T> const& bcs,
                   Mat& A,
@@ -68,24 +121,14 @@ void buildProblem(FESpace feSpace,
 
   for(auto &e: feSpace.meshPtr->elementList)
   {
-    // --- set current fe ---
-    curFE.reinit(e);
     LMat_T Ke = LMat_T::Zero();
     LVec_T Fe = LVec_T::Zero();
 
+    // --- set current fe ---
+    assembly.reinit(e);
+
     // --- build local matrix and rhs ---
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
-    {
-      double const f = rhs(curFE.qpoint[q]);
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
-      {
-        Fe(i) += curFE.JxW[q] * curFE.phi(i, q) * f;
-        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
-        {
-          Ke(i,j) += curFE.JxW[q] * (curFE.dphi(j, q).dot(curFE.dphi(i, q)));
-        }
-      }
-    }
+    assembly.build(Ke, Fe);
 
     // --- apply bc ---
     // A_constrained = C^T A C

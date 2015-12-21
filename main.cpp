@@ -67,7 +67,9 @@ int main()
 
   FESpace_T feSpace(meshPtr);
 
-  buildProblem(feSpace, rhs, bcs, A, b);
+  AssemblyStiffness<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
+
+  buildProblem(feSpace, assembly, rhs, bcs, A, b);
 
   std::cout << "A:\n" << A << std::endl;
   std::cout << "b:\n" << b << std::endl;

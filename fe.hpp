@@ -101,6 +101,35 @@ struct AssemblyStiffness: public Assembly<CurFE>
   }
 };
 
+template <typename CurFE>
+struct AssemblyMass: public Assembly<CurFE>
+{
+  typedef CurFE CurFE_T;
+  typedef Assembly<CurFE> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyMass(scalarFun_T const & r, CurFE_T & cfe):
+    Assembly<CurFE>(r, cfe)
+  {}
+
+  void build(LMat_T & Ke, LVec_T & Fe)
+  {
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      double const f = this->rhs(this->curFE.qpoint[q]);
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      {
+        Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
+        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        {
+          Ke(i,j) += this->curFE.JxW[q] * this->curFE.phi(j, q) * this->curFE.phi(i, q);
+        }
+      }
+    }
+  }
+};
+
 template <typename FESpace>
 void buildProblem(FESpace feSpace,
                   Assembly<typename FESpace::CurFE_T> & assembly,

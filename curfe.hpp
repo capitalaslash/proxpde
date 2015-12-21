@@ -33,7 +33,7 @@ struct CurFE
       J[q] = Eigen::Matrix3d::Zero();
       for(uint n=0; n<RefFE::numPts; ++n)
       {
-        J[q] += elem.pointList[n]->coord * RefFE::dphiFun[n](QR::n[q]).transpose();
+        J[q] += elem.pointList[n]->coord * dphiRef(n, q).transpose();
       }
       // fill extra dimension with identity
       J[q].block(dim,dim,codim,codim) = Eigen::Matrix<double,codim,codim>::Identity();

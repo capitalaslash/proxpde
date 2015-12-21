@@ -2,9 +2,35 @@
 
 #include "def.hpp"
 
+template <typename Elem>
+struct XDMFTraits
+{
+  static constexpr char const * shape_name = "None";
+};
+
+template <>
+struct XDMFTraits<Line>
+{
+  static constexpr char const * shape_name = "Polyline";
+};
+
+template <>
+struct XDMFTraits<Triangle>
+{
+  static constexpr char const * shape_name = "Triangle";
+};
+
+template <>
+struct XDMFTraits<Quad>
+{
+  static constexpr char const * shape_name = "Quadrilateral";
+};
+
 template <typename Mesh>
 struct IOManager
 {
+  typedef XDMFTraits<typename Mesh::Elem_T> Traits_T;
+
   explicit IOManager(std::shared_ptr<Mesh> m):
     mesh(m)
   {}
@@ -24,7 +50,7 @@ struct IOManager
     fout << "  <Domain>" << std::endl;
     fout << "    <Grid GridType=\"Uniform\">" << std::endl;
     fout << "      <Time Value=\"" << 0.0 << "\" />" << std::endl;
-    fout << "      <Topology TopologyType=\"Triangle\" Dimensions=\"" << numElems << "\">" << std::endl;
+    fout << "      <Topology TopologyType=\"" << Traits_T::shape_name << "\" Dimensions=\"" << numElems << "\">" << std::endl;
     //  fout << "        <DataItem Dimensions=\"" << numElems << " " << Elem_T::numPts << "\" NumberType=\"Int\" Precision=\"8\" Format=\"HDF\">" << std::endl;
     fout << "        <DataItem Dimensions=\"" << numElems << " " << Mesh::Elem_T::numPts << "\" NumberType=\"Int\" Precision=\"8\" Format=\"XML\">" << std::endl;
     for(auto& e: mesh->elementList)

@@ -30,3 +30,6 @@ target_link_libraries(main minifem)
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
 target_link_libraries(test_eigen minifem)
+
+add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
+target_link_libraries(test_trap minifem)

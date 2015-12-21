@@ -71,16 +71,16 @@ std::array<vectorFun_T,RefTriangleP1::numPts> const RefTriangleP1::dphiFun =
 
 std::array<scalarFun_T,RefQuadQ1::numPts> const RefQuadQ1::phiFun =
 {
-  [] (Vec3 const & p) { return 0.25*(1-p(0))*(1-p(1)); },
-  [] (Vec3 const & p) { return 0.25*(1+p(0))*(1-p(1)); },
-  [] (Vec3 const & p) { return 0.25*(1+p(0))*(1+p(1)); },
-  [] (Vec3 const & p) { return 0.25*(1-p(0))*(1+p(1)); }
+  [] (Vec3 const & p) { return 0.25*(1.-p(0))*(1.-p(1)); },
+  [] (Vec3 const & p) { return 0.25*(1.+p(0))*(1.-p(1)); },
+  [] (Vec3 const & p) { return 0.25*(1.+p(0))*(1.+p(1)); },
+  [] (Vec3 const & p) { return 0.25*(1.-p(0))*(1.+p(1)); }
 };
 
 std::array<vectorFun_T,RefQuadQ1::numPts> const RefQuadQ1::dphiFun =
 {
-  [] (Vec3 const & p) { return Vec3(-1.L, -1.L, 0.0); },
-  [] (Vec3 const & p) { return Vec3( 1.L, -1.L, 0.0); },
-  [] (Vec3 const & p) { return Vec3( 1.L,  1.L, 0.0); },
-  [] (Vec3 const & p) { return Vec3(-1.L,  1.L, 0.0); }
+  [] (Vec3 const & p) { return Vec3(-0.25*(1.-p(1)), -0.25*(1.-p(0)), 0.0); },
+  [] (Vec3 const & p) { return Vec3( 0.25*(1.-p(1)), -0.25*(1.+p(0)), 0.0); },
+  [] (Vec3 const & p) { return Vec3( 0.25*(1.+p(1)),  0.25*(1.+p(0)), 0.0); },
+  [] (Vec3 const & p) { return Vec3(-0.25*(1.+p(1)),  0.25*(1.-p(0)), 0.0); }
 };

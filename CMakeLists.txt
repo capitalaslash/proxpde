@@ -10,18 +10,23 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 
 # find_package(Qt5Gui)
 
+add_library(minifem
+  geo.cpp
+  reffe.cpp
+)
+
 add_executable(main
   main.cpp
   def.hpp
   geo.hpp
-  geo.cpp
   reffe.hpp
-  reffe.cpp
   qr.hpp
   curfe.hpp
   bc.hpp
   fe.hpp
   iomanager.hpp
 )
+target_link_libraries(main minifem)
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
+target_link_libraries(test_eigen minifem)

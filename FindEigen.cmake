@@ -16,16 +16,14 @@ find_path(EIGEN_INCLUDE_DIR Eigen/Core
   PATH_SUFFIXES eigen eigen3
 )
 
+set(EIGEN_INCLUDE_DIRS ${EIGEN_INCLUDE_DIR})
+
 # handle the QUIETLY and REQUIRED arguments and set EIGEN_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Eigen
+find_package_handle_standard_args(Eigen
+  FOUND_VAR EIGEN_FOUND
   REQUIRED_VARS EIGEN_INCLUDE_DIR
 )
-
-# Copy the results to the output variables.
-if(EIGEN_FOUND)
-  set(EIGEN_INCLUDE_DIRS ${EIGEN_INCLUDE_DIR})
-endif()
 
 mark_as_advanced(EIGEN_INCLUDE_DIR)

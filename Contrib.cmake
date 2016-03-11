@@ -1,5 +1,32 @@
 include(ExternalProject)
 
+# eigen
+find_package(Eigen)
+if(EIGEN_FOUND)
+  message(STATUS "contrib: Eigen found in system path")
+else()
+  message(STATUS "contrib: Eigen not found: building")
+  externalproject_add(
+  ep_eigen
+  PREFIX ${CONTRIB_DIR}/eigen
+  URL http://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
+  URL_HASH SHA1=64f4aef8012a424c7e079eaf0be71793ab9bc6e0
+  STAMP_DIR ${CONTRIB_DIR}/stamp
+  DOWNLOAD_DIR ${CONTRIB_DIR}/src
+  SOURCE_DIR ${CONTRIB_DIR}/src/eigen
+  BINARY_DIR ${CONTRIB_DIR}/build/eigen
+  TMP_DIR ${CONTRIB_DIR}/eigen-tmp
+  INSTALL_DIR ${CONTRIB_DIR}/install/eigen
+  CONFIGURE_COMMAND ${CMAKE_COMMAND}
+    -G ${CMAKE_GENERATOR}
+    -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+    -DCMAKE_INSTALL_PREFIX:PATH=${CONTRIB_DIR}/install/eigen
+    ${CONTRIB_DIR}/src/eigen
+  )
+  set(EIGEN_INCLUDE_DIRS ${CONTRIB_DIR}/install/eigen/include/eigen3
+    CACHE FILEPATH "Eigen include" FORCE)
+endif()
+
 # tinyxml2
 find_package(TinyXML2)
 if(TINYXML2_FOUND)

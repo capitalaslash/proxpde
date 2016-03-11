@@ -9,7 +9,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 set(CONTRIB_DIR ${CMAKE_SOURCE_DIR}/contrib)
 include(Contrib)
 
-find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})
 
 # find_package(Qt5Gui)

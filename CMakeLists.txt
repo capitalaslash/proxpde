@@ -25,6 +25,7 @@ add_executable(main
   bc.hpp
   fe.hpp
   iomanager.hpp
+  xdmf_traits.hpp
 )
 target_link_libraries(main minifem)
 

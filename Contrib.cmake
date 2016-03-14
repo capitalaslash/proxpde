@@ -20,7 +20,7 @@ if(EIGEN_USE_INTERNAL)
   PREFIX ${CONTRIB_SOURCE_DIR}/eigen
   URL https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
   URL_HASH SHA1=64f4aef8012a424c7e079eaf0be71793ab9bc6e0
-  STAMP_DIR ${CONTRIB_SOURCE_DIR}/stamp
+  STAMP_DIR ${CONTRIB_BINARY_DIR}/stamp
   DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src
   SOURCE_DIR ${CONTRIB_SOURCE_DIR}/src/eigen
   BINARY_DIR ${CONTRIB_BINARY_DIR}/build/eigen
@@ -53,7 +53,7 @@ if(TINYXML2_USE_INTERNAL)
     PREFIX ${CONTRIB_SOURCE_DIR}/tinyxml2
     GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
     GIT_TAG master
-    STAMP_DIR ${CONTRIB_SOURCE_DIR}/stamp
+    STAMP_DIR ${CONTRIB_BINARY_DIR}/stamp
     DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src
     SOURCE_DIR ${CONTRIB_SOURCE_DIR}/src/tinyxml2
     BINARY_DIR ${CONTRIB_BINARY_DIR}/build/tinyxml2

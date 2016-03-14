@@ -37,10 +37,16 @@ if(EIGEN_USE_INTERNAL)
 endif()
 
 # tinyxml2
-find_package(TinyXML2)
-if(TINYXML2_FOUND)
-  message(STATUS "contrib: TinyXML2 found in system path")
-else()
+option(TINYXML2_USE_INTERNAL "Use internal self-compiled TinyXML2 library" ON)
+if(NOT TINYXML2_USE_INTERNAL)
+  find_package(TinyXML2)
+  if(TINYXML2_FOUND)
+    message(STATUS "contrib: TinyXML2 found in system path")
+  else()
+    set(TINYXML2_USE_INTERNAL ON)
+  endif()
+endif()
+if(TINYXML2_USE_INTERNAL)
   message(STATUS "contrib: TinyXML2 not found: building")
   externalproject_add(
     ep_tinyxml2

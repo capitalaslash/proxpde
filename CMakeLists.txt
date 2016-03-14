@@ -17,6 +17,12 @@ add_library(minifem
   geo.cpp
   reffe.cpp
 )
+if(EIGEN_USE_INTERNAL)
+  add_dependencies(minifem ep_eigen)
+endif()
+if(TINYXML2_USE_INTERNAL)
+  add_dependencies(minifem ep_tinyxml2)
+endif()
 
 add_executable(main
   main.cpp

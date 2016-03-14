@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -std=c++11")
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
 # add external packages in contrib dir
-set(CONTRIB_DIR ${CMAKE_SOURCE_DIR}/contrib)
+set(MINIFEM_CONTRIB_DIR contrib CACHE STRING "relative path to contrib dir")
 include(Contrib)
 
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})

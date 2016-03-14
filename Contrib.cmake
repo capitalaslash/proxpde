@@ -4,10 +4,16 @@ set(CONTRIB_SOURCE_DIR ${CMAKE_SOURCE_DIR}/${MINIFEM_CONTRIB_DIR})
 set(CONTRIB_BINARY_DIR ${CMAKE_BINARY_DIR}/${MINIFEM_CONTRIB_DIR})
 
 # eigen
-find_package(Eigen)
-if(EIGEN_FOUND)
-  message(STATUS "contrib: Eigen found in system path")
-else()
+option(EIGEN_USE_INTERNAL "Use internal self-compiled Eigen library" OFF)
+if(NOT EIGEN_USE_INTERNAL)
+  find_package(Eigen)
+  if(EIGEN_FOUND)
+    message(STATUS "contrib: Eigen found in system path")
+  else()
+    set(EIGEN_USE_INTERNAL ON)
+  endif()
+endif()
+if(EIGEN_USE_INTERNAL)
   message(STATUS "contrib: Eigen not found: building")
   externalproject_add(
   ep_eigen

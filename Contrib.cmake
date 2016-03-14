@@ -18,7 +18,7 @@ if(EIGEN_USE_INTERNAL)
   externalproject_add(
   ep_eigen
   PREFIX ${CONTRIB_SOURCE_DIR}/eigen
-  URL http://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
+  URL https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
   URL_HASH SHA1=64f4aef8012a424c7e079eaf0be71793ab9bc6e0
   STAMP_DIR ${CONTRIB_SOURCE_DIR}/stamp
   DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src

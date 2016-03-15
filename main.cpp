@@ -69,7 +69,7 @@ int main()
 
   FESpace_T feSpace(meshPtr);
 
-  AssemblyStiffness<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
+  AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
 

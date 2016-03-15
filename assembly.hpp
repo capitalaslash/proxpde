@@ -14,11 +14,6 @@ struct Assembly
     curFE(cfe)
   {}
 
-  void reinit(GeoElem const & elem)
-  {
-    curFE.reinit(elem);
-  }
-
   virtual void build(LMat_T & Ke, LVec_T & Fe) const = 0;
 
   scalarFun_T const & rhs;
@@ -95,7 +90,7 @@ void buildProblem(FESpace feSpace,
   typedef typename CurFE_T::LocalMat_T LMat_T;
   typedef typename CurFE_T::LocalVec_T LVec_T;
 
-  CurFE_T & curFE = feSpace.curFE;
+  auto & curFE = feSpace.curFE;
 
   std::vector<Tri> coefficients;
   // sparsity pattern
@@ -107,7 +102,7 @@ void buildProblem(FESpace feSpace,
     LVec_T Fe = LVec_T::Zero();
 
     // --- set current fe ---
-    assembly.reinit(e);
+    curFE.reinit(e);
 
     // --- build local matrix and rhs ---
     assembly.build(Ke, Fe);

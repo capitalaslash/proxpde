@@ -125,7 +125,7 @@ struct AssemblyPoisson: public Assembly<CurFE>
 };
 
 template <typename FESpace>
-void buildProblem(FESpace feSpace,
+void buildProblem(FESpace & feSpace,
                   Assembly<typename FESpace::CurFE_T> & assembly,
                   scalarFun_T const& rhs,
                   bc_list<typename FESpace::Mesh_T> const& bcs,

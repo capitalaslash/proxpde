@@ -19,7 +19,7 @@ struct Assembly
     curFE.reinit(elem);
   }
 
-  virtual void build(LMat_T & Ke, LVec_T & Fe) = 0;
+  virtual void build(LMat_T & Ke, LVec_T & Fe) const = 0;
 
   scalarFun_T const & rhs;
   CurFE_T & curFE;
@@ -37,7 +37,7 @@ struct AssemblyStiffness: public Assembly<CurFE>
     Assembly<CurFE>(r, cfe)
   {}
 
-  void build(LMat_T & Ke, LVec_T & Fe)
+  void build(LMat_T & Ke, LVec_T & Fe) const
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
@@ -66,7 +66,7 @@ struct AssemblyMass: public Assembly<CurFE>
     Assembly<CurFE>(r, cfe)
   {}
 
-  void build(LMat_T & Ke, LVec_T & Fe)
+  void build(LMat_T & Ke, LVec_T & Fe) const
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {

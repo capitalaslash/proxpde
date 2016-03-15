@@ -29,10 +29,12 @@ add_executable(main
   def.hpp
   geo.hpp
   reffe.hpp
-  qr.hpp
-  curfe.hpp
-  bc.hpp
   fe.hpp
+  fespace.hpp
+  curfe.hpp
+  qr.hpp
+  bc.hpp
+  assembly.hpp
   iomanager.hpp
   xdmf_traits.hpp
 )

@@ -9,14 +9,12 @@ struct Assembly
   typedef typename CurFE_T::LocalMat_T LMat_T;
   typedef typename CurFE_T::LocalVec_T LVec_T;
 
-  explicit Assembly(scalarFun_T const & r, CurFE_T & cfe):
-    rhs(r),
+  explicit Assembly(CurFE_T & cfe):
     curFE(cfe)
   {}
 
   virtual void build(LMat_T & Ke, LVec_T & Fe) const = 0;
 
-  scalarFun_T const & rhs;
   CurFE_T & curFE;
 };
 
@@ -28,18 +26,16 @@ struct AssemblyStiffness: public Assembly<CurFE>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyStiffness(scalarFun_T const & r, CurFE_T & cfe):
-    Assembly<CurFE>(r, cfe)
+  explicit AssemblyStiffness(CurFE_T & cfe):
+    Assembly<CurFE>(cfe)
   {}
 
   void build(LMat_T & Ke, LVec_T & Fe) const
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      double const f = this->rhs(this->curFE.qpoint[q]);
       for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
       {
-        Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
         for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
         {
           Ke(i,j) += this->curFE.JxW[q] * (this->curFE.dphi(j, q).dot(this->curFE.dphi(i, q)));
@@ -57,18 +53,16 @@ struct AssemblyMass: public Assembly<CurFE>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyMass(scalarFun_T const & r, CurFE_T & cfe):
-    Assembly<CurFE>(r, cfe)
+  explicit AssemblyMass(CurFE_T & cfe):
+    Assembly<CurFE>(cfe)
   {}
 
   void build(LMat_T & Ke, LVec_T & Fe) const
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      double const f = this->rhs(this->curFE.qpoint[q]);
       for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
       {
-        Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
         for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
         {
           Ke(i,j) += this->curFE.JxW[q] * this->curFE.phi(j, q) * this->curFE.phi(i, q);
@@ -76,6 +70,58 @@ struct AssemblyMass: public Assembly<CurFE>
       }
     }
   }
+};
+
+template <typename CurFE>
+struct AssemblyRhs: public Assembly<CurFE>
+{
+  typedef CurFE CurFE_T;
+  typedef Assembly<CurFE> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyRhs(scalarFun_T const & r, CurFE_T & cfe):
+    Assembly<CurFE>(cfe),
+    rhs(r)
+  {}
+
+  void build(LMat_T &, LVec_T & Fe) const
+  {
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      double const f = this->rhs(this->curFE.qpoint[q]);
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      {
+        Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
+      }
+    }
+  }
+
+  scalarFun_T const & rhs;
+};
+
+template <typename CurFE>
+struct AssemblyPoisson: public Assembly<CurFE>
+{
+  typedef CurFE CurFE_T;
+  typedef Assembly<CurFE> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyPoisson(scalarFun_T const & r, CurFE_T & cfe):
+    Assembly<CurFE>(cfe),
+    assemblyLhs(cfe),
+    assemblyRhs(r, cfe)
+  {}
+
+  void build(LMat_T & Ke, LVec_T & Fe) const
+  {
+    assemblyLhs.build(Ke, Fe);
+    assemblyRhs.build(Ke, Fe);
+  }
+
+  AssemblyStiffness<CurFE> assemblyLhs;
+  AssemblyRhs<CurFE> assemblyRhs;
 };
 
 template <typename FESpace>

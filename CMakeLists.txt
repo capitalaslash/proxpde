@@ -24,6 +24,8 @@ if(TINYXML2_USE_INTERNAL)
   add_dependencies(minifem ep_tinyxml2)
 endif()
 
+set(LIBS minifem ${TINYXML2_LIBRARIES})
+
 add_executable(main
   main.cpp
   def.hpp
@@ -38,10 +40,10 @@ add_executable(main
   iomanager.hpp
   xdmf_traits.hpp
 )
-target_link_libraries(main minifem ${TINYXML2_LIBRARIES})
+target_link_libraries(main ${LIBS})
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
-target_link_libraries(test_eigen minifem)
+target_link_libraries(test_eigen ${LIBS})
 
 add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
-target_link_libraries(test_trap minifem)
+target_link_libraries(test_trap ${LIBS})

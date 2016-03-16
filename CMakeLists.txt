@@ -48,3 +48,6 @@ target_link_libraries(test_eigen ${LIBS})
 
 add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
 target_link_libraries(test_trap ${LIBS})
+
+enable_testing()
+add_subdirectory(test)

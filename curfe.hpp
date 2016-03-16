@@ -24,6 +24,9 @@ struct CurFE
     }
   }
 
+  CurFE(CurFE const &) = delete;
+  CurFE operator=(CurFE const &) = delete;
+
   void reinit(GeoElem const & elem)
   {
     uint const dim = RefFE::dim;

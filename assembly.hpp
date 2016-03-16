@@ -185,9 +185,9 @@ void buildProblem(FESpace & feSpace,
       }
     }
 
-    std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-    std::cout << "Ke:\n" << Ke << std::endl;
-    std::cout << "Fe:\n" << Fe << std::endl;
+    // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+    // std::cout << "Ke:\n" << Ke << std::endl;
+    // std::cout << "Fe:\n" << Fe << std::endl;
 
     // --- store local values in global matrix and rhs ---
     for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)

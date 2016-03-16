@@ -13,6 +13,7 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})
 
 # find_package(Qt5Gui)
 
+include_directories(${CMAKE_SOURCE_DIR})
 add_library(minifem
   geo.cpp
   reffe.cpp

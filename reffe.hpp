@@ -3,6 +3,15 @@
 #include "def.hpp"
 #include "geo.hpp"
 
+template <typename RefElem>
+uint constexpr numDOFs()
+{
+  return 1 * RefElem::dof_place[0] +
+    // RefElem::numFaces * RefElem::dof_place[1] +
+    // RefElem::numEdges * RefElem::dof_place[2] +
+    RefElem::numPts * RefElem::dof_place[3];
+}
+
 struct RefLineP1
 {
   static uint constexpr dim = 1U;

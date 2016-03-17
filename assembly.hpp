@@ -101,6 +101,36 @@ struct AssemblyAnalyticalRhs: public Assembly<CurFE>
 };
 
 template <typename CurFE>
+struct AssemblyAdvection: public Assembly<CurFE>
+{
+  typedef CurFE CurFE_T;
+  typedef Assembly<CurFE> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyAdvection(Vec3 const u, CurFE_T & cfe):
+    Assembly<CurFE>(cfe),
+    vel(u)
+  {}
+
+  void build(LMat_T & Ke, LVec_T & Fe) const
+  {
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      {
+        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        {
+          Ke(i,j) += this->curFE.JxW[q] * vel * this->curFE.dphi(i, q);
+        }
+      }
+    }
+  }
+
+  Vec3 const vel;
+};
+
+template <typename CurFE>
 struct AssemblyPoisson: public Assembly<CurFE>
 {
   typedef CurFE CurFE_T;

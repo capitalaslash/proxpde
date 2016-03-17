@@ -73,14 +73,14 @@ struct AssemblyMass: public Assembly<CurFE>
 };
 
 template <typename CurFE>
-struct AssemblyRhs: public Assembly<CurFE>
+struct AssemblyAnalyticalRhs: public Assembly<CurFE>
 {
   typedef CurFE CurFE_T;
   typedef Assembly<CurFE> Super_T;
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyRhs(scalarFun_T const & r, CurFE_T & cfe):
+  explicit AssemblyAnalyticalRhs(scalarFun_T const & r, CurFE_T & cfe):
     Assembly<CurFE>(cfe),
     rhs(r)
   {}
@@ -121,7 +121,7 @@ struct AssemblyPoisson: public Assembly<CurFE>
   }
 
   AssemblyStiffness<CurFE> assemblyLhs;
-  AssemblyRhs<CurFE> assemblyRhs;
+  AssemblyAnalyticalRhs<CurFE> assemblyRhs;
 };
 
 template <typename FESpace>

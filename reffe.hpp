@@ -5,8 +5,9 @@
 
 struct RefLineP1
 {
-  static uint const dim = 1U;
-  static uint const numPts = 2U;
+  static uint constexpr dim = 1U;
+  static uint constexpr numPts = 2U;
+  static std::array<uint,4> constexpr dof_place{0,0,0,1};
   typedef Line GeoElem_T;
   typedef Eigen::Vector2d LocalVec_T;
   typedef Eigen::Matrix2d LocalMat_T;
@@ -22,8 +23,9 @@ struct RefLineP1
 
 struct RefLineP2
 {
-  static uint const dim = 1U;
-  static uint const numPts = 3U;
+  static uint constexpr dim = 1U;
+  static uint constexpr numPts = 3U;
+  static std::array<uint,4> constexpr dof_place{1,0,0,1};
   typedef Line GeoElem_T;
   typedef Eigen::Vector3d LocalVec_T;
   typedef Eigen::Matrix3d LocalMat_T;
@@ -39,8 +41,9 @@ struct RefLineP2
 
 struct RefTriangleP1
 {
-  static uint const dim = 2U;
-  static uint const numPts = 3U;
+  static uint constexpr dim = 2U;
+  static uint constexpr numPts = 3U;
+  static std::array<uint,4> constexpr dof_place{0,0,0,1};
   typedef Eigen::Matrix<double,numPts,1> LocalVec_T;
   typedef Eigen::Matrix<double,numPts,numPts> LocalMat_T;
 
@@ -51,8 +54,9 @@ struct RefTriangleP1
 
 struct RefQuadQ1
 {
-  static uint const dim = 2U;
-  static uint const numPts = 4U;
+  static uint constexpr dim = 2U;
+  static uint constexpr numPts = 4U;
+  static std::array<uint,4> constexpr dof_place{0,0,0,1};
   typedef Eigen::Matrix<double,numPts,1> LocalVec_T;
   typedef Eigen::Matrix<double,numPts,numPts> LocalMat_T;
 

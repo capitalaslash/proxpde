@@ -32,6 +32,7 @@ add_executable(main
   def.hpp
   geo.hpp
   reffe.hpp
+  dof.hpp
   fe.hpp
   fespace.hpp
   curfe.hpp

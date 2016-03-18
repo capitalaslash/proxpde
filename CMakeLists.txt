@@ -15,7 +15,7 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})
 
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(minifem
-  geo.cpp
+  mesh.cpp
   reffe.cpp
 )
 if(EIGEN_USE_INTERNAL)
@@ -31,6 +31,7 @@ add_executable(main
   main.cpp
   def.hpp
   geo.hpp
+  mesh.hpp
   reffe.hpp
   dof.hpp
   fe.hpp

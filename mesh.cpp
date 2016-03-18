@@ -1,4 +1,4 @@
-#include "geo.hpp"
+#include "mesh.hpp"
 
 void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
                  Vec3 const& origin,

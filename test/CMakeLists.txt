@@ -5,6 +5,13 @@ add_test(
   COMMAND poisson1d
 )
 
+add_executable(poisson1d_p2 poisson1d_p2.cpp)
+target_link_libraries(poisson1d_p2 ${LIBS})
+add_test(
+  NAME poisson1d_p2
+  COMMAND poisson1d_p2
+)
+
 add_executable(poisson2dtri poisson2dtri.cpp)
 target_link_libraries(poisson2dtri ${LIBS})
 add_test(

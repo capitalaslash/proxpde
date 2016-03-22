@@ -34,9 +34,9 @@ struct AssemblyStiffness: public Assembly<CurFE>
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) += this->curFE.JxW[q] * (this->curFE.dphi(j, q).dot(this->curFE.dphi(i, q)));
         }
@@ -61,9 +61,9 @@ struct AssemblyMass: public Assembly<CurFE>
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) += this->curFE.JxW[q] * this->curFE.phi(j, q) * this->curFE.phi(i, q);
         }
@@ -90,7 +90,7 @@ struct AssemblyAnalyticalRhs: public Assembly<CurFE>
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       double const f = this->rhs(this->curFE.qpoint[q]);
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         Fe(i) += this->curFE.JxW[q] * this->curFE.phi(i, q) * f;
       }
@@ -117,9 +117,9 @@ struct AssemblyAdvection: public Assembly<CurFE>
   {
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) += this->curFE.JxW[q] * vel * this->curFE.dphi(i, q);
         }
@@ -158,7 +158,7 @@ template <typename FESpace>
 void buildProblem(FESpace & feSpace,
                   Assembly<typename FESpace::CurFE_T> & assembly,
                   scalarFun_T const& rhs,
-                  bc_list<typename FESpace::Mesh_T> const& bcs,
+                  bc_list<FESpace> const& bcs,
                   Mat& A,
                   Vec& b)
 {
@@ -193,21 +193,22 @@ void buildProblem(FESpace & feSpace,
     {
       LMat_T C = LMat_T::Identity();
       LVec_T h = LVec_T::Zero();
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        Point const& p = *e.pointList[i];
-        if(bc.is_constrained(p))
+        DOFid_T const id = feSpace.dof._map[e.id][i];
+        if(bc.is_constrained(id))
         {
-          h(i) = bc.value(p.coord);
+          h(i) = bc.value(curFE.dofPts[i]);
           C(i,i) = 0.;
         }
       }
       Ke = C * Ke * C;
       Fe = C * (Fe - curFE.stiffMat * h);
 
-      for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        if(bc.is_constrained(*e.pointList[i]))
+        DOFid_T const id = feSpace.dof._map[e.id][i];
+        if(bc.is_constrained(id))
         {
           Ke(i,i) = 1.0;
           Fe(i) = h[i];
@@ -220,13 +221,13 @@ void buildProblem(FESpace & feSpace,
     // std::cout << "Fe:\n" << Fe << std::endl;
 
     // --- store local values in global matrix and rhs ---
-    for(uint i=0; i<CurFE_T::RefFE_T::numPts; ++i)
+    for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
     {
-      const id_T id_i = e.pointList[i]->id;
+      const DOFid_T id_i = feSpace.dof._map[e.id][i];
       b(id_i) += Fe(i);
-      for(uint j=0; j<CurFE_T::RefFE_T::numPts; ++j)
+      for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
       {
-        const id_T id_j = e.pointList[j]->id;
+        const DOFid_T id_j = feSpace.dof._map[e.id][j];
         coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));
       }
     }

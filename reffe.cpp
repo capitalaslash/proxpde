@@ -42,16 +42,16 @@ std::array<Vec3,RefLineP2::numFuns> const RefLineP2::points =
 
 std::array<scalarFun_T,RefLineP2::numFuns> const RefLineP2::phiFun =
 {
-  [] (Vec3 const & p) { return 0.5*(p(0)-1)*p(0); },
-  [] (Vec3 const & p) { return 0.5*(p(0)+1)*p(0); },
-  [] (Vec3 const & p) { return 1-p(0)*p(0); }
+  [] (Vec3 const & p) { return 0.5*p(0)*(p(0)-1.); },
+  [] (Vec3 const & p) { return 0.5*p(0)*(p(0)+1.); },
+  [] (Vec3 const & p) { return 1.-p(0)*p(0); }
 };
 
-std::array<vectorFun_T,RefLineP2::numPts> const RefLineP2::dphiFun =
+std::array<vectorFun_T,RefLineP2::numFuns> const RefLineP2::dphiFun =
 {
-  [] (Vec3 const & p) { return Vec3(0.5*(2.*p(0)-1.), 0.0, 0.0); },
-  [] (Vec3 const & p) { return Vec3(0.5*(2.*p(0)+1.), 0.0, 0.0); },
-  [] (Vec3 const & p) { return Vec3(      1.-2.*p(0), 0.0, 0.0); }
+  [] (Vec3 const & p) { return Vec3(p(0)-0.5, 0.0, 0.0); },
+  [] (Vec3 const & p) { return Vec3(p(0)+0.5, 0.0, 0.0); },
+  [] (Vec3 const & p) { return Vec3(-2.*p(0), 0.0, 0.0); }
 };
 
 RefLineP2::LocalMat_T const RefLineP2::massMat =

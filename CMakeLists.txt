@@ -13,6 +13,22 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})
 
 # find_package(Qt5Gui)
 
+set(MINIFEM_HEADERS
+  def.hpp
+  geo.hpp
+  mesh.hpp
+  reffe.hpp
+  dof.hpp
+  fe.hpp
+  fespace.hpp
+  curfe.hpp
+  qr.hpp
+  bc.hpp
+  assembly.hpp
+  iomanager.hpp
+  xdmf_traits.hpp
+ )
+
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(minifem
   mesh.cpp
@@ -29,19 +45,7 @@ set(LIBS minifem ${TINYXML2_LIBRARIES})
 
 add_executable(main
   main.cpp
-  def.hpp
-  geo.hpp
-  mesh.hpp
-  reffe.hpp
-  dof.hpp
-  fe.hpp
-  fespace.hpp
-  curfe.hpp
-  qr.hpp
-  bc.hpp
-  assembly.hpp
-  iomanager.hpp
-  xdmf_traits.hpp
+  ${MINIFEM_HEADERS}
 )
 target_link_libraries(main ${LIBS})
 

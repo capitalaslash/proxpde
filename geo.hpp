@@ -46,7 +46,7 @@ struct GeoElem: public DOFobject
 {
   typedef std::vector<Point*> PointList_T;
 
-  explicit GeoElem(std::initializer_list<Point*> list, id_T i):
+  explicit GeoElem(std::initializer_list<Point*> list, id_T i = -1):
     pointList(list),
     id(i)
   {}
@@ -78,7 +78,7 @@ public:
   typedef Eigen::Matrix2d LocalMat_T;
   typedef std::vector<Point*> PointList_T;
 
-  explicit Line(std::initializer_list<Point*> list, id_T id):
+  explicit Line(std::initializer_list<Point*> list, id_T id = -1):
     GeoElem(list, id)
   {}
 
@@ -104,7 +104,7 @@ public:
   static uint const numPts = 3U;
   typedef std::array<Point*,numPts> PointList_T;
 
-  explicit Triangle(std::initializer_list<Point*> list, id_T id):
+  explicit Triangle(std::initializer_list<Point*> list, id_T id = -1):
     GeoElem(list, id)
   {}
 
@@ -133,7 +133,7 @@ public:
   static uint const numPts = 4U;
   typedef std::array<Point*,numPts> PointList_T;
 
-  explicit Quad(std::initializer_list<Point*> list, id_T id):
+  explicit Quad(std::initializer_list<Point*> list, id_T id = -1):
     GeoElem(list, id)
   {}
 

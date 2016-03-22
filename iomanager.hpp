@@ -6,27 +6,30 @@
 #include <fstream>
 #include <tinyxml2.h>
 
-template <typename Mesh>
+template <typename FESpace>
 struct IOManager
 {
-  typedef XDMFTraits<typename Mesh::Elem_T> Traits_T;
+  typedef typename FESpace::Mesh_T::Elem_T Elem_T;
+  typedef std::shared_ptr<typename FESpace::Mesh_T> MeshPtr_T;
+  typedef XDMFTraits<Elem_T> Traits_T;
 
-  explicit IOManager(std::shared_ptr<Mesh> m):
-    mesh(m)
+  explicit IOManager(FESpace const & space):
+    feSpace(space)
   {}
 
   void print(Vec const& sol);
 
-  std::shared_ptr<Mesh> mesh;
+  FESpace const & feSpace;
 };
 
 // implementation --------------------------------------------------------------
 
-template <typename Mesh>
-void IOManager<Mesh>::print(Vec const& sol)
+template <typename FESpace>
+void IOManager<FESpace>::print(Vec const& sol)
 {
-  uint const numPts = mesh->pointList.size();
-  uint const numElems = mesh->elementList.size();
+  typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
+  uint const numPts = mesh.pointList.size();
+  uint const numElems = mesh.elementList.size();
 
   //  system("mkdir -p output");
   const std::string fileName = "sol.xmf";
@@ -59,13 +62,13 @@ void IOManager<Mesh>::print(Vec const& sol)
 
   auto topodata_el = doc.NewElement("DataItem");
   topodata_el->SetAttribute("Dimensions",
-    (std::to_string(numElems) + " " + std::to_string(Mesh::Elem_T::numPts)).c_str());
+    (std::to_string(numElems) + " " + std::to_string(Elem_T::numPts)).c_str());
   topodata_el->SetAttribute("NumberType", "Int");
   topodata_el->SetAttribute("Precision", 8);
   topodata_el->SetAttribute("Format", "XML");
   std::stringstream buf;
   buf << std::endl;
-  for(auto& e: mesh->elementList)
+  for(auto& e: mesh.elementList)
   {
     for(auto n: e.pointList)
       buf << n->id << " ";
@@ -87,7 +90,7 @@ void IOManager<Mesh>::print(Vec const& sol)
   geodata_el->SetAttribute("Format", "XML");
   buf.str("");
   buf << std::endl;
-  for(auto &p: mesh->pointList)
+  for(auto &p: mesh.pointList)
   {
     buf << p.coord[0] << " " << p.coord[1] << " " << p.coord[2] << std::endl;
   }
@@ -97,6 +100,16 @@ void IOManager<Mesh>::print(Vec const& sol)
 
   for(auto& data: {sol})
   {
+    Vec print_data(numPts);
+    for(auto const & e: mesh.elementList)
+    {
+      uint count = 0;
+      for(auto const & p: e.pointList)
+      {
+        print_data(p->id) = data(feSpace.dof._map[e.id][count]);
+        count++;
+      }
+    }
     std::string const varName = "sol";
     auto var_el = doc.NewElement("Attribute");
     var_el->SetAttribute("Name", varName.c_str());
@@ -115,7 +128,7 @@ void IOManager<Mesh>::print(Vec const& sol)
     buf << std::endl;
     for(uint p=0; p<numPts; ++p)
     {
-      buf << data(p) << "\n";
+      buf << print_data(p) << "\n";
     }
     // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
     vardata_el->SetText(buf.str().c_str());

@@ -5,8 +5,9 @@
 #include <memory>
 
 #include "def.hpp"
+#include "dof_object.hpp"
 
-class Point
+class Point: public DOFobject
 {
 public:
   explicit Point(Vec3 const & c = Vec3::Zero(),
@@ -41,7 +42,7 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
   return out;
 }
 
-struct GeoElem
+struct GeoElem: public DOFobject
 {
   typedef std::vector<Point*> PointList_T;
 

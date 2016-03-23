@@ -2,19 +2,19 @@
 
 std::array<uint,4> constexpr RefLineP1::dof_place;
 
-std::array<Vec3,RefLineP1::numPts> const RefLineP1::points =
+std::array<Vec3,RefLineP1::numFuns> const RefLineP1::points =
 {
   Vec3(-1.L, 0., 0.),
   Vec3( 1.L, 0., 0.)
 };
 
-std::array<scalarFun_T,RefLineP1::numPts> const RefLineP1::phiFun =
+std::array<scalarFun_T,RefLineP1::numFuns> const RefLineP1::phiFun =
 {
   [] (Vec3 const & p) { return 0.5*(1-p(0)); },
   [] (Vec3 const & p) { return 0.5*(1+p(0)); }
 };
 
-std::array<vectorFun_T,RefLineP1::numPts> const RefLineP1::dphiFun =
+std::array<vectorFun_T,RefLineP1::numFuns> const RefLineP1::dphiFun =
 {
   [] (Vec3 const & p) { return Vec3(-0.5L, 0.0, 0.0); },
   [] (Vec3 const & p) { return Vec3(+0.5L, 0.0, 0.0); }
@@ -65,14 +65,14 @@ RefLineP2::LocalMat_T const RefLineP2::gradMat =
 
 std::array<uint,4> constexpr RefTriangleP1::dof_place;
 
-std::array<scalarFun_T,RefTriangleP1::numPts> const RefTriangleP1::phiFun =
+std::array<scalarFun_T,RefTriangleP1::numFuns> const RefTriangleP1::phiFun =
 {
   [] (Vec3 const & p) { return 1.L - p(0) - p(1); },
   [] (Vec3 const & p) { return p(0); },
   [] (Vec3 const & p) { return p(1); }
 };
 
-std::array<vectorFun_T,RefTriangleP1::numPts> const RefTriangleP1::dphiFun =
+std::array<vectorFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
 {
   [] (Vec3 const & p) { return Vec3(-1.L, -1.L, 0.0); },
   [] (Vec3 const & p) { return Vec3( 1.L,  0.0, 0.0); },
@@ -81,7 +81,7 @@ std::array<vectorFun_T,RefTriangleP1::numPts> const RefTriangleP1::dphiFun =
 
 std::array<uint,4> constexpr RefQuadQ1::dof_place;
 
-std::array<scalarFun_T,RefQuadQ1::numPts> const RefQuadQ1::phiFun =
+std::array<scalarFun_T,RefQuadQ1::numFuns> const RefQuadQ1::phiFun =
 {
   [] (Vec3 const & p) { return 0.25*(1.-p(0))*(1.-p(1)); },
   [] (Vec3 const & p) { return 0.25*(1.+p(0))*(1.-p(1)); },
@@ -89,7 +89,7 @@ std::array<scalarFun_T,RefQuadQ1::numPts> const RefQuadQ1::phiFun =
   [] (Vec3 const & p) { return 0.25*(1.-p(0))*(1.+p(1)); }
 };
 
-std::array<vectorFun_T,RefQuadQ1::numPts> const RefQuadQ1::dphiFun =
+std::array<vectorFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
 {
   [] (Vec3 const & p) { return Vec3(-0.25*(1.-p(1)), -0.25*(1.-p(0)), 0.0); },
   [] (Vec3 const & p) { return Vec3( 0.25*(1.-p(1)), -0.25*(1.+p(0)), 0.0); },

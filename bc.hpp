@@ -19,7 +19,6 @@ public:
       if(p.marker == marker)
       {
         point_set.insert(p.dof_ids[0]);
-        // std::cout << "inserting " << p.id << " " << p.marker << " " << marker << std::endl;
       }
     }
   }
@@ -43,6 +42,25 @@ public:
   bool_array vec;
   std::set<DOFid_T> point_set;
 };
+
+template <typename FESpace>
+std::ostream & operator<<(std::ostream & out, bc_ess<FESpace> const & bc)
+{
+  out << "bc on marker " << bc.marker << "\n";
+  out << "bool vec: ";
+  for(uint i=0; i<bc.vec.size(); i++)
+  {
+    out << bc.vec(i) << " ";
+  }
+  out << "\n";
+  out << "point_set: ";
+  for(auto & i: bc.point_set)
+  {
+    out << i << " ";
+  }
+  out << "\n";
+  return out;
+}
 
 template <typename FESpace>
 class bc_list: public std::vector<bc_ess<FESpace>>
@@ -75,3 +93,21 @@ public:
 
   bool_array vec;
 };
+
+template <typename FESpace>
+std::ostream & operator<<(std::ostream & out, bc_list<FESpace> const & bclist)
+{
+  out << "bc list\n";
+  for(auto & bc: bclist)
+  {
+    out << bc << "\n";
+  }
+  out << "bool vec: ";
+  for(uint i=0; i<bclist.vec.size(); i++)
+  {
+    out << bclist.vec(i) << " ";
+  }
+  out << "\n";
+
+  return out;
+}

@@ -7,11 +7,14 @@ struct DOF
 {
   static uint constexpr _clms = numDOFs<RefFE>();
   typedef std::vector<std::array<DOFid_T,_clms>> ElemMap_T;
+  typedef std::vector<DOFid_T> PtMap_T;
+
   explicit DOF(Mesh & mesh):
     _rows(mesh.elementList.size())
   {
     std::cout << "_clms = " << _clms << std::endl;
     elemMap.resize(_rows);
+    ptMap.resize(mesh.pointList.size());
     uint dof_count = 0;
     for(auto & e: mesh.elementList)
     {
@@ -30,6 +33,7 @@ struct DOF
             {
               p->dof_ids[i] = dof_count;
               elemMap[e.id][local_dof_count] = dof_count;
+              ptMap[p->id] = dof_count;
               dof_count++;
               local_dof_count++;
             }
@@ -39,6 +43,7 @@ struct DOF
             for(uint i=0; i<RefFE::dof_place[3]; i++)
             {
               elemMap[e.id][local_dof_count] = p->dof_ids[i];
+              ptMap[p->id] = p->dof_ids[i];
               local_dof_count++;
             }
           }
@@ -75,18 +80,26 @@ struct DOF
 
   uint _rows;
   ElemMap_T elemMap;
+  PtMap_T ptMap;
   uint num;
 };
 
 template <typename Mesh, typename RefFE>
 inline std::ostream & operator<<(std::ostream & out, DOF<Mesh, RefFE> const & dof)
 {
-  out << "DOF map with " << dof._rows << " and " << dof._clms << "\n";
+  out << "DOF map\n";
+  out << "elemMap: " << dof._rows << "x" << dof._clms << "\n";
   for(auto & row: dof.elemMap)
   {
     for(auto & id: row)
       out << id << " ";
     out << "\n";
   }
+  out << "ptMap: " << dof.ptMap.size() << "\n";
+  for(auto & i: dof.ptMap)
+  {
+    out << i << " ";
+  }
+  out << "\n";
   return out;
 }

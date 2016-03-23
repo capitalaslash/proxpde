@@ -47,11 +47,11 @@ int main()
   std::cout << *meshPtr << std::endl;
 
   // bc setup
-//  bc_ess<Mesh_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
-//  bc_ess<Mesh_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 1.;});
+//  bc_ess<FESpace_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
+//  bc_ess<FESpace_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 1.;});
 
   // empty bcs
-  bc_list<Mesh_T> bcs{};
+  bc_list<FESpace_T> bcs{};
   bcs.init(numPts);
 
   Mat A(numPts,numPts);
@@ -89,7 +89,7 @@ int main()
   sol = solver.solve(b);
   std::cout<< "sol:\n" << sol << std::endl;
 
-  IOManager<Mesh_T> io(meshPtr);
+  IOManager<FeSpace_T> io(feSpace);
 
   io.print(sol);
 

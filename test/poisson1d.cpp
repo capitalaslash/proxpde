@@ -35,14 +35,14 @@ int main(int argc, char* argv[])
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts, 0, 0});
 
-  bc_ess<Mesh_T> left(*meshPtr, side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_list<Mesh_T> bcs{left};
-  bcs.init(numPts);
-
-  Mat A(numPts, numPts);
-  Vec b = Vec::Zero(numPts);
-
   FESpace_T feSpace(meshPtr);
+
+  bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
+  bc_list<FESpace_T> bcs{feSpace, {left}};
+  bcs.init();
+
+  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
+  Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
@@ -54,10 +54,10 @@ int main(int argc, char* argv[])
   solver.factorize(A);
   sol = solver.solve(b);
 
-  Vec exact = Vec::Zero(numPts);
-  for(uint i=0; i<numPts; ++i)
+  Vec exact = Vec::Zero(feSpace.dof.totalNum);
+  for(uint i=0; i<feSpace.dof.totalNum; ++i)
   {
-    exact(i) = exact_sol(meshPtr->pointList[i].coord);
+    exact(feSpace.dof.ptMap[i]) = exact_sol(meshPtr->pointList[i].coord);
   }
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;

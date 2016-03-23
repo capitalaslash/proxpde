@@ -4,28 +4,6 @@
 #include "reffe.hpp"
 #include "qr.hpp"
 
-// trick to perform partial specialization of a class method without partial
-// specializing the whole class
-template <typename RefFE>
-struct dofPts_impl
-{
-  static std::array<Vec3,RefFE::numFuns> reinit(GeoElem const & elem);
-};
-
-template <>
-struct dofPts_impl<RefLineP2>
-{
-  static std::array<Vec3,3> reinit(GeoElem const & elem)
-  {
-    std::array<Vec3,3> pts = {
-      elem.pointList[0]->coord,
-      elem.pointList[1]->coord,
-      elem.midpoint()
-    };
-    return std::move(pts);
-  }
-};
-
 template <typename RefFE, typename QR>
 struct CurFE
 {
@@ -49,13 +27,11 @@ struct CurFE
   CurFE(CurFE const &) = delete;
   CurFE operator=(CurFE const &) = delete;
 
-  friend struct dofPts_impl<RefFE>;
-
   void reinit(GeoElem const & elem)
   {
     uint const dim = RefFE::dim;
     uint const codim = 3-dim;
-    dofPts = dofPts_impl<RefFE>::reinit(elem);
+    dofPts = RefFE::dofPts(elem);
 
     for(uint q=0; q<QR::numPts; ++q)
     {

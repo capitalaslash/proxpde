@@ -21,11 +21,11 @@ public:
         point_set.insert(p.dof_ids[0]);
       }
     }
+    vec = bool_array::Constant(feSpace.dof.totalNum, false);
   }
 
-  void init(uint const numPts)
+  void init()
   {
-    vec = bool_array::Constant(numPts, false);
     for(auto& id: point_set)
     {
       vec[id] = true;
@@ -66,18 +66,19 @@ template <typename FESpace>
 class bc_list: public std::vector<bc_ess<FESpace>>
 {
 public:
-  bc_list(std::initializer_list<bc_ess<FESpace>> list):
+  bc_list(FESpace const & feSpace, std::initializer_list<bc_ess<FESpace>> list):
     std::vector<bc_ess<FESpace>>(list)
-    {}
+  {
+    vec = bool_array::Constant(feSpace.dof.totalNum, false);
+  }
 
-  void init(uint const numPts)
+  void init()
   {
     for(auto& bc: *this)
     {
-      bc.init(numPts);
+      bc.init();
     }
-    vec = bool_array::Constant(numPts, false);
-    for(uint i=0; i<numPts; ++i)
+    for(uint i=0; i<vec.size(); ++i)
     {
       for(auto& bc: *this)
       {

@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
   FESpace_T feSpace(meshPtr);
 
   bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_list<FESpace_T> bcs{left};
-  bcs.init(feSpace.dof.totalNum);
+  bc_list<FESpace_T> bcs{feSpace, {left}};
+  bcs.init();
 
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);

@@ -28,7 +28,6 @@ int main(int argc, char* argv[])
 {
   uint const numPts_x = (argc < 3)? 11 : std::stoi(argv[1]);
   uint const numPts_y = (argc < 3)? 11 : std::stoi(argv[2]);
-  uint const numPts = numPts_x * numPts_y;
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -38,15 +37,17 @@ int main(int argc, char* argv[])
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
 
-  bc_ess<Mesh_T> left(*meshPtr, side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_ess<Mesh_T> bottom(*meshPtr, side::BOTTOM, [] (Vec3 const&) {return 0.;});
-  bc_list<Mesh_T> bcs{left, bottom};
-  bcs.init(numPts);
-
-  Mat A(numPts, numPts);
-  Vec b = Vec::Zero(numPts);
-
   FESpace_T feSpace(meshPtr);
+  std::cout << feSpace.dof << std::endl;
+
+  bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
+  bc_ess<FESpace_T> bottom(feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;});
+  bc_list<FESpace_T> bcs{feSpace, {left, bottom}};
+  bcs.init();
+  std::cout << bcs << std::endl;
+
+  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
+  Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
@@ -58,13 +59,13 @@ int main(int argc, char* argv[])
   solver.factorize(A);
   sol = solver.solve(b);
 
-  IOManager<Mesh_T> io(meshPtr);
+  IOManager<FESpace_T> io(feSpace);
   io.print(sol);
 
-  Vec exact = Vec::Zero(numPts);
-  for(uint i=0; i<numPts; ++i)
+  Vec exact = Vec::Zero(feSpace.dof.totalNum);
+  for(uint i=0; i<feSpace.dof.totalNum; ++i)
   {
-    exact(i) = exact_sol(meshPtr->pointList[i].coord);
+    exact(feSpace.dof.ptMap[i]) = exact_sol(meshPtr->pointList[i].coord);
   }
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;

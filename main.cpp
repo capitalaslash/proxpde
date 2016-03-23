@@ -54,27 +54,27 @@ int main()
 
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
-  std::cout << *meshPtr << std::endl;
-
-  // bc setup
-  bc_ess<Mesh_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_ess<Mesh_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 0.;});
-
-  // right bc not used here
-  bc_list<Mesh_T> bcs {left};
-  bcs.init(numPts);
-
-  Mat A(numPts,numPts);
-  Vec b = Vec::Zero(numPts);
+  // std::cout << *meshPtr << std::endl;
 
   FESpace_T feSpace(meshPtr);
+
+  // bc setup
+  bc_ess<FESpace_T>  left(feSpace,  side::LEFT, [] (Vec3 const&) {return 0.;});
+//  bc_ess<FESpace_T> right(feSpace, side::RIGHT, [] (Vec3 const&) {return 1.;});
+
+  // right bc not used here
+  bc_list<FESpace_T> bcs{feSpace, {left}};
+  bcs.init();
+
+  Mat A(feSpace.dof.totalNum,feSpace.dof.totalNum);
+  Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
 
-  std::cout << "A:\n" << A << std::endl;
-  std::cout << "b:\n" << b << std::endl;
+  // std::cout << "A:\n" << A << std::endl;
+  // std::cout << "b:\n" << b << std::endl;
 
   // std::ofstream fout("output.m");
   // for( int k=0; k<A.outerSize(); k++)
@@ -114,18 +114,18 @@ int main()
       sol = solver.solve(b);
     }
   }
-  std::cout<< "sol:\n" << sol << std::endl;
+  // std::cout<< "sol:\n" << sol << std::endl;
 
-  IOManager<Mesh_T> io(meshPtr);
+  IOManager<FESpace_T> io(feSpace);
 
   io.print(sol);
 
-  Vec exact = Vec::Zero(numPts);
+  Vec exact = Vec::Zero(feSpace.dof.totalNum);
   for(uint j=0; j<numPts_y; ++j)
     for(uint i=0; i<numPts_x; ++i)
     {
       uint const pos = i + j*numPts_x;
-      exact(pos) = exact_sol(meshPtr->pointList[pos].coord);
+      exact(feSpace.dof.ptMap[pos]) = exact_sol(meshPtr->pointList[pos].coord);
     }
 
   Vec error = sol - exact;

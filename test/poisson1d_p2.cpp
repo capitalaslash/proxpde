@@ -40,10 +40,10 @@ int main(int argc, char* argv[])
 
   bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
   bc_list<FESpace_T> bcs{left};
-  bcs.init(feSpace.dof.num);
+  bcs.init(feSpace.dof.totalNum);
 
-  Mat A(feSpace.dof.num, feSpace.dof.num);
-  Vec b = Vec::Zero(feSpace.dof.num);
+  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
+  Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   IOManager<FESpace_T> io(feSpace);
   io.print(sol);
 
-  Vec exact = Vec::Zero(feSpace.dof.num);
+  Vec exact = Vec::Zero(feSpace.dof.totalNum);
 //  for(uint i=0; i<numPts; ++i)
 //  {
 //    exact(i) = exact_sol(meshPtr->pointList[i].coord);

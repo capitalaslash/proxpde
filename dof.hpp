@@ -75,13 +75,13 @@ struct DOF
         }
       }
     }
-    num = dof_count;
+    totalNum = dof_count;
   }
 
   uint _rows;
   ElemMap_T elemMap;
   PtMap_T ptMap;
-  uint num;
+  uint totalNum;
 };
 
 template <typename Mesh, typename RefFE>

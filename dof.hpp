@@ -5,11 +5,13 @@
 template <typename Mesh, typename RefFE>
 struct DOF
 {
+  static uint constexpr _clms = numDOFs<RefFE>();
+  typedef std::vector<std::array<DOFid_T,_clms>> ElemMap_T;
   explicit DOF(Mesh & mesh):
     _rows(mesh.elementList.size())
   {
     std::cout << "_clms = " << _clms << std::endl;
-    _map.resize(_rows);
+    elemMap.resize(_rows);
     uint dof_count = 0;
     for(auto & e: mesh.elementList)
     {
@@ -27,7 +29,7 @@ struct DOF
             for(uint i=0; i<RefFE::dof_place[3]; i++)
             {
               p->dof_ids[i] = dof_count;
-              _map[e.id][local_dof_count] = dof_count;
+              elemMap[e.id][local_dof_count] = dof_count;
               dof_count++;
               local_dof_count++;
             }
@@ -36,7 +38,7 @@ struct DOF
           {
             for(uint i=0; i<RefFE::dof_place[3]; i++)
             {
-              _map[e.id][local_dof_count] = p->dof_ids[i];
+              elemMap[e.id][local_dof_count] = p->dof_ids[i];
               local_dof_count++;
             }
           }
@@ -53,7 +55,7 @@ struct DOF
           for(uint i=0; i<RefFE::dof_place[0]; i++)
           {
             e.dof_ids[i] = dof_count;
-            _map[e.id][local_dof_count] = dof_count;
+            elemMap[e.id][local_dof_count] = dof_count;
             dof_count++;
             local_dof_count++;
           }
@@ -62,7 +64,7 @@ struct DOF
         {
           for(uint i=0; i<RefFE::dof_place[0]; i++)
           {
-            _map[e.id][local_dof_count] = e.dof_ids[i];
+            elemMap[e.id][local_dof_count] = e.dof_ids[i];
             local_dof_count++;
           }
         }
@@ -71,9 +73,8 @@ struct DOF
     num = dof_count;
   }
 
-  static uint constexpr _clms = numDOFs<RefFE>();
   uint _rows;
-  std::vector<std::array<id_T,_clms>> _map;
+  ElemMap_T elemMap;
   uint num;
 };
 
@@ -81,7 +82,7 @@ template <typename Mesh, typename RefFE>
 inline std::ostream & operator<<(std::ostream & out, DOF<Mesh, RefFE> const & dof)
 {
   out << "DOF map with " << dof._rows << " and " << dof._clms << "\n";
-  for(auto & row: dof._map)
+  for(auto & row: dof.elemMap)
   {
     for(auto & id: row)
       out << id << " ";

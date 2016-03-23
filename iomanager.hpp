@@ -106,7 +106,7 @@ void IOManager<FESpace>::print(Vec const& sol)
       uint count = 0;
       for(auto const & p: e.pointList)
       {
-        print_data(p->id) = data(feSpace.dof._map[e.id][count]);
+        print_data(p->id) = data(feSpace.dof.elemMap[e.id][count]);
         count++;
       }
     }

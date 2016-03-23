@@ -195,7 +195,7 @@ void buildProblem(FESpace & feSpace,
       LVec_T h = LVec_T::Zero();
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id = feSpace.dof._map[e.id][i];
+        DOFid_T const id = feSpace.dof.elemMap[e.id][i];
         if(bc.is_constrained(id))
         {
           h(i) = bc.value(curFE.dofPts[i]);
@@ -207,7 +207,7 @@ void buildProblem(FESpace & feSpace,
 
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id = feSpace.dof._map[e.id][i];
+        DOFid_T const id = feSpace.dof.elemMap[e.id][i];
         if(bc.is_constrained(id))
         {
           Ke(i,i) = 1.0;
@@ -223,11 +223,11 @@ void buildProblem(FESpace & feSpace,
     // --- store local values in global matrix and rhs ---
     for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
     {
-      const DOFid_T id_i = feSpace.dof._map[e.id][i];
+      DOFid_T const id_i = feSpace.dof.elemMap[e.id][i];
       b(id_i) += Fe(i);
       for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
       {
-        const DOFid_T id_j = feSpace.dof._map[e.id][j];
+        DOFid_T const id_j = feSpace.dof.elemMap[e.id][j];
         coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));
       }
     }

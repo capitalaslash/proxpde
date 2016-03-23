@@ -100,16 +100,6 @@ void IOManager<FESpace>::print(Vec const& sol)
 
   for(auto& data: {sol})
   {
-    Vec print_data(numPts);
-    for(auto const & e: mesh.elementList)
-    {
-      uint count = 0;
-      for(auto const & p: e.pointList)
-      {
-        print_data(p->id) = data(feSpace.dof.elemMap[e.id][count]);
-        count++;
-      }
-    }
     std::string const varName = "sol";
     auto var_el = doc.NewElement("Attribute");
     var_el->SetAttribute("Name", varName.c_str());
@@ -128,7 +118,7 @@ void IOManager<FESpace>::print(Vec const& sol)
     buf << std::endl;
     for(uint p=0; p<numPts; ++p)
     {
-      buf << print_data(p) << "\n";
+      buf << data(feSpace.dof.ptMap[mesh.pointList[p].id]) << "\n";
     }
     // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
     vardata_el->SetText(buf.str().c_str());

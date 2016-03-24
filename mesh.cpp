@@ -11,8 +11,6 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
   {
     meshPtr->pointList.emplace_back(origin + p * h, p);
   }
-  meshPtr->pointList[0].marker = side::LEFT;
-  meshPtr->pointList[numPts-1].marker = side::RIGHT;
 
   uint const numElems = numPts-1;
   meshPtr->elementList.reserve(numElems);
@@ -23,6 +21,39 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
   }
 
   meshPtr->buildConnectivity();
+  buildFacets(meshPtr);
+  meshPtr->facetList[0].marker = side::LEFT;
+  meshPtr->facetList[1].marker = side::RIGHT;
+}
+
+template <typename Mesh>
+void markFacets2D(std::shared_ptr<Mesh> meshPtr,
+                  Vec3 const& origin,
+                  Vec3 const& length)
+{
+  for(auto & f: meshPtr->facetList)
+  {
+    if(std::fabs(f.pointList[0]->coord[1]-origin[1]) < 1e-6*length[1] &&
+       std::fabs(f.pointList[1]->coord[1]-origin[1]) < 1e-6*length[1])
+    {
+      f.marker = side::BOTTOM;
+    }
+    else if(std::fabs(f.pointList[0]->coord[0]-origin[0]-length[0]) < 1e-6*length[0] &&
+            std::fabs(f.pointList[1]->coord[0]-origin[0]-length[0]) < 1e-6*length[0])
+    {
+      f.marker = side::RIGHT;
+    }
+    else if(std::fabs(f.pointList[0]->coord[1]-origin[1]-length[1]) < 1e-6*length[1] &&
+            std::fabs(f.pointList[1]->coord[1]-origin[1]-length[1]) < 1e-6*length[1])
+    {
+      f.marker = side::TOP;
+    }
+    else if(std::fabs(f.pointList[0]->coord[0]-origin[0]) < 1e-6*length[0] &&
+            std::fabs(f.pointList[1]->coord[0]-origin[0]) < 1e-6*length[0])
+    {
+      f.marker = side::LEFT;
+    }
+  }
 }
 
 void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
@@ -90,6 +121,8 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
                  counter++});
     }
   meshPtr->buildConnectivity();
+  buildFacets(meshPtr);
+  markFacets2D(meshPtr, origin, length);
 }
 
 void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
@@ -134,4 +167,6 @@ void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
              counter++});
     }
   meshPtr->buildConnectivity();
+  buildFacets(meshPtr);
+  markFacets2D(meshPtr, origin, length);
 }

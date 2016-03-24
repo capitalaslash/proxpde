@@ -97,6 +97,29 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
   return out;
 }
 
+struct PointElem: public GeoElem
+{
+  static uint const numPts = 1U;
+  static uint const numEdges = 0U;
+  static uint const numFaces = 0U;
+
+  explicit PointElem(std::initializer_list<Point*> list = {nullptr},
+                 id_T i = -1,
+                 marker_T m = -1):
+    GeoElem(list, i, m)
+  {}
+
+  explicit PointElem(std::vector<Point*> const & list,
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
+  {}
+
+  virtual Vec3 midpoint() const {return pointList[0]->coord;}
+  virtual Vec3 origin() const {return pointList[0]->coord;}
+  virtual double volume() const {return 1.;}
+};
+
 class Line: public GeoElem
 {
 public:

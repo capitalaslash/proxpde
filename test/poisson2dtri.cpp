@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   }
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.345993) > 1.e-5)
+  if(std::fabs(norm - 0.0530736) > 1.e-5)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

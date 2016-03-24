@@ -32,6 +32,7 @@ set(MINIFEM_HEADERS
 
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(minifem
+  geo.cpp
   mesh.cpp
   reffe.cpp
 )

@@ -123,13 +123,25 @@ struct PointElem: public GeoElem
 class Line: public GeoElem
 {
 public:
+  typedef PointElem Facet_T;
   static uint const numPts = 2U;
-  typedef Eigen::Vector2d LocalVec_T;
-  typedef Eigen::Matrix2d LocalMat_T;
-  typedef std::vector<Point*> PointList_T;
+  static uint const numEdges = 1U;
+  static uint const numFaces = 0U;
+  static std::array<uint,4> constexpr dof_place{0,0,0,1};
+  static std::array<std::array<id_T,1>,2> constexpr elemToFacet{
+    {{0}, {1}}
+  };
 
-  explicit Line(std::initializer_list<Point*> list, id_T id = -1):
-    GeoElem(list, id)
+  explicit Line(std::initializer_list<Point*> const & list = {nullptr},
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
+  {}
+
+  explicit Line(std::vector<Point*> const & list,
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
   {}
 
   Vec3 midpoint() const
@@ -151,11 +163,25 @@ public:
 class Triangle: public GeoElem
 {
 public:
+  typedef Line Facet_T;
   static uint const numPts = 3U;
-  typedef std::array<Point*,numPts> PointList_T;
+  static uint const numEdges = 3U;
+  static uint const numFaces = 1U;
+  static std::array<uint,4> constexpr dof_place{0,0,0,1};
+  static std::array<std::array<id_T,2>,3> constexpr elemToFacet{
+    {{0,1}, {1,2}, {2,0}}
+  };
 
-  explicit Triangle(std::initializer_list<Point*> list, id_T id = -1):
-    GeoElem(list, id)
+  explicit Triangle(std::initializer_list<Point*> const & list = {nullptr},
+                    id_T i = -1,
+                    marker_T m = -1):
+        GeoElem(list, i, m)
+  {}
+
+  explicit Triangle(std::vector<Point*> const & list,
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
   {}
 
   Vec3 midpoint() const
@@ -180,11 +206,24 @@ public:
 class Quad: public GeoElem
 {
 public:
+  typedef Line Facet_T;
   static uint const numPts = 4U;
-  typedef std::array<Point*,numPts> PointList_T;
+  static uint const numEdges = 4U;
+  static uint const numFaces = 1U;
+  static std::array<std::array<id_T,2>,4> constexpr elemToFacet{
+    {{0,1}, {1,2}, {2,3}, {3,0}}
+  };
 
-  explicit Quad(std::initializer_list<Point*> list, id_T id = -1):
-    GeoElem(list, id)
+  explicit Quad(std::initializer_list<Point*> list = {nullptr},
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
+  {}
+
+  explicit Quad(std::vector<Point*> const & list,
+                id_T i = -1,
+                marker_T m = -1):
+    GeoElem(list, i, m)
   {}
 
   Vec3 midpoint() const

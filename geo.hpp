@@ -46,9 +46,22 @@ struct GeoElem: public DOFobject
 {
   typedef std::vector<Point*> PointList_T;
 
-  explicit GeoElem(std::initializer_list<Point*> list, id_T i = -1):
+  explicit GeoElem(std::initializer_list<Point*> const & list = {nullptr},
+                   id_T i = -1,
+                   marker_T m = -1):
     pointList(list),
-    id(i)
+    id(i),
+    marker(m),
+    facingElem{nullptr, nullptr}
+  {}
+
+  explicit GeoElem(std::vector<Point*> const & list,
+                   id_T i = -1,
+                   marker_T m = -1):
+    pointList(list),
+    id(i),
+    marker(m),
+    facingElem{nullptr, nullptr}
   {}
 
   virtual Vec3 midpoint() const = 0;
@@ -57,6 +70,8 @@ struct GeoElem: public DOFobject
 
   PointList_T pointList;
   id_T id;
+  marker_T marker;
+  std::array<GeoElem const*, 2> facingElem;
 };
 
 inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)

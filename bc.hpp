@@ -14,11 +14,14 @@ public:
     marker(m),
     value(v)
   {
-    for(auto& p: feSpace.meshPtr->pointList)
+    for(auto& f: feSpace.meshPtr->facetList)
     {
-      if(p.marker == marker)
+      if(f.marker == marker)
       {
-        point_set.insert(p.dof_ids[0]);
+        for(auto& p: f.pointList)
+        {
+          point_set.insert(p->dof_ids[0]);
+        }
       }
     }
     vec = bool_array::Constant(feSpace.dof.totalNum, false);

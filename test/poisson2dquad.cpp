@@ -38,13 +38,11 @@ int main(int argc, char* argv[])
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
 
   FESpace_T feSpace(meshPtr);
-  std::cout << feSpace.dof << std::endl;
 
   bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
   bc_ess<FESpace_T> bottom(feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;});
   bc_list<FESpace_T> bcs{feSpace, {left, bottom}};
   bcs.init();
-  std::cout << bcs << std::endl;
 
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
@@ -69,7 +67,7 @@ int main(int argc, char* argv[])
   }
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.476975) > 1.e-5)
+  if(std::fabs(norm - 0.020304) > 1.e-5)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

@@ -81,7 +81,19 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
   {
     out << p->id << ", ";
   }
-  out << "\b\b), " << "id: " << e.id;
+  out << "\b\b), " << "id: " << e.id << ", m: " << e.marker;
+  if(e.facingElem[0])
+  {
+    out << ", fe: " << e.facingElem[0]->id;
+    if(e.facingElem[1])
+    {
+      out << ", " << e.facingElem[1]->id;
+    }
+    else
+    {
+      out << ", on boundary";
+    }
+  }
   return out;
 }
 

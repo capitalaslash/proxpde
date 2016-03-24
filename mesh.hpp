@@ -1,19 +1,20 @@
 #pragma once
 
-#include <array>
-#include <vector>
-#include <memory>
-
 #include "def.hpp"
 #include "geo.hpp"
+
+#include <set>
+#include <map>
 
 template <typename Elem>
 class Mesh
 {
 public:
   typedef Elem Elem_T;
+  typedef typename Elem::Facet_T Facet_T;
   typedef std::vector<Point> PointList_T;
   typedef std::vector<Elem> ElementList_T;
+  typedef std::vector<Facet_T> FacetList_T;
   typedef std::array<id_T,Elem::numPts> ElementConn_T;
   typedef std::vector<std::array<id_T,Elem::numPts>> ConnList_T;
 
@@ -35,6 +36,7 @@ public:
 
   PointList_T pointList;
   ElementList_T elementList;
+  FacetList_T facetList;
   ConnList_T _connList;
 };
 
@@ -47,6 +49,9 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
   out << "\nelement list\n------------" << std::endl;
   for(auto &e: mesh.elementList)
     out << e << std::endl;
+  out << "\nfacet list\n------------" << std::endl;
+  for(auto &f: mesh.facetList)
+    out << f << std::endl;
   out << "\n------------" << std::endl;
   return out;
 }
@@ -58,6 +63,79 @@ enum side
   TOP,
   LEFT
 };
+
+template <typename Mesh>
+void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
+{
+  typedef typename Mesh::Facet_T Facet_T;
+  std::map<std::set<id_T>, Facet_T> facetMap;
+
+  uint facetCount = 0;
+  uint iFacetCount = 0;
+  for(auto const & e: meshPtr->elementList)
+  {
+    for(auto const & row: Mesh::Elem_T::elemToFacet)
+    {
+      std::vector<Point*> facetPts(Mesh::Facet_T::numPts);
+      std::set<id_T> facetIds;
+      uint i=0;
+      for(auto const & clm: row)
+      {
+        facetPts[i] = e.pointList[clm];
+        facetIds.insert(e.pointList[clm]->id);
+        i++;
+      }
+      Facet_T facet(facetPts);
+      auto inserted = facetMap.insert(std::make_pair(facetIds, facet));
+      if(inserted.second)
+      {
+        // we are the first element to cross this facet
+        inserted.first->second.facingElem[0] = &e;
+        facetCount++;
+      }
+      else
+      {
+        // we are the second element crossing this facet, this is internal
+        inserted.first->second.facingElem[1] = &e;
+        iFacetCount++;
+      }
+    }
+  }
+  uint bFacetTotal = facetCount - iFacetCount;
+  if(keep_internal)
+  {
+    meshPtr->facetList.resize(facetCount);
+  }
+  else
+  {
+    meshPtr->facetList.resize(bFacetTotal);
+  }
+
+  iFacetCount = bFacetTotal;
+  uint bFacetCount = 0;
+  for(auto const & facet: facetMap)
+  {
+    if(facet.second.facingElem[1] == nullptr)
+    {
+      // this is a boundary facet
+      meshPtr->facetList[bFacetCount] = facet.second;
+      meshPtr->facetList[bFacetCount].id = bFacetCount;
+      bFacetCount++;
+    }
+    else
+    {
+      // this is an internal facet
+      if(keep_internal)
+      {
+        meshPtr->facetList[iFacetCount] = facet.second;
+        meshPtr->facetList[iFacetCount].id = iFacetCount;
+      }
+      iFacetCount++;
+    }
+  }
+  assert(bFacetCount == bFacetTotal);
+  assert(iFacetCount == facetCount);
+}
 
 void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
                  Vec3 const& origin,

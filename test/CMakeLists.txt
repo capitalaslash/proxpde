@@ -25,3 +25,10 @@ add_test(
   NAME poisson2dquad
   COMMAND poisson2dquad
 )
+
+add_executable(poisson2dquad_q2 poisson2dquad_q2.cpp)
+target_link_libraries(poisson2dquad_q2 ${LIBS})
+add_test(
+  NAME poisson2dquad_q2
+  COMMAND poisson2dquad_q2
+)

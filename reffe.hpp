@@ -19,6 +19,10 @@ struct RefLineP1
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 2U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
+  static uint constexpr dofPerFacet = 1U;
+  static std::array<std::array<uint,1>,2> constexpr dofOnFacet = {
+    {{0}, {1}}
+  };
   typedef Eigen::Vector2d LocalVec_T;
   typedef Eigen::Matrix2d LocalMat_T;
 
@@ -47,6 +51,10 @@ struct RefLineP2
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 3U;
   static std::array<uint,4> constexpr dof_place{0,0,1,1};
+  static uint constexpr dofPerFacet = 1U;
+  static std::array<std::array<uint,1>,2> constexpr dofOnFacet = {
+    {{0}, {1}}
+  };
   typedef Eigen::Vector3d LocalVec_T;
   typedef Eigen::Matrix3d LocalMat_T;
 
@@ -76,6 +84,10 @@ struct RefTriangleP1
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 3U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
+  static uint constexpr dofPerFacet = 2U;
+  static std::array<std::array<uint,2>,3> constexpr dofOnFacet = {
+    {{0,1}, {1,2}, {2,0}}
+  };
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
@@ -102,6 +114,10 @@ struct RefQuadQ1
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 4U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
+  static uint constexpr dofPerFacet = 2U;
+  static std::array<std::array<uint,2>,4> constexpr dofOnFacet = {
+    {{0,1}, {1,2}, {2,3}, {3,0}}
+  };
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
@@ -129,6 +145,10 @@ struct RefQuadQ2
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 9U;
   static std::array<uint,4> constexpr dof_place{0,1,1,1};
+  static uint constexpr dofPerFacet = 3U;
+  static std::array<std::array<uint,3>,4> constexpr dofOnFacet = {
+    {{0,1,4}, {1,2,5}, {2,3,6}, {3,0,7}}
+  };
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 

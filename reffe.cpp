@@ -1,6 +1,7 @@
 #include "reffe.hpp"
 
 std::array<uint,4> constexpr RefLineP1::dof_place;
+std::array<std::array<uint,1>,2> constexpr RefLineP1::dofOnFacet;
 
 std::array<Vec3,RefLineP1::numFuns> const RefLineP1::points =
 {
@@ -28,6 +29,7 @@ RefLineP1::LocalMat_T const RefLineP1::gradMat =
                         -0.5L,  0.5L ).finished();
 
 std::array<uint,4> constexpr RefLineP2::dof_place;
+std::array<std::array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
 
 static Point line_p0{-1., 0., 0.};
 static Point line_p1{ 1., 0., 0.};
@@ -64,6 +66,7 @@ RefLineP2::LocalMat_T const RefLineP2::gradMat =
                         0., 0., 0. ).finished();
 
 std::array<uint,4> constexpr RefTriangleP1::dof_place;
+std::array<std::array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;
 
 std::array<scalarFun_T,RefTriangleP1::numFuns> const RefTriangleP1::phiFun =
 {
@@ -80,6 +83,7 @@ std::array<vectorFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
 };
 
 std::array<uint,4> constexpr RefQuadQ1::dof_place;
+std::array<std::array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
 
 std::array<scalarFun_T,RefQuadQ1::numFuns> const RefQuadQ1::phiFun =
 {
@@ -98,6 +102,7 @@ std::array<vectorFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
 };
 
 std::array<uint,4> constexpr RefQuadQ2::dof_place;
+std::array<std::array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
 
 std::array<scalarFun_T,RefQuadQ2::numFuns> const RefQuadQ2::phiFun =
 {

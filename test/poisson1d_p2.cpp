@@ -48,14 +48,14 @@ int main(int argc, char* argv[])
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
-  std::cout << "A:\n" << A << std::endl;
+//  std::cout << "A:\n" << A << std::endl;
 
   Vec sol;
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   solver.analyzePattern(A);
   solver.factorize(A);
   sol = solver.solve(b);
-  std::cout << "sol:\n" << sol << std::endl;
+//  std::cout << "sol:\n" << sol << std::endl;
 
   IOManager<FESpace_T> io(feSpace);
   io.print(sol);

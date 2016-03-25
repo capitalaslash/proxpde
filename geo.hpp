@@ -94,6 +94,13 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
   return out;
 }
 
+struct NullElem: public GeoElem
+{
+  static uint const numPts = 0U;
+  static uint const numEdges = 0U;
+  static uint const numFaces = 0U;
+};
+
 struct PointElem: public GeoElem
 {
   static uint const numPts = 1U;
@@ -121,6 +128,7 @@ class Line: public GeoElem
 {
 public:
   typedef PointElem Facet_T;
+  typedef NullElem Face_T;
   typedef Line Edge_T;
   static uint const numPts = 2U;
   static uint const numEdges = 1U;
@@ -129,6 +137,7 @@ public:
   static std::array<std::array<id_T,1>,2> constexpr elemToFacet{
     {{0}, {1}}
   };
+  static std::array<std::array<id_T,0>,0> constexpr elemToFace = {{}};
   static std::array<std::array<id_T,2>,1> constexpr elemToEdge{
     {{0,1}}
   };
@@ -165,6 +174,7 @@ class Triangle: public GeoElem
 {
 public:
   typedef Line Facet_T;
+  typedef Triangle Face_T;
   typedef Line Edge_T;
   static uint const numPts = 3U;
   static uint const numEdges = 3U;
@@ -174,6 +184,9 @@ public:
     {{0,1}, {1,2}, {2,0}}
   };
   static std::array<std::array<id_T,2>,3> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<id_T,3>,1> constexpr elemToFace{
+    {{0,1,2}}
+  };
 
   explicit Triangle(std::initializer_list<Point*> const & list = {nullptr},
                     id_T i = -1,
@@ -210,6 +223,7 @@ class Quad: public GeoElem
 {
 public:
   typedef Line Facet_T;
+  typedef Quad Face_T;
   typedef Line Edge_T;
   static uint const numPts = 4U;
   static uint const numEdges = 4U;
@@ -218,6 +232,9 @@ public:
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };
   static std::array<std::array<id_T,2>,4> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<id_T,4>,1> constexpr elemToFace{
+    {{0,1,2,3}}
+  };
 
   explicit Quad(std::initializer_list<Point*> list = {nullptr},
                 id_T i = -1,

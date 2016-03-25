@@ -61,17 +61,14 @@ int main(int argc, char* argv[])
   io.print(sol);
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);
-//  for(uint i=0; i<numPts; ++i)
-//  {
-//    exact(i) = exact_sol(meshPtr->pointList[i].coord);
-//  }
-//  double norm = (sol - exact).norm();
-//  std::cout << "the norm of the error is " << norm << std::endl;
-//  if(std::fabs(norm - 2.61664e-11) > 1.e-10)
-//  {
-//    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-//    return 1;
-//  }
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
+  double norm = (sol - exact).norm();
+  std::cout << "the norm of the error is " << norm << std::endl;
+  if(std::fabs(norm - 3.18935e-07) > 1.e-9)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

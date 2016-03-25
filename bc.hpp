@@ -20,7 +20,7 @@ public:
       {
         for(auto& p: f.pointList)
         {
-          point_set.insert(p->dof_ids[0]);
+          point_set.insert(p->dof_id);
         }
       }
     }

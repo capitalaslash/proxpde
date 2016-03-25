@@ -18,9 +18,13 @@ public:
     {
       if(f.marker == marker)
       {
-        for(auto& p: f.pointList)
+        id_T const iElemId = f.facingElem[0].first->id;
+        uint side = f.facingElem[0].second;
+        for(uint i=0; i<FESpace::RefFE_T::dofPerFacet; i++)
         {
-          point_set.insert(p->dof_id);
+          DOFid_T const dof =
+              feSpace.dof.elemMap[iElemId][FESpace::RefFE_T::dofOnFacet[side][i]];
+          point_set.insert(dof);
         }
       }
     }

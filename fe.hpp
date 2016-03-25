@@ -34,3 +34,10 @@ struct FEType<Quad,1>
   typedef RefQuadQ1 RefFE_T;
   typedef GaussQR<Quad,9> RecommendedQR;
 };
+
+template <>
+struct FEType<Quad,2>
+{
+  typedef RefQuadQ2 RefFE_T;
+  typedef GaussQR<Quad,9> RecommendedQR;
+};

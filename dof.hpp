@@ -26,26 +26,19 @@ struct DOF
         for(auto & p: e.pointList)
         {
           // check if dofs have already been assigned to this point
-          if(p->dof_ids.empty())
+          if(p->dof_id == DOFidNotSet)
           {
-            p->dof_ids.resize(RefFE::dof_place[3]);
-            for(uint i=0; i<RefFE::dof_place[3]; i++)
-            {
-              p->dof_ids[i] = dof_count;
-              elemMap[e.id][local_dof_count] = dof_count;
-              ptMap[p->id] = dof_count;
-              dof_count++;
-              local_dof_count++;
-            }
+            p->dof_id = dof_count;
+            elemMap[e.id][local_dof_count] = dof_count;
+            ptMap[p->id] = dof_count;
+            dof_count++;
+            local_dof_count++;
           }
           else
           {
-            for(uint i=0; i<RefFE::dof_place[3]; i++)
-            {
-              elemMap[e.id][local_dof_count] = p->dof_ids[i];
-              ptMap[p->id] = p->dof_ids[i];
-              local_dof_count++;
-            }
+            elemMap[e.id][local_dof_count] = p->dof_id;
+            ptMap[p->id] = p->dof_id;
+            local_dof_count++;
           }
         }
       }
@@ -54,24 +47,17 @@ struct DOF
       if(RefFE::dof_place[0])
       {
         // check if dofs have already been assigned to this element
-        if(e.dof_ids.empty())
+        if(e.dof_id == DOFidNotSet)
         {
-          e.dof_ids.resize(RefFE::dof_place[0]);
-          for(uint i=0; i<RefFE::dof_place[0]; i++)
-          {
-            e.dof_ids[i] = dof_count;
-            elemMap[e.id][local_dof_count] = dof_count;
-            dof_count++;
-            local_dof_count++;
-          }
+          e.dof_id = dof_count;
+          elemMap[e.id][local_dof_count] = dof_count;
+          dof_count++;
+          local_dof_count++;
         }
         else
         {
-          for(uint i=0; i<RefFE::dof_place[0]; i++)
-          {
-            elemMap[e.id][local_dof_count] = e.dof_ids[i];
-            local_dof_count++;
-          }
+          elemMap[e.id][local_dof_count] = e.dof_id;
+          local_dof_count++;
         }
       }
     }

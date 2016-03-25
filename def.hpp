@@ -9,6 +9,7 @@
 typedef uint id_T;
 typedef uint marker_T;
 typedef uint DOFid_T;
+DOFid_T const DOFidNotSet = -1;
 
 typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;

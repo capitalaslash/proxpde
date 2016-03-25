@@ -107,6 +107,39 @@ struct RefTriangleP1
   }
 };
 
+struct RefTriangleP2
+{
+  typedef Triangle GeoElem_T;
+  static GeoElem_T const geoElem;
+  static uint constexpr dim = 2U;
+  static uint constexpr numFuns = 6U;
+  static std::array<uint,4> constexpr dof_place{0,0,1,1};
+  static uint constexpr dofPerFacet = 3U;
+  static std::array<std::array<uint,3>,3> constexpr dofOnFacet = {
+    {{0,1,3}, {1,2,4}, {2,0,5}}
+  };
+  typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
+  typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
+
+  static std::array<scalarFun_T,numFuns> const phiFun;
+  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static double constexpr volume = 0.5L;
+
+  static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     std::array<Vec3,numFuns> dofPts =
+     {
+       e.pointList[0]->coord,
+       e.pointList[1]->coord,
+       e.pointList[2]->coord,
+       0.5*(e.pointList[0]->coord+e.pointList[1]->coord),
+       0.5*(e.pointList[1]->coord+e.pointList[2]->coord),
+       0.5*(e.pointList[2]->coord+e.pointList[0]->coord)
+     };
+     return std::move(dofPts);
+  }
+};
+
 struct RefQuadQ1
 {
   typedef Quad GeoElem_T;

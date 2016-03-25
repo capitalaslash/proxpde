@@ -29,6 +29,13 @@ struct FEType<Triangle,1>
 };
 
 template <>
+struct FEType<Triangle,2>
+{
+  typedef RefTriangleP2 RefFE_T;
+  typedef GaussQR<Triangle,4> RecommendedQR;
+};
+
+template <>
 struct FEType<Quad,1>
 {
   typedef RefQuadQ1 RefFE_T;

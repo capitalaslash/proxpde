@@ -1,5 +1,6 @@
 #include "reffe.hpp"
 
+// ----------------------------------------------------------------------------
 std::array<uint,4> constexpr RefLineP1::dof_place;
 std::array<std::array<uint,1>,2> constexpr RefLineP1::dofOnFacet;
 
@@ -28,6 +29,7 @@ RefLineP1::LocalMat_T const RefLineP1::gradMat =
   (Eigen::Matrix2d() <<  0.5L, -0.5L,
                         -0.5L,  0.5L ).finished();
 
+// ----------------------------------------------------------------------------
 std::array<uint,4> constexpr RefLineP2::dof_place;
 std::array<std::array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
 
@@ -65,6 +67,7 @@ RefLineP2::LocalMat_T const RefLineP2::gradMat =
                         0., 0., 0.,
                         0., 0., 0. ).finished();
 
+// ----------------------------------------------------------------------------
 std::array<uint,4> constexpr RefTriangleP1::dof_place;
 std::array<std::array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;
 
@@ -82,6 +85,43 @@ std::array<vectorFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
   [] (Vec3 const & p) { return Vec3( 0.0,  1.L, 0.0); }
 };
 
+// ----------------------------------------------------------------------------
+std::array<uint,4> constexpr RefTriangleP2::dof_place;
+std::array<std::array<uint,3>,3> constexpr RefTriangleP2::dofOnFacet;
+
+std::array<scalarFun_T,RefTriangleP2::numFuns> const RefTriangleP2::phiFun =
+{
+  [] (Vec3 const & p) { return 2.*(1.-p(0)-p(1))*(0.5-p(0)-p(1)); },
+  [] (Vec3 const & p) { return 2.*p(0)*(p(0)-0.5); },
+  [] (Vec3 const & p) { return 2.*p(1)*(p(1)-0.5); },
+  [] (Vec3 const & p) { return 4.*(1.-p(0)-p(1))*p(0); },
+  [] (Vec3 const & p) { return 4.*p(0)*p(1); },
+  [] (Vec3 const & p) { return 4.*p(1)*(1.-p(0)-p(1)); },
+};
+
+std::array<vectorFun_T,RefTriangleP2::numFuns> const RefTriangleP2::dphiFun =
+{
+  [] (Vec3 const & p) { return Vec3(4.*p(0)+4.*p(1)-3.,
+                                    4.*p(0)+4.*p(1)-3.,
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(4.*p(0)-1.,
+                                    0.0,
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(0.0,
+                                    4.*p(1)-1,
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(-4.*p(0)+4.*(1.-p(0)-p(1)),
+                                    -4.*p(0),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(4.*p(1),
+                                    4.*p(0),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(-4.*p(1),
+                                    -4.*p(1)+4.*(1.-p(0)-p(1)),
+                                    0.0); }
+};
+
+// ----------------------------------------------------------------------------
 std::array<uint,4> constexpr RefQuadQ1::dof_place;
 std::array<std::array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
 
@@ -101,6 +141,7 @@ std::array<vectorFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
   [] (Vec3 const & p) { return Vec3(-0.25*(1.+p(1)),  0.25*(1.-p(0)), 0.0); }
 };
 
+// ----------------------------------------------------------------------------
 std::array<uint,4> constexpr RefQuadQ2::dof_place;
 std::array<std::array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
 

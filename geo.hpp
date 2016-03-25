@@ -121,12 +121,16 @@ class Line: public GeoElem
 {
 public:
   typedef PointElem Facet_T;
+  typedef Line Edge_T;
   static uint const numPts = 2U;
   static uint const numEdges = 1U;
   static uint const numFaces = 0U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
   static std::array<std::array<id_T,1>,2> constexpr elemToFacet{
     {{0}, {1}}
+  };
+  static std::array<std::array<id_T,2>,1> constexpr elemToEdge{
+    {{0,1}}
   };
 
   explicit Line(std::initializer_list<Point*> const & list = {nullptr},
@@ -161,6 +165,7 @@ class Triangle: public GeoElem
 {
 public:
   typedef Line Facet_T;
+  typedef Line Edge_T;
   static uint const numPts = 3U;
   static uint const numEdges = 3U;
   static uint const numFaces = 1U;
@@ -168,6 +173,7 @@ public:
   static std::array<std::array<id_T,2>,3> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,0}}
   };
+  static std::array<std::array<id_T,2>,3> constexpr elemToEdge = elemToFacet;
 
   explicit Triangle(std::initializer_list<Point*> const & list = {nullptr},
                     id_T i = -1,
@@ -204,12 +210,14 @@ class Quad: public GeoElem
 {
 public:
   typedef Line Facet_T;
+  typedef Line Edge_T;
   static uint const numPts = 4U;
   static uint const numEdges = 4U;
   static uint const numFaces = 1U;
   static std::array<std::array<id_T,2>,4> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };
+  static std::array<std::array<id_T,2>,4> constexpr elemToEdge = elemToFacet;
 
   explicit Quad(std::initializer_list<Point*> list = {nullptr},
                 id_T i = -1,

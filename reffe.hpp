@@ -7,8 +7,8 @@ template <typename RefElem>
 uint constexpr numDOFs()
 {
   return 1 * RefElem::dof_place[0] +
-    // RefElem::numFaces * RefElem::dof_place[1] +
-    // RefElem::numEdges * RefElem::dof_place[2] +
+    RefElem::GeoElem_T::numFaces * RefElem::dof_place[1] +
+    RefElem::GeoElem_T::numEdges * RefElem::dof_place[2] +
     RefElem::GeoElem_T::numPts * RefElem::dof_place[3];
 }
 
@@ -46,7 +46,7 @@ struct RefLineP2
   static GeoElem_T const geoElem;
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 3U;
-  static std::array<uint,4> constexpr dof_place{1,0,0,1};
+  static std::array<uint,4> constexpr dof_place{0,0,1,1};
   typedef Eigen::Vector3d LocalVec_T;
   typedef Eigen::Matrix3d LocalMat_T;
 

@@ -1,9 +1,5 @@
 #pragma once
 
-#include <array>
-#include <vector>
-#include <memory>
-
 #include "def.hpp"
 #include "dof_object.hpp"
 

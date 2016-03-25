@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
 
   FESpace_T feSpace(meshPtr);
-  std::cout << feSpace.dof << std::endl;
 
   bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
   bc_ess<FESpace_T> bottom(feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;});
@@ -51,28 +50,28 @@ int main(int argc, char* argv[])
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
+//  std::cout << "A:\n" << A << std::endl;
+//  std::cout << "b:\n" << b << std::endl;
 
   Vec sol;
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   solver.analyzePattern(A);
   solver.factorize(A);
   sol = solver.solve(b);
+//  std::cout << "sol:\n" << sol << std::endl;
 
   IOManager<FESpace_T> io(feSpace);
   io.print(sol);
 
-//  Vec exact = Vec::Zero(feSpace.dof.totalNum);
-//  for(uint i=0; i<feSpace.dof.totalNum; ++i)
-//  {
-//    exact(feSpace.dof.ptMap[i]) = exact_sol(meshPtr->pointList[i].coord);
-//  }
-//  double norm = (sol - exact).norm();
-//  std::cout << "the norm of the error is " << norm << std::endl;
-//  if(std::fabs(norm - 0.020304) > 1.e-5)
-//  {
-//    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-//    return 1;
-//  }
+  Vec exact = Vec::Zero(feSpace.dof.totalNum);
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
+  double norm = (sol - exact).norm();
+  std::cout << "the norm of the error is " << norm << std::endl;
+  if(std::fabs(norm - 0.000143585) > 1.e-6)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

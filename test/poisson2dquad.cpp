@@ -61,10 +61,7 @@ int main(int argc, char* argv[])
   io.print(sol);
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  for(uint i=0; i<feSpace.dof.totalNum; ++i)
-  {
-    exact(feSpace.dof.ptMap[i]) = exact_sol(meshPtr->pointList[i].coord);
-  }
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;
   if(std::fabs(norm - 0.020304) > 1.e-5)

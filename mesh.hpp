@@ -74,6 +74,7 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
   uint iFacetCount = 0;
   for(auto const & e: meshPtr->elementList)
   {
+    uint side = 0;
     for(auto const & row: Mesh::Elem_T::elemToFacet)
     {
       std::vector<Point*> facetPts(Mesh::Facet_T::numPts);
@@ -90,17 +91,21 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
       if(inserted.second)
       {
         // we are the first element to cross this facet
-        inserted.first->second.facingElem[0] = &e;
+        inserted.first->second.facingElem[0].first = &e;
+        inserted.first->second.facingElem[0].second = side;
         facetCount++;
       }
       else
       {
         // we are the second element crossing this facet, this is internal
-        inserted.first->second.facingElem[1] = &e;
+        inserted.first->second.facingElem[1].first = &e;
+        inserted.first->second.facingElem[1].second = side;
         iFacetCount++;
       }
+      side++;
     }
   }
+
   uint bFacetTotal = facetCount - iFacetCount;
   if(keep_internal)
   {
@@ -115,7 +120,7 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
   uint bFacetCount = 0;
   for(auto const & facet: facetMap)
   {
-    if(facet.second.facingElem[1] == nullptr)
+    if(facet.second.facingElem[1].first == nullptr)
     {
       // this is a boundary facet
       meshPtr->facetList[bFacetCount] = facet.second;

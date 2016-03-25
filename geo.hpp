@@ -42,6 +42,7 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 struct GeoElem
 {
   typedef std::vector<Point*> PointList_T;
+  typedef std::pair<GeoElem const*, uint> FacingElem_T;
 
   explicit GeoElem(std::initializer_list<Point*> const & list = {nullptr},
                    id_T i = -1,
@@ -49,7 +50,7 @@ struct GeoElem
     pointList(list),
     id(i),
     marker(m),
-    facingElem{nullptr, nullptr}
+    facingElem{std::make_pair(nullptr, -1), std::make_pair(nullptr, -1)}
   {}
 
   explicit GeoElem(std::vector<Point*> const & list,
@@ -58,7 +59,7 @@ struct GeoElem
     pointList(list),
     id(i),
     marker(m),
-    facingElem{nullptr, nullptr}
+    facingElem{std::make_pair(nullptr, -1), std::make_pair(nullptr, -1)}
   {}
 
   virtual Vec3 midpoint() const = 0;
@@ -68,7 +69,7 @@ struct GeoElem
   PointList_T pointList;
   id_T id;
   marker_T marker;
-  std::array<GeoElem const*, 2> facingElem;
+  std::array<FacingElem_T, 2> facingElem;
 };
 
 inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
@@ -79,12 +80,12 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
     out << p->id << ", ";
   }
   out << "\b\b), " << "id: " << e.id << ", m: " << e.marker;
-  if(e.facingElem[0])
+  if(e.facingElem[0].first)
   {
-    out << ", fe: " << e.facingElem[0]->id;
-    if(e.facingElem[1])
+    out << ", fe: (" << e.facingElem[0].first->id << ", " << e.facingElem[0].second << ")";
+    if(e.facingElem[1].first)
     {
-      out << ", " << e.facingElem[1]->id;
+      out << ", " << e.facingElem[1].first->id << ", " << e.facingElem[1].second << ")";
     }
     else
     {

@@ -16,6 +16,8 @@ struct DOF
     elemMap.resize(_rows);
     ptMap.resize(mesh.pointList.size());
     std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), DOFidNotSet);
+    std::map<std::set<id_T>,DOFid_T> edgeDOFs;
+
     uint dof_count = 0;
     for(auto const & e: mesh.elementList)
     {
@@ -39,6 +41,34 @@ struct DOF
           {
             elemMap[e.id][local_dof_count] = p->dof_id;
             ptMap[p->id] = p->dof_id;
+            local_dof_count++;
+          }
+        }
+      }
+
+      // check if there dofs on the edges
+      if(RefFE::dof_place[2])
+      {
+        for(uint i=0; i<Mesh::Elem_T::numEdges; i++)
+        {
+          std::set<id_T> edgeIDs;
+          for(uint j=0; j<Mesh::Elem_T::Edge_T::numPts; j++)
+          {
+            edgeIDs.insert(e.pointList[Mesh::Elem_T::elemToEdge[i][j]]->id);
+          }
+
+          // check if dofs have already been assigned to this edge
+          auto it = edgeDOFs.find(edgeIDs);
+          if(it == edgeDOFs.end())
+          {
+            edgeDOFs[edgeIDs] = dof_count;
+            elemMap[e.id][local_dof_count] = dof_count;
+            dof_count++;
+            local_dof_count++;
+          }
+          else
+          {
+            elemMap[e.id][local_dof_count] = edgeDOFs[edgeIDs];
             local_dof_count++;
           }
         }

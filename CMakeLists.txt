@@ -18,7 +18,6 @@ set(MINIFEM_HEADERS
   geo.hpp
   mesh.hpp
   reffe.hpp
-  dof_object.hpp
   dof.hpp
   fe.hpp
   fespace.hpp

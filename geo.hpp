@@ -1,9 +1,8 @@
 #pragma once
 
 #include "def.hpp"
-#include "dof_object.hpp"
 
-class Point: public DOFobject
+class Point
 {
 public:
   explicit Point(Vec3 const & c = Vec3::Zero(),
@@ -11,6 +10,7 @@ public:
                  marker_T const m = -1):
     coord(c),
     id(i),
+    dof_id(DOFidNotSet),
     marker(m)
   {}
   explicit Point(double const x,
@@ -28,6 +28,7 @@ public:
 
   Vec3 coord;
   id_T id;
+  DOFid_T dof_id;
   marker_T marker;
 };
 
@@ -38,7 +39,7 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
   return out;
 }
 
-struct GeoElem: public DOFobject
+struct GeoElem
 {
   typedef std::vector<Point*> PointList_T;
 

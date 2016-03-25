@@ -15,8 +15,9 @@ struct DOF
     std::cout << "_clms = " << _clms << std::endl;
     elemMap.resize(_rows);
     ptMap.resize(mesh.pointList.size());
+    std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), DOFidNotSet);
     uint dof_count = 0;
-    for(auto & e: mesh.elementList)
+    for(auto const & e: mesh.elementList)
     {
       uint local_dof_count = 0;
 
@@ -47,16 +48,16 @@ struct DOF
       if(RefFE::dof_place[0])
       {
         // check if dofs have already been assigned to this element
-        if(e.dof_id == DOFidNotSet)
+        if(elemDOFs[e.id] == DOFidNotSet)
         {
-          e.dof_id = dof_count;
+          elemDOFs[e.id] = dof_count;
           elemMap[e.id][local_dof_count] = dof_count;
           dof_count++;
           local_dof_count++;
         }
         else
         {
-          elemMap[e.id][local_dof_count] = e.dof_id;
+          elemMap[e.id][local_dof_count] = elemDOFs[e.id];
           local_dof_count++;
         }
       }

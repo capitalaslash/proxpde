@@ -121,3 +121,35 @@ struct RefQuadQ1
      return std::move(dofPts);
   }
 };
+
+struct RefQuadQ2
+{
+  typedef Quad GeoElem_T;
+  static GeoElem_T const geoElem;
+  static uint constexpr dim = 2U;
+  static uint constexpr numFuns = 9U;
+  static std::array<uint,4> constexpr dof_place{0,1,1,1};
+  typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
+  typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
+
+  static std::array<scalarFun_T,numFuns> const phiFun;
+  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static double constexpr volume = 4.L;
+
+  static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     std::array<Vec3,numFuns> dofPts =
+     {
+       e.pointList[0]->coord,
+       e.pointList[1]->coord,
+       e.pointList[2]->coord,
+       e.pointList[3]->coord,
+       0.5*(e.pointList[0]->coord+e.pointList[1]->coord),
+       0.5*(e.pointList[1]->coord+e.pointList[2]->coord),
+       0.5*(e.pointList[2]->coord+e.pointList[3]->coord),
+       0.5*(e.pointList[3]->coord+e.pointList[0]->coord),
+       e.midpoint()
+     };
+     return std::move(dofPts);
+  }
+};

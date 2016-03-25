@@ -96,3 +96,49 @@ std::array<vectorFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
   [] (Vec3 const & p) { return Vec3( 0.25*(1.+p(1)),  0.25*(1.+p(0)), 0.0); },
   [] (Vec3 const & p) { return Vec3(-0.25*(1.+p(1)),  0.25*(1.-p(0)), 0.0); }
 };
+
+std::array<uint,4> constexpr RefQuadQ2::dof_place;
+
+std::array<scalarFun_T,RefQuadQ2::numFuns> const RefQuadQ2::phiFun =
+{
+  [] (Vec3 const & p) { return 0.25*p(0)*(p(0)-1.)*p(1)*(p(1)-1.); },
+  [] (Vec3 const & p) { return 0.25*p(0)*(p(0)+1.)*p(1)*(p(1)-1.); },
+  [] (Vec3 const & p) { return 0.25*p(0)*(p(0)+1.)*p(1)*(p(1)+1.); },
+  [] (Vec3 const & p) { return 0.25*p(0)*(p(0)-1.)*p(1)*(p(1)+1.); },
+  [] (Vec3 const & p) { return  0.5*(1.-p(0)*p(0))*p(1)*(p(1)-1.); },
+  [] (Vec3 const & p) { return  0.5*p(0)*(p(0)+1.)*(1.-p(1)*p(1)); },
+  [] (Vec3 const & p) { return  0.5*(1.-p(0)*p(0))*p(1)*(p(1)+1.); },
+  [] (Vec3 const & p) { return  0.5*p(0)*(p(0)-1.)*(1.-p(1)*p(1)); },
+  [] (Vec3 const & p) { return      (1.-p(0)*p(0))*(1.-p(1)*p(1)); }
+};
+
+std::array<vectorFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
+{
+  [] (Vec3 const & p) { return Vec3(0.5*(p(0)-0.5)*p(1)*(p(1)-1.),
+                                    0.5*p(0)*(p(0)-1.)*(p(1)-0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(0.5*(p(0)+0.5)*p(1)*(p(1)-1.),
+                                    0.5*p(0)*(p(0)+1.)*(p(1)-0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(0.5*(p(0)+0.5)*p(1)*(p(1)+1.),
+                                    0.5*p(0)*(p(0)+1.)*(p(1)+0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(0.5*(p(0)-0.5)*p(1)*(p(1)+1.),
+                                    0.5*p(0)*(p(0)-1.)*(p(1)+0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(-p(0)*p(1)*(p(1)-1.),
+                                    (1.-p(0)*p(0))*(p(1)-0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3((p(0)+0.5)*(1.-p(1)*p(1)),
+                                    -p(0)*(p(0)+1.)*p(1),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(-p(0)*p(1)*(p(1)+1.),
+                                    (1.-p(0)*p(0))*(p(1)+0.5),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3((p(0)-0.5)*(1.-p(1)*p(1)),
+                                    -p(0)*(p(0)-1.)*p(1),
+                                    0.0); },
+  [] (Vec3 const & p) { return Vec3(-2.*p(0)*(1.-p(1)*p(1)),
+                                    -2.*(1.-p(0)*p(0))*p(1),
+                                    0.0); }
+};

@@ -12,7 +12,7 @@ typedef Mesh<Elem_T> Mesh_T;
 typedef FESpace<
           Mesh_T,
           FEType<Elem_T,1>::RefFE_T,
-          GaussQR<Elem_T,3>> FESpace_T;
+          FEType<Elem_T,1>::RecommendedQR> FESpace_T;
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {

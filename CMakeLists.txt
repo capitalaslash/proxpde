@@ -24,6 +24,7 @@ set(MINIFEM_HEADERS
   curfe.hpp
   qr.hpp
   bc.hpp
+  var.hpp
   assembly.hpp
   iomanager.hpp
   xdmf_traits.hpp

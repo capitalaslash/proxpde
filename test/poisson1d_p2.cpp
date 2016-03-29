@@ -47,11 +47,9 @@ int main(int argc, char* argv[])
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
-  std::vector<Tri> triplets;
-  // FIXME - compute a proper sparsity pattern
-  triplets.reserve(5 * feSpace.dof.totalNum); // 5 = 2*dim+1
-  buildProblem(feSpace, assembly, rhs, bcs, triplets, b);
-  A.setFromTriplets(triplets.begin(), triplets.end());
+  Builder builder(A, b);
+  builder.buildProblem(feSpace, assembly, bcs);
+  builder.closeMatrix();
 
   Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;

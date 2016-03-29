@@ -154,80 +154,97 @@ struct AssemblyPoisson: public Assembly<CurFE>
   AssemblyAnalyticalRhs<CurFE> assemblyRhs;
 };
 
-template <typename FESpace>
-void buildProblem(FESpace & feSpace,
-                  Assembly<typename FESpace::CurFE_T> & assembly,
-                  scalarFun_T const& rhs,
-                  bc_list<FESpace> const& bcs,
-                  std::vector<Tri> & coefficients,
-                  Vec& b,
-                  uint row_offset = 0,
-                  uint clm_offset = 0)
+struct Builder
 {
-  typedef typename FESpace::CurFE_T CurFE_T;
-  typedef typename CurFE_T::LocalMat_T LMat_T;
-  typedef typename CurFE_T::LocalVec_T LVec_T;
+  Builder(Mat & mat, Vec & vec):
+    A(mat),
+    b(vec)
+  {}
 
-  auto & curFE = feSpace.curFE;
-
-  for(auto &e: feSpace.meshPtr->elementList)
+  template <typename FESpace>
+  void buildProblem(FESpace & feSpace,
+                    Assembly<typename FESpace::CurFE_T> & assembly,
+                    bc_list<FESpace> const& bcs,
+                    uint row_offset = 0,
+                    uint clm_offset = 0)
   {
-    LMat_T Ke = LMat_T::Zero();
-    LVec_T Fe = LVec_T::Zero();
+    typedef typename FESpace::CurFE_T CurFE_T;
+    typedef typename CurFE_T::LocalMat_T LMat_T;
+    typedef typename CurFE_T::LocalVec_T LVec_T;
 
-    // --- set current fe ---
-    curFE.reinit(e);
+    // FIXME - compute a proper sparsity pattern
+    _triplets.reserve((2*CurFE_T::RefFE_T::dim+1) * feSpace.dof.totalNum);
 
-    // --- build local matrix and rhs ---
-    assembly.build(Ke, Fe);
+    auto & curFE = feSpace.curFE;
 
-    // --- apply bc ---
-    // A_constrained = C^T A C
-    // b_constrained = C^T (b-Ah)
-    // C clear constrained rows/cols
-    // h is the vector of local constraint values
-
-    for(auto& bc: bcs)
+    for(auto &e: feSpace.meshPtr->elementList)
     {
-      LMat_T C = LMat_T::Identity();
-      LVec_T h = LVec_T::Zero();
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      LMat_T Ke = LMat_T::Zero();
+      LVec_T Fe = LVec_T::Zero();
+
+      // --- set current fe ---
+      curFE.reinit(e);
+
+      // --- build local matrix and rhs ---
+      assembly.build(Ke, Fe);
+
+      // --- apply bc ---
+      // A_constrained = C^T A C
+      // b_constrained = C^T (b-Ah)
+      // C clear constrained rows/cols
+      // h is the vector of local constraint values
+
+      for(auto& bc: bcs)
       {
-        DOFid_T const id = feSpace.dof.elemMap[e.id][i];
-        if(bc.is_constrained(id))
+        LMat_T C = LMat_T::Identity();
+        LVec_T h = LVec_T::Zero();
+        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
-          h(i) = bc.value(curFE.dofPts[i]);
-          C(i,i) = 0.;
+          DOFid_T const id = feSpace.dof.elemMap[e.id][i];
+          if(bc.is_constrained(id))
+          {
+            h(i) = bc.value(curFE.dofPts[i]);
+            C(i,i) = 0.;
+          }
+        }
+        Ke = C * Ke * C;
+        Fe = C * (Fe - curFE.stiffMat * h);
+
+        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+        {
+          DOFid_T const id = feSpace.dof.elemMap[e.id][i];
+          if(bc.is_constrained(id))
+          {
+            Ke(i,i) = 1.0;
+            Fe(i) = h[i];
+          }
         }
       }
-      Ke = C * Ke * C;
-      Fe = C * (Fe - curFE.stiffMat * h);
 
+      //     std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      //     std::cout << "Ke:\n" << Ke << std::endl;
+      //     std::cout << "Fe:\n" << Fe << std::endl;
+
+      // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id = feSpace.dof.elemMap[e.id][i];
-        if(bc.is_constrained(id))
+        DOFid_T const id_i = feSpace.dof.elemMap[e.id][i];
+        b(row_offset+id_i) += Fe(i);
+        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
-          Ke(i,i) = 1.0;
-          Fe(i) = h[i];
+          DOFid_T const id_j = feSpace.dof.elemMap[e.id][j];
+          _triplets.push_back(Tri(row_offset+id_i, clm_offset+id_j, Ke(i,j)));
         }
-      }
-    }
-
-    // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-    // std::cout << "Ke:\n" << Ke << std::endl;
-    // std::cout << "Fe:\n" << Fe << std::endl;
-
-    // --- store local values in global matrix and rhs ---
-    for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-    {
-      DOFid_T const id_i = feSpace.dof.elemMap[e.id][i];
-      b(row_offset+id_i) += Fe(i);
-      for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-      {
-        DOFid_T const id_j = feSpace.dof.elemMap[e.id][j];
-        coefficients.push_back(Tri(row_offset+id_i, clm_offset+id_j, Ke(i,j)));
       }
     }
   }
-}
+
+  void closeMatrix()
+  {
+    A.setFromTriplets(_triplets.begin(), _triplets.end());
+  }
+
+  Mat & A;
+  Vec & b;
+  std::vector<Tri> _triplets;
+};

@@ -45,7 +45,6 @@ int main()
 {
   uint const numPts_x = 21;
   uint const numPts_y = 2;
-  uint const numPts = numPts_x*numPts_y;
 
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0.02, 0.);
@@ -71,11 +70,9 @@ int main()
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
-  std::vector<Tri> triplets;
-  // FIXME - compute a proper sparsity pattern
-  triplets.reserve(5 * feSpace.dof.totalNum); // 5 = 2*dim+1
-  buildProblem(feSpace, assembly, rhs, bcs, triplets, b);
-  A.setFromTriplets(triplets.begin(), triplets.end());
+  Builder builder(A, b);
+  builder.buildProblem(feSpace, assembly, bcs);
+  builder.closeMatrix();
 
   // std::cout << "A:\n" << A << std::endl;
   // std::cout << "b:\n" << b << std::endl;

@@ -61,7 +61,6 @@ int main(int argc, char* argv[])
   io.print(sol);
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  for(uint i=0; i<feSpace.dof.totalNum; ++i)
   interpolateAnalyticalFunction(exact_sol, feSpace, exact);
   double norm = (sol - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;

@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(b);
   std::cout << "sol:\n" << sol.data << std::endl;
 
-  IOManager<FESpace_T> io(feSpace);
+  IOManager<FESpace_T> io{"sol_poisson1d_p2.xmf", feSpace};
   io.print({sol});
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);

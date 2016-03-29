@@ -116,8 +116,7 @@ int main()
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 
-  IOManager<FESpace_T> io(feSpace);
-
+  IOManager<FESpace_T> io{"sol.xmf", feSpace};
   io.print({sol});
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);

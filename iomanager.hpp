@@ -14,12 +14,9 @@ struct IOManager
   typedef std::shared_ptr<typename FESpace::Mesh_T> MeshPtr_T;
   typedef XDMFTraits<Elem_T> Traits_T;
 
-  explicit IOManager(FESpace const & space):
-    feSpace(space)
-  {}
-
   void print(std::vector<Var> const& data);
 
+  std::string fileName;
   FESpace const & feSpace;
 };
 
@@ -32,8 +29,7 @@ void IOManager<FESpace>::print(std::vector<Var> const& data)
   uint const numPts = mesh.pointList.size();
   uint const numElems = mesh.elementList.size();
 
-  //  system("mkdir -p output");
-  const std::string fileName = "sol.xmf";
+  // system("mkdir -p output");
 
   using namespace tinyxml2;
 

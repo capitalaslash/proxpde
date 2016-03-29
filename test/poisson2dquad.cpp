@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   solver.factorize(A);
   sol.data = solver.solve(b);
 
-  IOManager<FESpace_T> io(feSpace);
+  IOManager<FESpace_T> io{"sol_poisson2dquad.xmf", feSpace};
   io.print({sol});
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);

@@ -89,19 +89,19 @@ int main()
   // std::cout << "=====" << std::endl;
   // fout.close();
 
-  Vec sol;
+  Var sol{"u"};
   switch(solver_type)
   {
     case CHOLESKY:
     {
       Eigen::SimplicialCholesky<Mat> solver(A);
-      sol = solver.solve(b);
+      sol.data = solver.solve(b);
       break;
     }
     case BICGSTAB:
     {
       Eigen::SimplicialCholesky<Mat> solver(A);
-      sol = solver.solve(b);
+      sol.data = solver.solve(b);
     }
     case SPARSELU:
     {
@@ -111,14 +111,14 @@ int main()
       // Compute the numerical factorization
       solver.factorize(A);
 
-      sol = solver.solve(b);
+      sol.data = solver.solve(b);
     }
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 
   IOManager<FESpace_T> io(feSpace);
 
-  io.print(sol);
+  io.print({sol});
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);
   for(uint j=0; j<numPts_y; ++j)
@@ -128,7 +128,7 @@ int main()
       exact(feSpace.dof.ptMap[pos]) = exact_sol(meshPtr->pointList[pos].coord);
     }
 
-  Vec error = sol - exact;
+  Vec error = sol.data - exact;
   std::cout << "error: " << error.norm() << std::endl;
 
   return 0;

@@ -2,6 +2,7 @@
 
 #include "def.hpp"
 #include "xdmf_traits.hpp"
+#include "var.hpp"
 
 #include <fstream>
 #include <tinyxml2.h>
@@ -17,7 +18,7 @@ struct IOManager
     feSpace(space)
   {}
 
-  void print(Vec const& sol);
+  void print(std::vector<Var> const& data);
 
   FESpace const & feSpace;
 };
@@ -25,7 +26,7 @@ struct IOManager
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(Vec const& sol)
+void IOManager<FESpace>::print(std::vector<Var> const& data)
 {
   typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
   uint const numPts = mesh.pointList.size();
@@ -98,11 +99,10 @@ void IOManager<FESpace>::print(Vec const& sol)
   geodata_el->SetText(buf.str().c_str());
   geometry->InsertEndChild(geodata_el);
 
-  for(auto& data: {sol})
+  for(auto& v: data)
   {
-    std::string const varName = "sol";
     auto var_el = doc.NewElement("Attribute");
-    var_el->SetAttribute("Name", varName.c_str());
+    var_el->SetAttribute("Name", v.name.c_str());
     var_el->SetAttribute("Active", 1);
     var_el->SetAttribute("AttributeType", "Scalar");
     var_el->SetAttribute("Center", "Node");
@@ -118,7 +118,7 @@ void IOManager<FESpace>::print(Vec const& sol)
     buf << std::endl;
     for(uint p=0; p<numPts; ++p)
     {
-      buf << data(feSpace.dof.ptMap[mesh.pointList[p].id]) << "\n";
+      buf << v.data(feSpace.dof.ptMap[mesh.pointList[p].id]) << "\n";
     }
     // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
     vardata_el->SetText(buf.str().c_str());

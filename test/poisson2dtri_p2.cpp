@@ -51,18 +51,18 @@ int main(int argc, char* argv[])
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
 
-  Vec sol;
+  Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   solver.analyzePattern(A);
   solver.factorize(A);
-  sol = solver.solve(b);
+  sol.data = solver.solve(b);
 
   IOManager<FESpace_T> io(feSpace);
-  io.print(sol);
+  io.print({sol});
 
   Vec exact = Vec::Zero(feSpace.dof.totalNum);
   interpolateAnalyticalFunction(exact_sol, feSpace, exact);
-  double norm = (sol - exact).norm();
+  double norm = (sol.data - exact).norm();
   std::cout << "the norm of the error is " << norm << std::endl;
   if(std::fabs(norm - 0.00109279) > 1.e-5)
   {

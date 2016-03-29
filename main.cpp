@@ -71,7 +71,11 @@ int main()
 
   AssemblyPoisson<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
-  buildProblem(feSpace, assembly, rhs, bcs, A, b);
+  std::vector<Tri> triplets;
+  // FIXME - compute a proper sparsity pattern
+  triplets.reserve(5 * feSpace.dof.totalNum); // 5 = 2*dim+1
+  buildProblem(feSpace, assembly, rhs, bcs, triplets, b);
+  A.setFromTriplets(triplets.begin(), triplets.end());
 
   // std::cout << "A:\n" << A << std::endl;
   // std::cout << "b:\n" << b << std::endl;

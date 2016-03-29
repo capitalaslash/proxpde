@@ -159,18 +159,16 @@ void buildProblem(FESpace & feSpace,
                   Assembly<typename FESpace::CurFE_T> & assembly,
                   scalarFun_T const& rhs,
                   bc_list<FESpace> const& bcs,
-                  Mat& A,
-                  Vec& b)
+                  std::vector<Tri> & coefficients,
+                  Vec& b,
+                  uint row_offset = 0,
+                  uint clm_offset = 0)
 {
   typedef typename FESpace::CurFE_T CurFE_T;
   typedef typename CurFE_T::LocalMat_T LMat_T;
   typedef typename CurFE_T::LocalVec_T LVec_T;
 
   auto & curFE = feSpace.curFE;
-
-  std::vector<Tri> coefficients;
-  // sparsity pattern
-  coefficients.reserve(feSpace.meshPtr->pointList.size() * 3); // 3 = 2*dim+1
 
   for(auto &e: feSpace.meshPtr->elementList)
   {
@@ -224,13 +222,12 @@ void buildProblem(FESpace & feSpace,
     for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
     {
       DOFid_T const id_i = feSpace.dof.elemMap[e.id][i];
-      b(id_i) += Fe(i);
+      b(row_offset+id_i) += Fe(i);
       for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
       {
         DOFid_T const id_j = feSpace.dof.elemMap[e.id][j];
-        coefficients.push_back(Tri(id_i, id_j, Ke(i,j)));
+        coefficients.push_back(Tri(row_offset+id_i, clm_offset+id_j, Ke(i,j)));
       }
     }
   }
-  A.setFromTriplets(coefficients.begin(), coefficients.end());
 }

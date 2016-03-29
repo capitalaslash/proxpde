@@ -10,7 +10,6 @@ public:
                  marker_T const m = -1):
     coord(c),
     id(i),
-    dof_id(DOFidNotSet),
     marker(m)
   {}
   explicit Point(double const x,
@@ -28,7 +27,6 @@ public:
 
   Vec3 coord;
   id_T id;
-  DOFid_T dof_id;
   marker_T marker;
 };
 

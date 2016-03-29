@@ -13,7 +13,7 @@ struct DOF
     _rows(mesh.elementList.size())
   {
     elemMap.resize(_rows);
-    ptMap.resize(mesh.pointList.size());
+    ptMap.resize(mesh.pointList.size(), DOFidNotSet);
     std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), DOFidNotSet);
     std::map<std::set<id_T>,DOFid_T> edgeDOFs;
     std::map<std::set<id_T>,DOFid_T> faceDOFs;
@@ -29,9 +29,8 @@ struct DOF
         for(auto & p: e.pointList)
         {
           // check if dofs have already been assigned to this point
-          if(p->dof_id == DOFidNotSet)
+          if(ptMap[p->id] == DOFidNotSet)
           {
-            p->dof_id = dof_count;
             elemMap[e.id][local_dof_count] = dof_count;
             ptMap[p->id] = dof_count;
             dof_count++;
@@ -39,8 +38,7 @@ struct DOF
           }
           else
           {
-            elemMap[e.id][local_dof_count] = p->dof_id;
-            ptMap[p->id] = p->dof_id;
+            elemMap[e.id][local_dof_count] = ptMap[p->id];
             local_dof_count++;
           }
         }

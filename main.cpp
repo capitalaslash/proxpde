@@ -116,19 +116,15 @@ int main()
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 
+  Var exact{"exact", feSpace.dof.totalNum};
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+
+  Var error{"error"};
+  error.data = sol.data - exact.data;
+  std::cout << "error: " << error.data.norm() << std::endl;
+
   IOManager<FESpace_T> io{"sol.xmf", feSpace};
-  io.print({sol});
-
-  Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  for(uint j=0; j<numPts_y; ++j)
-    for(uint i=0; i<numPts_x; ++i)
-    {
-      uint const pos = i + j*numPts_x;
-      exact(feSpace.dof.ptMap[pos]) = exact_sol(meshPtr->pointList[pos].coord);
-    }
-
-  Vec error = sol.data - exact;
-  std::cout << "error: " << error.norm() << std::endl;
+  io.print({sol, exact, error});
 
   return 0;
 }

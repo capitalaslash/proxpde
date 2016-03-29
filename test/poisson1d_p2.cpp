@@ -55,14 +55,16 @@ int main(int argc, char* argv[])
   solver.analyzePattern(A);
   solver.factorize(A);
   sol.data = solver.solve(b);
-  std::cout << "sol:\n" << sol.data << std::endl;
+
+  Var exact{"exact", feSpace.dof.totalNum};
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  Var error{"e"};
+  error.data = sol.data - exact.data;
 
   IOManager<FESpace_T> io{"sol_poisson1d_p2.xmf", feSpace};
-  io.print({sol});
+  io.print({sol, exact, error});
 
-  Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
-  double norm = (sol.data - exact).norm();
+  double norm = error.data.norm();
   std::cout << "the norm of the error is " << norm << std::endl;
   if(std::fabs(norm - 3.18935e-07) > 1.e-9)
   {

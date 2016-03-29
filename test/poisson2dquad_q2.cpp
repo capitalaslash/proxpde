@@ -59,12 +59,15 @@ int main(int argc, char* argv[])
   solver.factorize(A);
   sol.data = solver.solve(b);
 
-  IOManager<FESpace_T> io{"sol_poisson2dquad_q2.xmf", feSpace};
-  io.print({sol});
+  Var exact{"exact", feSpace.dof.totalNum};
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  Var error{"e"};
+  error.data = sol.data - exact.data;
 
-  Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
-  double norm = (sol.data - exact).norm();
+  IOManager<FESpace_T> io{"sol_poisson2dquad_q2.xmf", feSpace};
+  io.print({sol, exact, error});
+
+  double norm = error.data.norm();
   std::cout << "the norm of the error is " << norm << std::endl;
   if(std::fabs(norm - 0.000143585) > 1.e-6)
   {

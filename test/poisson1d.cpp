@@ -4,6 +4,7 @@
 #include "fespace.hpp"
 #include "bc.hpp"
 #include "assembly.hpp"
+#include "iomanager.hpp"
 
 #include <iostream>
 
@@ -48,15 +49,21 @@ int main(int argc, char* argv[])
 
   buildProblem(feSpace, assembly, rhs, bcs, A, b);
 
-  Vec sol;
+  Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   solver.analyzePattern(A);
   solver.factorize(A);
-  sol = solver.solve(b);
+  sol.data = solver.solve(b);
 
-  Vec exact = Vec::Zero(feSpace.dof.totalNum);
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact);
-  double norm = (sol - exact).norm();
+  Var exact{"exact", feSpace.dof.totalNum};
+  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  Var error{"e"};
+  error.data = sol.data - exact.data;
+
+  IOManager<FESpace_T> io{"sol_poisson1d.xmf", feSpace};
+  io.print({sol, exact, error});
+
+  double norm = error.data.norm();
   std::cout << "the norm of the error is " << norm << std::endl;
   if(std::fabs(norm - 2.61664e-11) > 1.e-10)
   {

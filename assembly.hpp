@@ -135,7 +135,7 @@ struct AssemblyVecRhs: public Assembly<FESpace>
     typedef typename FESpace_T::CurFE_T CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      Vec3 local_rhs = Vec3::Zero();
+      double local_rhs = 0.0;
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace1.dof.elemMap[this->feSpace1.curFE.e->id][n];

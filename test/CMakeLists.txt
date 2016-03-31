@@ -39,3 +39,10 @@ add_test(
   NAME poisson2dquad_q2
   COMMAND poisson2dquad_q2
 )
+
+add_executable(dr2dquad dr2dquad.cpp)
+target_link_libraries(dr2dquad ${LIBS})
+add_test(
+  NAME dr2dquad
+  COMMAND dr2dquad
+)

@@ -13,7 +13,7 @@ struct FESpace
   typedef RefFE RefFE_T;
   typedef QR QR_T;
   typedef DOF<Mesh, RefFE> DOF_T;
-  typedef CurFE<RefFE,QR> CurFE_T;
+  typedef CurFE<RefFE, QR> CurFE_T;
 
   explicit FESpace(std::shared_ptr<Mesh> const mesh):
     meshPtr(mesh),

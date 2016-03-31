@@ -118,6 +118,42 @@ struct AssemblyAnalyticalRhs: public Assembly<FESpace>
 };
 
 template <typename FESpace>
+struct AssemblyVecRhs: public Assembly<FESpace>
+{
+  typedef FESpace FESpace_T;
+  typedef Assembly<FESpace> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyVecRhs(Vec const & r, FESpace_T & fe):
+    Assembly<FESpace_T>(fe),
+    rhs(r)
+  {}
+
+  void build(LMat_T &, LVec_T & Fe) const
+  {
+    typedef typename FESpace_T::CurFE_T CurFE_T;
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      Vec3 local_rhs = Vec3::Zero();
+      for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = this->feSpace1.dof.elemMap[this->feSpace1.curFE.e->id][n];
+        local_rhs += rhs(dofId) * this->feSpace1.curFE.phi(n, q);
+      }
+      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      {
+        Fe(i) += this->feSpace1.curFE.JxW[q] *
+            this->feSpace1.curFE.phi(i, q) *
+            local_rhs;
+      }
+    }
+  }
+
+  Vec const & rhs;
+};
+
+template <typename FESpace>
 struct AssemblyAdvection: public Assembly<FESpace>
 {
   typedef FESpace FESpace_T;

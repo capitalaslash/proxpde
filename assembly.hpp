@@ -259,6 +259,7 @@ struct Builder
       // C clear constrained rows/cols
       // h is the vector of local constraint values
 
+      auto Ke_uncostrained = Ke;
       for(auto& bc: bcs)
       {
         LMat_T C = LMat_T::Identity();
@@ -273,7 +274,7 @@ struct Builder
           }
         }
         Ke = C * Ke * C;
-        Fe = C * (Fe - curFE.stiffMat * h);
+        Fe = C * (Fe - Ke_uncostrained * h);
 
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {

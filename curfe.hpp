@@ -75,6 +75,6 @@ struct CurFE
   Eigen::Matrix<Vec3, RefFE::numFuns, QR::numPts> dphi;
   // std::array<scalarFun_T,RefFE::numFuns> phiFun;
   // std::array<vectorFun_T,RefFE::numFuns> dphiFun;
-  LocalMat_T massMat;
-  LocalMat_T stiffMat;
+  // LocalMat_T massMat;
+  // LocalMat_T stiffMat;
 };

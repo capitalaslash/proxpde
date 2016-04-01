@@ -46,3 +46,10 @@ add_test(
   NAME dr2dquad
   COMMAND dr2dquad
 )
+
+add_executable(stokes2dquad stokes2dquad.cpp)
+target_link_libraries(stokes2dquad ${LIBS})
+add_test(
+  NAME stokes2dquad
+  COMMAND stokes2dquad
+)

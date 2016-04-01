@@ -194,6 +194,75 @@ struct AssemblyAdvection: public Assembly<FESpace>
   Vec const & vel;
 };
 
+template <typename FESpace1, typename FESpace2>
+struct AssemblyGrad: public Assembly<FESpace1, FESpace2>
+{
+  typedef FESpace1 FESpace1_T;
+  typedef FESpace2 FESpace2_T;
+  typedef Assembly<FESpace1, FESpace2> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyGrad(uint comp, FESpace1_T & fe1, FESpace2_T & fe2):
+    Assembly<FESpace1_T,FESpace2_T>(fe1, fe2),
+    component(comp)
+  {}
+
+  void build(LMat_T & Ke, LVec_T &) const
+  {
+    typedef typename FESpace1_T::CurFE_T CurFE1_T;
+    typedef typename FESpace2_T::CurFE_T CurFE2_T;
+    for(uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+    {
+      for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
+      {
+        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
+        {
+          Ke(i,j) += this->feSpace1.curFE.JxW[q] *
+              this->feSpace1.curFE.dphi(i, q)(component) *
+              this->feSpace2.curFE.phi(j, q);
+        }
+      }
+    }
+  }
+  uint const component;
+};
+
+template <typename FESpace1, typename FESpace2>
+struct AssemblyDiv: public Assembly<FESpace1, FESpace2>
+{
+  typedef FESpace1 FESpace1_T;
+  typedef FESpace2 FESpace2_T;
+  typedef Assembly<FESpace1, FESpace2> Super_T;
+  typedef typename Super_T::LMat_T LMat_T;
+  typedef typename Super_T::LVec_T LVec_T;
+
+  explicit AssemblyDiv(uint comp, FESpace1_T & fe1, FESpace2_T & fe2):
+    Assembly<FESpace1_T,FESpace2_T>(fe1, fe2),
+    component(comp)
+  {}
+
+  void build(LMat_T & Ke, LVec_T &) const
+  {
+    typedef typename FESpace1_T::CurFE_T CurFE1_T;
+    typedef typename FESpace2_T::CurFE_T CurFE2_T;
+    for(uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+    {
+      for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
+      {
+        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
+        {
+          Ke(i,j) += this->feSpace1.curFE.JxW[q] *
+              this->feSpace1.curFE.phi(i, q) *
+              this->feSpace2.curFE.dphi(j, q)(component);
+        }
+      }
+    }
+  }
+
+  uint const component;
+};
+
 template <typename FESpace>
 struct AssemblyPoisson: public Assembly<FESpace>
 {
@@ -233,16 +302,28 @@ struct Builder
                     uint row_offset = 0,
                     uint clm_offset = 0)
   {
-    typedef typename FESpace::CurFE_T CurFE_T;
-    typedef typename CurFE_T::LocalMat_T LMat_T;
-    typedef typename CurFE_T::LocalVec_T LVec_T;
+    buildProblem(feSpace, feSpace, assembly, bcs, row_offset, clm_offset);
+  }
+
+  template <typename FESpace1, typename FESpace2>
+  void buildProblem(FESpace1 & feSpace1,
+                    FESpace2 & feSpace2,
+                    Assembly<FESpace1, FESpace2> & assembly,
+                    bc_list<FESpace1> const& bcs,
+                    uint row_offset = 0,
+                    uint clm_offset = 0)
+  {
+    typedef typename FESpace1::CurFE_T CurFE1_T;
+    typedef typename FESpace2::CurFE_T CurFE2_T;
+    typedef typename Assembly<FESpace1, FESpace2>::LMat_T LMat_T;
+    typedef typename Assembly<FESpace1, FESpace2>::LVec_T LVec_T;
 
     // FIXME - compute a proper sparsity pattern
-    _triplets.reserve((2*CurFE_T::RefFE_T::dim+1) * feSpace.dof.totalNum);
+    _triplets.reserve((2*CurFE1_T::RefFE_T::dim+1) * feSpace1.dof.totalNum);
 
-    auto & curFE = feSpace.curFE;
+    auto & curFE = feSpace1.curFE;
 
-    for(auto &e: feSpace.meshPtr->elementList)
+    for(auto &e: feSpace1.meshPtr->elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
@@ -254,31 +335,41 @@ struct Builder
       assembly.build(Ke, Fe);
 
       // --- apply bc ---
-      // A_constrained = C^T A C
+      // A_constrained = Cl A Cr
       // b_constrained = C^T (b-Ah)
-      // C clear constrained rows/cols
+      // Cl clears constrained rows
+      // Cr clears constrained clms
       // h is the vector of local constraint values
 
       auto Ke_uncostrained = Ke;
       for(auto& bc: bcs)
       {
-        LMat_T C = LMat_T::Identity();
-        LVec_T h = LVec_T::Zero();
-        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+        typename CurFE1_T::LocalMat_T Cl = CurFE1_T::LocalMat_T::Identity();
+        typename CurFE2_T::LocalMat_T Cr = CurFE2_T::LocalMat_T::Identity();
+        typename CurFE2_T::LocalVec_T h = CurFE2_T::LocalVec_T::Zero();
+        for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
         {
-          DOFid_T const id = feSpace.dof.elemMap[e.id][i];
+          DOFid_T const id = feSpace1.dof.elemMap[e.id][i];
           if(bc.is_constrained(id))
           {
-            h(i) = bc.value(curFE.dofPts[i]);
-            C(i,i) = 0.;
+            Cl(i,i) = 0.;
           }
         }
-        Ke = C * Ke * C;
-        Fe = C * (Fe - Ke_uncostrained * h);
-
-        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+        for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
         {
-          DOFid_T const id = feSpace.dof.elemMap[e.id][i];
+          DOFid_T const id = feSpace2.dof.elemMap[e.id][i];
+          if(bc.is_constrained(id))
+          {
+            h(i) = bc.value(feSpace2.curFE.dofPts[i]);
+            Cr(i,i) = 0.;
+          }
+        }
+        Ke = Cl * Ke * Cr;
+        Fe = Cl * (Fe - Ke_uncostrained * h);
+
+        for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
+        {
+          DOFid_T const id = feSpace1.dof.elemMap[e.id][i];
           if(bc.is_constrained(id))
           {
             Ke(i,i) = 1.0;
@@ -287,18 +378,18 @@ struct Builder
         }
       }
 
-      //     std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      //     std::cout << "Ke:\n" << Ke << std::endl;
-      //     std::cout << "Fe:\n" << Fe << std::endl;
+      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      // std::cout << "Ke:\n" << Ke << std::endl;
+      // std::cout << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id_i = feSpace.dof.elemMap[e.id][i];
+        DOFid_T const id_i = feSpace1.dof.elemMap[e.id][i];
         b(row_offset+id_i) += Fe(i);
-        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
+        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
-          DOFid_T const id_j = feSpace.dof.elemMap[e.id][j];
+          DOFid_T const id_j = feSpace2.dof.elemMap[e.id][j];
           _triplets.push_back(Tri(row_offset+id_i, clm_offset+id_j, Ke(i,j)));
         }
       }

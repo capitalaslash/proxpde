@@ -8,6 +8,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <Eigen/UmfPackSupport>
 
 typedef uint id_T;
 typedef uint marker_T;

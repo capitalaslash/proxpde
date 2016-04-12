@@ -31,11 +31,11 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 
 int main(int argc, char* argv[])
 {
-  uint const numPts_x = (argc < 3)? 11 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 3)? 11 : std::stoi(argv[2]);
+  uint const numPts_x = (argc < 3)? 3 : std::stoi(argv[1]);
+  uint const numPts_y = (argc < 3)? 3 : std::stoi(argv[2]);
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  Vec3 const origin{-1., -1., 0.};
+  Vec3 const length{2., 2., 0.};
 
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
 
@@ -46,73 +46,85 @@ int main(int argc, char* argv[])
   FESpaceP_T feSpaceP(meshPtr);
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
+  auto oneFun = [] (Vec3 const&) {return 1.;};
   bc_list<FESpaceU_T> bcsU{
     feSpaceU,
     {
-      bc_ess<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun),
-      bc_ess<FESpaceU_T>(feSpaceU, side::BOTTOM, zeroFun)
+      bc_ess<FESpaceU_T>(feSpaceU, side::RIGHT, zeroFun),
+      bc_ess<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
     }
   };
   bcsU.init();
-  bc_list<FESpaceP_T> bcsP{
-    feSpaceP,
+  bc_list<FESpaceU_T> bcsV{
+    feSpaceU,
     {
-      bc_ess<FESpaceP_T>(feSpaceP, side::LEFT, zeroFun),
-      bc_ess<FESpaceP_T>(feSpaceP, side::BOTTOM, zeroFun)
+      bc_ess<FESpaceU_T>(feSpaceU, side::BOTTOM, oneFun),
+      bc_ess<FESpaceU_T>(feSpaceU, side::RIGHT, zeroFun)
     }
   };
+  bcsV.init();
+  bc_list<FESpaceP_T> bcsP(feSpaceP);
   bcsP.init();
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
 
-  AssemblyStiffness<FESpaceU_T> stiffness(feSpaceU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP);
-  AssemblyGrad<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> grad1(1, feSpaceU, feSpaceP);
-  AssemblyGrad<FESpaceP_T, FESpaceU_T> div1(1, feSpaceP, feSpaceU);
-  AssemblyPoisson<FESpaceU_T> poissonU(rhs, feSpaceU);
-  AssemblyPoisson<FESpaceP_T> poissonP(rhs, feSpaceP);
+  AssemblyStiffness<FESpaceU_T> stiffness0(feSpaceU);
+  AssemblyStiffness<FESpaceU_T> stiffness1(feSpaceU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  // AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, 0);
+  AssemblyGrad<FESpaceU_T, FESpaceP_T> grad1(1, feSpaceU, feSpaceP, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> div1(1, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
 
   Builder builder(A, b);
-//  builder.attach_assembler(stiffness);
-  builder.buildProblem(feSpaceU, stiffness, bcsU);
-  builder.buildProblem(feSpaceU, feSpaceP, grad0, bcsU, 0, 2*feSpaceU.dof.totalNum);
-  builder.buildProblem(feSpaceP, feSpaceU, div0, bcsP, 2*feSpaceU.dof.totalNum, 0);
-  builder.buildProblem(feSpaceU, stiffness, bcsU, feSpaceU.dof.totalNum, 0);
-  builder.buildProblem(feSpaceU, feSpaceP, grad1, bcsU, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
-  builder.buildProblem(feSpaceP, feSpaceU, div1, bcsP, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
-//  builder.buildProblem(feSpaceU, poissonU, bcsU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
-//  builder.buildProblem(feSpaceP, poissonP, bcsP, 2*feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
+  // builder.assemblies[0].push_back(&stiffness0);
+  // builder.assemblies[1].push_back(&grad0);
+  // builder.assemblies[1].push_back(&div0);
+  // builder.assemblies[0].push_back(&stiffness1);
+  builder.buildProblem(stiffness0, bcsU);
+  builder.buildProblem(make_assemblyGrad(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum), bcsU, bcsP);
+  builder.buildProblem(div0, bcsP, bcsU);
+  builder.buildProblem(stiffness1, bcsV);
+  builder.buildProblem(grad1, bcsV, bcsP);
+  builder.buildProblem(div1, bcsP, bcsV);
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  Eigen::SparseLU<Mat> solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
+  // Eigen::SparseLU<Mat> solver;
+  // solver.analyzePattern(A);
+  // solver.factorize(A);
+  // Eigen::GMRES<Mat> solver(A);
+  Eigen::UmfPackLU<Mat> solver(A);
+  // Eigen::SuperLU<Mat> solver(A);
   sol = solver.solve(b);
+
+  // std::cout << "A:\n" << A << std::endl;
+  // std::cout << "b:\n" << b << std::endl;
+  // std::cout << "sol:\n" << sol << std::endl;
+
+  std::cout << sol.norm() << std::endl;
 
   Var u{"u", sol, 0, feSpaceU.dof.totalNum};
   Var v{"v", sol, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum};
   Var p{"p", sol, 2*feSpaceU.dof.totalNum, feSpaceP.dof.totalNum};
 
-//  Var exact{"exact", feSpaceU.dof.totalNum};
-//  interpolateAnalyticalFunction(exact_sol, feSpaceU, exact.data);
-//  Var error{"e"};
-//  error.data = sol.data - exact.data;
+  // Var exact{"exact", feSpaceU.dof.totalNum};
+  // interpolateAnalyticalFunction(exact_sol, feSpaceU, exact.data);
+  Var error{"e"};
+  error.data = sol /*- exact.data*/;
 
   IOManager<FESpaceU_T> ioU{"sol_stokes2dquad_u.xmf", feSpaceU};
   ioU.print({u, v});
   IOManager<FESpaceP_T> ioP{"sol_stokes2dquad_p.xmf", feSpaceP};
   ioP.print({p});
 
-//  double norm = error.data.norm();
-//  std::cout << "the norm of the error is " << norm << std::endl;
-//  if(std::fabs(norm - 0.000143585) > 1.e-6)
-//  {
-//    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-//    return 1;
-//  }
+  double norm = error.data.norm();
+  std::cout << "the norm of the error is " << norm << std::endl;
+  if(std::fabs(norm - 6.03323) > 1.e-4)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

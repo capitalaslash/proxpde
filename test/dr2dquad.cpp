@@ -56,9 +56,9 @@ int main(int argc, char* argv[])
   AssemblyAnalyticalRhs<FESpace_T> f(rhs, feSpace);
 
   Builder builder(A, b);
-  builder.buildProblem(feSpace, stiffness, bcs);
-  builder.buildProblem(feSpace, mass, bcs);
-  builder.buildProblem(feSpace, f, bcs);
+  builder.buildProblem(stiffness, bcs);
+  builder.buildProblem(mass, bcs);
+  builder.buildProblem(f, bcs);
   builder.closeMatrix();
 
   Var sol{"u"};

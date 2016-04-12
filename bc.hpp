@@ -73,7 +73,7 @@ template <typename FESpace>
 class bc_list: public std::vector<bc_ess<FESpace>>
 {
 public:
-  bc_list(FESpace const & feSpace, std::initializer_list<bc_ess<FESpace>> list):
+  explicit bc_list(FESpace const & feSpace, std::initializer_list<bc_ess<FESpace>> list = {}):
     std::vector<bc_ess<FESpace>>(list)
   {
     vec = bool_array::Constant(feSpace.dof.totalNum, false);

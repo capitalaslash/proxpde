@@ -68,10 +68,10 @@ int main()
   Mat A(feSpace.dof.totalNum,feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
-  AssemblyPoisson<FESpace_T> assembly(rhs, feSpace);
+  AssemblyStiffness<FESpace_T> assembly(feSpace);
 
   Builder builder(A, b);
-  builder.buildProblem(feSpace, assembly, bcs);
+  builder.buildProblem(assembly, bcs);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << A << std::endl;

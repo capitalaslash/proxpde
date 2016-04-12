@@ -47,10 +47,11 @@ int main(int argc, char* argv[])
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
-  AssemblyPoisson<FESpace_T> assembly(rhs, feSpace);
+  AssemblyStiffness<FESpace_T> stiffness(feSpace);
 
   Builder builder(A, b);
-  builder.buildProblem(feSpace, assembly, bcs);
+  builder.buildProblem(stiffness, bcs);
+  builder.buildProblem(AssemblyAnalyticalRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};

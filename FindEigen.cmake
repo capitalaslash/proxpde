@@ -12,7 +12,7 @@
 
 # Look for the header file.
 find_path(EIGEN_INCLUDE_DIR Eigen/Core
-  HINTS ${EIGEN_DIR} ENV EIGEN_DIR
+  HINTS ${EIGEN_DIR} $ENV{EIGEN_DIR}
   PATH_SUFFIXES eigen eigen3
 )
 

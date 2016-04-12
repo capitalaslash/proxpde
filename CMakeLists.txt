@@ -9,7 +9,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 set(MINIFEM_CONTRIB_DIR contrib CACHE STRING "relative path to contrib dir")
 include(Contrib)
 
-include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS} ${TINYXML2_INCLUDE_DIRS})
+include_directories(SYSTEM
+  ${EIGEN_INCLUDE_DIRS}
+  ${UMFPACK_INCLUDE_DIRS}
+  ${TINYXML2_INCLUDE_DIRS}
+)
 
 # find_package(Qt5Gui)
 
@@ -39,11 +43,19 @@ add_library(minifem
 if(EIGEN_USE_INTERNAL)
   add_dependencies(minifem ep_eigen)
 endif()
+if(UMFPACK_USE_INTERNAL)
+  add_dependencies(minifem ep_umfpack)
+endif()
 if(TINYXML2_USE_INTERNAL)
   add_dependencies(minifem ep_tinyxml2)
 endif()
 
-set(LIBS minifem ${TINYXML2_LIBRARIES})
+set(LIBS
+  minifem
+  ${UMFPACK_LIBRARIES}
+  ${TINYXML2_LIBRARIES}
+)
+message(STATUS "Final set of libraries to link: ${LIBS}")
 
 add_executable(main
   main.cpp

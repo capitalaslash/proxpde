@@ -32,6 +32,7 @@ set(MINIFEM_HEADERS
   assembly.hpp
   iomanager.hpp
   xdmf_traits.hpp
+  timer.hpp
  )
 
 include_directories(${CMAKE_SOURCE_DIR})

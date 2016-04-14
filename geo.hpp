@@ -72,12 +72,12 @@ struct GeoElem
 
 inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
 {
-  out << "(";
+  out << "pts: ";
   for(auto & p: e.pointList)
   {
-    out << p->id << ", ";
+    out << p->id << " ";
   }
-  out << "\b\b), " << "id: " << e.id << ", m: " << e.marker;
+  out << "id: " << e.id << ", m: " << e.marker;
   if(e.facingElem[0].first)
   {
     out << ", fe: (" << e.facingElem[0].first->id << ", " << e.facingElem[0].second << ")";

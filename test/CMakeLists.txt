@@ -53,3 +53,10 @@ add_test(
   NAME stokes2dquad
   COMMAND stokes2dquad
 )
+
+add_executable(stokes2dcircle stokes2dcircle.cpp)
+target_link_libraries(stokes2dcircle ${LIBS})
+add_test(
+  NAME stokes2dcircle
+  COMMAND stokes2dcircle
+)

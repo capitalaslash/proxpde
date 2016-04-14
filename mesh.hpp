@@ -61,7 +61,8 @@ enum side
   BOTTOM,
   RIGHT,
   TOP,
-  LEFT
+  LEFT,
+  CIRCLE
 };
 
 template <typename Mesh>
@@ -156,6 +157,11 @@ void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
                  Vec3 const& origin,
                  Vec3 const& length,
                  std::array<uint, 2> const numPts);
+
+void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
+                     Vec3 const& origin,
+                     double const& radius,
+                     std::array<uint, 3> const numPts);
 
 template <class Elem>
 struct MeshBuilder

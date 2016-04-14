@@ -409,7 +409,7 @@ struct Builder
         for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           DOFid_T const id_j = assembly.feSpace.dof.elemMap[e.id][j];
-          _triplets.push_back(Tri(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j)));
+          _triplets.emplace_back(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j));
         }
       }
     }
@@ -445,8 +445,8 @@ struct Builder
       // --- build local matrix and rhs ---
       assembly.build(Ke);
 
-      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      std::cout << "Ke:\n" << Ke << std::endl;
+      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      // std::cout << "Ke:\n" << Ke << std::endl;
 
       // --- apply bc ---
       // A_constrained = C^T A C
@@ -492,7 +492,7 @@ struct Builder
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
           DOFid_T const id_j = assembly.feSpace2.dof.elemMap[e.id][j];
-          _triplets.push_back(Tri(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j)));
+          _triplets.emplace_back(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j));
         }
       }
     }
@@ -541,8 +541,8 @@ struct Builder
       }
       Fe = C * Fe;
 
-      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      std::cout << "Fe:\n" << Fe << std::endl;
+      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      // std::cout << "Fe:\n" << Fe << std::endl;
 
       assert(assembly.offset_row == row_offset);
       assert(assembly.offset_clm == clm_offset);
@@ -563,5 +563,5 @@ struct Builder
   Mat & A;
   Vec & b;
   std::array<std::vector<AssemblyBase*>,3> assemblies;
-  std::vector<Tri> _triplets;
+  std::vector<Triplet> _triplets;
 };

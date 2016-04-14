@@ -19,7 +19,7 @@ typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;
 typedef Eigen::VectorXd Vec;
 typedef Eigen::Vector3d Vec3;
-typedef Eigen::Triplet<double> Tri;
+typedef Eigen::Triplet<double> Triplet;
 
 typedef std::function<double(Vec3 const&)> scalarFun_T;
 typedef std::function<Vec3(Vec3 const&)> vectorFun_T;

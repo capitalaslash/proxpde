@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  bc_ess<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
-  bc_list<FESpace_T> bcs{feSpace, {left}};
+  BCEss<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
+  BCList<FESpace_T> bcs{feSpace, {left}};
   bcs.init();
   std::cout << "bcs: " << t << " ms" << std::endl;
 

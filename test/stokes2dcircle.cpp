@@ -47,23 +47,23 @@ int main(int argc, char* argv[])
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   auto inlet = [] (Vec3 const& p) {return -p(1)*(p(1)+1.);};
-  bc_list<FESpaceU_T> bcsU{
+  BCList<FESpaceU_T> bcsU{
     feSpaceU,
     {
-      bc_ess<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      bc_ess<FESpaceU_T>(feSpaceU, side::LEFT, inlet)
+      BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
+      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, inlet)
     }
   };
   bcsU.init();
-  bc_list<FESpaceU_T> bcsV{
+  BCList<FESpaceU_T> bcsV{
     feSpaceU,
     {
-      bc_ess<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      bc_ess<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
+      BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
+      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
     }
   };
   bcsV.init();
-  bc_list<FESpaceP_T> bcsP(feSpaceP);
+  BCList<FESpaceP_T> bcsP(feSpaceP);
   // bcsP.init();
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

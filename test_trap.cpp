@@ -47,11 +47,11 @@ int main()
   std::cout << *meshPtr << std::endl;
 
   // bc setup
-//  bc_ess<FESpace_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
-//  bc_ess<FESpace_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 1.;});
+//  BCEss<FESpace_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
+//  BCEss<FESpace_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 1.;});
 
   // empty bcs
-  bc_list<FESpace_T> bcs{};
+  BCList<FESpace_T> bcs{};
   bcs.init(numPts);
 
   Mat A(numPts,numPts);

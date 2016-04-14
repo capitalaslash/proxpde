@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
   FESpace_T feSpace(meshPtr);
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
-  bc_list<FESpace_T> bcs{feSpace, {
-      bc_ess<FESpace_T>(feSpace, side::BOTTOM, zeroFun),
-      bc_ess<FESpace_T>(feSpace, side::RIGHT, zeroFun),
-      bc_ess<FESpace_T>(feSpace, side::TOP, zeroFun),
-      bc_ess<FESpace_T>(feSpace, side::LEFT, zeroFun),
+  BCList<FESpace_T> bcs{feSpace, {
+      BCEss<FESpace_T>(feSpace, side::BOTTOM, zeroFun),
+      BCEss<FESpace_T>(feSpace, side::RIGHT, zeroFun),
+      BCEss<FESpace_T>(feSpace, side::TOP, zeroFun),
+      BCEss<FESpace_T>(feSpace, side::LEFT, zeroFun),
     }};
   bcs.init();
 

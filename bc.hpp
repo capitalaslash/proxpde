@@ -7,10 +7,10 @@
 typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 
 template <typename FESpace>
-class bc_ess
+class BCEss
 {
 public:
-  bc_ess(FESpace const& feSpace, marker_T m, scalarFun_T v):
+  BCEss(FESpace const& feSpace, marker_T m, scalarFun_T v):
     marker(m),
     value(v)
   {
@@ -51,7 +51,7 @@ public:
 };
 
 template <typename FESpace>
-std::ostream & operator<<(std::ostream & out, bc_ess<FESpace> const & bc)
+std::ostream & operator<<(std::ostream & out, BCEss<FESpace> const & bc)
 {
   out << "bc on marker " << bc.marker << "\n";
   out << "bool vec: ";
@@ -70,11 +70,11 @@ std::ostream & operator<<(std::ostream & out, bc_ess<FESpace> const & bc)
 }
 
 template <typename FESpace>
-class bc_list: public std::vector<bc_ess<FESpace>>
+class BCList: public std::vector<BCEss<FESpace>>
 {
 public:
-  explicit bc_list(FESpace const & feSpace, std::initializer_list<bc_ess<FESpace>> list = {}):
-    std::vector<bc_ess<FESpace>>(list)
+  explicit BCList(FESpace const & feSpace, std::initializer_list<BCEss<FESpace>> list = {}):
+    std::vector<BCEss<FESpace>>(list)
   {
     vec = bool_array::Constant(feSpace.dof.totalNum, false);
   }
@@ -103,7 +103,7 @@ public:
 };
 
 template <typename FESpace>
-std::ostream & operator<<(std::ostream & out, bc_list<FESpace> const & bclist)
+std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bclist)
 {
   out << "bc list\n";
   for(auto & bc: bclist)

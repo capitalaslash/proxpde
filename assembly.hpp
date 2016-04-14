@@ -329,7 +329,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(Diagonal<FESpace> const & assembly,
-                    bc_list<FESpace> const & bcs,
+                    BCList<FESpace> const & bcs,
                     uint row_offset = 0,
                     uint clm_offset = 0)
   {
@@ -417,8 +417,8 @@ struct Builder
 
   template <typename FESpace1, typename FESpace2>
   void buildProblem(Coupling<FESpace1, FESpace2> const & assembly,
-                    bc_list<FESpace1> const & bcs1,
-                    bc_list<FESpace2> const & bcs2,
+                    BCList<FESpace1> const & bcs1,
+                    BCList<FESpace2> const & bcs2,
                     uint row_offset = 0,
                     uint clm_offset = 0)
   {
@@ -500,7 +500,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(AssemblyVector<FESpace> const & assembly,
-                    bc_list<FESpace> const& bcs,
+                    BCList<FESpace> const& bcs,
                     uint row_offset = 0,
                     uint clm_offset = 0)
   {

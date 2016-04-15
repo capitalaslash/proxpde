@@ -15,29 +15,30 @@ public:
   typedef std::vector<Point> PointList_T;
   typedef std::vector<Elem> ElementList_T;
   typedef std::vector<Facet_T> FacetList_T;
-  typedef std::array<id_T,Elem::numPts> ElementConn_T;
-  typedef std::vector<std::array<id_T,Elem::numPts>> ConnList_T;
+  typedef std::vector<std::array<id_T,Elem::numPts>> elemToPoint_T;
+  typedef std::vector<std::array<id_T,Elem::numFacets>> elemToFacet_T;
 
   void buildConnectivity()
   {
-    _connList.reserve(elementList.size());
+    elemToPoint.reserve(elementList.size());
     for(auto& l: elementList)
     {
-      ElementConn_T elemConn;
+      std::array<id_T,Elem::numPts> elemConn;
       uint counter = 0;
       for(auto& p: l.pointList)
       {
         elemConn[counter] = p->id;
         counter++;
       }
-      _connList.push_back(elemConn);
+      elemToPoint.push_back(elemConn);
     }
   }
 
   PointList_T pointList;
   ElementList_T elementList;
   FacetList_T facetList;
-  ConnList_T _connList;
+  elemToPoint_T elemToPoint;
+  elemToFacet_T elemToFacet;
 };
 
 template <typename Elem>
@@ -52,6 +53,15 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
   out << "\nfacet list\n------------" << std::endl;
   for(auto &f: mesh.facetList)
     out << f << std::endl;
+  out << "\nelemToFacet map\n------------" << std::endl;
+  for(auto &row: mesh.elemToFacet)
+  {
+    for(auto &clm: row)
+    {
+      out << clm << " ";
+    }
+    out << std::endl;
+  }
   out << "\n------------" << std::endl;
   return out;
 }
@@ -116,6 +126,11 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
   {
     meshPtr->facetList.resize(bFacetTotal);
   }
+  meshPtr->elemToFacet.resize(meshPtr->elementList.size());
+  for(uint i=0; i<meshPtr->elemToFacet.size(); ++i)
+  {
+    meshPtr->elemToFacet[i].fill(DOFidNotSet);
+  }
 
   iFacetCount = bFacetTotal;
   uint bFacetCount = 0;
@@ -126,6 +141,9 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
       // this is a boundary facet
       meshPtr->facetList[bFacetCount] = facet.second;
       meshPtr->facetList[bFacetCount].id = bFacetCount;
+      meshPtr->elemToFacet
+        [facet.second.facingElem[0].first->id]
+        [facet.second.facingElem[0].second] = bFacetCount;
       bFacetCount++;
     }
     else
@@ -135,6 +153,12 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
       {
         meshPtr->facetList[iFacetCount] = facet.second;
         meshPtr->facetList[iFacetCount].id = iFacetCount;
+        meshPtr->elemToFacet
+          [facet.second.facingElem[0].first->id]
+          [facet.second.facingElem[0].second] = iFacetCount;
+        meshPtr->elemToFacet
+          [facet.second.facingElem[1].first->id]
+          [facet.second.facingElem[1].second] = iFacetCount;
       }
       iFacetCount++;
     }

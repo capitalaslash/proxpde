@@ -1,8 +1,10 @@
 #pragma once
 
 #include <set>
+#include <list>
 
 #include "def.hpp"
+#include "curfe.hpp"
 
 typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
 
@@ -70,6 +72,24 @@ std::ostream & operator<<(std::ostream & out, BCEss<FESpace> const & bc)
 }
 
 template <typename FESpace>
+struct BCNat
+{
+  typedef CurFE<
+    typename FESpace::RefFE_T::RefFacet_T,
+    typename FESpace::QR_T>
+      CurFE_T;
+
+  explicit BCNat(marker_T m, scalarFun_T const & f):
+    marker(m),
+    value(f)
+  {}
+
+  CurFE_T curFE;
+  marker_T marker;
+  scalarFun_T value;
+};
+
+template <typename FESpace>
 class BCList: public std::vector<BCEss<FESpace>>
 {
 public:
@@ -99,7 +119,13 @@ public:
     return vec[p.id];
   }
 
+  void addBCNat(marker_T m, scalarFun_T const & v)
+  {
+    bcNat_list.emplace_back(m, v);
+  }
+
   bool_array vec;
+  std::list<BCNat<FESpace>> bcNat_list;
 };
 
 template <typename FESpace>

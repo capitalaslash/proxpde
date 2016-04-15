@@ -98,6 +98,7 @@ struct NullElem: public GeoElem
   static uint const numPts = 0U;
   static uint const numEdges = 0U;
   static uint const numFaces = 0U;
+  static uint const numFacets = 0U;
 };
 
 struct PointElem: public GeoElem
@@ -105,6 +106,7 @@ struct PointElem: public GeoElem
   static uint const numPts = 1U;
   static uint const numEdges = 0U;
   static uint const numFaces = 0U;
+  static uint const numFacets = 0U;
 
   explicit PointElem(std::initializer_list<Point*> list = {nullptr},
                  id_T i = -1,
@@ -132,6 +134,7 @@ public:
   static uint const numPts = 2U;
   static uint const numEdges = 1U;
   static uint const numFaces = 0U;
+  static uint const numFacets = 2U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
   static std::array<std::array<id_T,1>,2> constexpr elemToFacet{
     {{0}, {1}}
@@ -178,6 +181,7 @@ public:
   static uint const numPts = 3U;
   static uint const numEdges = 3U;
   static uint const numFaces = 1U;
+  static uint const numFacets = 3U;
   static std::array<uint,4> constexpr dof_place{0,0,0,1};
   static std::array<std::array<id_T,2>,3> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,0}}
@@ -227,6 +231,7 @@ public:
   static uint const numPts = 4U;
   static uint const numEdges = 4U;
   static uint const numFaces = 1U;
+  static uint const numFacets = 4U;
   static std::array<std::array<id_T,2>,4> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };

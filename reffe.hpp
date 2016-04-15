@@ -143,6 +143,7 @@ struct RefTriangleP2
 struct RefQuadQ1
 {
   typedef Quad GeoElem_T;
+  typedef RefLineP1 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 4U;
@@ -174,6 +175,7 @@ struct RefQuadQ1
 struct RefQuadQ2
 {
   typedef Quad GeoElem_T;
+  typedef RefLineP2 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 9U;

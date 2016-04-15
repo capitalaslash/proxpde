@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
   double const radius = 1.;
 
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
-
   buildCircleMesh(meshPtr, origin, radius, {numPts_x, numPts_y, numPts_r});
+  std::cout << *meshPtr << std::endl;
 
   FESpaceU_T feSpaceU(meshPtr);
   FESpaceP_T feSpaceP(meshPtr);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     feSpaceU,
     {
       BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, inlet)
+      // BCEss<FESpaceU_T>(feSpaceU, side::LEFT, inlet)
     }
   };
   bcsU.init();
@@ -60,12 +60,13 @@ int main(int argc, char* argv[])
     feSpaceU,
     {
       BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
+      // BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
     }
   };
   bcsV.init();
   BCList<FESpaceP_T> bcsP(feSpaceP);
   // bcsP.init();
+  bcsP.addBCNat(side::LEFT, [] (Vec3 const&) {return 1.;});
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
@@ -88,6 +89,7 @@ int main(int argc, char* argv[])
   builder.buildProblem(stiffness1, bcsV);
   builder.buildProblem(grad1, bcsV, bcsP);
   builder.buildProblem(div1, bcsP, bcsV);
+  builder.buildProblem(AssemblyAnalyticalRhs<FESpaceP_T>(zeroFun, feSpaceP, 2*feSpaceU.dof.totalNum), bcsP);
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

@@ -186,8 +186,9 @@ struct Builder
     typedef typename AssemblyVector<FESpace>::LVec_T LVec_T;
 
     auto & curFE = assembly.feSpace.curFE;
+    auto const & mesh = *assembly.feSpace.meshPtr;
 
-    for(auto &e: assembly.feSpace.meshPtr->elementList)
+    for(auto &e: mesh.elementList)
     {
       LVec_T Fe = LVec_T::Zero();
 
@@ -218,8 +219,37 @@ struct Builder
       }
       Fe = C * Fe;
 
-      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      // std::cout << "Fe:\n" << Fe << std::endl;
+      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      std::cout << "Fe:\n" << Fe << std::endl;
+
+      for(auto & bc: bcs.bcNat_list)
+      {
+        uint facetCounter = 0;
+        for(auto const facetId: mesh.elemToFacet[e.id])
+        {
+          if(facetId != DOFidNotSet &&
+             mesh.facetList[facetId].marker == bc.marker)
+          {
+            auto const & facet = mesh.facetList[facetId];
+            bc.curFE.reinit(facet);
+            for(uint q=0; q<BCNat<FESpace>::CurFE_T::QR_T::numPts; ++q)
+            {
+              auto const value = bc.value(bc.curFE.qpoint[q]);
+              typedef typename BCNat<FESpace>::CurFE_T::RefFE_T RefFESide_T;
+              for(uint i=0; i<RefFESide_T::numFuns; ++i)
+              {
+                Fe(RefFESide_T::dofOnFacet[facetCounter][i]) += bc.curFE.JxW[q] *
+                      bc.curFE.phi(i, q) *
+                      value;
+              }
+            }
+          }
+          facetCounter++;
+        }
+      }
+
+      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      std::cout << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)

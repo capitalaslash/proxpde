@@ -8,6 +8,7 @@
 #include "fe.hpp"
 #include "fespace.hpp"
 #include "assembly.hpp"
+#include "builder.hpp"
 #include "iomanager.hpp"
 
 scalarFun_T rhs = [] (Vec3 const& p)

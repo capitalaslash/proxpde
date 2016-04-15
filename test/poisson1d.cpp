@@ -4,6 +4,7 @@
 #include "fespace.hpp"
 #include "bc.hpp"
 #include "assembly.hpp"
+#include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
 

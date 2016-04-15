@@ -30,6 +30,7 @@ set(MINIFEM_HEADERS
   bc.hpp
   var.hpp
   assembly.hpp
+  builder.hpp
   iomanager.hpp
   xdmf_traits.hpp
   timer.hpp

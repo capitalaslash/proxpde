@@ -5,6 +5,7 @@
 #include "bc.hpp"
 #include "var.hpp"
 #include "assembly.hpp"
+#include "builder.hpp"
 #include "iomanager.hpp"
 
 #include <iostream>

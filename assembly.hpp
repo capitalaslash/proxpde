@@ -329,9 +329,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(Diagonal<FESpace> const & assembly,
-                    BCList<FESpace> const & bcs,
-                    uint row_offset = 0,
-                    uint clm_offset = 0)
+                    BCList<FESpace> const & bcs)
   {
     typedef typename FESpace::CurFE_T CurFE_T;
     typedef typename Diagonal<FESpace>::LMat_T LMat_T;
@@ -418,9 +416,7 @@ struct Builder
   template <typename FESpace1, typename FESpace2>
   void buildProblem(Coupling<FESpace1, FESpace2> const & assembly,
                     BCList<FESpace1> const & bcs1,
-                    BCList<FESpace2> const & bcs2,
-                    uint row_offset = 0,
-                    uint clm_offset = 0)
+                    BCList<FESpace2> const & bcs2)
   {
     typedef typename FESpace1::CurFE_T CurFE1_T;
     typedef typename FESpace2::CurFE_T CurFE2_T;
@@ -500,9 +496,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(AssemblyVector<FESpace> const & assembly,
-                    BCList<FESpace> const& bcs,
-                    uint row_offset = 0,
-                    uint clm_offset = 0)
+                    BCList<FESpace> const& bcs)
   {
     typedef typename FESpace::CurFE_T CurFE_T;
     typedef typename AssemblyVector<FESpace>::LMat_T LMat_T;
@@ -544,8 +538,6 @@ struct Builder
       // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
       // std::cout << "Fe:\n" << Fe << std::endl;
 
-      assert(assembly.offset_row == row_offset);
-      assert(assembly.offset_clm == clm_offset);
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {

@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
-  AssemblyMass<FESpace_T> mass(feSpace);
+  AssemblyMass<FESpace_T> mass(1.0, feSpace);
   AssemblyAnalyticalRhs<FESpace_T> f(rhs, feSpace);
 
   Builder builder(A, b);

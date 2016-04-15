@@ -107,8 +107,9 @@ struct AssemblyMass: public Diagonal<FESpace>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyMass(FESpace_T & fe, uint offset_row = 0, uint offset_clm = 0):
-     Diagonal<FESpace>(fe, offset_row, offset_clm)
+  explicit AssemblyMass(double const & c, FESpace_T & fe, uint offset_row = 0, uint offset_clm = 0):
+     Diagonal<FESpace>(fe, offset_row, offset_clm),
+     coeff(c)
   {}
 
   void build(LMat_T & Ke) const
@@ -121,12 +122,14 @@ struct AssemblyMass: public Diagonal<FESpace>
       {
         for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
-          Ke(i,j) += this->feSpace.curFE.JxW[q] *
+          Ke(i,j) += coeff * this->feSpace.curFE.JxW[q] *
               this->feSpace.curFE.phi(j, q) * this->feSpace.curFE.phi(i, q);
         }
       }
     }
   }
+
+  double coeff;
 };
 
 template <typename FESpace>

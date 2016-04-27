@@ -74,10 +74,10 @@ std::ostream & operator<<(std::ostream & out, BCEss<FESpace> const & bc)
 template <typename FESpace>
 struct BCNat
 {
-  typedef CurFE<
-    typename FESpace::RefFE_T::RefFacet_T,
-    typename FESpace::QR_T>
-      CurFE_T;
+  typedef typename FESpace::RefFE_T::RefFacet_T Elem_T;
+  typedef typename SideQR<typename FESpace::QR_T>::Type QR_T;
+  typedef CurFE<Elem_T, QR_T> CurFE_T;
+  typedef typename CurFE_T::RefFE_T RefFE_T;
 
   explicit BCNat(marker_T m, scalarFun_T const & f):
     marker(m),

@@ -11,6 +11,9 @@ struct CurFE
   typedef QR QR_T;
   typedef Eigen::Matrix<double,RefFE::numFuns,RefFE::numFuns> LocalMat_T;
   typedef Eigen::Matrix<double,RefFE::numFuns,1> LocalVec_T;
+  typedef Eigen::Matrix<double,3,RefFE::dim> JacMat_T;
+  typedef Eigen::Matrix<double,RefFE::dim,3> JacTMat_T;
+  typedef Eigen::Matrix<double,RefFE::dim,1> RefVec_T;
 
   CurFE()
   {
@@ -18,8 +21,8 @@ struct CurFE
     {
       for(uint q=0; q<QR::numPts; ++q)
       {
-        phiRef(i,q) = RefFE::phiFun[i](QR::n[q]);
-        dphiRef(i,q) = RefFE::dphiFun[i](QR::n[q]);
+        phiRef(i,q) = RefFE::phiFun[i](QR::node[q])(0);
+        dphiRef(i,q) = RefFE::dphiFun[i](QR::node[q]);
       }
     }
   }
@@ -32,25 +35,24 @@ struct CurFE
   void reinit(GeoElem const & elem)
   {
     e = &elem;
-    uint const dim = RefFE::dim;
-    uint const codim = 3-dim;
     dofPts = RefFE::dofPts(elem);
 
     for(uint q=0; q<QR::numPts; ++q)
     {
-      J[q] = Eigen::Matrix3d::Zero();
+      J[q] = JacMat_T::Zero();
       for(uint n=0; n<RefFE::numFuns; ++n)
       {
         J[q] += dofPts[n] * dphiRef(n,q).transpose();
       }
-      // fill extra dimension with identity
-      J[q].block(dim,dim,codim,codim) = Eigen::Matrix<double,codim,codim>::Identity();
 
-      detJ[q] = J[q].determinant();
-      JmT[q] = J[q].inverse().transpose();
+      // J^+ = (J^T J)^-1 J^T
+      auto JtJ = J[q].transpose() * J[q];
+      auto JtJi = JtJ.inverse();
+      detJ[q] = std::sqrt(JtJ.determinant());
+      JmT[q] = J[q] * JtJi.transpose();
 
-      JxW[q] = detJ[q] * QR::w[q];
-      qpoint[q] = elem.origin() + J[q] * QR::n[q];
+      JxW[q] = detJ[q] * QR::weight[q];
+      qpoint[q] = elem.origin() + J[q] * QR::node[q];
 
       for(uint i=0; i<RefFE::numFuns; ++i)
       {
@@ -64,13 +66,13 @@ struct CurFE
   vectorFun_T map;
   // vectorFun_T imap;
   std::array<Vec3,RefFE::numFuns> dofPts;
-  std::array<Eigen::Matrix3d,QR::numPts> J;
+  std::array<Eigen::Matrix<double,3,RefFE::dim>,QR::numPts> J;
+  std::array<Eigen::Matrix<double,3,RefFE::dim>,QR::numPts> JmT;
   std::array<double,QR::numPts> detJ;
-  std::array<Eigen::Matrix3d,QR::numPts> JmT;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
   Eigen::Matrix<double, RefFE::numFuns, QR::numPts> phiRef;
-  Eigen::Matrix<Vec3, RefFE::numFuns, QR::numPts> dphiRef;
+  Eigen::Matrix<RefVec_T, RefFE::numFuns, QR::numPts> dphiRef;
   Eigen::Matrix<double, RefFE::numFuns, QR::numPts> phi;
   Eigen::Matrix<Vec3, RefFE::numFuns, QR::numPts> dphi;
   // std::array<scalarFun_T,RefFE::numFuns> phiFun;

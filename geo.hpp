@@ -95,6 +95,7 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
 
 struct NullElem: public GeoElem
 {
+  static uint const dim = -1U;
   static uint const numPts = 0U;
   static uint const numEdges = 0U;
   static uint const numFaces = 0U;
@@ -131,6 +132,7 @@ public:
   typedef PointElem Facet_T;
   typedef NullElem Face_T;
   typedef Line Edge_T;
+  static uint const dim = 1U;
   static uint const numPts = 2U;
   static uint const numEdges = 1U;
   static uint const numFaces = 0U;
@@ -178,6 +180,7 @@ public:
   typedef Line Facet_T;
   typedef Triangle Face_T;
   typedef Line Edge_T;
+  static uint const dim = 2U;
   static uint const numPts = 3U;
   static uint const numEdges = 3U;
   static uint const numFaces = 1U;
@@ -228,6 +231,7 @@ public:
   typedef Line Facet_T;
   typedef Quad Face_T;
   typedef Line Edge_T;
+  static uint const dim = 2U;
   static uint const numPts = 4U;
   static uint const numEdges = 4U;
   static uint const numFaces = 1U;

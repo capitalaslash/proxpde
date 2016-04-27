@@ -12,9 +12,26 @@ uint constexpr numDOFs()
     RefElem::GeoElem_T::numPts * RefElem::dof_place[3];
 }
 
+struct RefPointP1
+{
+  static uint constexpr dim = 0U;
+  static uint constexpr numFuns = 1U;
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
+
+  static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     std::array<Vec3,numFuns> dofPts =
+     {
+       e.pointList[0]->coord
+     };
+     return std::move(dofPts);
+  }
+};
+
 struct RefLineP1
 {
   typedef Line GeoElem_T;
+  typedef RefPointP1 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 2U;
@@ -23,12 +40,14 @@ struct RefLineP1
   static std::array<std::array<uint,1>,2> constexpr dofOnFacet = {
     {{0}, {1}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Vector2d LocalVec_T;
   typedef Eigen::Matrix2d LocalMat_T;
 
-  static std::array<Vec3,numFuns> const points;
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<Vec_T,numFuns> const points;
+  static std::array<onedFun_T,numFuns> const phiFun;
+  static std::array<onedFun_T,numFuns> const dphiFun;
+  static std::array<onedFun_T,numFuns> const dphiFunD;
   static LocalMat_T const massMat;
   static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
@@ -47,6 +66,7 @@ struct RefLineP1
 struct RefLineP2
 {
   typedef Line GeoElem_T;
+  typedef RefPointP1 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 3U;
@@ -55,12 +75,13 @@ struct RefLineP2
   static std::array<std::array<uint,1>,2> constexpr dofOnFacet = {
     {{0}, {1}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Vector3d LocalVec_T;
   typedef Eigen::Matrix3d LocalMat_T;
 
-  static std::array<Vec3,numFuns> const points;
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<Vec_T,numFuns> const points;
+  static std::array<onedFun_T,numFuns> const phiFun;
+  static std::array<onedFun_T,numFuns> const dphiFun;
   static LocalMat_T const massMat;
   static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
@@ -80,6 +101,7 @@ struct RefLineP2
 struct RefTriangleP1
 {
   typedef Triangle GeoElem_T;
+  typedef RefLineP1 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 3U;
@@ -88,11 +110,12 @@ struct RefTriangleP1
   static std::array<std::array<uint,2>,3> constexpr dofOnFacet = {
     {{0,1}, {1,2}, {2,0}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<scalarTwodFun_T,numFuns> const phiFun;
+  static std::array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 0.5L;
 
   static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
@@ -110,6 +133,7 @@ struct RefTriangleP1
 struct RefTriangleP2
 {
   typedef Triangle GeoElem_T;
+  typedef RefLineP2 RefFacet_T;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 6U;
@@ -118,11 +142,12 @@ struct RefTriangleP2
   static std::array<std::array<uint,3>,3> constexpr dofOnFacet = {
     {{0,1,3}, {1,2,4}, {2,0,5}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<scalarTwodFun_T,numFuns> const phiFun;
+  static std::array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 0.5L;
 
   static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
@@ -152,11 +177,12 @@ struct RefQuadQ1
   static std::array<std::array<uint,2>,4> constexpr dofOnFacet = {
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<scalarTwodFun_T,numFuns> const phiFun;
+  static std::array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 4.L;
 
   static std::array<Vec3,numFuns> dofPts(GeoElem const & e)
@@ -184,11 +210,12 @@ struct RefQuadQ2
   static std::array<std::array<uint,3>,4> constexpr dofOnFacet = {
     {{0,1,4}, {1,2,5}, {2,3,6}, {3,0,7}}
   };
+  typedef Eigen::Matrix<double,dim,1> Vec_T;
   typedef Eigen::Matrix<double,numFuns,1> LocalVec_T;
   typedef Eigen::Matrix<double,numFuns,numFuns> LocalMat_T;
 
-  static std::array<scalarFun_T,numFuns> const phiFun;
-  static std::array<vectorFun_T,numFuns> const dphiFun;
+  static std::array<scalarTwodFun_T,numFuns> const phiFun;
+  static std::array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 4.L;
 
   static std::array<Vec3,numFuns> dofPts(GeoElem const & e)

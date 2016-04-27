@@ -41,6 +41,20 @@ int main(int argc, char* argv[])
   meshBuilder.build(meshPtr, origin, length, {numPts, 0, 0});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
+  // rotation matrix
+  double theta = M_PI / 3.;
+  Eigen::Matrix3d R;
+  R << std::cos(theta), std::sin(theta), 0.0,
+      -std::sin(theta), std::cos(theta), 0.0,
+      0.0, 0.0, 1.0;
+  auto Rt = R.transpose();
+
+  // rotate mesh
+  for (auto & p: meshPtr->pointList)
+  {
+    p.coord = R * p.coord;
+  }
+
   t.start();
   FESpace_T feSpace(meshPtr);
   std::cout << "fespace: " << t << " ms" << std::endl;
@@ -55,7 +69,12 @@ int main(int argc, char* argv[])
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
-  AssemblyAnalyticalRhs<FESpace_T> f(rhs, feSpace);
+
+  auto rotatedRhs = [&Rt] (Vec3 const& p)
+  {
+    return rhs(Rt * p);
+  };
+  AssemblyAnalyticalRhs<FESpace_T> f(rotatedRhs, feSpace);
 
   t.start();
   Builder builder(A, b);
@@ -63,6 +82,9 @@ int main(int argc, char* argv[])
   builder.buildProblem(f, bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
+
+  // std::cout << "A:\n" << A << std::endl;
+  // std::cout << "b:\n" << b << std::endl;
 
   t.start();
   Var sol{"u"};
@@ -73,7 +95,11 @@ int main(int argc, char* argv[])
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  auto rotatedESol = [&Rt] (Vec3 const& p)
+  {
+    return exact_sol(Rt * p);
+  };
+  interpolateAnalyticalFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
     }
   };
   bcsU.init();
+  bcsU.addBCNat(side::LEFT, [] (Vec3 const&) {return 1.;});
   BCList<FESpaceU_T> bcsV{
     feSpaceU,
     {
@@ -66,7 +67,6 @@ int main(int argc, char* argv[])
   bcsV.init();
   BCList<FESpaceP_T> bcsP(feSpaceP);
   // bcsP.init();
-  bcsP.addBCNat(side::LEFT, [] (Vec3 const&) {return 1.;});
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

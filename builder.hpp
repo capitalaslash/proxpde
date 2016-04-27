@@ -12,7 +12,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(Diagonal<FESpace> const & assembly,
-                    BCList<FESpace> const & bcs)
+                    BCList<FESpace> & bcs)
   {
     typedef typename FESpace::CurFE_T CurFE_T;
     typedef typename Diagonal<FESpace>::LMat_T LMat_T;
@@ -22,8 +22,9 @@ struct Builder
     _triplets.reserve((2*CurFE_T::RefFE_T::dim+1) * assembly.feSpace.dof.totalNum);
 
     auto & curFE = assembly.feSpace.curFE;
+    auto const & mesh = *assembly.feSpace.meshPtr;
 
-    for(auto &e: assembly.feSpace.meshPtr->elementList)
+    for(auto &e: mesh.elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
@@ -34,7 +35,36 @@ struct Builder
       // --- build local matrix and rhs ---
       assembly.build(Ke);
 
-      // --- apply bc ---
+      // --- apply Neumann bcs ---
+      for(auto & bc: bcs.bcNat_list)
+      {
+        uint facetCounter = 0;
+        for(auto const facetId: mesh.elemToFacet[e.id])
+        {
+          if(facetId != DOFidNotSet &&
+             mesh.facetList[facetId].marker == bc.marker)
+          {
+            auto const & facet = mesh.facetList[facetId];
+            bc.curFE.reinit(facet);
+            for(uint q=0; q<BCNat<FESpace>::QR_T::numPts; ++q)
+            {
+              auto const value = bc.value(bc.curFE.qpoint[q]);
+              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+              {
+                auto const id =
+                  CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
+                Fe(id) += bc.curFE.JxW[q] *
+                      bc.curFE.phi(i, q) *
+                      value;
+              }
+            }
+          }
+          facetCounter++;
+        }
+      }
+      std::cout << "Fe:\n" << Fe << std::endl;
+
+      // --- apply Dirichlet bcs ---
       // A_constrained = C^T A C
       // b_constrained = C^T (b-Ah)
       // C^T clears constrained rows
@@ -219,37 +249,8 @@ struct Builder
       }
       Fe = C * Fe;
 
-      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      std::cout << "Fe:\n" << Fe << std::endl;
-
-      for(auto & bc: bcs.bcNat_list)
-      {
-        uint facetCounter = 0;
-        for(auto const facetId: mesh.elemToFacet[e.id])
-        {
-          if(facetId != DOFidNotSet &&
-             mesh.facetList[facetId].marker == bc.marker)
-          {
-            auto const & facet = mesh.facetList[facetId];
-            bc.curFE.reinit(facet);
-            for(uint q=0; q<BCNat<FESpace>::CurFE_T::QR_T::numPts; ++q)
-            {
-              auto const value = bc.value(bc.curFE.qpoint[q]);
-              typedef typename BCNat<FESpace>::CurFE_T::RefFE_T RefFESide_T;
-              for(uint i=0; i<RefFESide_T::numFuns; ++i)
-              {
-                Fe(RefFESide_T::dofOnFacet[facetCounter][i]) += bc.curFE.JxW[q] *
-                      bc.curFE.phi(i, q) *
-                      value;
-              }
-            }
-          }
-          facetCounter++;
-        }
-      }
-
-      std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      std::cout << "Fe:\n" << Fe << std::endl;
+      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
+      // std::cout << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)

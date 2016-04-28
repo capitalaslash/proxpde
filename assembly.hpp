@@ -268,7 +268,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
       {
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
-          Ke(i,j) += this->feSpace1.curFE.JxW[q] *
+          Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
               this->feSpace1.curFE.dphi(i, q)(component) *
               this->feSpace2.curFE.phi(j, q);
         }
@@ -312,7 +312,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
       {
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
-          Ke(i,j) += this->feSpace1.curFE.JxW[q] *
+          Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
               this->feSpace1.curFE.phi(i, q) *
               this->feSpace2.curFE.dphi(j, q)(component);
         }

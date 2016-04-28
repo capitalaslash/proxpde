@@ -62,7 +62,7 @@ struct Builder
           facetCounter++;
         }
       }
-      std::cout << "Fe:\n" << Fe << std::endl;
+      // std::cout << "Fe:\n" << Fe << std::endl;
 
       // --- apply Dirichlet bcs ---
       // A_constrained = C^T A C
@@ -209,7 +209,7 @@ struct Builder
 
   template <typename FESpace>
   void buildProblem(AssemblyVector<FESpace> const & assembly,
-                    BCList<FESpace> const& bcs)
+                    BCList<FESpace> const & bcs)
   {
     typedef typename FESpace::CurFE_T CurFE_T;
     typedef typename AssemblyVector<FESpace>::LMat_T LMat_T;

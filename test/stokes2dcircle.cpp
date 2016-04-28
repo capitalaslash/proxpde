@@ -32,27 +32,26 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 
 int main(int argc, char* argv[])
 {
-  uint const numPts_x = (argc < 4)? 2 : std::stoi(argv[1]);
+  uint const numPts_x = (argc < 4)? 3 : std::stoi(argv[1]);
   uint const numPts_y = (argc < 4)? 3 : std::stoi(argv[2]);
-  uint const numPts_r = (argc < 4)? 4 : std::stoi(argv[3]);
+  uint const numPts_r = (argc < 4)? 3 : std::stoi(argv[3]);
 
   Vec3 const origin{0., 0., 0.};
   double const radius = 1.;
 
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
   buildCircleMesh(meshPtr, origin, radius, {numPts_x, numPts_y, numPts_r});
-  std::cout << *meshPtr << std::endl;
+  // std::cout << *meshPtr << std::endl;
 
   FESpaceU_T feSpaceU(meshPtr);
   FESpaceP_T feSpaceP(meshPtr);
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
-  auto inlet = [] (Vec3 const& p) {return -p(1)*(p(1)+1.);};
   BCList<FESpaceU_T> bcsU{
     feSpaceU,
     {
       BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      // BCEss<FESpaceU_T>(feSpaceU, side::LEFT, inlet)
+      BCEss<FESpaceU_T>(feSpaceU, side::TOP, zeroFun)
     }
   };
   bcsU.init();
@@ -61,7 +60,7 @@ int main(int argc, char* argv[])
     feSpaceU,
     {
       BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      // BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
+      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
     }
   };
   bcsV.init();
@@ -93,9 +92,6 @@ int main(int argc, char* argv[])
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  // Eigen::SparseLU<Mat> solver;
-  // solver.analyzePattern(A);
-  // solver.factorize(A);
   // Eigen::GMRES<Mat> solver(A);
   Eigen::UmfPackLU<Mat> solver(A);
   // Eigen::SuperLU<Mat> solver(A);

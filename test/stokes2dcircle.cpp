@@ -88,7 +88,6 @@ int main(int argc, char* argv[])
   builder.buildProblem(stiffness1, bcsV);
   builder.buildProblem(grad1, bcsV, bcsP);
   builder.buildProblem(div1, bcsP, bcsV);
-  builder.buildProblem(AssemblyAnalyticRhs<FESpaceP_T>(zeroFun, feSpaceP, 2*feSpaceU.dof.totalNum), bcsP);
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

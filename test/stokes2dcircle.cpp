@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
   builder.buildProblem(stiffness1, bcsV);
   builder.buildProblem(grad1, bcsV, bcsP);
   builder.buildProblem(div1, bcsP, bcsV);
-  builder.buildProblem(AssemblyAnalyticalRhs<FESpaceP_T>(zeroFun, feSpaceP, 2*feSpaceU.dof.totalNum), bcsP);
+  builder.buildProblem(AssemblyAnalyticRhs<FESpaceP_T>(zeroFun, feSpaceP, 2*feSpaceU.dof.totalNum), bcsP);
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
   Var p{"p", sol, 2*feSpaceU.dof.totalNum, feSpaceP.dof.totalNum};
 
   // Var exact{"exact", feSpaceU.dof.totalNum};
-  // interpolateAnalyticalFunction(exact_sol, feSpaceU, exact.data);
+  // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 

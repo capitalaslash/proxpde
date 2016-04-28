@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   t.start();
   Builder builder(A, b);
   builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(AssemblyAnalyticalRhs<FESpace_T>(rhs, feSpace), bcs);
+  builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
 
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

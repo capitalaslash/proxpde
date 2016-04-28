@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
   AssemblyMass<FESpace_T> mass(1.0, feSpace);
-  AssemblyAnalyticalRhs<FESpace_T> f(rhs, feSpace);
+  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
   Builder builder(A, b);
   builder.buildProblem(stiffness, bcs);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(b);
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

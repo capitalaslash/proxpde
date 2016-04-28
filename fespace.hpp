@@ -26,7 +26,7 @@ struct FESpace
 };
 
 template <typename FESpace>
-void interpolateAnalyticalFunction(scalarFun_T const & f,
+void interpolateAnalyticFunction(scalarFun_T const & f,
                                    FESpace const & feSpace,
                                    Vec & v)
 {

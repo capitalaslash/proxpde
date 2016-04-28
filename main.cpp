@@ -119,7 +119,7 @@ int main()
   // std::cout<< "sol:\n" << sol << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
 
   Var error{"error"};
   error.data = sol.data - exact.data;

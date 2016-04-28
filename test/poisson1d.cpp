@@ -70,11 +70,8 @@ int main(int argc, char* argv[])
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
 
-  auto rotatedRhs = [&Rt] (Vec3 const& p)
-  {
-    return rhs(Rt * p);
-  };
-  AssemblyAnalyticalRhs<FESpace_T> f(rotatedRhs, feSpace);
+  auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
+  AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
 
   t.start();
   Builder builder(A, b);
@@ -95,11 +92,8 @@ int main(int argc, char* argv[])
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};
-  auto rotatedESol = [&Rt] (Vec3 const& p)
-  {
-    return exact_sol(Rt * p);
-  };
-  interpolateAnalyticalFunction(rotatedESol, feSpace, exact.data);
+  auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
+  interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

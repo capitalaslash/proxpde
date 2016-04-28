@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
-  AssemblyAnalyticalRhs<FESpace_T> f(rhs, feSpace);
+  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
   t.start();
   Builder builder(A, b);
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

@@ -133,14 +133,14 @@ struct AssemblyMass: public Diagonal<FESpace>
 };
 
 template <typename FESpace>
-struct AssemblyAnalyticalRhs: public AssemblyVector<FESpace>
+struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 {
   typedef FESpace FESpace_T;
   typedef Diagonal<FESpace> Super_T;
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyAnalyticalRhs(scalarFun_T const & r,
+  explicit AssemblyAnalyticRhs(scalarFun_T const & r,
                                  FESpace & fe,
                                  uint offset_row = 0):
     AssemblyVector<FESpace>(fe, offset_row),

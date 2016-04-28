@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
   Builder builder(A, b);
   builder.buildProblem(AssemblyStiffness<FESpace_T>(feSpace), bcs);
-  builder.buildProblem(AssemblyAnalyticalRhs<FESpace_T>(rhs, feSpace), bcs);
+  builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(b);
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticalFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
   Var p{"p", sol, 2*feSpaceU.dof.totalNum, feSpaceP.dof.totalNum};
 
   // Var exact{"exact", feSpaceU.dof.totalNum};
-  // interpolateAnalyticalFunction(exact_sol, feSpaceU, exact.data);
+  // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 

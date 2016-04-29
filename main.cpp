@@ -58,13 +58,9 @@ int main()
 
   FESpace_T feSpace(meshPtr);
 
-  // bc setup
-  BCEss<FESpace_T>  left(feSpace,  side::LEFT, [] (Vec3 const&) {return 0.;});
-//  BCEss<FESpace_T> right(feSpace, side::RIGHT, [] (Vec3 const&) {return 1.;});
-
   // right bc not used here
-  BCList<FESpace_T> bcs{feSpace, {left}};
-  bcs.init();
+  BCList<FESpace_T> bcs{feSpace};
+  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
 
   Mat A(feSpace.dof.totalNum,feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);

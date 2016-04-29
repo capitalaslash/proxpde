@@ -52,7 +52,6 @@ int main()
 
   // empty bcs
   BCList<FESpace_T> bcs{};
-  bcs.init(numPts);
 
   Mat A(numPts,numPts);
   Vec b = Vec::Zero(numPts);

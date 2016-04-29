@@ -25,6 +25,26 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
   return std::sin(M_PI*p(0))*std::sin(M_PI*p(1));
 };
 
+// vectorFun_T mesh_mod = [] (Vec3 const &p)
+// {
+//   double const x = 1. * (1.-std::cos(p(0) * M_PI / (1.*2.)));
+//   return Vec3(x, p(1), std::sqrt(2.*x-x*x));
+// };
+// vectorFun_T mesh_mod_inv = [] (Vec3 const &p)
+// {
+//   double const x = 1.*2.*std::acos(1 - p(0)/1.) / M_PI;
+//   return Vec3(x, p(1), 1.-std::sqrt(1.-x*x));
+// };
+
+vectorFun_T mesh_mod = [] (Vec3 const &p)
+{
+  return p;
+};
+vectorFun_T mesh_mod_inv = [] (Vec3 const &p)
+{
+  return p;
+};
+
 int main(int argc, char* argv[])
 {
   uint const numPts_x = (argc < 3)? 11 : std::stoi(argv[1]);
@@ -38,23 +58,49 @@ int main(int argc, char* argv[])
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
 
+  // mesh modifier
+  for (auto & p: meshPtr->pointList)
+  {
+    p.coord = mesh_mod(p.coord);
+  }
+
+  // // rotation matrix
+  // double thetay = M_PI / 4.;
+  // double thetaz = M_PI / 3.;
+  // Eigen::Matrix3d Ry, Rz;
+  // Ry << std::cos(thetay), 0.0, std::sin(thetay),
+  //       0.0, 1.0, 0.0,
+  //      -std::sin(thetay), 0.0, std::cos(thetay);
+  // Rz << std::cos(thetaz), std::sin(thetaz), 0.0,
+  //      -std::sin(thetaz), std::cos(thetaz), 0.0,
+  //     0.0, 0.0, 1.0;
+  // auto R = Ry * Rz;
+  // auto Rt = R.transpose();
+  //
+  // // rotate mesh
+  // for (auto & p: meshPtr->pointList)
+  // {
+  //   p.coord = R * p.coord;
+  // }
+
   FESpace_T feSpace(meshPtr);
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
-  BCList<FESpace_T> bcs{feSpace, {
-      BCEss<FESpace_T>(feSpace, side::BOTTOM, zeroFun),
-      BCEss<FESpace_T>(feSpace, side::RIGHT, zeroFun),
-      BCEss<FESpace_T>(feSpace, side::TOP, zeroFun),
-      BCEss<FESpace_T>(feSpace, side::LEFT, zeroFun),
-    }};
-  bcs.init();
+  BCList<FESpace_T> bcs{feSpace};
+  bcs.addEssentialBC(side::BOTTOM, zeroFun);
+  bcs.addEssentialBC(side::RIGHT, zeroFun);
+  bcs.addEssentialBC(side::TOP, zeroFun);
+  bcs.addEssentialBC(side::LEFT, zeroFun);
 
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   AssemblyStiffness<FESpace_T> stiffness(feSpace);
   AssemblyMass<FESpace_T> mass(1.0, feSpace);
-  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
+  // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
+  auto modifiedRhs = [] (Vec3 const& p) {return rhs(mesh_mod_inv(p));};
+  AssemblyAnalyticRhs<FESpace_T> f(modifiedRhs, feSpace);
+  // AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
   Builder builder(A, b);
   builder.buildProblem(stiffness, bcs);
@@ -69,7 +115,10 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(b);
 
   Var exact{"exact", feSpace.dof.totalNum};
-  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
+  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
+  auto modifiedESol = [] (Vec3 const& p) {return exact_sol(mesh_mod_inv(p));};
+  interpolateAnalyticFunction(modifiedESol, feSpace, exact.data);
+  // interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

@@ -73,21 +73,14 @@ struct Builder
 
       typename CurFE_T::LocalMat_T C = CurFE_T::LocalMat_T::Identity();
       typename CurFE_T::LocalVec_T h = CurFE_T::LocalVec_T::Zero();
-      for(auto& bc: bcs)
+      for(auto& bc: bcs.bcEss_list)
       {
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
           DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-          if(bc.is_constrained(id))
+          if(bc.isConstrained(id))
           {
             C(i,i) = 0.;
-          }
-        }
-        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-        {
-          DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-          if(bc.is_constrained(id))
-          {
             h(i) = bc.value(assembly.feSpace.curFE.dofPts[i]);
           }
         }
@@ -98,9 +91,9 @@ struct Builder
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-        for(auto& bc: bcs)
+        for(auto& bc: bcs.bcEss_list)
         {
-          if(bc.is_constrained(id))
+          if(bc.isConstrained(id))
           {
             Ke(i,i) = 1.0;
             Fe(i) = h[i];
@@ -165,12 +158,12 @@ struct Builder
       // h is the vector of local constraint values
 
       typename CurFE1_T::LocalMat_T Crow = CurFE1_T::LocalMat_T::Identity();
-      for(auto& bc: bcs1)
+      for(auto& bc: bcs1.bcEss_list)
       {
         for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
         {
           DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][i];
-          if(bc.is_constrained(id))
+          if(bc.isConstrained(id))
           {
             Crow(i,i) = 0.;
           }
@@ -178,12 +171,12 @@ struct Builder
       }
       typename CurFE2_T::LocalMat_T Cclm = CurFE2_T::LocalMat_T::Identity();
       typename CurFE2_T::LocalVec_T h = CurFE2_T::LocalVec_T::Zero();
-      for(auto& bc: bcs2)
+      for(auto& bc: bcs2.bcEss_list)
       {
         for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
         {
           DOFid_T const id = assembly.feSpace2.dof.elemMap[e.id][i];
-          if(bc.is_constrained(id))
+          if(bc.isConstrained(id))
           {
             Cclm(i,i) = 0.;
             h(i) = bc.value(assembly.feSpace2.curFE.dofPts[i]);
@@ -236,12 +229,12 @@ struct Builder
       // h is the vector of local constraint values
 
       LMat_T C = LMat_T::Identity();
-      for(auto& bc: bcs)
+      for(auto& bc: bcs.bcEss_list)
       {
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
           DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-          if(bc.is_constrained(id))
+          if(bc.isConstrained(id))
           {
             C(i,i) = 0.;
           }

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <set>
-#include <list>
-
 #include "def.hpp"
 #include "curfe.hpp"
 
-typedef Eigen::Array<bool,Eigen::Dynamic,1> bool_array;
+#include <unordered_set>
+#include <list>
+
+typedef Eigen::Array<bool,Eigen::Dynamic,1> BoolArray_T;
 
 template <typename FESpace>
 class BCEss
@@ -20,50 +20,48 @@ public:
     {
       if(f.marker == marker)
       {
+        // TODO: assert that facingElem[1] is null, so the facet is on the boundary
         id_T const iElemId = f.facingElem[0].first->id;
         uint side = f.facingElem[0].second;
         for(uint i=0; i<FESpace::RefFE_T::dofPerFacet; i++)
         {
           DOFid_T const dof =
               feSpace.dof.elemMap[iElemId][FESpace::RefFE_T::dofOnFacet[side][i]];
-          point_set.insert(dof);
+          constrainedDOFset.insert(dof);
         }
       }
     }
-    vec = bool_array::Constant(feSpace.dof.totalNum, false);
-  }
 
-  void init()
-  {
-    for(auto& id: point_set)
+    boolVector = BoolArray_T::Constant(feSpace.dof.totalNum, false);
+    for(auto& id: constrainedDOFset)
     {
-      vec[id] = true;
+      boolVector[id] = true;
     }
   }
 
-  bool is_constrained(DOFid_T const& id) const
+  bool isConstrained(DOFid_T const& id) const
   {
-    return vec[id];
+    return boolVector[id];
   }
 
   marker_T marker;
   scalarFun_T value;
-  bool_array vec;
-  std::set<DOFid_T> point_set;
+  BoolArray_T boolVector;
+  std::unordered_set<DOFid_T> constrainedDOFset;
 };
 
 template <typename FESpace>
 std::ostream & operator<<(std::ostream & out, BCEss<FESpace> const & bc)
 {
   out << "bc on marker " << bc.marker << "\n";
-  out << "bool vec: ";
-  for(uint i=0; i<bc.vec.size(); i++)
+  out << "boolVector: ";
+  for(uint i=0; i<bc.boolVector.size(); i++)
   {
-    out << bc.vec(i) << " ";
+    out << bc.boolVector(i) << " ";
   }
   out << "\n";
-  out << "point_set: ";
-  for(auto & i: bc.point_set)
+  out << "constrainedDOFset: ";
+  for(auto & i: bc.constrainedDOFset)
   {
     out << i << " ";
   }
@@ -82,7 +80,9 @@ struct BCNat
   explicit BCNat(marker_T m, scalarFun_T const & f):
     marker(m),
     value(f)
-  {}
+  {
+    // TODO: create a list of constrained faces at the beginning?
+  }
 
   CurFE_T curFE;
   marker_T marker;
@@ -90,41 +90,25 @@ struct BCNat
 };
 
 template <typename FESpace>
-class BCList: public std::vector<BCEss<FESpace>>
+class BCList
 {
 public:
-  explicit BCList(FESpace const & feSpace, std::initializer_list<BCEss<FESpace>> list = {}):
-    std::vector<BCEss<FESpace>>(list)
+  explicit BCList(FESpace const & fe):
+  feSpace(fe)
+  {}
+
+  void addEssentialBC(marker_T const m, scalarFun_T const & f)
   {
-    vec = bool_array::Constant(feSpace.dof.totalNum, false);
+    bcEss_list.emplace_back(feSpace, m, f);
   }
 
-  void init()
+  void addNaturalBC(marker_T const m, scalarFun_T const & f)
   {
-    for(auto& bc: *this)
-    {
-      bc.init();
-    }
-    for(uint i=0; i<vec.size(); ++i)
-    {
-      for(auto& bc: *this)
-      {
-        vec[i] = vec[i] || bc.vec[i];
-      }
-    }
+    bcNat_list.emplace_back(m, f);
   }
 
-  bool is_constrained(Point const& p) const
-  {
-    return vec[p.id];
-  }
-
-  void addBCNat(marker_T m, scalarFun_T const & v)
-  {
-    bcNat_list.emplace_back(m, v);
-  }
-
-  bool_array vec;
+  FESpace const & feSpace;
+  std::list<BCEss<FESpace>> bcEss_list;
   std::list<BCNat<FESpace>> bcNat_list;
 };
 
@@ -132,16 +116,9 @@ template <typename FESpace>
 std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bclist)
 {
   out << "bc list\n";
-  for(auto & bc: bclist)
+  for(auto & bc: bclist.bcEss_list)
   {
     out << bc << "\n";
   }
-  out << "bool vec: ";
-  for(uint i=0; i<bclist.vec.size(); i++)
-  {
-    out << bclist.vec(i) << " ";
-  }
-  out << "\n";
-
   return out;
 }

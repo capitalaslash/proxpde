@@ -28,7 +28,7 @@ struct CurFE
   }
 
   CurFE(CurFE const &) = delete;
-  CurFE operator=(CurFE const &) = delete;
+  CurFE & operator=(CurFE const &) = delete;
 
   constexpr static uint size() {return RefFE::numFuns;}
 
@@ -63,7 +63,7 @@ struct CurFE
   }
 
   GeoElem const* e;
-  vectorFun_T map;
+  // vectorFun_T map;
   // vectorFun_T imap;
   std::array<Vec3,RefFE::numFuns> dofPts;
   std::array<Eigen::Matrix<double,3,RefFE::dim>,QR::numPts> J;

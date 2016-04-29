@@ -47,25 +47,15 @@ int main(int argc, char* argv[])
   FESpaceP_T feSpaceP(meshPtr);
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
-  BCList<FESpaceU_T> bcsU{
-    feSpaceU,
-    {
-      BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::TOP, zeroFun)
-    }
-  };
-  bcsU.init();
-  bcsU.addBCNat(side::LEFT, [] (Vec3 const&) {return 1.;});
-  BCList<FESpaceU_T> bcsV{
-    feSpaceU,
-    {
-      BCEss<FESpaceU_T>(feSpaceU, side::CIRCLE, zeroFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
-    }
-  };
-  bcsV.init();
+  auto oneFun = [] (Vec3 const&) {return 1.;};
+  BCList<FESpaceU_T> bcsU{feSpaceU};
+  bcsU.addEssentialBC(side::CIRCLE, zeroFun);
+  bcsU.addEssentialBC(side::TOP, zeroFun);
+  bcsU.addNaturalBC(side::LEFT, oneFun);
+  BCList<FESpaceU_T> bcsV{feSpaceU};
+  bcsV.addEssentialBC(side::CIRCLE, zeroFun);
+  bcsV.addEssentialBC(side::LEFT, zeroFun);
   BCList<FESpaceP_T> bcsP(feSpaceP);
-  // bcsP.init();
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

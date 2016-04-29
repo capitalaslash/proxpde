@@ -12,14 +12,11 @@
 
 typedef Quad Elem_T;
 typedef Mesh<Elem_T> Mesh_T;
-typedef FESpace<
-          Mesh_T,
-          FEType<Elem_T,2>::RefFE_T,
-          FEType<Elem_T,2>::RecommendedQR> FESpaceU_T;
-typedef FESpace<
-          Mesh_T,
-          FEType<Elem_T,1>::RefFE_T,
-          FEType<Elem_T,2>::RecommendedQR> FESpaceP_T;
+typedef FEType<Elem_T,2>::RefFE_T QuadraticRefFE;
+typedef FEType<Elem_T,1>::RefFE_T LinearRefFE;
+typedef FEType<Elem_T,2>::RecommendedQR QuadraticQR;
+typedef FESpace<Mesh_T,QuadraticRefFE,QuadraticQR> FESpaceU_T;
+typedef FESpace<Mesh_T,LinearRefFE,QuadraticQR> FESpaceP_T;
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {
@@ -35,37 +32,31 @@ int main(int argc, char* argv[])
   uint const numPts_x = (argc < 3)? 3 : std::stoi(argv[1]);
   uint const numPts_y = (argc < 3)? 3 : std::stoi(argv[2]);
 
-  Vec3 const origin{-1., -1., 0.};
-  Vec3 const length{2., 2., 0.};
+  Vec3 const origin{0., 0., 0.};
+  Vec3 const length{1., 1., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::shared_ptr<Mesh_T> meshPtr{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
 
-  FESpaceU_T feSpaceU(meshPtr);
-  FESpaceP_T feSpaceP(meshPtr);
+  FESpaceU_T feSpaceU{meshPtr};
+  FESpaceP_T feSpaceP{meshPtr};
 
-  auto zeroFun = [] (Vec3 const&) {return 0.;};
-  auto oneFun = [] (Vec3 const&) {return 1.;};
-  BCList<FESpaceU_T> bcsU{
-    feSpaceU,
-    {
-      BCEss<FESpaceU_T>(feSpaceU, side::RIGHT, zeroFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::LEFT, zeroFun)
-    }
-  };
-  bcsU.init();
-  BCList<FESpaceU_T> bcsV{
-    feSpaceU,
-    {
-      BCEss<FESpaceU_T>(feSpaceU, side::BOTTOM, oneFun),
-      BCEss<FESpaceU_T>(feSpaceU, side::RIGHT, zeroFun)
-    }
-  };
-  bcsV.init();
-  BCList<FESpaceP_T> bcsP(feSpaceP);
-  bcsP.init();
+  // FESpaceList<FESpaceU_T, FESpaceU_T, FESpaceP_T> feList{feSpaceU, feSpaceU, feSpaceP};
+
+  auto zeroFun = [] (Vec3 const &) {return 0.;};
+  auto inlet = [] (Vec3 const & p) {return 0.5*(1.-p(0)*p(0));};
+  BCList<FESpaceU_T> bcsU{feSpaceU};
+  bcsU.addEssentialBC(side::RIGHT, zeroFun);
+  bcsU.addEssentialBC(side::LEFT, zeroFun);
+  bcsU.addEssentialBC(side::BOTTOM, zeroFun);
+  bcsU.addEssentialBC(side::TOP, zeroFun);
+  BCList<FESpaceU_T> bcsV{feSpaceU};
+  bcsV.addEssentialBC(side::RIGHT, zeroFun);
+  bcsV.addEssentialBC(side::BOTTOM, inlet);
+  // bcsV.addNaturalBC(side::BOTTOM, oneFun);
+  BCList<FESpaceP_T> bcsP{feSpaceP};
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

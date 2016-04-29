@@ -40,10 +40,9 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace(meshPtr);
 
-  BCEss<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
-  BCEss<FESpace_T> bottom(feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;});
-  BCList<FESpace_T> bcs{feSpace, {left, bottom}};
-  bcs.init();
+  BCList<FESpace_T> bcs{feSpace};
+  bcs.addEssentialBC(side::BOTTOM, [](Vec3 const &){return 0.;});
+  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
 
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);

@@ -60,9 +60,8 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCEss<FESpace_T> left(feSpace, side::LEFT, [] (Vec3 const&) {return 0.;});
-  BCList<FESpace_T> bcs{feSpace, {left}};
-  bcs.init();
+  BCList<FESpace_T> bcs{feSpace};
+  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);

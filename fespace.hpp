@@ -6,14 +6,16 @@
 
 template <typename Mesh,
           typename RefFE,
-          typename QR>
+          typename QR,
+          uint d = 1>
 struct FESpace
 {
   typedef Mesh Mesh_T;
   typedef RefFE RefFE_T;
   typedef QR QR_T;
-  typedef DOF<Mesh, RefFE> DOF_T;
+  typedef DOF<Mesh, RefFE, d> DOF_T;
   typedef CurFE<RefFE, QR> CurFE_T;
+  static uint const dim = d;
 
   explicit FESpace(std::shared_ptr<Mesh> const mesh):
     meshPtr(mesh),

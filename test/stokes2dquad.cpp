@@ -17,6 +17,7 @@ typedef FEType<Elem_T,1>::RefFE_T LinearRefFE;
 typedef FEType<Elem_T,2>::RecommendedQR QuadraticQR;
 typedef FESpace<Mesh_T,QuadraticRefFE,QuadraticQR> FESpaceU_T;
 typedef FESpace<Mesh_T,LinearRefFE,QuadraticQR> FESpaceP_T;
+typedef FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2> FESpaceVel_T;
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {
@@ -42,6 +43,8 @@ int main(int argc, char* argv[])
 
   FESpaceU_T feSpaceU{meshPtr};
   FESpaceP_T feSpaceP{meshPtr};
+  FESpaceVel_T feSpaceVel{meshPtr};
+  std::cout << feSpaceVel.dof << std::endl;
 
   // FESpaceList<FESpaceU_T, FESpaceU_T, FESpaceP_T> feList{feSpaceU, feSpaceU, feSpaceP};
 
@@ -56,13 +59,21 @@ int main(int argc, char* argv[])
   bcsV.addEssentialBC(side::RIGHT, zeroFun);
   bcsV.addEssentialBC(side::BOTTOM, inlet);
   // bcsV.addNaturalBC(side::BOTTOM, oneFun);
+  BCList<FESpaceVel_T> bcsVel{feSpaceVel};
+  bcsVel.addEssentialBC(side::RIGHT, zeroFun, {0,1});
+  // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
+  std::cout << bcsVel << std::endl;
   BCList<FESpaceP_T> bcsP{feSpaceP};
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
+  uint const numDOFs = feSpaceVel.dof.totalNum*FESpaceVel_T::dim + feSpaceP.dof.totalNum;
+  Mat AA(numDOFs, numDOFs);
+  Vec bb = Vec::Zero(numDOFs);
 
   AssemblyStiffness<FESpaceU_T> stiffness0(1.0, feSpaceU);
   AssemblyStiffness<FESpaceU_T> stiffness1(1.0, feSpaceU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
   // AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
   AssemblyDiv<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, 0);
   AssemblyGrad<FESpaceU_T, FESpaceP_T> grad1(1, feSpaceU, feSpaceP, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);

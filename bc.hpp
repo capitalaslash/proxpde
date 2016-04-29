@@ -8,11 +8,16 @@
 
 typedef Eigen::Array<bool,Eigen::Dynamic,1> BoolArray_T;
 
+// TODO: add static map to set components via flags
+
 template <typename FESpace>
 class BCEss
 {
 public:
-  BCEss(FESpace const& feSpace, marker_T m, scalarFun_T v):
+  BCEss(FESpace const& feSpace,
+        marker_T m,
+        scalarFun_T v,
+        std::array<uint,FESpace::dim> comp = {0}):
     marker(m),
     value(v)
   {
@@ -27,12 +32,24 @@ public:
         {
           DOFid_T const dof =
               feSpace.dof.elemMap[iElemId][FESpace::RefFE_T::dofOnFacet[side][i]];
-          constrainedDOFset.insert(dof);
+          for(uint d=0; d<FESpace::dim; ++d)
+          {
+            bool const compIsConstrained =
+                std::any_of(
+                  std::begin(comp),
+                  std::end(comp),
+                  [&d](uint i) { return i == d; }
+                );
+            if(compIsConstrained)
+            {
+              constrainedDOFset.insert(dof + d*feSpace.dof.totalNum);
+            }
+          }
         }
       }
     }
 
-    boolVector = BoolArray_T::Constant(feSpace.dof.totalNum, false);
+    boolVector = BoolArray_T::Constant(feSpace.dof.totalNum*FESpace::dim, false);
     for(auto& id: constrainedDOFset)
     {
       boolVector[id] = true;
@@ -97,9 +114,12 @@ public:
   feSpace(fe)
   {}
 
-  void addEssentialBC(marker_T const m, scalarFun_T const & f)
+  void addEssentialBC(
+      marker_T const m,
+      scalarFun_T const & f,
+      std::array<uint,FESpace::dim> comp = {0})
   {
-    bcEss_list.emplace_back(feSpace, m, f);
+    bcEss_list.emplace_back(feSpace, m, f, comp);
   }
 
   void addNaturalBC(marker_T const m, scalarFun_T const & f)

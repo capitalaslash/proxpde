@@ -2,11 +2,13 @@
 
 #include "def.hpp"
 
-template <typename Mesh, typename RefFE>
+#include <tuple>
+
+template <typename Mesh, typename RefFE, uint dim>
 struct DOF
 {
   static uint constexpr _clms = numDOFs<RefFE>();
-  typedef std::vector<std::array<DOFid_T,_clms>> ElemMap_T;
+  typedef std::vector<std::array<DOFid_T,_clms*dim>> ElemMap_T;
   typedef std::vector<DOFid_T> PtMap_T;
 
   explicit DOF(Mesh & mesh):
@@ -99,6 +101,7 @@ struct DOF
           }
         }
       }
+
       // check if there dofs on the element
       if(RefFE::dof_place[0])
       {
@@ -116,8 +119,20 @@ struct DOF
           local_dof_count++;
         }
       }
+      assert(local_dof_count == _clms);
     }
     totalNum = dof_count;
+
+    for(uint d=0; d<dim-1; d++)
+    {
+      for(uint e=0; e<_rows; ++e)
+      {
+        for(uint i=0; i<_clms; i++)
+        {
+          elemMap[e][_clms*(d+1)+i] = totalNum * (d+1) + elemMap[e][i];
+        }
+      }
+    }
   }
 
   uint _rows;
@@ -126,8 +141,8 @@ struct DOF
   uint totalNum;
 };
 
-template <typename Mesh, typename RefFE>
-inline std::ostream & operator<<(std::ostream & out, DOF<Mesh, RefFE> const & dof)
+template <typename Mesh, typename RefFE, uint dim>
+inline std::ostream & operator<<(std::ostream & out, DOF<Mesh,RefFE,dim> const & dof)
 {
   out << "DOF map\n";
   out << "elemMap: " << dof._rows << "x" << dof._clms << "\n";

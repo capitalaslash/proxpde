@@ -54,7 +54,7 @@ struct Builder
                 auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
                 Fe(id) += bc.curFE.JxW[q] *
-                      bc.curFE.phi(i, q) *
+                      bc.curFE.phi[q](i) *
                       value;
               }
             }

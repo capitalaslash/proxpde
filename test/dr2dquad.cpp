@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   // // rotation matrix
   // double thetay = M_PI / 4.;
   // double thetaz = M_PI / 3.;
-  // Eigen::Matrix3d Ry, Rz;
+  // FMat<3,3> Ry, Rz;
   // Ry << std::cos(thetay), 0.0, std::sin(thetay),
   //       0.0, 1.0, 0.0,
   //      -std::sin(thetay), 0.0, std::cos(thetay);

@@ -14,8 +14,8 @@ struct Diagonal: public AssemblyBase
 {
   typedef FESpace FESpace_T;
   typedef typename FESpace_T::CurFE_T CurFE_T;
-  typedef Eigen::Matrix<double,CurFE_T::size(),CurFE_T::size()> LMat_T;
-  typedef Eigen::Matrix<double,CurFE_T::size(),1> LVec_T;
+  typedef FMat<CurFE_T::size(),CurFE_T::size()> LMat_T;
+  typedef FVec<CurFE_T::size()> LVec_T;
 
   explicit Diagonal(FESpace_T & fe, uint offset_row, uint offset_clm):
     AssemblyBase{offset_row, offset_clm},
@@ -34,8 +34,8 @@ struct Coupling: public AssemblyBase
   typedef FESpace2 FESpace2_T;
   typedef typename FESpace1_T::CurFE_T CurFE1_T;
   typedef typename FESpace2_T::CurFE_T CurFE2_T;
-  typedef Eigen::Matrix<double,CurFE1_T::size(),CurFE2_T::size()> LMat_T;
-  typedef Eigen::Matrix<double,CurFE1_T::size(),1> LVec_T;
+  typedef FMat<CurFE1_T::size(),CurFE2_T::size()> LMat_T;
+  typedef FVec<CurFE1_T::size()> LVec_T;
 
   explicit Coupling(FESpace1_T & fe1,
                     FESpace2 & fe2,
@@ -57,8 +57,8 @@ struct AssemblyVector: public AssemblyBase
 {
   typedef FESpace FESpace_T;
   typedef typename FESpace_T::CurFE_T CurFE_T;
-  typedef Eigen::Matrix<double,CurFE_T::size(),CurFE_T::size()> LMat_T;
-  typedef Eigen::Matrix<double,CurFE_T::size(),1> LVec_T;
+  typedef FMat<CurFE_T::size(),CurFE_T::size()> LMat_T;
+  typedef FVec<CurFE_T::size()> LVec_T;
 
   explicit AssemblyVector(FESpace_T & fe, uint offset_row):
     AssemblyBase{offset_row, 0},
@@ -92,7 +92,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
         for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) += this->feSpace.curFE.JxW[q] *
-              (this->feSpace.curFE.dphi(j, q).dot(this->feSpace.curFE.dphi(i, q)));
+              (this->feSpace.curFE.dphi[q].col(j).dot(this->feSpace.curFE.dphi[q].col(i)));
         }
       }
     }
@@ -123,7 +123,7 @@ struct AssemblyMass: public Diagonal<FESpace>
         for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) += coeff * this->feSpace.curFE.JxW[q] *
-              this->feSpace.curFE.phi(j, q) * this->feSpace.curFE.phi(i, q);
+              this->feSpace.curFE.phi[q](j) * this->feSpace.curFE.phi[q](i);
         }
       }
     }
@@ -155,7 +155,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
       double const f = rhs(this->feSpace.curFE.qpoint[q]);
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        Fe(i) += this->feSpace.curFE.JxW[q] * this->feSpace.curFE.phi(i, q) * f;
+        Fe(i) += this->feSpace.curFE.JxW[q] * this->feSpace.curFE.phi[q](i) * f;
       }
     }
   }
@@ -190,7 +190,7 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         Fe(i) += this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.phi(i, q) *
+            this->feSpace.curFE.phi[q](i) *
             local_rhs;
       }
     }
@@ -222,7 +222,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_vel += vel(dofId) * this->feSpace.curFE.phi(n, q);
+        local_vel += vel(dofId) * this->feSpace.curFE.phi[q](n);
       }
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
@@ -230,8 +230,8 @@ struct AssemblyAdvection: public Diagonal<FESpace>
         {
           Ke(i,j) += this->feSpace.curFE.JxW[q] *
               local_vel *
-              this->feSpace.curFE.dphi(i, q) *
-              this->feSpace.curFE.phi(j, q);
+              this->feSpace.curFE.dphi[q].col(i) *
+              this->feSpace.curFE.phi[q](j);
         }
       }
     }
@@ -269,8 +269,8 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
-              this->feSpace1.curFE.dphi(i, q)(component) *
-              this->feSpace2.curFE.phi(j, q);
+              this->feSpace1.curFE.dphi[q](component, i) *
+              this->feSpace2.curFE.phi[q](j);
         }
       }
     }
@@ -313,8 +313,8 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
-              this->feSpace1.curFE.phi(i, q) *
-              this->feSpace2.curFE.dphi(j, q)(component);
+              this->feSpace1.curFE.phi[q](i) *
+              this->feSpace2.curFE.dphi[q](component, j);
         }
       }
     }

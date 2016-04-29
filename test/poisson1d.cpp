@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
   // rotation matrix
   double theta = M_PI / 3.;
-  Eigen::Matrix3d R;
+  FMat<3,3> R;
   R << std::cos(theta), std::sin(theta), 0.0,
       -std::sin(theta), std::cos(theta), 0.0,
       0.0, 0.0, 1.0;

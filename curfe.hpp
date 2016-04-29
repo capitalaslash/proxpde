@@ -9,11 +9,11 @@ struct CurFE
 {
   typedef RefFE RefFE_T;
   typedef QR QR_T;
-  typedef Eigen::Matrix<double,RefFE::numFuns,RefFE::numFuns> LocalMat_T;
-  typedef Eigen::Matrix<double,RefFE::numFuns,1> LocalVec_T;
-  typedef Eigen::Matrix<double,3,RefFE::dim> JacMat_T;
-  typedef Eigen::Matrix<double,RefFE::dim,3> JacTMat_T;
-  typedef Eigen::Matrix<double,RefFE::dim,1> RefVec_T;
+  typedef FMat<RefFE::numFuns,RefFE::numFuns> LocalMat_T;
+  typedef FVec<RefFE::numFuns> LocalVec_T;
+  typedef FMat<3,RefFE::dim> JacMat_T;
+  typedef FMat<RefFE::dim,3> JacTMat_T;
+  typedef typename RefFE_T::Vec_T RefVec_T;
 
   CurFE()
   {
@@ -21,8 +21,8 @@ struct CurFE
     {
       for(uint q=0; q<QR::numPts; ++q)
       {
-        phiRef(i,q) = RefFE::phiFun[i](QR::node[q])(0);
-        dphiRef(i,q) = RefFE::dphiFun[i](QR::node[q]);
+        phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
+        dphiRef[q].col(i) = RefFE::dphiFun[i](QR::node[q]);
       }
     }
   }
@@ -34,49 +34,49 @@ struct CurFE
 
   void reinit(GeoElem const & elem)
   {
-    e = &elem;
+    // e = &elem;
     dofPts = RefFE::dofPts(elem);
 
     for(uint q=0; q<QR::numPts; ++q)
     {
-      J[q] = JacMat_T::Zero();
+      jac[q] = JacMat_T::Zero();
       for(uint n=0; n<RefFE::numFuns; ++n)
       {
-        J[q] += dofPts[n] * dphiRef(n,q).transpose();
+        jac[q] += dofPts[n] * dphiRef[q].col(n).transpose();
       }
 
       // J^+ = (J^T J)^-1 J^T
-      auto JtJ = J[q].transpose() * J[q];
-      auto JtJi = JtJ.inverse();
-      detJ[q] = std::sqrt(JtJ.determinant());
-      JmT[q] = J[q] * JtJi.transpose();
+      auto jTj = jac[q].transpose() * jac[q];
+      auto jTjI = jTj.inverse();
+      detJ[q] = std::sqrt(jTj.determinant());
+      jacMT[q] = jac[q] * jTjI.transpose();
 
       JxW[q] = detJ[q] * QR::weight[q];
-      qpoint[q] = elem.origin() + J[q] * QR::node[q];
+      qpoint[q] = elem.origin() + jac[q] * QR::node[q];
 
       for(uint i=0; i<RefFE::numFuns; ++i)
       {
-        phi(i,q) = phiRef(i,q);
-        dphi(i,q) = JmT[q] * dphiRef(i,q);
+        // phi values on qpoints are unaffected by the change of coords
+        // this update can potentially be done in the constructor
+        phi[q](i) = phiRef[q](i);
+        dphi[q].col(i) = jacMT[q] * dphiRef[q].col(i);
       }
     }
   }
 
-  GeoElem const* e;
+  // GeoElem const* e;
   // vectorFun_T map;
   // vectorFun_T imap;
   std::array<Vec3,RefFE::numFuns> dofPts;
-  std::array<Eigen::Matrix<double,3,RefFE::dim>,QR::numPts> J;
-  std::array<Eigen::Matrix<double,3,RefFE::dim>,QR::numPts> JmT;
+  std::array<JacMat_T,QR::numPts> jac;
+  std::array<JacMat_T,QR::numPts> jacMT;
   std::array<double,QR::numPts> detJ;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
-  Eigen::Matrix<double, RefFE::numFuns, QR::numPts> phiRef;
-  Eigen::Matrix<RefVec_T, RefFE::numFuns, QR::numPts> dphiRef;
-  Eigen::Matrix<double, RefFE::numFuns, QR::numPts> phi;
-  Eigen::Matrix<Vec3, RefFE::numFuns, QR::numPts> dphi;
-  // std::array<scalarFun_T,RefFE::numFuns> phiFun;
-  // std::array<vectorFun_T,RefFE::numFuns> dphiFun;
+  std::array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
+  std::array<FMat<RefFE::dim, RefFE::numFuns>,QR::numPts> dphiRef;
+  std::array<FVec<RefFE::numFuns>,QR::numPts> phi;
+  std::array<FMat<3, RefFE::numFuns>,QR::numPts> dphi;
   // LocalMat_T massMat;
   // LocalMat_T stiffMat;
 };

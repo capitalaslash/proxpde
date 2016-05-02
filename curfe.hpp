@@ -22,7 +22,7 @@ struct CurFE
       for(uint q=0; q<QR::numPts; ++q)
       {
         phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
-        dphiRef[q].col(i) = RefFE::dphiFun[i](QR::node[q]);
+        dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
       }
     }
   }
@@ -42,25 +42,22 @@ struct CurFE
       jac[q] = JacMat_T::Zero();
       for(uint n=0; n<RefFE::numFuns; ++n)
       {
-        jac[q] += dofPts[n] * dphiRef[q].col(n).transpose();
+        jac[q] += dofPts[n] * dphiRef[q].row(n);
       }
 
       // J^+ = (J^T J)^-1 J^T
       auto jTj = jac[q].transpose() * jac[q];
       auto jTjI = jTj.inverse();
       detJ[q] = std::sqrt(jTj.determinant());
-      jacMT[q] = jac[q] * jTjI.transpose();
+      jacPlus[q] = jTjI * jac[q].transpose();
 
       JxW[q] = detJ[q] * QR::weight[q];
       qpoint[q] = elem.origin() + jac[q] * QR::node[q];
 
-      for(uint i=0; i<RefFE::numFuns; ++i)
-      {
-        // phi values on qpoints are unaffected by the change of coords
-        // this update can potentially be done in the constructor
-        phi[q](i) = phiRef[q](i);
-        dphi[q].col(i) = jacMT[q] * dphiRef[q].col(i);
-      }
+      // phi values on qpoints are unaffected by the change of coords
+      // this update can potentially be done in the constructor
+      phi[q] = phiRef[q];
+      dphi[q] = dphiRef[q] * jacPlus[q];
     }
   }
 
@@ -69,14 +66,14 @@ struct CurFE
   // vectorFun_T imap;
   std::array<Vec3,RefFE::numFuns> dofPts;
   std::array<JacMat_T,QR::numPts> jac;
-  std::array<JacMat_T,QR::numPts> jacMT;
+  std::array<JacTMat_T,QR::numPts> jacPlus;
   std::array<double,QR::numPts> detJ;
   std::array<double,QR::numPts> JxW;
   std::array<Vec3,QR::numPts> qpoint;
   std::array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
-  std::array<FMat<RefFE::dim, RefFE::numFuns>,QR::numPts> dphiRef;
+  std::array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> dphiRef;
   std::array<FVec<RefFE::numFuns>,QR::numPts> phi;
-  std::array<FMat<3, RefFE::numFuns>,QR::numPts> dphi;
+  std::array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
   // LocalMat_T massMat;
   // LocalMat_T stiffMat;
 };

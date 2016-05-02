@@ -87,14 +87,10 @@ struct AssemblyStiffness: public Diagonal<FESpace>
     typedef typename FESpace_T::CurFE_T CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      {
-        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-        {
-          Ke(i,j) += this->feSpace.curFE.JxW[q] *
-              (this->feSpace.curFE.dphi[q].col(j).dot(this->feSpace.curFE.dphi[q].col(i)));
-        }
-      }
+      Ke +=
+        this->feSpace.curFE.JxW[q] *
+        this->feSpace.curFE.dphi[q] *
+        this->feSpace.curFE.dphi[q].transpose();
     }
   }
 };
@@ -118,14 +114,10 @@ struct AssemblyMass: public Diagonal<FESpace>
 
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      {
-        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-        {
-          Ke(i,j) += coeff * this->feSpace.curFE.JxW[q] *
-              this->feSpace.curFE.phi[q](j) * this->feSpace.curFE.phi[q](i);
-        }
-      }
+      Ke +=
+        coeff * this->feSpace.curFE.JxW[q] *
+        this->feSpace.curFE.phi[q] *
+        this->feSpace.curFE.phi[q].transpose();
     }
   }
 
@@ -230,7 +222,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
         {
           Ke(i,j) += this->feSpace.curFE.JxW[q] *
               local_vel *
-              this->feSpace.curFE.dphi[q].col(i) *
+              this->feSpace.curFE.dphi[q].row(i) *
               this->feSpace.curFE.phi[q](j);
         }
       }
@@ -269,7 +261,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
         for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
         {
           Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
-              this->feSpace1.curFE.dphi[q](component, i) *
+              this->feSpace1.curFE.dphi[q](i, component) *
               this->feSpace2.curFE.phi[q](j);
         }
       }
@@ -314,7 +306,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
         {
           Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
               this->feSpace1.curFE.phi[q](i) *
-              this->feSpace2.curFE.dphi[q](component, j);
+              this->feSpace2.curFE.dphi[q](j, component);
         }
       }
     }

@@ -12,6 +12,13 @@ add_test(
   COMMAND poisson1d_p2
 )
 
+add_executable(advection1d advection1d.cpp)
+target_link_libraries(advection1d ${LIBS})
+add_test(
+  NAME advection1d
+  COMMAND advection1d
+)
+
 add_executable(poisson2dtri poisson2dtri.cpp)
 target_link_libraries(poisson2dtri ${LIBS})
 add_test(

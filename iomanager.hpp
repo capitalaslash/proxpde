@@ -16,8 +16,9 @@ struct IOManager
 
   void print(std::vector<Var> const& data);
 
-  std::string fileName;
   FESpace const & feSpace;
+  std::string fileName;
+  double time;
 };
 
 // implementation --------------------------------------------------------------
@@ -49,7 +50,7 @@ void IOManager<FESpace>::print(std::vector<Var> const& data)
   auto grid = domain->InsertEndChild(grid_el);
 
   auto time_el = doc.NewElement("Time");
-  time_el->SetAttribute("Value", 0.0);
+  time_el->SetAttribute("Value", time);
   grid->InsertEndChild(time_el);
 
   auto topo_el = doc.NewElement("Topology");

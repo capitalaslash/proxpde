@@ -34,7 +34,7 @@ struct CurFE
 
   void reinit(GeoElem const & elem)
   {
-    // e = &elem;
+    e = &elem;
     dofPts = RefFE::dofPts(elem);
 
     for(uint q=0; q<QR::numPts; ++q)
@@ -61,7 +61,7 @@ struct CurFE
     }
   }
 
-  // GeoElem const* e;
+  GeoElem const* e;
   // vectorFun_T map;
   // vectorFun_T imap;
   std::array<Vec3,RefFE::numFuns> dofPts;

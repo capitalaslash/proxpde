@@ -18,7 +18,7 @@ DOFid_T const DOFidNotSet = -1;
 typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;
 typedef Eigen::VectorXd Vec;
-
+typedef Eigen::Matrix<double, Eigen::Dynamic, 3> Vec3d;
 
 template <uint Size>
 using FVec = Eigen::Matrix<double,Size,1>;

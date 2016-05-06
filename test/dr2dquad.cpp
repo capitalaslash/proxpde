@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
-  AssemblyStiffness<FESpace_T> stiffness(feSpace);
+  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
   AssemblyMass<FESpace_T> mass(1.0, feSpace);
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   auto modifiedRhs = [] (Vec3 const& p) {return rhs(mesh_mod_inv(p));};
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{"sol_dr2dquad.xmf", feSpace};
+  IOManager<FESpace_T> io{feSpace, "sol_dr2dquad.xmf"};
   io.print({sol, exact, error});
 
   double norm = error.data.norm();

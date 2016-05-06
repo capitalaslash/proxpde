@@ -65,7 +65,7 @@ int main()
   Mat A(feSpace.dof.totalNum,feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
-  AssemblyStiffness<FESpace_T> assembly(feSpace);
+  AssemblyStiffness<FESpace_T> assembly(1.0, feSpace);
 
   Builder builder(A, b);
   builder.buildProblem(assembly, bcs);
@@ -121,7 +121,7 @@ int main()
   error.data = sol.data - exact.data;
   std::cout << "error: " << error.data.norm() << std::endl;
 
-  IOManager<FESpace_T> io{"sol.xmf", feSpace};
+  IOManager<FESpace_T> io{feSpace, "sol.xmf"};
   io.print({sol, exact, error});
 
   return 0;

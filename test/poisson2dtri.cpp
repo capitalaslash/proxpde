@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
   Builder builder(A, b);
-  builder.buildProblem(AssemblyStiffness<FESpace_T>(feSpace), bcs);
+  builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
   builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();
 
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{"sol_poisson2dtri.xmf", feSpace};
+  IOManager<FESpace_T> io{feSpace, "sol_poisson2dtri.xmf"};
   io.print({sol, exact, error});
 
   double norm = error.data.norm();

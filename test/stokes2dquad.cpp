@@ -61,8 +61,8 @@ int main(int argc, char* argv[])
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
   Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
 
-  AssemblyStiffness<FESpaceU_T> stiffness0(feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffness1(feSpaceU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyStiffness<FESpaceU_T> stiffness0(1.0, feSpaceU);
+  AssemblyStiffness<FESpaceU_T> stiffness1(1.0, feSpaceU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
   // AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
   AssemblyDiv<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, 0);
   AssemblyGrad<FESpaceU_T, FESpaceP_T> grad1(1, feSpaceU, feSpaceP, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
@@ -105,9 +105,9 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 
-  IOManager<FESpaceU_T> ioU{"sol_stokes2dquad_u.xmf", feSpaceU};
+  IOManager<FESpaceU_T> ioU{feSpaceU, "sol_stokes2dquad_u.xmf"};
   ioU.print({u, v});
-  IOManager<FESpaceP_T> ioP{"sol_stokes2dquad_p.xmf", feSpaceP};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dquad_p.xmf"};
   ioP.print({p});
 
   double norm = error.data.norm();

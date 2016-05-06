@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
   Vec b = Vec::Zero(feSpace.dof.totalNum);
 
-  AssemblyStiffness<FESpace_T> stiffness(feSpace);
+  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
 
   t.start();
   Builder builder(A, b);
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{"sol_poisson2dquad.xmf", feSpace};
+  IOManager<FESpace_T> io{feSpace, "sol_poisson2dquad.xmf"};
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

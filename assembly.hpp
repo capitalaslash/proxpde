@@ -3,6 +3,8 @@
 #include "def.hpp"
 #include "fespace.hpp"
 
+#include <type_traits>
+
 struct AssemblyBase
 {
   uint offset_row;
@@ -78,8 +80,12 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyStiffness(FESpace_T & fe, uint offset_row = 0, uint offset_clm = 0):
-    Diagonal<FESpace_T>(fe, offset_row, offset_clm)
+  explicit AssemblyStiffness(double const c,
+                             FESpace_T & fe,
+                             uint offset_row = 0,
+                             uint offset_clm = 0):
+    Diagonal<FESpace_T>(fe, offset_row, offset_clm),
+    coeff(c)
   {}
 
   void build(LMat_T & Ke) const
@@ -87,12 +93,13 @@ struct AssemblyStiffness: public Diagonal<FESpace>
     typedef typename FESpace_T::CurFE_T CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      Ke +=
-        this->feSpace.curFE.JxW[q] *
-        this->feSpace.curFE.dphi[q] *
-        this->feSpace.curFE.dphi[q].transpose();
+      Ke += coeff * this->feSpace.curFE.JxW[q] *
+          this->feSpace.curFE.dphi[q] *
+          this->feSpace.curFE.dphi[q].transpose();
     }
   }
+
+  double coeff;
 };
 
 template <typename FESpace>
@@ -103,7 +110,10 @@ struct AssemblyMass: public Diagonal<FESpace>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyMass(double const & c, FESpace_T & fe, uint offset_row = 0, uint offset_clm = 0):
+  explicit AssemblyMass(double const & c,
+                        FESpace_T & fe,
+                        uint offset_row = 0,
+                        uint offset_clm = 0):
      Diagonal<FESpace>(fe, offset_row, offset_clm),
      coeff(c)
   {}
@@ -114,8 +124,7 @@ struct AssemblyMass: public Diagonal<FESpace>
 
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      Ke +=
-        coeff * this->feSpace.curFE.JxW[q] *
+      Ke += coeff * this->feSpace.curFE.JxW[q] *
         this->feSpace.curFE.phi[q] *
         this->feSpace.curFE.phi[q].transpose();
     }
@@ -133,8 +142,8 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   typedef typename Super_T::LVec_T LVec_T;
 
   explicit AssemblyAnalyticRhs(scalarFun_T const & r,
-                                 FESpace & fe,
-                                 uint offset_row = 0):
+                               FESpace & fe,
+                               uint offset_row = 0):
     AssemblyVector<FESpace>(fe, offset_row),
     rhs(r)
   {}
@@ -144,11 +153,9 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     typedef typename FESpace_T::CurFE_T CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      double const f = rhs(this->feSpace.curFE.qpoint[q]);
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      {
-        Fe(i) += this->feSpace.curFE.JxW[q] * this->feSpace.curFE.phi[q](i) * f;
-      }
+      Fe += this->feSpace.curFE.JxW[q] *
+          this->feSpace.curFE.phi[q] *
+          rhs(this->feSpace.curFE.qpoint[q]);
     }
   }
 
@@ -163,8 +170,10 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyVecRhs(Vec const & r, FESpace_T & fe):
-    Diagonal<FESpace_T>(fe),
+  explicit AssemblyVecRhs(Vec const & r,
+                          FESpace_T & fe,
+                          uint offset_row = 0):
+    AssemblyVector<FESpace_T>(fe, offset_row),
     rhs(r)
   {}
 
@@ -177,14 +186,11 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_rhs += rhs(dofId) * this->feSpace.curFE.phi(n, q);
+        local_rhs += rhs(dofId) * this->feSpace.curFE.phi[q](n);
       }
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      {
-        Fe(i) += this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.phi[q](i) *
-            local_rhs;
-      }
+      Fe += this->feSpace.curFE.JxW[q] *
+          this->feSpace.curFE.phi[q] *
+          local_rhs;
     }
   }
 
@@ -196,12 +202,15 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 {
   typedef FESpace FESpace_T;
   typedef Diagonal<FESpace> Super_T;
+  typedef Eigen::Matrix<double, Eigen::Dynamic, FESpace_T::RefFE_T::dim> VelVec_T;
   typedef typename Super_T::LMat_T LMat_T;
   typedef typename Super_T::LVec_T LVec_T;
 
-  explicit AssemblyAdvection(Vec const u,
-                             FESpace_T & fe):
-    Diagonal<FESpace>(fe),
+  explicit AssemblyAdvection(Vec3d const u,
+                             FESpace_T & fe,
+                             uint offset_row = 0,
+                             uint offset_clm = 0):
+    Diagonal<FESpace>(fe, offset_row, offset_clm),
     vel(u)
   {}
 
@@ -214,22 +223,24 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_vel += vel(dofId) * this->feSpace.curFE.phi[q](n);
+        local_vel += vel.row(dofId) * this->feSpace.curFE.phi[q](n);
       }
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      {
-        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-        {
-          Ke(i,j) += this->feSpace.curFE.JxW[q] *
-              local_vel *
-              this->feSpace.curFE.dphi[q].row(i) *
-              this->feSpace.curFE.phi[q](j);
-        }
-      }
+      Ke += this->feSpace.curFE.JxW[q] *
+          this->feSpace.curFE.phi[q] *
+          (this->feSpace.curFE.dphi[q] * local_vel).transpose();
+      // for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      // {
+      //   for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
+      //   {
+      //     Ke(i,j) += this->feSpace.curFE.JxW[q] *
+      //         (local_vel.dot(this->feSpace.curFE.dphi[q].row(i).transpose())) *
+      //         this->feSpace.curFE.phi[q](j);
+      //   }
+      // }
     }
   }
 
-  Vec const & vel;
+  Vec3d vel;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -248,23 +259,22 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
                         uint offset_clm = 0):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm),
     component(comp)
-  {}
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace1_T::CurFE_T::QR_T,
+          typename FESpace2_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
 
   void build(LMat_T & Ke) const
   {
-    typedef typename FESpace1_T::CurFE_T CurFE1_T;
-    typedef typename FESpace2_T::CurFE_T CurFE2_T;
-    for(uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+    for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
-      {
-        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
-        {
-          Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
-              this->feSpace1.curFE.dphi[q](i, component) *
-              this->feSpace2.curFE.phi[q](j);
-        }
-      }
+      Ke -= this->feSpace1.curFE.JxW[q] *
+          this->feSpace1.curFE.dphi[q].col(component)*
+          this->feSpace2.curFE.phi[q].transpose();
     }
   }
   uint const component;
@@ -292,23 +302,22 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
                        uint offset_clm = 0):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm),
     component(comp)
-  {}
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace1_T::CurFE_T::QR_T,
+          typename FESpace2_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
 
   void build(LMat_T & Ke) const
   {
-    typedef typename FESpace1_T::CurFE_T CurFE1_T;
-    typedef typename FESpace2_T::CurFE_T CurFE2_T;
-    for(uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+    for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
     {
-      for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
-      {
-        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
-        {
-          Ke(i,j) -= this->feSpace1.curFE.JxW[q] *
-              this->feSpace1.curFE.phi[q](i) *
-              this->feSpace2.curFE.dphi[q](j, component);
-        }
-      }
+      Ke -= this->feSpace1.curFE.JxW[q] *
+          this->feSpace1.curFE.phi[q] *
+          this->feSpace2.curFE.dphi[q].col(component).transpose();
     }
   }
 

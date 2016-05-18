@@ -59,7 +59,7 @@ void markFacets2D(std::shared_ptr<Mesh> meshPtr,
 void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 std::array<uint, 2> const numPts)
+                 array<uint, 2> const numPts)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   meshPtr->pointList.reserve(numPts[0]*numPts[1]);
@@ -90,7 +90,7 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
     for(uint i=0; i<numPts[0]-1; ++i)
     {
       id_T const base = i + j*numPts[0];
-      std::array<id_T,3> triplet_b, triplet_t;
+      array<id_T,3> triplet_b, triplet_t;
       if((i-0.5*(numPts[0]-2))*(j-0.5*(numPts[1]-2)) > 0)
       {
         triplet_b[0] = base;
@@ -128,7 +128,7 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
 void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 std::array<uint, 2> const numPts)
+                 array<uint, 2> const numPts)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   meshPtr->pointList.reserve(numPts[0]*numPts[1]);
@@ -174,7 +174,7 @@ void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
 void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
                      Vec3 const& origin,
                      double const& radius,
-                     std::array<uint, 3> const numPts)
+                     array<uint, 3> const numPts)
 {
   meshPtr->pointList.resize(
     numPts[0]*numPts[1] +

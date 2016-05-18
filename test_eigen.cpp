@@ -19,7 +19,7 @@ int main()
   outer.block<2,2>(0,0) = m.block<2,2>(0,0);
   std::cout << outer << std::endl;
 
-  std::array<Eigen::Matrix3d,2> J;
+  array<Eigen::Matrix3d,2> J;
   J[0] = Eigen::Matrix3d::Identity();
   J[0].block<1,1>(0,0) = Eigen::Matrix<double,1,1>::Constant(2.0);
 

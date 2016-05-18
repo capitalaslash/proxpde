@@ -15,15 +15,15 @@ public:
   typedef std::vector<Point> PointList_T;
   typedef std::vector<Elem> ElementList_T;
   typedef std::vector<Facet_T> FacetList_T;
-  typedef std::vector<std::array<id_T,Elem::numPts>> elemToPoint_T;
-  typedef std::vector<std::array<id_T,Elem::numFacets>> elemToFacet_T;
+  typedef std::vector<array<id_T,Elem::numPts>> elemToPoint_T;
+  typedef std::vector<array<id_T,Elem::numFacets>> elemToFacet_T;
 
   void buildConnectivity()
   {
     elemToPoint.reserve(elementList.size());
     for(auto& l: elementList)
     {
-      std::array<id_T,Elem::numPts> elemConn;
+      array<id_T,Elem::numPts> elemConn;
       uint counter = 0;
       for(auto& p: l.pointList)
       {
@@ -175,17 +175,17 @@ void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
 void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 std::array<uint, 2> const numPts);
+                 array<uint, 2> const numPts);
 
 void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 std::array<uint, 2> const numPts);
+                 array<uint, 2> const numPts);
 
 void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
                      Vec3 const& origin,
                      double const& radius,
-                     std::array<uint, 3> const numPts);
+                     array<uint, 3> const numPts);
 
 template <class Elem>
 struct MeshBuilder
@@ -193,7 +193,7 @@ struct MeshBuilder
   void build(std::shared_ptr<Mesh<Line>> meshPtr,
              Vec3 const& origin,
              Vec3 const& length,
-             std::array<uint, 3> const numPts);
+             array<uint, 3> const numPts);
 };
 
 template <>
@@ -202,7 +202,7 @@ struct MeshBuilder<Line>
   void build(std::shared_ptr<Mesh<Line>> meshPtr,
              Vec3 const& origin,
              Vec3 const& length,
-             std::array<uint, 3> const numPts)
+             array<uint, 3> const numPts)
   {
     buildMesh1D(meshPtr, origin, length, numPts[0]);
   }
@@ -214,7 +214,7 @@ struct MeshBuilder<Triangle>
   void build(std::shared_ptr<Mesh<Triangle>> meshPtr,
              Vec3 const& origin,
              Vec3 const& length,
-             std::array<uint, 3> const numPts)
+             array<uint, 3> const numPts)
   {
     buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
   }
@@ -226,7 +226,7 @@ struct MeshBuilder<Quad>
   void build(std::shared_ptr<Mesh<Quad>> meshPtr,
              Vec3 const& origin,
              Vec3 const& length,
-             std::array<uint, 3> const numPts)
+             array<uint, 3> const numPts)
   {
     buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
   }

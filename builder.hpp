@@ -268,6 +268,6 @@ struct Builder
 
   Mat & A;
   Vec & b;
-  std::array<std::vector<AssemblyBase*>,3> assemblies;
+  array<std::vector<AssemblyBase*>,3> assemblies;
   std::vector<Triplet> _triplets;
 };

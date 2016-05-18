@@ -1,14 +1,15 @@
 #pragma once
 
 #include "def.hpp"
+#include "reffe.hpp"
 
-#include <tuple>
+#include <set>
 
 template <typename Mesh, typename RefFE, uint dim>
 struct DOF
 {
   static uint constexpr _clms = numDOFs<RefFE>();
-  typedef std::vector<std::array<DOFid_T,_clms*dim>> ElemMap_T;
+  typedef std::vector<array<DOFid_T,_clms*dim>> ElemMap_T;
   typedef std::vector<DOFid_T> PtMap_T;
 
   explicit DOF(Mesh & mesh):

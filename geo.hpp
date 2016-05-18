@@ -67,7 +67,7 @@ struct GeoElem
   PointList_T pointList;
   id_T id;
   marker_T marker;
-  std::array<FacingElem_T, 2> facingElem;
+  array<FacingElem_T, 2> facingElem;
 };
 
 inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
@@ -137,12 +137,12 @@ public:
   static uint const numEdges = 1U;
   static uint const numFaces = 0U;
   static uint const numFacets = 2U;
-  static std::array<uint,4> constexpr dof_place{0,0,0,1};
-  static std::array<std::array<id_T,1>,2> constexpr elemToFacet{
+  static array<uint,4> constexpr dof_place{0,0,0,1};
+  static array<array<id_T,1>,2> constexpr elemToFacet{
     {{0}, {1}}
   };
-  static std::array<std::array<id_T,0>,0> constexpr elemToFace = {{}};
-  static std::array<std::array<id_T,2>,1> constexpr elemToEdge{
+  static array<array<id_T,0>,0> constexpr elemToFace = {{}};
+  static array<array<id_T,2>,1> constexpr elemToEdge{
     {{0,1}}
   };
 
@@ -185,12 +185,12 @@ public:
   static uint const numEdges = 3U;
   static uint const numFaces = 1U;
   static uint const numFacets = 3U;
-  static std::array<uint,4> constexpr dof_place{0,0,0,1};
-  static std::array<std::array<id_T,2>,3> constexpr elemToFacet{
+  static array<uint,4> constexpr dof_place{0,0,0,1};
+  static array<array<id_T,2>,3> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,0}}
   };
-  static std::array<std::array<id_T,2>,3> constexpr elemToEdge = elemToFacet;
-  static std::array<std::array<id_T,3>,1> constexpr elemToFace{
+  static array<array<id_T,2>,3> constexpr elemToEdge = elemToFacet;
+  static array<array<id_T,3>,1> constexpr elemToFace{
     {{0,1,2}}
   };
 
@@ -236,11 +236,11 @@ public:
   static uint const numEdges = 4U;
   static uint const numFaces = 1U;
   static uint const numFacets = 4U;
-  static std::array<std::array<id_T,2>,4> constexpr elemToFacet{
+  static array<array<id_T,2>,4> constexpr elemToFacet{
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };
-  static std::array<std::array<id_T,2>,4> constexpr elemToEdge = elemToFacet;
-  static std::array<std::array<id_T,4>,1> constexpr elemToFace{
+  static array<array<id_T,2>,4> constexpr elemToEdge = elemToFacet;
+  static array<array<id_T,4>,1> constexpr elemToFace{
     {{0,1,2,3}}
   };
 

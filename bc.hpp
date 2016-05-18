@@ -17,7 +17,7 @@ public:
   BCEss(FESpace const& feSpace,
         marker_T m,
         scalarFun_T v,
-        std::array<uint,FESpace::dim> comp = {0}):
+        array<uint,FESpace::dim> comp = {0}):
     marker(m),
     value(v)
   {
@@ -117,7 +117,7 @@ public:
   void addEssentialBC(
       marker_T const m,
       scalarFun_T const & f,
-      std::array<uint,FESpace::dim> comp = {0})
+      array<uint,FESpace::dim> comp = {0})
   {
     bcEss_list.emplace_back(feSpace, m, f, comp);
   }

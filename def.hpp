@@ -15,8 +15,10 @@ typedef uint marker_T;
 typedef uint DOFid_T;
 DOFid_T const DOFidNotSet = -1;
 
-template <typename T, std::size_t N>
-using array = std::array<T,N>;
+// template <typename T, std::size_t N>
+// using array = std::array<T,N>;
+#include "array.hpp"
+
 typedef Eigen::SparseMatrix<double,Eigen::ColMajor> Mat; // ColMajor is default
 // typedef Eigen::SparseMatrix<double,Eigen::RowMajor> Mat;
 typedef Eigen::VectorXd Vec;

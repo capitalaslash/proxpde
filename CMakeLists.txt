@@ -20,6 +20,7 @@ include_directories(SYSTEM
 
 set(MINIFEM_HEADERS
   def.hpp
+  array.hpp
   geo.hpp
   mesh.hpp
   reffe.hpp

@@ -27,16 +27,6 @@ struct FESpace
   DOF_T dof;
 };
 
-template <typename ... FESpaces>
-struct FESpaceList
-{
-  explicit FESpaceList(FESpaces ... feSpaces):
-    list{feSpaces ...}
-  {}
-
-  std::tuple<FESpaces ...> list;
-};
-
 template <typename FESpace>
 void interpolateAnalyticFunction(scalarFun_T const & f,
                                    FESpace const & feSpace,

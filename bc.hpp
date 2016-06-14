@@ -133,10 +133,11 @@ public:
 };
 
 template <typename FESpace>
-std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bclist)
+std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bcList)
 {
-  out << "bc list\n";
-  for(auto & bc: bclist.bcEss_list)
+  out << "bc list with " << bcList.bcEss_list.size() << " essential bcs and "
+      << bcList.bcNat_list.size() << " natural bcs" << std::endl;
+  for(auto & bc: bcList.bcEss_list)
   {
     out << bc << "\n";
   }

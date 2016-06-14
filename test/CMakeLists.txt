@@ -1,3 +1,10 @@
+add_executable(blockmatrix blockmatrix.cpp)
+target_link_libraries(blockmatrix ${LIBS})
+add_test(
+  NAME blockmatrix
+  COMMAND blockmatrix
+)
+
 add_executable(poisson1d poisson1d.cpp)
 target_link_libraries(poisson1d ${LIBS})
 add_test(

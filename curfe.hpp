@@ -28,8 +28,8 @@ struct CurFE
     }
   }
 
-  CurFE(CurFE const &) = delete;
-  CurFE & operator=(CurFE const &) = delete;
+  // CurFE(CurFE const &) = delete;
+  // CurFE & operator=(CurFE const &) = delete;
 
   constexpr static uint size() {return RefFE::numFuns;}
 

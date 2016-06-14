@@ -40,6 +40,12 @@ add_test(
   COMMAND poisson2dtri_p2
 )
 
+add_executable(advection2dtri advection2dtri.cpp)
+target_link_libraries(advection2dtri ${LIBS})
+add_test(
+  NAME advection2dtri
+  COMMAND advection2dtri
+)
 add_executable(poisson2dquad poisson2dquad.cpp)
 target_link_libraries(poisson2dquad ${LIBS})
 add_test(

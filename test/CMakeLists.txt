@@ -46,6 +46,7 @@ add_test(
   NAME advection2dtri
   COMMAND advection2dtri
 )
+
 add_executable(poisson2dquad poisson2dquad.cpp)
 target_link_libraries(poisson2dquad ${LIBS})
 add_test(
@@ -65,6 +66,13 @@ target_link_libraries(dr2dquad ${LIBS})
 add_test(
   NAME dr2dquad
   COMMAND dr2dquad
+)
+
+add_executable(advection2dquad advection2dquad.cpp)
+target_link_libraries(advection2dquad ${LIBS})
+add_test(
+  NAME advection2dquad
+  COMMAND advection2dquad
 )
 
 add_executable(stokes2dquad stokes2dquad.cpp)

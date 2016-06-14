@@ -46,7 +46,9 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{meshPtr};
   std::cout << feSpaceVel.dof << std::endl;
 
-  // FESpaceList<FESpaceU_T, FESpaceU_T, FESpaceP_T> feList{feSpaceU, feSpaceU, feSpaceP};
+  auto feList = std::make_tuple(feSpaceU, feSpaceU, feSpaceP);
+  auto assembler = make_assembler(feList);
+  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU, feSpaceP));
 
   auto zeroFun = [] (Vec3 const &) {return 0.;};
   auto inlet = [] (Vec3 const & p) {return 0.5*(1.-p(0)*p(0));};
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::RIGHT, zeroFun, {0,1});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
-  std::cout << bcsVel << std::endl;
+  std::cout << "bcsVel:\n" << bcsVel << std::endl;
   BCList<FESpaceP_T> bcsP{feSpaceP};
 
   Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
@@ -90,6 +92,7 @@ int main(int argc, char* argv[])
   builder.buildProblem(stiffness1, bcsV);
   builder.buildProblem(grad1, bcsV, bcsP);
   builder.buildProblem(div1, bcsP, bcsV);
+  builder.buildProblem(stiffness, bcsVel);
   builder.closeMatrix();
 
   Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);

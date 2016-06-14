@@ -9,8 +9,9 @@ struct CurFE
 {
   typedef RefFE RefFE_T;
   typedef QR QR_T;
-  typedef FMat<RefFE::numFuns,RefFE::numFuns> LocalMat_T;
-  typedef FVec<RefFE::numFuns> LocalVec_T;
+  static uint constexpr numDOFs = RefFE::numFuns;
+  typedef FMat<numDOFs,numDOFs> LocalMat_T;
+  typedef FVec<numDOFs> LocalVec_T;
   typedef FMat<3,RefFE::dim> JacMat_T;
   typedef FMat<RefFE::dim,3> JacTMat_T;
   typedef typename RefFE_T::Vec_T RefVec_T;

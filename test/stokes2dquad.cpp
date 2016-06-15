@@ -10,14 +10,14 @@
 
 #include <iostream>
 
-typedef Quad Elem_T;
-typedef Mesh<Elem_T> Mesh_T;
-typedef FEType<Elem_T,2>::RefFE_T QuadraticRefFE;
-typedef FEType<Elem_T,1>::RefFE_T LinearRefFE;
-typedef FEType<Elem_T,2>::RecommendedQR QuadraticQR;
-typedef FESpace<Mesh_T,QuadraticRefFE,QuadraticQR> FESpaceU_T;
-typedef FESpace<Mesh_T,LinearRefFE,QuadraticQR> FESpaceP_T;
-typedef FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2> FESpaceVel_T;
+using Elem_T = Quad;
+using Mesh_T = Mesh<Elem_T>;
+using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
+using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
+using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
+using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
+using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {

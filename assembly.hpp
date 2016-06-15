@@ -14,10 +14,10 @@ struct AssemblyBase
 template <typename FESpace>
 struct Diagonal: public AssemblyBase
 {
-  typedef FESpace FESpace_T;
-  typedef typename FESpace_T::CurFE_T CurFE_T;
-  typedef FMat<CurFE_T::size(),CurFE_T::size()> LMat_T;
-  typedef FVec<CurFE_T::size()> LVec_T;
+  using FESpace_T = FESpace;
+  using CurFE_T = typename FESpace_T::CurFE_T;
+  using LMat_T = FMat<CurFE_T::size(),CurFE_T::size()>;
+  using LVec_T = FVec<CurFE_T::size()>;
 
   explicit Diagonal(FESpace_T & fe, uint offset_row, uint offset_clm):
     AssemblyBase{offset_row, offset_clm},
@@ -32,12 +32,12 @@ struct Diagonal: public AssemblyBase
 template <typename FESpace1, typename FESpace2>
 struct Coupling: public AssemblyBase
 {
-  typedef FESpace1 FESpace1_T;
-  typedef FESpace2 FESpace2_T;
-  typedef typename FESpace1_T::CurFE_T CurFE1_T;
-  typedef typename FESpace2_T::CurFE_T CurFE2_T;
-  typedef FMat<CurFE1_T::size(),CurFE2_T::size()> LMat_T;
-  typedef FVec<CurFE1_T::size()> LVec_T;
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using CurFE1_T = typename FESpace1_T::CurFE_T;
+  using CurFE2_T = typename FESpace2_T::CurFE_T;
+  using LMat_T = FMat<CurFE1_T::size(),CurFE2_T::size()>;
+  using LVec_T = FVec<CurFE1_T::size()>;
 
   explicit Coupling(FESpace1_T & fe1,
                     FESpace2 & fe2,
@@ -57,10 +57,10 @@ struct Coupling: public AssemblyBase
 template <typename FESpace>
 struct AssemblyVector: public AssemblyBase
 {
-  typedef FESpace FESpace_T;
-  typedef typename FESpace_T::CurFE_T CurFE_T;
-  typedef FMat<CurFE_T::size(),CurFE_T::size()> LMat_T;
-  typedef FVec<CurFE_T::size()> LVec_T;
+  using FESpace_T = FESpace;
+  using CurFE_T = typename FESpace_T::CurFE_T;
+  using LMat_T = FMat<CurFE_T::size(),CurFE_T::size()>;
+  using LVec_T = FVec<CurFE_T::size()>;
 
   explicit AssemblyVector(FESpace_T & fe, uint offset_row):
     AssemblyBase{offset_row, 0},
@@ -75,10 +75,10 @@ struct AssemblyVector: public AssemblyBase
 template <typename FESpace>
 struct AssemblyStiffness: public Diagonal<FESpace>
 {
-  typedef FESpace FESpace_T;
-  typedef Diagonal<FESpace> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyStiffness(double const c,
                              FESpace_T & fe,
@@ -90,7 +90,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
 
   void build(LMat_T & Ke) const
   {
-    typedef typename FESpace_T::CurFE_T CurFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       Ke += coeff * this->feSpace.curFE.JxW[q] *
@@ -105,10 +105,10 @@ struct AssemblyStiffness: public Diagonal<FESpace>
 template <typename FESpace>
 struct AssemblyMass: public Diagonal<FESpace>
 {
-  typedef FESpace FESpace_T;
-  typedef Diagonal<FESpace> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyMass(double const & c,
                         FESpace_T & fe,
@@ -120,7 +120,7 @@ struct AssemblyMass: public Diagonal<FESpace>
 
   void build(LMat_T & Ke) const
   {
-    typedef typename FESpace_T::CurFE_T CurFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
 
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
@@ -136,10 +136,10 @@ struct AssemblyMass: public Diagonal<FESpace>
 template <typename FESpace>
 struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 {
-  typedef FESpace FESpace_T;
-  typedef Diagonal<FESpace> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyAnalyticRhs(scalarFun_T const & r,
                                FESpace & fe,
@@ -150,7 +150,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 
   void build(LVec_T & Fe) const
   {
-    typedef typename FESpace_T::CurFE_T CurFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       Fe += this->feSpace.curFE.JxW[q] *
@@ -165,10 +165,10 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 template <typename FESpace>
 struct AssemblyVecRhs: public AssemblyVector<FESpace>
 {
-  typedef FESpace FESpace_T;
-  typedef Diagonal<FESpace> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyVecRhs(Vec const & r,
                           FESpace_T & fe,
@@ -179,7 +179,7 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
 
   void build(LVec_T & Fe) const
   {
-    typedef typename FESpace_T::CurFE_T CurFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       double local_rhs = 0.0;
@@ -200,11 +200,11 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
 template <typename FESpace>
 struct AssemblyAdvection: public Diagonal<FESpace>
 {
-  typedef FESpace FESpace_T;
-  typedef Diagonal<FESpace> Super_T;
-  typedef Eigen::Matrix<double, Eigen::Dynamic, FESpace_T::RefFE_T::dim> VelVec_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using VelVec_T = Eigen::Matrix<double, Eigen::Dynamic, FESpace_T::RefFE_T::dim>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyAdvection(Vec3d const u,
                              FESpace_T & fe,
@@ -216,7 +216,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   void build(LMat_T & Ke) const
   {
-    typedef typename FESpace_T::CurFE_T CurFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       Vec3 local_vel = Vec3::Zero();
@@ -246,11 +246,11 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 template <typename FESpace1, typename FESpace2>
 struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
 {
-  typedef FESpace1 FESpace1_T;
-  typedef FESpace2 FESpace2_T;
-  typedef Coupling<FESpace1, FESpace2> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = Coupling<FESpace1, FESpace2>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyGrad(uint comp,
                         FESpace1_T & fe1,
@@ -289,11 +289,11 @@ AssemblyGrad<FESpace1, FESpace2> make_assemblyGrad(uint comp, FESpace1 & fe1, FE
 template <typename FESpace1, typename FESpace2>
 struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
 {
-  typedef FESpace1 FESpace1_T;
-  typedef FESpace2 FESpace2_T;
-  typedef Coupling<FESpace1, FESpace2> Super_T;
-  typedef typename Super_T::LMat_T LMat_T;
-  typedef typename Super_T::LVec_T LVec_T;
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = Coupling<FESpace1, FESpace2>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyDiv(uint comp,
                        FESpace1_T & fe1,

@@ -9,12 +9,12 @@
 
 #include <iostream>
 
-typedef Triangle Elem_T;
-typedef Mesh<Elem_T> Mesh_T;
-typedef FESpace<
-          Mesh_T,
-          FEType<Elem_T,2>::RefFE_T,
-          GaussQR<Elem_T,3>> FESpace_T;
+using Elem_T = Triangle;
+using Mesh_T = Mesh<Elem_T>;
+using FESpace_T = FESpace<Mesh_T,
+                          FEType<Elem_T,2>::RefFE_T,
+                          FEType<Elem_T,1>::RecommendedQR>;
+//          GaussQR<Elem_T,3>> FESpace_T;
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {

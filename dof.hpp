@@ -9,8 +9,8 @@ template <typename Mesh, typename RefFE, uint dim>
 struct DOF
 {
   static uint constexpr _clms = numDOFs<RefFE>();
-  typedef std::vector<array<DOFid_T,_clms*dim>> ElemMap_T;
-  typedef std::vector<DOFid_T> PtMap_T;
+  using ElemMap_T = std::vector<array<DOFid_T,_clms*dim>>;
+  using PtMap_T = std::vector<DOFid_T>;
 
   explicit DOF(Mesh & mesh):
     _rows(mesh.elementList.size())

@@ -39,8 +39,8 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 
 struct GeoElem
 {
-  typedef std::vector<Point*> PointList_T;
-  typedef std::pair<GeoElem const*, uint> FacingElem_T;
+  using PointList_T = std::vector<Point*>;
+  using FacingElem_T = std::pair<GeoElem const*, uint>;
 
   explicit GeoElem(std::initializer_list<Point*> const & list = {nullptr},
                    id_T i = -1,
@@ -129,9 +129,9 @@ struct PointElem: public GeoElem
 class Line: public GeoElem
 {
 public:
-  typedef PointElem Facet_T;
-  typedef NullElem Face_T;
-  typedef Line Edge_T;
+  using Facet_T = PointElem;
+  using Face_T = NullElem;
+  using Edge_T = Line;
   static uint const dim = 1U;
   static uint const numPts = 2U;
   static uint const numEdges = 1U;
@@ -177,9 +177,9 @@ public:
 class Triangle: public GeoElem
 {
 public:
-  typedef Line Facet_T;
-  typedef Triangle Face_T;
-  typedef Line Edge_T;
+  using Facet_T = Line;
+  using Face_T = Triangle;
+  using Edge_T = Line;
   static uint const dim = 2U;
   static uint const numPts = 3U;
   static uint const numEdges = 3U;
@@ -228,9 +228,9 @@ public:
 class Quad: public GeoElem
 {
 public:
-  typedef Line Facet_T;
-  typedef Quad Face_T;
-  typedef Line Edge_T;
+  using Facet_T = Line;
+  using Face_T = Quad;
+  using Edge_T = Line;
   static uint const dim = 2U;
   static uint const numPts = 4U;
   static uint const numEdges = 4U;

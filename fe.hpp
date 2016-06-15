@@ -10,41 +10,41 @@ struct FEType {};
 template <>
 struct FEType<Line,1>
 {
-  typedef RefLineP1 RefFE_T;
-  typedef GaussQR<Line,3> RecommendedQR;
+  using RefFE_T = RefLineP1;
+  using RecommendedQR = GaussQR<Line,3>;
 };
 
 template <>
 struct FEType<Line,2>
 {
-  typedef RefLineP2 RefFE_T;
-  typedef GaussQR<Line,3> RecommendedQR;
+  using RefFE_T = RefLineP2;
+  using RecommendedQR = GaussQR<Line,3>;
 };
 
 template <>
 struct FEType<Triangle,1>
 {
-  typedef RefTriangleP1 RefFE_T;
-  typedef GaussQR<Triangle,3> RecommendedQR;
+  using RefFE_T = RefTriangleP1;
+  using RecommendedQR = GaussQR<Triangle,3>;
 };
 
 template <>
 struct FEType<Triangle,2>
 {
-  typedef RefTriangleP2 RefFE_T;
-  typedef GaussQR<Triangle,4> RecommendedQR;
+  using RefFE_T = RefTriangleP2;
+  using RecommendedQR = GaussQR<Triangle,4>;
 };
 
 template <>
 struct FEType<Quad,1>
 {
-  typedef RefQuadQ1 RefFE_T;
-  typedef GaussQR<Quad,9> RecommendedQR;
+  using RefFE_T = RefQuadQ1;
+  using RecommendedQR = GaussQR<Quad,9>;
 };
 
 template <>
 struct FEType<Quad,2>
 {
-  typedef RefQuadQ2 RefFE_T;
-  typedef GaussQR<Quad,9> RecommendedQR;
+  using RefFE_T = RefQuadQ2;
+  using RecommendedQR = GaussQR<Quad,9>;
 };

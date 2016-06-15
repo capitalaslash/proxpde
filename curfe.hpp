@@ -7,14 +7,14 @@
 template <typename RefFE, typename QR>
 struct CurFE
 {
-  typedef RefFE RefFE_T;
-  typedef QR QR_T;
+  using RefFE_T = RefFE;
+  using QR_T = QR;
   static uint constexpr numDOFs = RefFE::numFuns;
-  typedef FMat<numDOFs,numDOFs> LocalMat_T;
-  typedef FVec<numDOFs> LocalVec_T;
-  typedef FMat<3,RefFE::dim> JacMat_T;
-  typedef FMat<RefFE::dim,3> JacTMat_T;
-  typedef typename RefFE_T::Vec_T RefVec_T;
+  using LocalMat_T = FMat<numDOFs,numDOFs>;
+  using LocalVec_T = FVec<numDOFs>;
+  using JacMat_T = FMat<3,RefFE::dim>;
+  using JacTMat_T = FMat<RefFE::dim,3>;
+  using RefVec_T = typename RefFE_T::Vec_T;
 
   CurFE()
   {

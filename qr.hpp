@@ -7,7 +7,7 @@
 template <typename GeoElem, uint N>
 struct GaussQR
 {
-  typedef FVec<GeoElem::dim> Vec_T;
+  using Vec_T = FVec<GeoElem::dim>;
   static uint const numPts = N;
 
   static FMat<N,1> const weight;
@@ -79,7 +79,7 @@ template<> array<GaussQR<Quad,9>::Vec_T,9> const GaussQR<Quad,9>::node =
 template <typename GeoElem>
 struct TrapQR
 {
-  typedef FVec<GeoElem::dim> Vec_T;
+  using Vec_T = FVec<GeoElem::dim>;
   static uint const numPts = GeoElem::numPts;
 
   static FVec<GeoElem::numPts> const weight;
@@ -116,11 +116,11 @@ template<> array<TrapQR<Quad>::Vec_T,4> const TrapQR<Quad>::node =
 template <typename QR>
 struct SideQR
 {
-  typedef GaussQR<NullElem,0> Type;
+  using Type = GaussQR<NullElem,0>;
 };
 
 template <>
 struct SideQR<GaussQR<Quad,9>>
 {
-  typedef GaussQR<Line,3> Type;
+  using Type = GaussQR<Line,3>;
 };

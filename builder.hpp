@@ -20,9 +20,9 @@ struct Builder
   void buildProblem(Diagonal<FESpace> const & assembly,
                     BCList<FESpace> & bcs)
   {
-    typedef typename FESpace::CurFE_T CurFE_T;
-    typedef typename Diagonal<FESpace>::LMat_T LMat_T;
-    typedef typename Diagonal<FESpace>::LVec_T LVec_T;
+    using CurFE_T = typename FESpace::CurFE_T;
+    using LMat_T = typename Diagonal<FESpace>::LMat_T;
+    using LVec_T = typename Diagonal<FESpace>::LVec_T;
 
     // FIXME: compute a proper sparsity pattern
     uint const approxEntryNum = (2*CurFE_T::RefFE_T::dim+1) * assembly.feSpace.dof.totalNum;
@@ -137,10 +137,10 @@ struct Builder
                     BCList<FESpace1> const & bcs1,
                     BCList<FESpace2> const & bcs2)
   {
-    typedef typename FESpace1::CurFE_T CurFE1_T;
-    typedef typename FESpace2::CurFE_T CurFE2_T;
-    typedef typename Coupling<FESpace1, FESpace2>::LMat_T LMat_T;
-    typedef typename Coupling<FESpace1, FESpace2>::LVec_T LVec_T;
+    using CurFE1_T = typename FESpace1::CurFE_T;
+    using CurFE2_T = typename FESpace2::CurFE_T;
+    using LMat_T = typename Coupling<FESpace1, FESpace2>::LMat_T;
+    using LVec_T = typename Coupling<FESpace1, FESpace2>::LVec_T;
 
     // FIXME - compute a proper sparsity pattern
     _triplets.reserve((2*CurFE1_T::RefFE_T::dim+1) * assembly.feSpace1.dof.totalNum);
@@ -217,9 +217,9 @@ struct Builder
   void buildProblem(AssemblyVector<FESpace> const & assembly,
                     BCList<FESpace> const & bcs)
   {
-    typedef typename FESpace::CurFE_T CurFE_T;
-    typedef typename AssemblyVector<FESpace>::LMat_T LMat_T;
-    typedef typename AssemblyVector<FESpace>::LVec_T LVec_T;
+    using CurFE_T = typename FESpace::CurFE_T;
+    using LMat_T = typename AssemblyVector<FESpace>::LMat_T;
+    using LVec_T = typename AssemblyVector<FESpace>::LVec_T;
 
     auto & curFE = assembly.feSpace.curFE;
     auto const & mesh = *assembly.feSpace.meshPtr;

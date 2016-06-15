@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <list>
 
-typedef Eigen::Array<bool,Eigen::Dynamic,1> BoolArray_T;
+using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
 
 // TODO: add static map to set components via flags
 
@@ -89,10 +89,10 @@ std::ostream & operator<<(std::ostream & out, BCEss<FESpace> const & bc)
 template <typename FESpace>
 struct BCNat
 {
-  typedef typename FESpace::RefFE_T::RefFacet_T Elem_T;
-  typedef typename SideQR<typename FESpace::QR_T>::Type QR_T;
-  typedef CurFE<Elem_T, QR_T> CurFE_T;
-  typedef typename CurFE_T::RefFE_T RefFE_T;
+  using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
+  using QR_T = typename SideQR<typename FESpace::QR_T>::Type;
+  using CurFE_T = CurFE<Elem_T, QR_T>;
+  using RefFE_T = typename CurFE_T::RefFE_T;
 
   explicit BCNat(marker_T m, scalarFun_T const & f):
     marker(m),

@@ -16,7 +16,7 @@ struct RefPointP1
 {
   static uint constexpr dim = 0U;
   static uint constexpr numFuns = 1U;
-  typedef FVec<dim> Vec_T;
+  using Vec_T = FVec<dim>;
 
   static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {
@@ -30,8 +30,8 @@ struct RefPointP1
 
 struct RefLineP1
 {
-  typedef Line GeoElem_T;
-  typedef RefPointP1 RefFacet_T;
+  using GeoElem_T = Line;
+  using RefFacet_T = RefPointP1;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 2U;
@@ -40,9 +40,9 @@ struct RefLineP1
   static array<array<uint,1>,2> constexpr dofOnFacet = {
     {{0}, {1}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<2> LocalVec_T;
-  typedef FMat<2,2> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<2>;
+  using LocalMat_T = FMat<2,2>;
 
   static array<Vec_T,numFuns> const points;
   static array<ScalarFun<dim>,numFuns> const phiFun;
@@ -64,8 +64,8 @@ struct RefLineP1
 
 struct RefLineP2
 {
-  typedef Line GeoElem_T;
-  typedef RefPointP1 RefFacet_T;
+  using GeoElem_T = Line;
+  using RefFacet_T = RefPointP1;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 1U;
   static uint constexpr numFuns = 3U;
@@ -74,9 +74,9 @@ struct RefLineP2
   static array<array<uint,1>,2> constexpr dofOnFacet = {
     {{0}, {1}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<numFuns> LocalVec_T;
-  typedef FMat<numFuns,numFuns> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<Vec_T,numFuns> const points;
   static array<ScalarFun<dim>,numFuns> const phiFun;
@@ -99,8 +99,8 @@ struct RefLineP2
 
 struct RefTriangleP1
 {
-  typedef Triangle GeoElem_T;
-  typedef RefLineP1 RefFacet_T;
+  using GeoElem_T = Triangle;
+  using RefFacet_T = RefLineP1;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 3U;
@@ -109,9 +109,9 @@ struct RefTriangleP1
   static array<array<uint,2>,3> constexpr dofOnFacet = {
     {{0,1}, {1,2}, {2,0}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<numFuns> LocalVec_T;
-  typedef FMat<numFuns,numFuns> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
   static array<twodFun_T,numFuns> const dphiFun;
@@ -131,8 +131,8 @@ struct RefTriangleP1
 
 struct RefTriangleP2
 {
-  typedef Triangle GeoElem_T;
-  typedef RefLineP2 RefFacet_T;
+  using GeoElem_T = Triangle;
+  using RefFacet_T = RefLineP2;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 6U;
@@ -141,9 +141,9 @@ struct RefTriangleP2
   static array<array<uint,3>,3> constexpr dofOnFacet = {
     {{0,1,3}, {1,2,4}, {2,0,5}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<numFuns> LocalVec_T;
-  typedef FMat<numFuns,numFuns> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
   static array<twodFun_T,numFuns> const dphiFun;
@@ -166,8 +166,8 @@ struct RefTriangleP2
 
 struct RefQuadQ1
 {
-  typedef Quad GeoElem_T;
-  typedef RefLineP1 RefFacet_T;
+  using GeoElem_T = Quad;
+  using RefFacet_T = RefLineP1;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 4U;
@@ -176,9 +176,9 @@ struct RefQuadQ1
   static array<array<uint,2>,4> constexpr dofOnFacet = {
     {{0,1}, {1,2}, {2,3}, {3,0}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<numFuns> LocalVec_T;
-  typedef FMat<numFuns,numFuns> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
   static array<twodFun_T,numFuns> const dphiFun;
@@ -199,8 +199,8 @@ struct RefQuadQ1
 
 struct RefQuadQ2
 {
-  typedef Quad GeoElem_T;
-  typedef RefLineP2 RefFacet_T;
+  using GeoElem_T = Quad;
+  using RefFacet_T = RefLineP2;
   static GeoElem_T const geoElem;
   static uint constexpr dim = 2U;
   static uint constexpr numFuns = 9U;
@@ -209,9 +209,9 @@ struct RefQuadQ2
   static array<array<uint,3>,4> constexpr dofOnFacet = {
     {{0,1,4}, {1,2,5}, {2,3,6}, {3,0,7}}
   };
-  typedef FVec<dim> Vec_T;
-  typedef FVec<numFuns> LocalVec_T;
-  typedef FMat<numFuns,numFuns> LocalMat_T;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
   static array<twodFun_T,numFuns> const dphiFun;

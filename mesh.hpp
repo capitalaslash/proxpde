@@ -10,13 +10,13 @@ template <typename Elem>
 class Mesh
 {
 public:
-  typedef Elem Elem_T;
-  typedef typename Elem::Facet_T Facet_T;
-  typedef std::vector<Point> PointList_T;
-  typedef std::vector<Elem> ElementList_T;
-  typedef std::vector<Facet_T> FacetList_T;
-  typedef std::vector<array<id_T,Elem::numPts>> elemToPoint_T;
-  typedef std::vector<array<id_T,Elem::numFacets>> elemToFacet_T;
+  using Elem_T = Elem;
+  using Facet_T = typename Elem::Facet_T;
+  using PointList_T = std::vector<Point>;
+  using ElementList_T = std::vector<Elem>;
+  using FacetList_T = std::vector<Facet_T>;
+  using elemToPoint_T = std::vector<array<id_T,Elem::numPts>>;
+  using elemToFacet_T = std::vector<array<id_T,Elem::numFacets>>;
 
   void buildConnectivity()
   {
@@ -78,7 +78,7 @@ enum side
 template <typename Mesh>
 void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
 {
-  typedef typename Mesh::Facet_T Facet_T;
+  using Facet_T = typename Mesh::Facet_T;
   std::map<std::set<id_T>, Facet_T> facetMap;
 
   uint facetCount = 0;

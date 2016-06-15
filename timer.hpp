@@ -8,7 +8,7 @@ template <typename TimeUnit>
 class Timer
 {
 public:
-  typedef std::chrono::high_resolution_clock Clock_T;
+  using Clock_T = std::chrono::high_resolution_clock;
 
   explicit Timer() {}
 
@@ -33,4 +33,4 @@ std::ostream & operator<<(std::ostream & out, Timer<TimeUnit> const & timer)
   return out;
 }
 
-typedef Timer<std::chrono::milliseconds> MilliTimer;
+using MilliTimer = Timer<std::chrono::milliseconds>;

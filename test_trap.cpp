@@ -24,12 +24,11 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
-typedef Quad Elem_T;
-typedef Mesh<Elem_T> Mesh_T;
-typedef FESpace<
-          Mesh_T,
-          FEType<Elem_T,1>::RefFE_T,
-          TrapQR<Elem_T>> FESpace_T;
+using Elem_T = Quad;
+using Mesh_T = Mesh<Elem_T>;
+using FESpace_T = FESpace<Mesh_T,
+                          FEType<Elem_T,1>::RefFE_T,
+                          TrapQR<Elem_T>>;
 
 int main()
 {

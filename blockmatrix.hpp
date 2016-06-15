@@ -41,7 +41,7 @@ template <uint... Is>
 struct Block
 {
   static uint const totalSize = detail::sum(Is...);
-  typedef array<uint,sizeof...(Is)> Array_T;
+  using Array_T = array<uint,sizeof...(Is)>;
   static Array_T constexpr size = {{Is...}};
   static Array_T constexpr offset = detail::array_accu<Array_T>({{Is...}});
 };
@@ -53,9 +53,9 @@ typename Block<Is...>::Array_T constexpr Block<Is...>::offset;
 template <uint... Blocks>
 struct BlockMatrix
 {
-  typedef Block<Blocks...> B_T;
+  using B_T = Block<Blocks...>;
   static uint const size = B_T::totalSize;
-  typedef Eigen::Matrix<double, size, size, 0, size, size> Data_T;
+  using Data_T = Eigen::Matrix<double, size, size, 0, size, size>;
 
   BlockMatrix():
     data(Data_T::Zero())

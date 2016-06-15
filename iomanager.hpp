@@ -10,9 +10,9 @@
 template <typename FESpace>
 struct IOManager
 {
-  typedef typename FESpace::Mesh_T::Elem_T Elem_T;
-  typedef std::shared_ptr<typename FESpace::Mesh_T> MeshPtr_T;
-  typedef XDMFTraits<Elem_T> Traits_T;
+  using Elem_T = typename FESpace::Mesh_T::Elem_T;
+  using MeshPtr_T = std::shared_ptr<typename FESpace::Mesh_T>;
+  using Traits_T = XDMFTraits<Elem_T>;
 
   void print(std::vector<Var> const& data);
 

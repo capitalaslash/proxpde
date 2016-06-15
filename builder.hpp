@@ -1,13 +1,13 @@
 #pragma once
 
 #include "def.hpp"
+#include "array.hpp"
 #include "blockmatrix.hpp"
 #include "fespace.hpp"
 #include "assembly.hpp"
 #include "bc.hpp"
 
 #include <tuple>
-#include <sprout/array.hpp>
 
 struct Builder
 {

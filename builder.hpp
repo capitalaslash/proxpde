@@ -361,12 +361,6 @@ static array<uint, std::tuple_size<FESpaceTuple>::value> constexpr getBlockStruc
 }
 }
 
-template<uint row, uint clm>
-struct BlockMat
-{
-  BlockMat(){}
-};
-
 template <typename... FESpaces>
 struct Assembler
 {

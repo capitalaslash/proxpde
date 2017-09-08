@@ -1,28 +1,40 @@
 #pragma once
 
 #include "def.hpp"
-#include "geo.hpp"
+#include "reffe.hpp"
 
-template <typename Elem>
+template <typename RefFE>
 struct XDMFTraits
 {
   static constexpr char const * shape_name = "None";
 };
 
 template <>
-struct XDMFTraits<Line>
+struct XDMFTraits<RefLineP1>
 {
   static constexpr char const * shape_name = "Polyline";
 };
 
 template <>
-struct XDMFTraits<Triangle>
+struct XDMFTraits<RefTriangleP1>
 {
   static constexpr char const * shape_name = "Triangle";
 };
 
 template <>
-struct XDMFTraits<Quad>
+struct XDMFTraits<RefQuadQ1>
 {
   static constexpr char const * shape_name = "Quadrilateral";
+};
+
+template <>
+struct XDMFTraits<RefQuadP2>
+{
+  static constexpr char const * shape_name = "Quadrilateral_8";
+};
+
+template <>
+struct XDMFTraits<RefQuadQ2>
+{
+  static constexpr char const * shape_name = "Quadrilateral_9";
 };

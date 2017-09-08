@@ -4,7 +4,9 @@
 #include "geo.hpp"
 
 #include <set>
+#include <unordered_set>
 #include <map>
+#include <fstream>
 
 template <typename Elem>
 class Mesh
@@ -249,4 +251,202 @@ void buildNormals(std::shared_ptr<Mesh> meshPtr)
 
       }
   }
+}
+
+enum GMSHElemType
+{
+  GMSHNull = 0,
+  GMSHLine = 1,
+  GMSHTriangle = 2,
+  GMSHQuad = 3,
+//  GMSHTet = 4,
+//  GMSHHexa = 5,
+//  GMSHQuadraticLine = 8,
+//  GMSHQuadraticTriangle = 9,
+//  GMSHQuadraticQuad = 10,
+//  GMSHQuadraticTet = 11,
+//  GMSHQuadraticHexa = 12
+};
+
+template <typename Elem>
+struct ElemToGmsh { static GMSHElemType constexpr type = GMSHNull; };
+
+template <>
+struct ElemToGmsh<Line> { static GMSHElemType constexpr type = GMSHLine; };
+template <>
+struct ElemToGmsh<Triangle> { static GMSHElemType constexpr type = GMSHTriangle; };
+template <>
+struct ElemToGmsh<Quad> { static GMSHElemType constexpr type = GMSHQuad; };
+
+template <typename Elem>
+void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
+              std::string filename)
+{
+  auto in = std::ifstream(filename);
+  if (!in.is_open())
+  {
+    std::cerr << "mesh file " << filename << " not found" << std::endl;
+    std::exit(1);
+  }
+
+  // header
+  std::string buf;
+  in >> buf;
+  if (buf != "$MeshFormat")
+  {
+    std::cerr << "file format not recognized" << std::endl;
+    std::exit(1);
+  }
+
+  int filetype, datasize; // filetype = 0 -> ascii
+  in >> buf >> filetype >> datasize;
+  if (buf != "2.2" || filetype != 0 || datasize != 8)
+  {
+    std::cerr << "file format not recognized" << std::endl;
+    std::exit(1);
+  }
+
+  in >> buf;
+  if (buf != "$EndMeshFormat")
+  {
+    std::cerr << "file format not recognized" << std::endl;
+    std::exit(1);
+  }
+
+  std::set<typename Elem::Facet_T> facets;
+
+  in >> buf;
+  while(!in.eof())
+  {
+    if (buf == "$PhysicalNames")
+    {
+      // TODO
+      while(buf != "$EndPhysicalNames")
+      {
+        in >> buf;
+      }
+    }
+    else if (buf == "$Nodes")
+    {
+      uint numNodes;
+      in >> numNodes;
+      meshPtr->pointList.reserve(numNodes);
+
+      // format: node-number(one-based) x-coord y-coord z-coord
+      for (uint n=0; n<numNodes; n++)
+      {
+        uint id;
+        double x,y,z;
+        in >> id >> x >> y >> z;
+        // currently only sonsecutive ids are supported
+        assert(n == id-1);
+        meshPtr->pointList.emplace_back(Vec3{x, y, z}, n);
+      }
+      in >> buf;
+      if (buf != "$EndNodes")
+      {
+        std::cerr << "error reading nodes" << std::endl;
+        std::exit(1);
+      }
+    }
+    else if (buf == "$Elements")
+    {
+      uint numElements;
+      in >> numElements;
+      meshPtr->elementList.reserve(numElements);
+      // format: elm-number(one-based) elm-type number-of-tags < tag > ... node-number-list
+      uint eVol = 0, eBd = 0;
+      for (uint e=0; e<numElements; e++)
+      {
+        uint id, elType, numTags;
+        in >> id >> elType >> numTags;
+        std::vector<uint> tags(numTags);
+        for (uint t=0; t<numTags; t++)
+        {
+          in >> tags[t];
+        }
+
+        // check if volume or boundary element
+        if (ElemToGmsh<Elem>::type == elType)
+        {
+          // read connectivity from file
+          std::array<uint, Elem::numPts> conn;
+          for (uint c=0; c<Elem::numPts; c++)
+          {
+            in >> conn[c];
+          }
+
+          // get points pointers from connectivity
+          std::vector<Point*> connPts;
+          std::for_each(conn.begin(), conn.end(), [&connPts, &meshPtr](uint const c){
+            connPts.push_back(&meshPtr->pointList[c-1]);
+          });
+
+          // create mesh element
+          meshPtr->elementList.emplace_back(Elem(connPts, eVol));
+          eVol++;
+        }
+        else if (ElemToGmsh<typename Elem::Facet_T>::type == elType)
+        {
+          // read connectivity from file
+          std::array<uint, Elem::Facet_T::numPts> conn;
+          for (uint c=0; c<Elem::Facet_T::numPts; c++)
+          {
+            in >> conn[c];
+          }
+
+          // get points pointers from connectivity
+          std::vector<Point*> connPts;
+          std::for_each(conn.begin(), conn.end(), [&connPts, &meshPtr](uint const c){
+            connPts.push_back(&meshPtr->pointList[c-1]);
+          });
+
+          // create mesh boundary element
+          facets.insert(typename Elem::Facet_T(connPts, eBd, tags[0]));
+          eBd++;
+        }
+        else
+        {
+          std::cerr << "error reading elements" << std::endl;
+          std::exit(1);
+        }
+      }
+      in >> buf;
+      if (buf != "$EndElements")
+      {
+        std::cerr << "error reading elements" << std::endl;
+        std::exit(1);
+      }
+    }
+    else
+    {
+      std::cerr << "file section not recognized" << std::endl;
+      std::exit(1);
+    }
+    // get next section
+    in >> buf;
+  }
+  meshPtr->buildConnectivity();
+  buildFacets(meshPtr);
+
+  // the file should contain all the boundary facets
+  assert(meshPtr->facetList.size() == facets.size());
+
+  // use file facets to set boundary flags
+  for (auto & meshFacet: meshPtr->facetList)
+  {
+    for (auto it = facets.begin(); it != facets.end(); ++it)
+    {
+      if(geoEqual(meshFacet, *it))
+      {
+        meshFacet.marker = it->marker;
+        facets.erase(it);
+        break;
+      }
+    }
+  }
+  // check that all facets have been found in the mesh
+  assert(facets.size() == 0);
+
+  std::cout << "mesh file " << filename << " successfully read" << std::endl;
 }

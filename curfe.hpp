@@ -31,8 +31,6 @@ struct CurFE
   // CurFE(CurFE const &) = delete;
   // CurFE & operator=(CurFE const &) = delete;
 
-  constexpr static uint size() {return RefFE::numFuns;}
-
   void reinit(GeoElem const & elem)
   {
     e = &elem;
@@ -63,6 +61,7 @@ struct CurFE
   }
 
   GeoElem const* e;
+  static int const size = RefFE::numFuns;
   // vectorFun_T map;
   // vectorFun_T imap;
   array<Vec3,RefFE::numFuns> dofPts;
@@ -77,4 +76,24 @@ struct CurFE
   array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
   // LocalMat_T massMat;
   // LocalMat_T stiffMat;
+};
+
+template <typename QR>
+struct CurFE<RefPointP1,QR>
+{
+  using RefFE_T = RefPointP1;
+
+  void reinit(GeoElem const & elem)
+  {
+    e = &elem;
+    dofPts = RefFE_T::dofPts(elem);
+
+    qpoint = {elem.origin()};
+  }
+
+  GeoElem const* e;
+  array<Vec3,RefFE_T::numFuns> dofPts;
+  array<double,QR::numPts> JxW = {1.L};
+  array<Vec3,QR::numPts> qpoint;
+  array<FVec<1>,QR::numPts> phi = {FVec<1>(1.L)};
 };

@@ -88,3 +88,10 @@ add_test(
   NAME stokes2dcircle
   COMMAND stokes2dcircle
 )
+
+add_executable(vectorfe1d vectorfe1d.cpp)
+target_link_libraries(vectorfe1d ${LIBS})
+add_test(
+  NAME vectorfe1d
+  COMMAND vectorfe1d
+)

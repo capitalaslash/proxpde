@@ -12,9 +12,9 @@ struct IOManager
 {
   using Elem_T = typename FESpace::Mesh_T::Elem_T;
   using MeshPtr_T = std::shared_ptr<typename FESpace::Mesh_T>;
-  using Traits_T = XDMFTraits<Elem_T>;
+  using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
 
-  void print(std::vector<Var> const& data);
+  void print(std::vector<Var> const& data) const;
 
   FESpace const & feSpace;
   std::string fileName;
@@ -24,11 +24,21 @@ struct IOManager
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> const& data)
+void IOManager<FESpace>::print(std::vector<Var> const& data) const
 {
   typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
-  uint const numPts = mesh.pointList.size();
+  uint const numPts = feSpace.dof.totalNum;
   uint const numElems = mesh.elementList.size();
+
+  std::vector<Vec3> points {numPts};
+  for(auto const &e: mesh.elementList)
+  {
+    auto localPts = FESpace::RefFE_T::dofPts(e);
+    for (uint p=0; p<localPts.size(); ++p)
+    {
+      points[feSpace.dof.elemMap[e.id][p]] = localPts[p];
+    }
+  }
 
   // system("mkdir -p output");
 
@@ -60,16 +70,16 @@ void IOManager<FESpace>::print(std::vector<Var> const& data)
 
   auto topodata_el = doc.NewElement("DataItem");
   topodata_el->SetAttribute("Dimensions",
-    (std::to_string(numElems) + " " + std::to_string(Elem_T::numPts)).c_str());
+    (std::to_string(numElems) + " " + std::to_string(FESpace::RefFE_T::numFuns)).c_str());
   topodata_el->SetAttribute("NumberType", "Int");
   topodata_el->SetAttribute("Precision", 8);
   topodata_el->SetAttribute("Format", "XML");
   std::stringstream buf;
   buf << std::endl;
-  for(auto& e: mesh.elementList)
+  for (auto& e: mesh.elementList)
   {
-    for(auto n: e.pointList)
-      buf << n->id << " ";
+    for (uint p=0; p<FESpace::RefFE_T::numFuns; ++p)
+      buf << feSpace.dof.elemMap[e.id][p] << " ";
     buf << std::endl;
   }
   // buf << _data.name << ".mesh.h5:connectivity " << std::endl;
@@ -82,15 +92,15 @@ void IOManager<FESpace>::print(std::vector<Var> const& data)
 
   auto geodata_el = doc.NewElement("DataItem");
   geodata_el->SetAttribute("Dimensions",
-    (std::to_string(numPts) + " 3").c_str());
+    (std::to_string(points.size()) + " 3").c_str());
   geodata_el->SetAttribute("NumberType", "Float");
   geodata_el->SetAttribute("Precision", 8);
   geodata_el->SetAttribute("Format", "XML");
   buf.str("");
   buf << std::endl;
-  for(auto &p: mesh.pointList)
+  for(auto &p: points)
   {
-    buf << p.coord[0] << " " << p.coord[1] << " " << p.coord[2] << std::endl;
+    buf << p[0] << " " << p[1] << " " << p[2] << std::endl;
   }
   // buf << _data.name << ".mesh.h5:coords " << std::endl;
   geodata_el->SetText(buf.str().c_str());
@@ -98,28 +108,37 @@ void IOManager<FESpace>::print(std::vector<Var> const& data)
 
   for(auto& v: data)
   {
-    auto var_el = doc.NewElement("Attribute");
-    var_el->SetAttribute("Name", v.name.c_str());
-    var_el->SetAttribute("Active", 1);
-    var_el->SetAttribute("AttributeType", "Scalar");
-    var_el->SetAttribute("Center", "Node");
-    auto var = grid->InsertEndChild(var_el);
-
-    auto vardata_el = doc.NewElement("DataItem");
-    vardata_el->SetAttribute("Dimensions",
-      (std::to_string(numPts) + " 1").c_str());
-    vardata_el->SetAttribute("NumberType", "Float");
-    vardata_el->SetAttribute("Precision", 8);
-    vardata_el->SetAttribute("Format", "XML");
-    buf.str("");
-    buf << std::endl;
-    for(uint p=0; p<numPts; ++p)
+    for (uint d=0; d<feSpace.dim; ++d)
     {
-      buf << v.data(feSpace.dof.ptMap[mesh.pointList[p].id]) << "\n";
+      auto name = v.name;
+      if (feSpace.dim > 0)
+      {
+        name += "_" + std::to_string(d);
+      }
+
+      auto var_el = doc.NewElement("Attribute");
+      var_el->SetAttribute("Name", name.c_str());
+      var_el->SetAttribute("Active", 1);
+      var_el->SetAttribute("AttributeType", "Scalar");
+      var_el->SetAttribute("Center", "Node");
+      auto var = grid->InsertEndChild(var_el);
+
+      auto vardata_el = doc.NewElement("DataItem");
+      vardata_el->SetAttribute("Dimensions",
+                               (std::to_string(numPts) + " 1").c_str());
+      vardata_el->SetAttribute("NumberType", "Float");
+      vardata_el->SetAttribute("Precision", 8);
+      vardata_el->SetAttribute("Format", "XML");
+      buf.str("");
+      buf << std::endl;
+      for (uint p=0; p<numPts; ++p)
+      {
+        buf << v.data[p + d*numPts] << "\n";
+      }
+      // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
+      vardata_el->SetText(buf.str().c_str());
+      var->InsertEndChild(vardata_el);
     }
-    // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
-    vardata_el->SetText(buf.str().c_str());
-    var->InsertEndChild(vardata_el);
   }
 
   doc.SaveFile(fileName.c_str());

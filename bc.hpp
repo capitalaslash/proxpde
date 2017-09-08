@@ -6,8 +6,6 @@
 #include <unordered_set>
 #include <list>
 
-using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
-
 // TODO: add static map to set components via flags
 
 template <typename FESpace>

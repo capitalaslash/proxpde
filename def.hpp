@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <cassert>
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -19,23 +20,25 @@ DOFid_T const DOFidNotSet = -1;
 // using array = std::array<T,N>;
 #include "array.hpp"
 
+using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
+
 using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
 // using Mat = Eigen::SparseMatrix<double,Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
 using Vec3d = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
-template <uint Size>
+template <int Size>
 using FVec = Eigen::Matrix<double,Size,1>;
 
-template <uint RowSize, uint ClmSize>
+template <int RowSize, int ClmSize>
 using FMat = Eigen::Matrix<double,RowSize,ClmSize>;
 
-template <uint ImageSize, uint DomainSize>
+template <int ImageSize, int DomainSize>
 using Fun = std::function<
   FVec<ImageSize> (FVec<DomainSize> const&)
 >;
 
-template <uint DomainSize>
+template <int DomainSize>
 using ScalarFun = std::function<
   double (FVec<DomainSize> const&)
 >;
@@ -51,4 +54,3 @@ using vectorFun_T = std::function<Vec3(Vec3 const&)>;
 using onedFun_T = std::function<Vec1(Vec1 const&)>;
 using twodFun_T = std::function<Vec2(Vec2 const&)>;
 using scalarTwodFun_T = std::function<double(Vec2 const&)>;
-

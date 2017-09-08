@@ -234,3 +234,21 @@ struct RefQuadQ2
      return std::move(dofPts);
   }
 };
+
+template <typename RefFE>
+struct Order{ static constexpr uint value = 0; };
+
+template <>
+struct Order<RefPointP1>{ static constexpr uint value = 1; };
+template <>
+struct Order<RefLineP1>{ static constexpr uint value = 1; };
+template <>
+struct Order<RefTriangleP1>{ static constexpr uint value = 1; };
+template <>
+struct Order<RefQuadQ1>{ static constexpr uint value = 1; };
+template <>
+struct Order<RefLineP2>{ static constexpr uint value = 2; };
+template <>
+struct Order<RefTriangleP2>{ static constexpr uint value = 2; };
+template <>
+struct Order<RefQuadQ2>{ static constexpr uint value = 2; };

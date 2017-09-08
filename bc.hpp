@@ -12,12 +12,33 @@ template <typename FESpace>
 class BCEss
 {
 public:
+  using DofSet_T = std::unordered_set<DOFid_T>;
+
   BCEss(FESpace const& feSpace,
         marker_T m,
-        scalarFun_T v,
-        array<uint,FESpace::dim> comp = {0}):
+        Fun<FESpace::dim,3> v,
+        std::vector<uint> const & comp = {0}):
     marker(m),
-    value(v)
+    value(v),
+    dimSize(feSpace.dof.totalNum)
+  {
+    fillDofSet(feSpace, comp);
+    fillBoolVector(feSpace);
+  }
+
+  // use manual-provided set of DOFs for this condition
+  BCEss(FESpace const& feSpace,
+        DofSet_T const & dofSet,
+        Fun<FESpace::dim,3> v,
+        std::vector<uint> const & comp = {0}):
+    marker(-1),
+    value(v),
+    constrainedDOFset(dofSet)
+  {
+    fillBoolVector(feSpace);
+  }
+
+  void fillDofSet(FESpace const& feSpace, std::vector<uint> const & comp)
   {
     for(auto& f: feSpace.meshPtr->facetList)
     {
@@ -40,13 +61,16 @@ public:
                 );
             if(compIsConstrained)
             {
-              constrainedDOFset.insert(dof + d*feSpace.dof.totalNum);
+              constrainedDOFset.insert(dof + d*dimSize);
             }
           }
         }
       }
     }
+  }
 
+  void fillBoolVector(FESpace const & feSpace)
+  {
     boolVector = BoolArray_T::Constant(feSpace.dof.totalNum*FESpace::dim, false);
     for(auto& id: constrainedDOFset)
     {
@@ -54,15 +78,17 @@ public:
     }
   }
 
-  bool isConstrained(DOFid_T const& id) const
+  bool isConstrained(DOFid_T const& id, int const d = 0) const
   {
-    return boolVector[id];
+    return boolVector[id + d*dimSize];
   }
 
+  double diag = 1.0;
   marker_T marker;
-  scalarFun_T value;
+  DofSet_T constrainedDOFset;
   BoolArray_T boolVector;
-  std::unordered_set<DOFid_T> constrainedDOFset;
+  Fun<FESpace::dim,3> value;
+  uint const dimSize;
 };
 
 template <typename FESpace>
@@ -92,16 +118,23 @@ struct BCNat
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCNat(marker_T m, scalarFun_T const & f):
+  explicit BCNat(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = {0}):
     marker(m),
-    value(f)
+    value(f),
+    comp(c)
   {
     // TODO: create a list of constrained faces at the beginning?
   }
 
+  bool hasComp(uint c)
+  {
+    return std::find(comp.begin(), comp.end(), c) != comp.end();
+  }
+
   CurFE_T curFE;
   marker_T marker;
-  scalarFun_T value;
+  Fun<FESpace::dim,3> value;
+  std::vector<uint> comp;
 };
 
 template <typename FESpace>
@@ -114,18 +147,53 @@ public:
 
   void addEssentialBC(
       marker_T const m,
-      scalarFun_T const & f,
-      array<uint,FESpace::dim> comp = {0})
+      Fun<FESpace::dim,3> const & f,
+      std::vector<uint> const & comp = {{0}})
   {
+    if (checkMarkerFixed(m))
+    {
+      std::cerr << "the marker " << m << " has already been fixed." << std::endl;
+      abort();
+    }
+    fixedMarkers.insert(m);
     bcEss_list.emplace_back(feSpace, m, f, comp);
   }
 
-  void addNaturalBC(marker_T const m, scalarFun_T const & f)
+  void addEssentialBC(
+      typename BCEss<FESpace>::DofSet_T dofSet,
+      Fun<FESpace::dim,3> const & f,
+      std::vector<uint> const & comp = {0})
   {
-    bcNat_list.emplace_back(m, f);
+    bcEss_list.emplace_back(feSpace, dofSet, f, comp);
+  }
+
+  void addNaturalBC(
+      marker_T const m,
+      Fun<FESpace::dim,3> const & f,
+      std::vector<uint> const & comp = {0})
+  {
+    if (checkMarkerFixed(m))
+    {
+      std::cerr << "the marker " << m << " has already been fixed." << std::endl;
+      abort();
+    }
+    bcNat_list.emplace_back(m, f, comp);
+    fixedMarkers.insert(m);
+  }
+
+  bool checkMarkerFixed(marker_T const m) const
+  {
+    return fixedMarkers.find(m) != fixedMarkers.end();
+  }
+
+  bool checkDofFixed(id_T const id) const
+  {
+    return fixedDofs.find(id) != fixedDofs.end();
   }
 
   FESpace const & feSpace;
+  std::set<marker_T> fixedMarkers;
+  std::set<id_T> fixedDofs;
   std::list<BCEss<FESpace>> bcEss_list;
   std::list<BCNat<FESpace>> bcNat_list;
 };

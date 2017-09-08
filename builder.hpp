@@ -21,9 +21,10 @@ struct Builder
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename Diagonal<FESpace>::LMat_T;
     using LVec_T = typename Diagonal<FESpace>::LVec_T;
+    auto const gSize = assembly.feSpace.dof.totalNum;
 
     // FIXME: compute a proper sparsity pattern
-    uint const approxEntryNum = (2*CurFE_T::RefFE_T::dim+1) * assembly.feSpace.dof.totalNum;
+    uint const approxEntryNum = (2*CurFE_T::RefFE_T::dim+1) * gSize;
     _triplets.reserve(approxEntryNum);
 
     auto & curFE = assembly.feSpace.curFE;
@@ -54,14 +55,20 @@ struct Builder
             bc.curFE.reinit(facet);
             for(uint q=0; q<BCNat<FESpace>::QR_T::numPts; ++q)
             {
-              auto const value = bc.value(bc.curFE.qpoint[q]);
-              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+              for (uint d=0; d<assembly.feSpace.dim; ++d)
               {
-                auto const id =
-                  CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
-                Fe(id) += bc.curFE.JxW[q] *
-                      bc.curFE.phi[q](i) *
-                      value;
+                if (bc.hasComp(d))
+                {
+                  auto const value = bc.value(bc.curFE.qpoint[q])(d);
+                  for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+                  {
+                    auto const id =
+                        CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
+                    Fe(id) += bc.curFE.JxW[q] *
+                              bc.curFE.phi[q](i) *
+                        value;
+                  }
+                }
               }
             }
           }
@@ -77,32 +84,44 @@ struct Builder
       // C clears constrained clms
       // h is the vector of local constraint values
 
-      typename CurFE_T::LocalMat_T C = CurFE_T::LocalMat_T::Identity();
-      typename CurFE_T::LocalVec_T h = CurFE_T::LocalVec_T::Zero();
+      LMat_T C = LMat_T ::Identity();
+      LVec_T h = LVec_T::Zero();
       for(auto& bc: bcs.bcEss_list)
       {
-        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+        for (uint d=0; d<FESpace::dim; ++d)
         {
-          DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-          if(bc.isConstrained(id))
+          for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
-            C(i,i) = 0.;
-            h(i) = bc.value(assembly.feSpace.curFE.dofPts[i]);
+            auto const pos = i+d*FESpace::RefFE_T::numFuns;
+            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
+            if(bc.isConstrained(id))
+            {
+              C(pos, pos) = 0.;
+              h(pos) = bc.value(assembly.feSpace.curFE.dofPts[i])(d);
+            }
           }
         }
       }
       Fe = C * (Fe - Ke * h);
       Ke = C * Ke * C;
 
-      for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      for (uint d=0; d<FESpace::dim; ++d)
       {
-        DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-        for(auto& bc: bcs.bcEss_list)
+        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
-          if(bc.isConstrained(id))
+          auto const pos = i+d*FESpace::RefFE_T::numFuns;
+          DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
+
+          for(auto& bc: bcs.bcEss_list)
           {
-            Ke(i,i) = 1.0;
-            Fe(i) = h[i];
+            // dofs can be fixed with essential conditions only once!
+            // all other bcs will be silently discarded
+            if (bc.isConstrained(id))
+            {
+              Ke(pos, pos) = bc.diag;
+              Fe(pos) = h[pos];
+              // bc.fixedDofs.insert(id);
+            }
           }
         }
       }
@@ -115,14 +134,21 @@ struct Builder
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         DOFid_T const id_i = assembly.feSpace.dof.elemMap[e.id][i];
-        b(assembly.offset_row+id_i) += Fe(i);
-        for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
+        for (uint d=0; d<FESpace::dim; ++d)
         {
-          DOFid_T const id_j = assembly.feSpace.dof.elemMap[e.id][j];
-          if(std::fabs(Ke(i,j)) > 1.e-16)
+          b(assembly.offset_row + d*gSize + id_i) += Fe(i + d*FESpace::CurFE_T::size);
+          for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
-            _triplets.emplace_back(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j));
-            entryNum++;
+            DOFid_T const id_j = assembly.feSpace.dof.elemMap[e.id][j];
+            auto val = Ke(i+d*FESpace::CurFE_T::size,j+d*FESpace::CurFE_T::size);
+            if(std::fabs(val) > 1.e-16)
+            {
+              _triplets.emplace_back(
+                    assembly.offset_row + d*gSize + id_i,
+                    assembly.offset_clm + d*gSize + id_j,
+                    val);
+              entryNum++;
+            }
           }
         }
       }
@@ -242,12 +268,15 @@ struct Builder
       LMat_T C = LMat_T::Identity();
       for(auto& bc: bcs.bcEss_list)
       {
-        for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+        for (uint d=0; d<FESpace::dim; ++d)
         {
-          DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i];
-          if(bc.isConstrained(id))
+          for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
-            C(i,i) = 0.;
+            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i+d*FESpace::RefFE_T::numFuns];
+            if(bc.isConstrained(id))
+            {
+              C(i+d*FESpace::RefFE_T::numFuns,i+d*FESpace::RefFE_T::numFuns) = 0.;
+            }
           }
         }
       }
@@ -260,7 +289,11 @@ struct Builder
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         DOFid_T const id_i = assembly.feSpace.dof.elemMap[e.id][i];
-        b(assembly.offset_row+id_i) += Fe(i);
+        for (uint d=0; d<FESpace::dim; ++d)
+        {
+          auto val = Fe(i+d*FESpace::CurFE_T::size);
+          b(assembly.offset_row + d*assembly.feSpace.dof.totalNum + id_i) += val;
+        }
       }
     }
   }
@@ -272,6 +305,6 @@ struct Builder
 
   Mat & A;
   Vec & b;
-  array<std::vector<AssemblyBase*>,3> assemblies;
   std::vector<Triplet> _triplets;
+  array<std::vector<AssemblyBase*>,3> assemblies;
 };

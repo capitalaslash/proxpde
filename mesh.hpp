@@ -68,11 +68,11 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
 
 enum side
 {
-  BOTTOM,
-  RIGHT,
-  TOP,
-  LEFT,
-  CIRCLE
+  BOTTOM = 1,
+  RIGHT = 2,
+  TOP = 3,
+  LEFT = 4,
+  CIRCLE = 101
 };
 
 template <typename Mesh>
@@ -216,7 +216,7 @@ struct MeshBuilder<Triangle>
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
+    buildMesh2D(meshPtr, origin, length, {{numPts[0], numPts[1]}});
   }
 };
 
@@ -228,6 +228,25 @@ struct MeshBuilder<Quad>
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh2D(meshPtr, origin, length, {numPts[0], numPts[1]});
+    buildMesh2D(meshPtr, origin, length, {{numPts[0], numPts[1]}});
   }
 };
+
+template <typename Mesh>
+void buildNormals(std::shared_ptr<Mesh> meshPtr)
+{
+  for (auto & facet: meshPtr->facetList)
+  {
+      if (facet.onBoundary())
+      {
+        facet.buildNormal();
+
+        // check orientation wrt. midpoint of internal element
+        if ((facet.midpoint() - facet.facingElem[0].first->midpoint()).dot(facet.normal) < 0.)
+        {
+          facet.normal = -1.0 * facet.normal;
+        }
+
+      }
+  }
+}

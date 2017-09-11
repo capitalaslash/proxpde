@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
   t.start();
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
+  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

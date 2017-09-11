@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
+  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
 
   FESpace_T feSpace(meshPtr);
 

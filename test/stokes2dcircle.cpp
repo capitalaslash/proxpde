@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   double const radius = 1.;
 
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
-  buildCircleMesh(meshPtr, origin, radius, {numPts_x, numPts_y, numPts_r});
+  buildCircleMesh(meshPtr, origin, radius, {{numPts_x, numPts_y, numPts_r}});
   // std::cout << *meshPtr << std::endl;
 
   FESpaceU_T feSpaceU(meshPtr);

@@ -20,7 +20,7 @@ template<> std::array<Vec3,1> const GaussQR<Line,1>::n =
   Vec3( 0., 0., 0.),
 };
 
-static double constexpr sqrt13rd = std::sqrt(1.L/3);
+static double constexpr sqrt13rd = 0.5773502691896258L;
 template<> Eigen::Array<double,2,1> const GaussQR<Line,2>::w = {1.L, 1.L};
 template<> std::array<Vec3,2> const GaussQR<Line,2>::n =
 {
@@ -28,7 +28,7 @@ template<> std::array<Vec3,2> const GaussQR<Line,2>::n =
   Vec3( sqrt13rd, 0., 0.)
 };
 
-static double constexpr sqrt35th = std::sqrt(3.L/5);
+static double constexpr sqrt35th = 0.774596669241483L;
 template<> Eigen::Array<double,3,1> const GaussQR<Line,3>::w = {5.L/9, 8.L/9, 5.L/9};
 template<> std::array<Vec3,3> const GaussQR<Line,3>::n =
 {

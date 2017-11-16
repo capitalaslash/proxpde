@@ -48,8 +48,8 @@ struct Coupling: public AssemblyBase
   using FESpace2_T = FESpace2;
   using CurFE1_T = typename FESpace1_T::CurFE_T;
   using CurFE2_T = typename FESpace2_T::CurFE_T;
-  using LMat_T = FMat<CurFE1_T::size(),CurFE2_T::size()>;
-  using LVec_T = FVec<CurFE1_T::size()>;
+  using LMat_T = FMat<CurFE1_T::size,CurFE2_T::size>;
+  using LVec_T = FVec<CurFE1_T::size>;
 
   explicit Coupling(FESpace1_T & fe1,
                     FESpace2 & fe2,

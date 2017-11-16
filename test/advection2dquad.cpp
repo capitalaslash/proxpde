@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
   double dt = 0.1;
 
-  Vec3d vel = Vec3d::Zero(feSpace.dof.totalNum, 3);
+  Field3 vel = Field3::Zero(feSpace.dof.totalNum, 3);
   vel.col(0) = Vec::Constant(feSpace.dof.totalNum, 0.1);
   AssemblyAdvection<FESpace_T> advection(vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);

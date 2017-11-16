@@ -294,7 +294,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyAdvection(Vec3d const u,
+  explicit AssemblyAdvection(Field3 const u,
                              FESpace_T & fe,
                              AssemblyBase::CompList const & comp = {0},
                              uint offset_row = 0,
@@ -357,7 +357,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     return Ke;
   }
 
-  Vec3d vel;
+  Field3 vel;
 };
 
 template <typename FESpace1, typename FESpace2>

@@ -25,7 +25,7 @@ using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
 using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
 // using Mat = Eigen::SparseMatrix<double,Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
-using Vec3d = Eigen::Matrix<double, Eigen::Dynamic, 3>;
+using Field3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
 template <int Size>
 using FVec = Eigen::Matrix<double,Size,1>;
@@ -43,14 +43,14 @@ using ScalarFun = std::function<
   double (FVec<DomainSize> const&)
 >;
 
-using Vec1 = Eigen::Matrix<double,1,1>;
-using Vec2 = Eigen::Vector2d;
-using Vec3 = Eigen::Vector3d;
+using Vec1 = FVec<1>;
+using Vec2 = FVec<2>;
+using Vec3 = FVec<3>;
 using Triplet = Eigen::Triplet<double>;
 
-using scalarFun_T = std::function<double(Vec3 const&)>;
-using vectorFun_T = std::function<Vec3(Vec3 const&)>;
+using scalarFun_T = ScalarFun<3>;
+using vectorFun_T = Fun<3,3>;
 
-using onedFun_T = std::function<Vec1(Vec1 const&)>;
-using twodFun_T = std::function<Vec2(Vec2 const&)>;
-using scalarTwodFun_T = std::function<double(Vec2 const&)>;
+using onedFun_T = Fun<1,1>;
+using twodFun_T = Fun<2,2>;
+using scalarTwodFun_T = ScalarFun<2>;

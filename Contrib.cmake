@@ -97,7 +97,7 @@ if(TINYXML2_USE_INTERNAL)
     ep_tinyxml2
     PREFIX ${CONTRIB_SOURCE_DIR}/tinyxml2
     GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
-    GIT_TAG 3.0.0
+    GIT_TAG 5.0.1
     STAMP_DIR ${CONTRIB_BINARY_DIR}/stamp
     DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src
     SOURCE_DIR ${CONTRIB_SOURCE_DIR}/src/tinyxml2

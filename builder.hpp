@@ -43,7 +43,7 @@ struct Builder
       assembly.build(Ke);
 
       // --- apply Neumann bcs ---
-      for(auto & bc: bcs.bcNat_list)
+      for(auto & bc: bcs.bcNatList)
       {
         uint facetCounter = 0;
         for(auto const facetId: mesh.elemToFacet[e.id])
@@ -86,7 +86,7 @@ struct Builder
 
       LMat_T C = LMat_T ::Identity();
       LVec_T h = LVec_T::Zero();
-      for(auto& bc: bcs.bcEss_list)
+      for(auto& bc: bcs.bcEssList)
       {
         for (uint d=0; d<FESpace::dim; ++d)
         {
@@ -112,7 +112,7 @@ struct Builder
           auto const pos = i+d*FESpace::RefFE_T::numFuns;
           DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
 
-          for(auto& bc: bcs.bcEss_list)
+          for(auto& bc: bcs.bcEssList)
           {
             // dofs can be fixed with essential conditions only once!
             // all other bcs will be silently discarded
@@ -195,7 +195,7 @@ struct Builder
       // h is the vector of local constraint values
 
       typename CurFE1_T::LocalMat_T Crow = CurFE1_T::LocalMat_T::Identity();
-      for(auto& bc: bcs1.bcEss_list)
+      for(auto& bc: bcs1.bcEssList)
       {
         for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
         {
@@ -208,7 +208,7 @@ struct Builder
       }
       typename CurFE2_T::LocalMat_T Cclm = CurFE2_T::LocalMat_T::Identity();
       typename CurFE2_T::LocalVec_T h = CurFE2_T::LocalVec_T::Zero();
-      for(auto& bc: bcs2.bcEss_list)
+      for(auto& bc: bcs2.bcEssList)
       {
         for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
         {
@@ -216,7 +216,7 @@ struct Builder
           if(bc.isConstrained(id))
           {
             Cclm(i,i) = 0.;
-            h(i) = bc.value(assembly.feSpace2.curFE.dofPts[i]);
+            h(i) = bc.value(assembly.feSpace2.curFE.dofPts[i])(0);
           }
         }
       }
@@ -266,7 +266,7 @@ struct Builder
       // h is the vector of local constraint values
 
       LMat_T C = LMat_T::Identity();
-      for(auto& bc: bcs.bcEss_list)
+      for(auto& bc: bcs.bcEssList)
       {
         for (uint d=0; d<FESpace::dim; ++d)
         {

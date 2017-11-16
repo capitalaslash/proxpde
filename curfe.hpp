@@ -88,12 +88,12 @@ struct CurFE<RefPointP1,QR>
     e = &elem;
     dofPts = RefFE_T::dofPts(elem);
 
-    qpoint = {elem.origin()};
+    qpoint = {{elem.origin()}};
   }
 
   GeoElem const* e;
   array<Vec3,RefFE_T::numFuns> dofPts;
-  array<double,QR::numPts> JxW = {1.L};
+  array<double,QR::numPts> JxW = {{1.L}};
   array<Vec3,QR::numPts> qpoint;
-  array<FVec<1>,QR::numPts> phi = {FVec<1>(1.L)};
+  array<FVec<1>,QR::numPts> phi = {{FVec<1>(1.L)}};
 };

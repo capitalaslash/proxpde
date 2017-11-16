@@ -13,9 +13,9 @@
 static const int dim = 2;
 
 std::vector<uint> const ALL_COMP {{0, 1}};
-std::vector<uint> const COMP_X {{0}};
-std::vector<uint> const COMP_Y {{1}};
-std::vector<uint> const COMP_Z {{2}};
+std::vector<uint> const COMP_X {0};
+std::vector<uint> const COMP_Y {1};
+std::vector<uint> const COMP_Z {2};
 
 using Elem_T = Line;
 using Mesh_T = Mesh<Elem_T>;

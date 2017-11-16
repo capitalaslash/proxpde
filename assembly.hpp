@@ -158,9 +158,10 @@ struct AssemblyMass: public Diagonal<FESpace>
 
   explicit AssemblyMass(double const & c,
                         FESpace_T & fe,
+                        AssemblyBase::CompList const & comp = {0},
                         uint offset_row = 0,
                         uint offset_clm = 0):
-     Diagonal<FESpace>(fe, offset_row, offset_clm),
+     Diagonal<FESpace>(fe, offset_row, offset_clm, comp),
      coeff(c)
   {}
 
@@ -200,13 +201,35 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const & r,
-                               FESpace & fe,
-                               AssemblyBase::CompList const & comp = {0},
-                               uint offset_row = 0):
+  AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const & r,
+                      FESpace & fe,
+                      AssemblyBase::CompList const & comp = {0},
+                      uint offset_row = 0):
     AssemblyVector<FESpace>(fe, offset_row, comp),
     rhs(r)
   {}
+
+  // this constructor is available only when FESpace::dim == 1
+  template <typename FESpace1 = FESpace,
+            std::enable_if_t<FESpace1::dim == 1, bool> = true>
+  AssemblyAnalyticRhs(scalarFun_T const & r,
+                      FESpace & fe,
+                      AssemblyBase::CompList const & comp = {0},
+                      uint offset_row = 0):
+    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, comp, offset_row)
+  {}
+
+  // otherwise, we fail
+  template <typename FESpace1 = FESpace,
+            std::enable_if_t<FESpace1::dim != 1, bool> = true>
+  AssemblyAnalyticRhs(scalarFun_T const & r,
+                      FESpace & fe,
+                      AssemblyBase::CompList const & comp = {0},
+                      uint offset_row = 0):
+    AssemblyVector<FESpace>(fe, offset_row, comp)
+  {
+    std::abort();
+  }
 
   void build(LVec_T & Fe) const
   {
@@ -223,7 +246,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     }
   }
 
-  Fun<FESpace_T::dim,3> const & rhs;
+  Fun<FESpace_T::dim,3> const rhs;
 };
 
 template <typename FESpace>
@@ -236,8 +259,9 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
 
   explicit AssemblyVecRhs(Vec const & r,
                           FESpace_T & fe,
+                          AssemblyBase::CompList const & comp = {0},
                           uint offset_row = 0):
-    AssemblyVector<FESpace_T>(fe, offset_row),
+    AssemblyVector<FESpace_T>(fe, offset_row, comp),
     rhs(r)
   {}
 
@@ -272,9 +296,10 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   explicit AssemblyAdvection(Vec3d const u,
                              FESpace_T & fe,
+                             AssemblyBase::CompList const & comp = {0},
                              uint offset_row = 0,
                              uint offset_clm = 0):
-    Diagonal<FESpace>(fe, offset_row, offset_clm),
+    Diagonal<FESpace>(fe, offset_row, offset_clm, comp),
     vel(u)
   {}
 
@@ -349,7 +374,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
                         FESpace2_T & fe2,
                         uint offset_row = 0,
                         uint offset_clm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm),
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, {0}),
     component(comp)
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -392,7 +417,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
                        FESpace2_T & fe2,
                        uint offset_row = 0,
                        uint offset_clm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm),
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, {0}),
     component(comp)
   {
     // this works only if the same quad rule is defined on both CurFE

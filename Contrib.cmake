@@ -109,11 +109,12 @@ if(TINYXML2_USE_INTERNAL)
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_INSTALL_PREFIX:PATH=${CONTRIB_BINARY_DIR}/install/tinyxml2
+      -DCMAKE_INSTALL_LIBDIR:PATH=${CONTRIB_BINARY_DIR}/install/tinyxml2/lib
       -DCMAKE_BUILD_TYPE:STRING=Release
       ${CONTRIB_SOURCE_DIR}/src/tinyxml2
   )
   set(TINYXML2_INCLUDE_DIRS ${CONTRIB_BINARY_DIR}/install/tinyxml2/include
     CACHE PATH "TinyXML2 include" FORCE)
-  link_directories(${CONTRIB_BINARY_DIR}/install/tinyxml2/lib64)
+  link_directories(${CONTRIB_BINARY_DIR}/install/tinyxml2/lib)
   set(TINYXML2_LIBRARIES tinyxml2 CACHE FILEPATH "TinyXML2 library" FORCE)
 endif()

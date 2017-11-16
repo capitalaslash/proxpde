@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
   bcsV.addEssentialBC(side::BOTTOM, inlet);
   // bcsV.addNaturalBC(side::BOTTOM, oneFun);
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, zeroFun, {0,1});
+  bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
   std::cout << "bcsVel:\n" << bcsVel << std::endl;
   BCList<FESpaceP_T> bcsP{feSpaceP};
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
   Vec bb = Vec::Zero(numDOFs);
 
   AssemblyStiffness<FESpaceU_T> stiffness0(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffness1(1.0, feSpaceU, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyStiffness<FESpaceU_T> stiffness1(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
   // AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
   AssemblyDiv<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, 0);

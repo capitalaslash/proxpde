@@ -89,6 +89,13 @@ add_test(
   COMMAND stokes2dcircle
 )
 
+add_executable(cavity cavity.cpp)
+target_link_libraries(cavity ${LIBS})
+add_test(
+  NAME cavity
+  COMMAND cavity
+)
+
 add_executable(vectorfe1d vectorfe1d.cpp)
 target_link_libraries(vectorfe1d ${LIBS})
 add_test(

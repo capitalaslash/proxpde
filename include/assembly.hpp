@@ -48,8 +48,8 @@ struct Coupling: public AssemblyBase
   using FESpace2_T = FESpace2;
   using CurFE1_T = typename FESpace1_T::CurFE_T;
   using CurFE2_T = typename FESpace2_T::CurFE_T;
-  using LMat_T = FMat<CurFE1_T::size,CurFE2_T::size>;
-  using LVec_T = FVec<CurFE1_T::size>;
+  using LMat_T = FMat<FESpace1_T::dim*CurFE1_T::size,FESpace2_T::dim*CurFE2_T::size>;
+  using LVec_T = FVec<FESpace1_T::dim*CurFE1_T::size>;
 
   explicit Coupling(FESpace1_T & fe1,
                     FESpace2 & fe2,
@@ -397,6 +397,54 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
   uint const component;
 };
 
+template <typename FESpace>
+std::vector<uint> allComp()
+{
+  std::vector<uint> comp(FESpace::dim);
+  std::iota(comp.begin(), comp.end(), 0);
+  return comp;
+}
+
+template <typename FESpace1, typename FESpace2>
+struct AssemblyVGrad: public Coupling<FESpace1, FESpace2>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = Coupling<FESpace1, FESpace2>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyVGrad(FESpace1_T & fe1,
+                        FESpace2_T & fe2,
+                        uint offset_row = 0,
+                        uint offset_clm = 0):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, allComp<FESpace1>())
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace1_T::CurFE_T::QR_T,
+          typename FESpace2_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
+
+  void build(LMat_T & Ke) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    for (uint d=0; d<FESpace1_T::dim; ++d)
+    {
+      auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(d*CurFE1_T::size, 0);
+      for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
+      {
+        Kec += this->feSpace1.curFE.JxW[q] *
+              this->feSpace1.curFE.dphi[q].col(d)*
+              this->feSpace2.curFE.phi[q].transpose();
+      }
+    }
+  }
+};
+
 template <typename FESpace1, typename FESpace2>
 AssemblyGrad<FESpace1, FESpace2> make_assemblyGrad(uint comp, FESpace1 & fe1, FESpace2 & fe2, uint offset_row = 0, uint offset_clm = 0)
 {
@@ -439,4 +487,44 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
   }
 
   uint const component;
+};
+
+template <typename FESpace1, typename FESpace2>
+struct AssemblyVDiv: public Coupling<FESpace1, FESpace2>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = Coupling<FESpace1, FESpace2>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyVDiv(FESpace1_T & fe1,
+                        FESpace2_T & fe2,
+                        uint offset_row = 0,
+                        uint offset_clm = 0):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, allComp<FESpace2>())
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace1_T::CurFE_T::QR_T,
+          typename FESpace2_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
+
+  void build(LMat_T & Ke) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    for (uint d=0; d<FESpace1_T::dim; ++d)
+    {
+      auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(0, d*CurFE1_T::size);
+      for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
+      {
+        Kec += this->feSpace1.curFE.JxW[q] *
+              this->feSpace1.curFE.phi[q] *
+              this->feSpace2.curFE.dphi[q].col(d).transpose();
+      }
+    }
+  }
 };

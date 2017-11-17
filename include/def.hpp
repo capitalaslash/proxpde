@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <algorithm>
+#include <numeric>
 #include <cassert>
 
 #include <Eigen/Dense>

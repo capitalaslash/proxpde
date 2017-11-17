@@ -165,6 +165,9 @@ struct Builder
     using CurFE2_T = typename FESpace2::CurFE_T;
     using LMat_T = typename Coupling<FESpace1, FESpace2>::LMat_T;
     using LVec_T = typename Coupling<FESpace1, FESpace2>::LVec_T;
+    using SquareMat1_T = FMat<FESpace1::dim*CurFE1_T::size,FESpace1::dim*CurFE1_T::size>;
+    using SquareMat2_T = FMat<FESpace2::dim*CurFE2_T::size,FESpace2::dim*CurFE2_T::size>;
+    using Vec2_T = FVec<FESpace2::dim*CurFE2_T::size>;
 
     // FIXME - compute a proper sparsity pattern
     _triplets.reserve((2*CurFE1_T::RefFE_T::dim+1) * assembly.feSpace1.dof.totalNum);
@@ -194,20 +197,23 @@ struct Builder
       // C clears constrained clms
       // h is the vector of local constraint values
 
-      typename CurFE1_T::LocalMat_T Crow = CurFE1_T::LocalMat_T::Identity();
+      SquareMat1_T Crow = SquareMat1_T::Identity();
       for(auto& bc: bcs1.bcEssList)
       {
-        for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
+        for (uint d=0; d<FESpace1::dim; ++d)
         {
-          DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][i];
-          if(bc.isConstrained(id))
+          for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
           {
-            Crow(i,i) = 0.;
+            DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][i];
+            if(bc.isConstrained(id))
+            {
+              Crow(i,i) = 0.;
+            }
           }
         }
       }
-      typename CurFE2_T::LocalMat_T Cclm = CurFE2_T::LocalMat_T::Identity();
-      typename CurFE2_T::LocalVec_T h = CurFE2_T::LocalVec_T::Zero();
+      SquareMat2_T Cclm = SquareMat2_T::Identity();
+      Vec2_T h = Vec2_T::Zero();
       for(auto& bc: bcs2.bcEssList)
       {
         for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)

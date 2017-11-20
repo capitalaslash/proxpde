@@ -516,9 +516,9 @@ struct AssemblyVDiv: public Coupling<FESpace1, FESpace2>
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
-    for (uint d=0; d<FESpace1_T::dim; ++d)
+    for (uint d=0; d<FESpace2_T::dim; ++d)
     {
-      auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(0, d*CurFE1_T::size);
+      auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(0, d*CurFE2_T::size);
       for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
       {
         Kec += this->feSpace1.curFE.JxW[q] *

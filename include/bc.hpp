@@ -61,6 +61,15 @@ public:
     fillBoolVector();
   }
 
+  // this can be used with scalar FESpaces only
+  BCEss(FESpace const& feSpace,
+        DofSet_T const & dofSet,
+        scalarFun_T const & v):
+    BCEss(feSpace, dofSet, [v](Vec3 const &p){return Vec1{v(p)};})
+  {
+    fillBoolVector();
+  }
+
   BCEss(FESpace const& feSpace,
         marker_T m,
         Fun<FESpace::dim,3> const & v,
@@ -199,21 +208,19 @@ public:
     std::abort();
   }
 
-//  void addEssentialBC(
-//      DofSet_T dofSet,
-//      Fun<FESpace::dim,3> const & f,
-//      std::vector<uint> const & comp = {0})
-//  {
-//    bcEssList.emplace_back(feSpace, dofSet, f, comp);
-//  }
+  void addEssentialBC(
+      DofSet_T dofSet,
+      Fun<FESpace::dim,3> const & f)
+  {
+    bcEssList.emplace_back(feSpace, dofSet, f);
+  }
 
-//  void addEssentialBC(
-//      DofSet_T dofSet,
-//      scalarFun_T const & f,
-//      std::vector<uint> const & comp = {0})
-//  {
-//    addEssentialBC(dofSet, [&f] (Vec3 const &p) {return Vec1(f(p));}, comp);
-//  }
+  void addEssentialBC(
+      DofSet_T dofSet,
+      scalarFun_T const & f)
+  {
+    bcEssList.emplace_back(feSpace, dofSet, f);
+  }
 
   void addNaturalBC(
       marker_T const m,
@@ -246,7 +253,7 @@ public:
   void addNaturalBC(
       marker_T const,
       scalarFun_T const &,
-      std::vector<uint> const & comp)
+      std::vector<uint> const &)
   {
     std::cerr << __FILE__ << ":" << __LINE__ << " > this funcytion only works with FESpace::dim == 1" << std::endl;
     std::abort();

@@ -74,25 +74,25 @@ int main(int argc, char* argv[])
   Mat AA(numDOFs, numDOFs);
   Vec bb = Vec::Zero(numDOFs);
 
-  AssemblyStiffness<FESpaceU_T> stiffness0(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffness1(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
+  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  // AssemblyGrad<FESpaceU_T, FESpaceP_T> grad0(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> div0(0, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, 0);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> grad1(1, feSpaceU, feSpaceP, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> div1(1, feSpaceP, feSpaceU, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  // AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.totalNum, 0);
+  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
 
   Builder builder(A, b);
   // builder.assemblies[0].push_back(&stiffness0);
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
-  builder.buildProblem(stiffness0, bcsU);
-  builder.buildProblem(make_assemblyGrad(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum), bcsU, bcsP);
-  builder.buildProblem(div0, bcsP, bcsU);
-  builder.buildProblem(stiffness1, bcsV);
-  builder.buildProblem(grad1, bcsV, bcsP);
-  builder.buildProblem(div1, bcsP, bcsV);
+  builder.buildProblem(stiffnessU, bcsU);
+  builder.buildProblem(make_assemblyGrad(feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.totalNum), bcsU, bcsP);
+  builder.buildProblem(divU, bcsP, bcsU);
+  builder.buildProblem(stiffnessV, bcsV);
+  builder.buildProblem(gradV, bcsV, bcsP);
+  builder.buildProblem(divV, bcsP, bcsV);
   builder.buildProblem(stiffness, bcsVel);
   builder.closeMatrix();
 

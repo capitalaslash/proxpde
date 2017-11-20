@@ -136,15 +136,15 @@ int main(int argc, char* argv[])
   Vec bS = Vec::Zero(numDOFs);
 
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  AssemblyVGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, 0, 2*dofU);
-  AssemblyVDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, 2*dofU, 0);
+  AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
   AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
   AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, dofU, dofU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*dofU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(1, feSpaceU, feSpaceP, dofU, 2*dofU);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(0, feSpaceP, feSpaceU, 2*dofU, 0);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(1, feSpaceP, feSpaceU, 2*dofU, dofU);
+  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(feSpaceU, feSpaceP, {0}, 0, 2*dofU);
+  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, dofU, 2*dofU);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*dofU, 0);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*dofU, dofU);
 
 //  double const dt = 5.e-3;
 //  AssemblyMass<FESpaceU_T> timederU(1./dt, feSpaceU);

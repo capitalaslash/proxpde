@@ -29,8 +29,9 @@ struct FESpace
 
 template <typename FESpace>
 void interpolateAnalyticFunction(scalarFun_T const & f,
-                                   FESpace const & feSpace,
-                                   Vec & v)
+                                 FESpace const & feSpace,
+                                 Vec & v,
+                                 uint const offset = 0)
 {
   for(auto const & e: feSpace.meshPtr->elementList)
   {
@@ -38,7 +39,7 @@ void interpolateAnalyticFunction(scalarFun_T const & f,
     for(auto const & dof: feSpace.dof.elemMap[e.id])
     {
       auto const pt = FESpace::RefFE_T::dofPts(e)[i];
-      v[dof] = f(pt);
+      v[offset + dof] = f(pt);
       i++;
     }
   }

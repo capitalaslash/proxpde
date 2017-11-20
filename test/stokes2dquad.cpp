@@ -16,18 +16,8 @@ using Mesh_T = Mesh<Elem_T>;
 using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
 using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
 using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
-using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
-
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-scalarFun_T exact_sol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
 
 int main(int argc, char* argv[])
 {
@@ -42,92 +32,79 @@ int main(int argc, char* argv[])
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
 
-  FESpaceU_T feSpaceU{meshPtr};
-  FESpaceP_T feSpaceP{meshPtr};
   FESpaceVel_T feSpaceVel{meshPtr};
-  std::cout << feSpaceVel.dof << std::endl;
+  FESpaceP_T feSpaceP{meshPtr};
+  // std::cout << feSpaceVel.dof << std::endl;
 
-  auto feList = std::make_tuple(feSpaceU, feSpaceU, feSpaceP);
+  auto feList = std::make_tuple(feSpaceVel, feSpaceP);
   auto assembler = make_assembler(feList);
   // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU, feSpaceP));
 
-  auto zeroFun = [] (Vec3 const &) {return 0.;};
-  auto inlet = [] (Vec3 const & p) {return 0.5*(1.-p(0)*p(0));};
-  BCList<FESpaceU_T> bcsU{feSpaceU};
-  bcsU.addEssentialBC(side::RIGHT, zeroFun);
-  bcsU.addEssentialBC(side::LEFT, zeroFun);
-  bcsU.addEssentialBC(side::BOTTOM, zeroFun);
-  bcsU.addEssentialBC(side::TOP, zeroFun);
-  BCList<FESpaceU_T> bcsV{feSpaceU};
-  bcsV.addEssentialBC(side::RIGHT, zeroFun);
-  bcsV.addEssentialBC(side::BOTTOM, inlet);
-  // bcsV.addNaturalBC(side::BOTTOM, oneFun);
+  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
+  auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
+  bcsVel.addEssentialBC(side::BOTTOM, inlet, {0,1});
+  bcsVel.addEssentialBC(side::RIGHT, zero, {0,1});
+  bcsVel.addEssentialBC(side::TOP, zero, {0});
+  bcsVel.addEssentialBC(side::LEFT, zero, {0});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
-  std::cout << "bcsVel:\n" << bcsVel << std::endl;
   BCList<FESpaceP_T> bcsP{feSpaceP};
 
-  Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  uint const numDOFs = feSpaceVel.dof.totalNum*FESpaceVel_T::dim + feSpaceP.dof.totalNum;
-  Mat AA(numDOFs, numDOFs);
-  Vec bb = Vec::Zero(numDOFs);
+  auto const dofU = feSpaceVel.dof.totalNum;
+  auto const dofP = feSpaceP.dof.totalNum;
+  uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
+  Mat A(numDOFs, numDOFs);
+  Vec b = Vec::Zero(numDOFs);
 
-  AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  // AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.totalNum, 0);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
   Builder builder(A, b);
   // builder.assemblies[0].push_back(&stiffness0);
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
-  builder.buildProblem(stiffnessU, bcsU);
-  builder.buildProblem(make_assemblyGrad(feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.totalNum), bcsU, bcsP);
-  builder.buildProblem(divU, bcsP, bcsU);
-  builder.buildProblem(stiffnessV, bcsV);
-  builder.buildProblem(gradV, bcsV, bcsP);
-  builder.buildProblem(divV, bcsP, bcsV);
   builder.buildProblem(stiffness, bcsVel);
+  builder.buildProblem(grad, bcsVel, bcsP);
+  builder.buildProblem(div, bcsP, bcsVel);
   builder.closeMatrix();
 
-  Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  // Eigen::SparseLU<Mat> solver;
-  // solver.analyzePattern(A);
-  // solver.factorize(A);
-  // Eigen::GMRES<Mat> solver(A);
+  Var sol("vel", numDOFs);
   Eigen::UmfPackLU<Mat> solver(A);
-  // Eigen::SuperLU<Mat> solver(A);
-  sol = solver.solve(b);
+  sol.data = solver.solve(b);
 
   // std::cout << "A:\n" << A << std::endl;
   // std::cout << "b:\n" << b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
-  std::cout << sol.norm() << std::endl;
+  Var exact{"exact", numDOFs};
+  interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
+  interpolateAnalyticFunction([](Vec3 const & p){return p(1)-1;}, feSpaceP, exact.data, 2*dofU);
 
-  Var u{"u", sol, 0, feSpaceU.dof.totalNum};
-  Var v{"v", sol, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum};
-  Var p{"p", sol, 2*feSpaceU.dof.totalNum, feSpaceP.dof.totalNum};
+  std::cout << sol.data.norm() << std::endl;
 
-  // Var exact{"exact", feSpaceU.dof.totalNum};
-  // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
-  Var error{"e"};
-  error.data = sol /*- exact.data*/;
+  Var u{"u", sol.data, 0, dofU};
+  Var v{"v", sol.data, dofU, dofU};
+  Var p{"p", sol.data, 2*dofU, dofP};
+  Var ue{"ue", exact.data, 0, dofU};
+  Var ve{"ve", exact.data, dofU, dofU};
+  Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager<FESpaceU_T> ioU{feSpaceU, "sol_stokes2dquad_u.xmf"};
-  ioU.print({u, v});
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dquad_vel.xmf"};
+  ioVel.print({sol, exact});
   IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dquad_p.xmf"};
-  ioP.print({p});
+  ioP.print({p, pe});
 
-  double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 6.03323) > 1.e-4)
+  auto uNorm = (u.data - ue.data).norm();
+  auto vNorm = (v.data - ve.data).norm();
+  auto pNorm = (p.data - pe.data).norm();
+
+  std::cout << "u error norm: " << uNorm << std::endl;
+  std::cout << "v error norm: " << vNorm << std::endl;
+  std::cout << "p error norm: " << pNorm << std::endl;
+
+  if (uNorm + vNorm + pNorm > 1.e-14)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

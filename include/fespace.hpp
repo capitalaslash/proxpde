@@ -28,19 +28,29 @@ struct FESpace
 };
 
 template <typename FESpace>
-void interpolateAnalyticFunction(scalarFun_T const & f,
+void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
                                  FESpace const & feSpace,
                                  Vec & v,
                                  uint const offset = 0)
 {
   for(auto const & e: feSpace.meshPtr->elementList)
   {
-    uint i = 0;
+    uint p = 0;
     for(auto const & dof: feSpace.dof.elemMap[e.id])
     {
-      auto const pt = FESpace::RefFE_T::dofPts(e)[i];
-      v[offset + dof] = f(pt);
-      i++;
+      auto const d = p / FESpace::RefFE_T::numFuns;
+      auto const pt = FESpace::RefFE_T::dofPts(e)[p % FESpace::RefFE_T::numFuns];
+      v[offset + dof] = f(pt)[d];
+      p++;
     }
   }
+}
+
+template <typename FESpace>
+void interpolateAnalyticFunction(scalarFun_T const & f,
+                                 FESpace const & feSpace,
+                                 Vec & v,
+                                 uint const offset = 0)
+{
+  interpolateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
 }

@@ -75,6 +75,13 @@ add_test(
   COMMAND advection2dquad
 )
 
+add_executable(assemblyvector assemblyvector.cpp)
+target_link_libraries(assemblyvector ${LIBS})
+add_test(
+  NAME assemblyvector
+  COMMAND assemblyvector
+)
+
 add_executable(stokes2dquad stokes2dquad.cpp)
 target_link_libraries(stokes2dquad ${LIBS})
 add_test(

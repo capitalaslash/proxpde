@@ -172,6 +172,8 @@ struct Builder
     using SquareMat1_T = FMat<FESpace1::dim*CurFE1_T::size,FESpace1::dim*CurFE1_T::size>;
     using SquareMat2_T = FMat<FESpace2::dim*CurFE2_T::size,FESpace2::dim*CurFE2_T::size>;
     using Vec2_T = FVec<FESpace2::dim*CurFE2_T::size>;
+    auto const gSize1 = assembly.feSpace1.dof.totalNum;
+    auto const gSize2 = assembly.feSpace2.dof.totalNum;
 
     // FIXME - compute a proper sparsity pattern
     _triplets.reserve((2*CurFE1_T::RefFE_T::dim+1) * assembly.feSpace1.dof.totalNum);
@@ -208,10 +210,11 @@ struct Builder
         {
           for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
           {
-            DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][i];
+            auto const pos = i+d*FESpace1::RefFE_T::numFuns;
+            DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][pos];
             if(bc.isConstrained(id))
             {
-              Crow(i,i) = 0.;
+              Crow(pos,pos) = 0.;
             }
           }
         }
@@ -220,28 +223,48 @@ struct Builder
       Vec2_T h = Vec2_T::Zero();
       for(auto& bc: bcs2.bcEssList)
       {
-        for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
+        for (uint d=0; d<FESpace2::dim; ++d)
         {
-          DOFid_T const id = assembly.feSpace2.dof.elemMap[e.id][i];
-          if(bc.isConstrained(id))
+          for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
           {
-            Cclm(i,i) = 0.;
-            h(i) = bc.value(assembly.feSpace2.curFE.dofPts[i])(0);
+            auto const pos = i+d*FESpace2::RefFE_T::numFuns;
+            DOFid_T const id = assembly.feSpace2.dof.elemMap[e.id][pos];
+            if(bc.isConstrained(id))
+            {
+              Cclm(pos,pos) = 0.;
+              h(pos) = bc.value(assembly.feSpace2.curFE.dofPts[i])[d];
+            }
           }
         }
       }
       Fe = - Crow * Ke * h;
+      // std::cout << "Ke pre bc:\n" << Ke << std::endl;
       Ke = Crow * Ke * Cclm;
+      // std::cout << "Ke post bc:\n" << Ke << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
       {
         DOFid_T const id_i = assembly.feSpace1.dof.elemMap[e.id][i];
-        b(assembly.offset_row+id_i) += Fe(i);
-        for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
+        for (uint d1=0; d1<FESpace1::dim; ++d1)
         {
-          DOFid_T const id_j = assembly.feSpace2.dof.elemMap[e.id][j];
-          _triplets.emplace_back(assembly.offset_row+id_i, assembly.offset_clm+id_j, Ke(i,j));
+          b(assembly.offset_row + d1*gSize1 + id_i) += Fe(i + d1*FESpace1::CurFE_T::size);
+
+          for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
+          {
+            DOFid_T const id_j = assembly.feSpace2.dof.elemMap[e.id][j];
+            for (uint d2=0; d2<FESpace2::dim; ++d2)
+            {
+              auto val = Ke(i+d1*FESpace1::CurFE_T::size,j+d2*FESpace2::CurFE_T::size);
+              if(std::fabs(val) > 1.e-16)
+              {
+                _triplets.emplace_back(
+                      assembly.offset_row + d1*gSize1 + id_i,
+                      assembly.offset_clm + d2*gSize2 + id_j,
+                      val);
+              }
+            }
+          }
         }
       }
     }

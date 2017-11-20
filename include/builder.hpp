@@ -134,19 +134,23 @@ struct Builder
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
         DOFid_T const id_i = assembly.feSpace.dof.elemMap[e.id][i];
-        for (uint d=0; d<FESpace::dim; ++d)
+        for (uint d1=0; d1<FESpace::dim; ++d1)
         {
-          b(assembly.offset_row + d*gSize + id_i) += Fe(i + d*FESpace::CurFE_T::size);
+          b(assembly.offset_row + d1*gSize + id_i) += Fe(i + d1*FESpace::CurFE_T::size);
+
           for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
             DOFid_T const id_j = assembly.feSpace.dof.elemMap[e.id][j];
-            auto val = Ke(i+d*FESpace::CurFE_T::size,j+d*FESpace::CurFE_T::size);
-            if(std::fabs(val) > 1.e-16)
+            for (uint d2=0; d2<FESpace::dim; ++d2)
             {
-              _triplets.emplace_back(
-                    assembly.offset_row + d*gSize + id_i,
-                    assembly.offset_clm + d*gSize + id_j,
-                    val);
+              auto val = Ke(i+d1*FESpace::CurFE_T::size,j+d2*FESpace::CurFE_T::size);
+              if(std::fabs(val) > 1.e-16)
+              {
+                _triplets.emplace_back(
+                      assembly.offset_row + d1*gSize + id_i,
+                      assembly.offset_clm + d2*gSize + id_j,
+                      val);
+              }
               entryNum++;
             }
           }

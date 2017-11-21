@@ -10,7 +10,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <iostream>
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
@@ -62,12 +61,12 @@ int main(int argc, char* argv[])
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
-  double const dt = 5.e-3;
+  double const dt = 5.e-1;
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
   Vec vel_old(2*dofU);
   AssemblyVecRhs<FESpaceVel_T> timeder_rhs(vel_old, feSpaceVel);
 
-  uint const ntime = 5000;
+  uint const ntime = 10;
 
   Var vel{"vel"};
   vel.data = Vec::Zero(2*dofU + dofP);
@@ -75,8 +74,11 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(ic, feSpaceVel, vel.data);
 
   Eigen::UmfPackLU<Mat> solver;
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_cavitytime_vel.xmf", 0.0};
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_cavitytime_p.xmf", 0.0};
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output/sol_cavitytime_v_0.xmf", 0.0};
+  ioVel.print({vel});
+  IOManager<FESpaceP_T> ioP{feSpaceP, "output/sol_cavitytime_p_0.xmf", 0.0};
+  Var p{"p", vel.data, 2*dofU, dofP};
+  ioP.print({p});
 
   for (uint itime=0; itime<ntime; itime++)
   {
@@ -100,7 +102,7 @@ int main(int argc, char* argv[])
     ioVel.fileName = "output/sol_cavitytime_v_" + std::to_string(itime) + ".xmf";
     ioVel.time = (itime+1) * dt;
     ioVel.print({vel});
-    Var p{"p", vel.data, 2*dofU, dofP};
+    p.data = vel.data.block(2*dofU,0,dofP,1);
     ioP.fileName = "output/sol_cavitytime_p_" + std::to_string(itime) + ".xmf";
     ioP.time = (itime+1) * dt;
     ioP.print({p});

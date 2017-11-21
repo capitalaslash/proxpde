@@ -9,8 +9,8 @@ set(BLAS_LIBRARIES blas CACHE FILEPATH "BLAS libraries")
 # eigen
 option(EIGEN_USE_INTERNAL "Use internal self-compiled Eigen library" OFF)
 if(NOT EIGEN_USE_INTERNAL)
-  find_package(Eigen)
-  if(EIGEN_FOUND)
+  find_package (Eigen3 3.3 NO_MODULE)
+  if(TARGET Eigen3::Eigen)
     message(STATUS "contrib: Eigen found in system path")
   else()
     set(EIGEN_USE_INTERNAL ON)
@@ -21,8 +21,8 @@ if(EIGEN_USE_INTERNAL)
   externalproject_add(
   ep_eigen
   PREFIX ${CONTRIB_SOURCE_DIR}/eigen
-  URL https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
-  URL_HASH SHA1=64f4aef8012a424c7e079eaf0be71793ab9bc6e0
+  URL https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
+  URL_HASH SHA1=e52d7d7a8c81f5ee0699e63ae3b78fe8214380a5
   STAMP_DIR ${CONTRIB_BINARY_DIR}/stamp
   DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src
   SOURCE_DIR ${CONTRIB_SOURCE_DIR}/src/eigen
@@ -35,8 +35,13 @@ if(EIGEN_USE_INTERNAL)
     -DCMAKE_INSTALL_PREFIX:PATH=${CONTRIB_BINARY_DIR}/install/eigen
     ${CONTRIB_SOURCE_DIR}/src/eigen
   )
-  set(EIGEN_INCLUDE_DIRS ${CONTRIB_BINARY_DIR}/install/eigen/include/eigen3
-    CACHE PATH "Eigen include" FORCE)
+  set(Eigen3_DIR ${CONTRIB_BINARY_DIR}/install/eigen
+    CACHE PATH "Eigen directory" FORCE)
+  add_library(Eigen3::Eigen INTERFACE IMPORTED)
+  file(MAKE_DIRECTORY "${Eigen3_DIR}/include/eigen3")
+  set_target_properties(Eigen3::Eigen PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${Eigen3_DIR}/include/eigen3"
+  )
 endif()
 
 # umfpack (used through eigen)

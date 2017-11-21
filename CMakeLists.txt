@@ -49,18 +49,19 @@ include_directories(${COMMON_INCLUDES})
 
 add_subdirectory(src)
 
-#if(EIGEN_USE_INTERNAL)
-#  add_dependencies(minifem ep_eigen)
-#endif()
-#if(UMFPACK_USE_INTERNAL)
-#  add_dependencies(minifem ep_umfpack)
-#endif()
-#if(TINYXML2_USE_INTERNAL)
-#  add_dependencies(minifem ep_tinyxml2)
-#endif()
+if(EIGEN_USE_INTERNAL)
+  add_dependencies(minifem ep_eigen)
+endif()
+if(UMFPACK_USE_INTERNAL)
+  add_dependencies(minifem ep_umfpack)
+endif()
+if(TINYXML2_USE_INTERNAL)
+  add_dependencies(minifem ep_tinyxml2)
+endif()
 
 set(LIBS
   minifem
+  Eigen3::Eigen
   ${UMFPACK_LIBRARIES}
   ${TINYXML2_LIBRARIES}
 )

@@ -1,111 +1,30 @@
-add_executable(blockmatrix blockmatrix.cpp)
-target_link_libraries(blockmatrix ${LIBS})
-add_test(
-  NAME blockmatrix
-  COMMAND blockmatrix
-)
+macro(minifem_add_test test_name)
+  add_executable(${test_name} ${test_name}.cpp)
+  target_link_libraries(${test_name} ${LIBS})
+  add_test(
+    NAME ${test_name}
+    COMMAND ${test_name}
+  )
+endmacro()
 
-add_executable(poisson1d poisson1d.cpp)
-target_link_libraries(poisson1d ${LIBS})
-add_test(
-  NAME poisson1d
-  COMMAND poisson1d
-)
+minifem_add_test(blockmatrix)
 
-add_executable(poisson1d_p2 poisson1d_p2.cpp)
-target_link_libraries(poisson1d_p2 ${LIBS})
-add_test(
-  NAME poisson1d_p2
-  COMMAND poisson1d_p2
-)
+minifem_add_test(poisson1d)
+minifem_add_test(poisson1d_p2)
+minifem_add_test(advection1d)
 
-add_executable(advection1d advection1d.cpp)
-target_link_libraries(advection1d ${LIBS})
-add_test(
-  NAME advection1d
-  COMMAND advection1d
-)
+minifem_add_test(poisson2dtri)
+minifem_add_test(poisson2dtri_p2)
+minifem_add_test(advection2dtri)
 
-add_executable(poisson2dtri poisson2dtri.cpp)
-target_link_libraries(poisson2dtri ${LIBS})
-add_test(
-  NAME poisson2dtri
-  COMMAND poisson2dtri
-)
+minifem_add_test(poisson2dquad)
+minifem_add_test(poisson2dquad_q2)
+minifem_add_test(dr2dquad)
+minifem_add_test(advection2dquad)
 
-add_executable(poisson2dtri_p2 poisson2dtri_p2.cpp)
-target_link_libraries(poisson2dtri_p2 ${LIBS})
-add_test(
-  NAME poisson2dtri_p2
-  COMMAND poisson2dtri_p2
-)
+minifem_add_test(vectorfe1d)
+minifem_add_test(assemblyvector)
 
-add_executable(advection2dtri advection2dtri.cpp)
-target_link_libraries(advection2dtri ${LIBS})
-add_test(
-  NAME advection2dtri
-  COMMAND advection2dtri
-)
-
-add_executable(poisson2dquad poisson2dquad.cpp)
-target_link_libraries(poisson2dquad ${LIBS})
-add_test(
-  NAME poisson2dquad
-  COMMAND poisson2dquad
-)
-
-add_executable(poisson2dquad_q2 poisson2dquad_q2.cpp)
-target_link_libraries(poisson2dquad_q2 ${LIBS})
-add_test(
-  NAME poisson2dquad_q2
-  COMMAND poisson2dquad_q2
-)
-
-add_executable(dr2dquad dr2dquad.cpp)
-target_link_libraries(dr2dquad ${LIBS})
-add_test(
-  NAME dr2dquad
-  COMMAND dr2dquad
-)
-
-add_executable(advection2dquad advection2dquad.cpp)
-target_link_libraries(advection2dquad ${LIBS})
-add_test(
-  NAME advection2dquad
-  COMMAND advection2dquad
-)
-
-add_executable(assemblyvector assemblyvector.cpp)
-target_link_libraries(assemblyvector ${LIBS})
-add_test(
-  NAME assemblyvector
-  COMMAND assemblyvector
-)
-
-add_executable(stokes2dquad stokes2dquad.cpp)
-target_link_libraries(stokes2dquad ${LIBS})
-add_test(
-  NAME stokes2dquad
-  COMMAND stokes2dquad
-)
-
-add_executable(stokes2dcircle stokes2dcircle.cpp)
-target_link_libraries(stokes2dcircle ${LIBS})
-add_test(
-  NAME stokes2dcircle
-  COMMAND stokes2dcircle
-)
-
-add_executable(cavity cavity.cpp)
-target_link_libraries(cavity ${LIBS})
-add_test(
-  NAME cavity
-  COMMAND cavity
-)
-
-add_executable(vectorfe1d vectorfe1d.cpp)
-target_link_libraries(vectorfe1d ${LIBS})
-add_test(
-  NAME vectorfe1d
-  COMMAND vectorfe1d
-)
+minifem_add_test(stokes2dquad)
+minifem_add_test(stokes2dcircle)
+minifem_add_test(cavity)

@@ -29,14 +29,15 @@ struct Builder
     using LVec_T = typename Diagonal<FESpace>::LVec_T;
     auto const gSize = assembly.feSpace.dof.totalNum;
 
-    // FIXME: compute a proper sparsity pattern
-    uint const approxEntryNum = (pow(2,CurFE_T::RefFE_T::dim)*CurFE_T::numDOFs-1) * gSize * FESpace::dim;
-    _triplets.reserve(approxEntryNum);
-
     auto & curFE = assembly.feSpace.curFE;
     auto const & mesh = *assembly.feSpace.meshPtr;
 
-    uint entryNum = 0;
+    // FIXME: compute a proper sparsity pattern
+    // approxEntryNum = n. localMat entries * n. elements
+    uint const approxEntryNum =
+        pow(CurFE_T::numDOFs*FESpace::dim,2) * mesh.elementList.size();
+    _triplets.reserve(approxEntryNum);
+
     for(auto &e: mesh.elementList)
     {
       LMat_T Ke = LMat_T::Zero();
@@ -157,13 +158,11 @@ struct Builder
                       assembly.offset_clm + d2*gSize + id_j,
                       val);
               }
-              entryNum++;
             }
           }
         }
       }
     }
-    std::cout << "entries: " << entryNum << " - expected " << approxEntryNum << std::endl;
   }
 
   template <typename FESpace1, typename FESpace2>
@@ -181,8 +180,13 @@ struct Builder
     auto const gSize1 = assembly.feSpace1.dof.totalNum;
     auto const gSize2 = assembly.feSpace2.dof.totalNum;
 
-    // FIXME - compute a proper sparsity pattern
-    _triplets.reserve((2*CurFE1_T::RefFE_T::dim+1) * assembly.feSpace1.dof.totalNum);
+    // FIXME: compute a proper sparsity pattern
+    // approxEntryNum = n. localMat entries * n. elements
+    uint const approxEntryNum =
+        CurFE1_T::numDOFs*FESpace1::dim *
+        CurFE2_T::numDOFs*FESpace2::dim *
+        assembly.feSpace1.meshPtr->elementList.size();
+    _triplets.reserve(approxEntryNum);
 
     auto & curFE1 = assembly.feSpace1.curFE;
     auto & curFE2 = assembly.feSpace2.curFE;

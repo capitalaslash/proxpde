@@ -7,6 +7,12 @@
 #include "assembly.hpp"
 #include "bc.hpp"
 
+template<class T>
+inline constexpr T pow(const T base, unsigned const exponent)
+{
+    return exponent == 0 ? 1 : base * pow(base, exponent-1);
+}
+
 struct Builder
 {
   Builder(Mat & mat, Vec & vec):
@@ -24,7 +30,7 @@ struct Builder
     auto const gSize = assembly.feSpace.dof.totalNum;
 
     // FIXME: compute a proper sparsity pattern
-    uint const approxEntryNum = (2*CurFE_T::RefFE_T::dim+1) * gSize;
+    uint const approxEntryNum = (pow(2,CurFE_T::RefFE_T::dim)*CurFE_T::numDOFs-1) * gSize * FESpace::dim;
     _triplets.reserve(approxEntryNum);
 
     auto & curFE = assembly.feSpace.curFE;

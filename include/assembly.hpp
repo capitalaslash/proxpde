@@ -139,17 +139,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   LMat_T build(/*LMat_T & Ke*/) const
   {
     LMat_T Ke;
-    using CurFE_T = typename FESpace_T::CurFE_T;
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
-    {
-      for (uint d=0; d<FESpace_T::dim; ++d)
-      {
-        Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
-            coeff * this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.dphi[q] *
-            this->feSpace.curFE.dphi[q].transpose();
-      }
-    }
+    this->build(Ke);
     return Ke;
   }
 
@@ -342,28 +332,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   LMat_T build(/*LMat_T & Ke*/) const
   {
     LMat_T Ke;
-    using CurFE_T = typename FESpace_T::CurFE_T;
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
-    {
-      Vec3 local_vel = Vec3::Zero();
-      for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
-      {
-        id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_vel += vel.row(dofId) * this->feSpace.curFE.phi[q](n);
-      }
-      Ke += this->feSpace.curFE.JxW[q] *
-          this->feSpace.curFE.phi[q] *
-          (this->feSpace.curFE.dphi[q] * local_vel).transpose();
-      // for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      // {
-      //   for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-      //   {
-      //     Ke(i,j) += this->feSpace.curFE.JxW[q] *
-      //         (local_vel.dot(this->feSpace.curFE.dphi[q].row(i).transpose())) *
-      //         this->feSpace.curFE.phi[q](j);
-      //   }
-      // }
-    }
+    this->build(Ke);
     return Ke;
   }
 

@@ -10,6 +10,7 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
+#include <experimental/filesystem>
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
@@ -73,6 +74,7 @@ int main(int argc, char* argv[])
   auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
   interpolateAnalyticFunction(ic, feSpaceVel, vel.data);
 
+  std::experimental::filesystem::create_directory("output");
   Eigen::UmfPackLU<Mat> solver;
   IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output/sol_cavitytime_v_0.xmf", 0.0};
   ioVel.print({vel});

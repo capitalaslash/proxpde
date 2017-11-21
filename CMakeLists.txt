@@ -64,6 +64,7 @@ set(LIBS
   Eigen3::Eigen
   ${UMFPACK_LIBRARIES}
   ${TINYXML2_LIBRARIES}
+  stdc++fs
 )
 message(STATUS "Final set of libraries to link: ${LIBS}")
 

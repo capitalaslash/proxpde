@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  double dt = 0.1;
+  double const dt = 0.1;
 
   Field3 vel = Field3::Zero(feSpace.dof.totalNum, 3);
   vel.col(0) = Vec::Constant(feSpace.dof.totalNum, 0.1);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
   Vec c_old(feSpace.dof.totalNum);
   AssemblyVecRhs<FESpace_T> timeder_rhs(c_old, feSpace);
 
-  uint ntime = 200;
+  uint const ntime = 200;
   Var c{"conc"};
   c.data = Vec::Zero(feSpace.dof.totalNum);
   interpolateAnalyticFunction(ic, feSpace, c.data);

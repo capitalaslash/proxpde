@@ -16,6 +16,14 @@ struct AssemblyBase
 };
 
 template <typename FESpace>
+std::vector<uint> allComp()
+{
+  std::vector<uint> comp(FESpace::dim);
+  std::iota(comp.begin(), comp.end(), 0);
+  return comp;
+}
+
+template <typename FESpace>
 struct Diagonal: public AssemblyBase
 {
   using FESpace_T = FESpace;
@@ -158,7 +166,7 @@ struct AssemblyMass: public Diagonal<FESpace>
 
   explicit AssemblyMass(double const & c,
                         FESpace_T & fe,
-                        AssemblyBase::CompList const & comp = {0},
+                        AssemblyBase::CompList const & comp = allComp<FESpace>(),
                         uint offset_row = 0,
                         uint offset_clm = 0):
      Diagonal<FESpace>(fe, offset_row, offset_clm, comp),
@@ -171,22 +179,20 @@ struct AssemblyMass: public Diagonal<FESpace>
 
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      Ke += coeff * this->feSpace.curFE.JxW[q] *
-        this->feSpace.curFE.phi[q] *
-        this->feSpace.curFE.phi[q].transpose();
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            this->feSpace.curFE.phi[q].transpose();
+      }
     }
   }
 
   LMat_T build(/*LMat_T & Ke*/) const
   {
     LMat_T Ke;
-    using CurFE_T = typename FESpace_T::CurFE_T;
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
-    {
-      Ke += coeff * this->feSpace.curFE.JxW[q] *
-          this->feSpace.curFE.phi[q] *
-          this->feSpace.curFE.phi[q].transpose();
-    }
+    this->build(Ke);
     return Ke;
   }
 
@@ -270,15 +276,19 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      double local_rhs = 0.0;
-      for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+      for (uint d=0; d<FESpace_T::dim; ++d)
       {
-        id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_rhs += rhs(dofId) * this->feSpace.curFE.phi[q](n);
+        double local_rhs = 0.0;
+        for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+        {
+          id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n] + d*this->feSpace.dof.totalNum;
+          local_rhs += rhs(dofId) * this->feSpace.curFE.phi[q](n);
+        }
+        Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0) +=
+            this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            local_rhs;
       }
-      Fe += this->feSpace.curFE.JxW[q] *
-          this->feSpace.curFE.phi[q] *
-          local_rhs;
     }
   }
 
@@ -359,14 +369,6 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   Field3 vel;
 };
-
-template <typename FESpace>
-std::vector<uint> allComp()
-{
-  std::vector<uint> comp(FESpace::dim);
-  std::iota(comp.begin(), comp.end(), 0);
-  return comp;
-}
 
 template <typename FESpace1, typename FESpace2>
 struct AssemblyGrad: public Coupling<FESpace1, FESpace2>

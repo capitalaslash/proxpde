@@ -35,10 +35,11 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{meshPtr};
   FESpaceP_T feSpaceP{meshPtr};
 
+  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
-  bcsVel.addEssentialBC(side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
-  bcsVel.addEssentialBC(side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
+  bcsVel.addEssentialBC(side::RIGHT, zero, {0,1});
+  bcsVel.addEssentialBC(side::LEFT, zero, {0,1});
+  bcsVel.addEssentialBC(side::BOTTOM, zero, {0,1});
   bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}, {0, 1});
   BCList<FESpaceP_T> bcsP{feSpaceP};
   // DofSet_T pinSet = {1};

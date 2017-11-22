@@ -29,3 +29,5 @@ minifem_add_test(stokes2dquad)
 minifem_add_test(stokes2dcircle)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime)
+
+minifem_add_test(gmres)

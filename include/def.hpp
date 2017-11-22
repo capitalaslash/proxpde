@@ -13,6 +13,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
+#include <unsupported/Eigen/IterativeSolvers>
+
 #ifdef NDEBUG
 static std::ofstream debug{"/dev/null"};
 #else
@@ -36,6 +38,9 @@ using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
 // using Mat = Eigen::SparseMatrix<double,Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
 using Field3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
+
+using LUSolver = Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>>;
+using GMRESSolver = Eigen::GMRES<Mat, Eigen::IncompleteLUT<double>>;
 
 template <int Size>
 using FVec = Eigen::Matrix<double,Size,1>;

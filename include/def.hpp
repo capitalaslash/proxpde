@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <array>
 #include <vector>
 #include <memory>
@@ -12,6 +13,13 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
+#ifdef NDEBUG
+static std::ofstream debug{"/dev/null"};
+#else
+static std::ostream & debug = std::cout;
+#endif
+
+static std::ofstream filelog{"minifem.log"};
 
 using id_T = uint;
 using marker_T = uint;

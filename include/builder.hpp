@@ -82,7 +82,7 @@ struct Builder
           facetCounter++;
         }
       }
-      // std::cout << "Fe:\n" << Fe << std::endl;
+      // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- apply Dirichlet bcs ---
       // A_constrained = C^T A C
@@ -133,9 +133,9 @@ struct Builder
         }
       }
 
-      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      // std::cout << "Ke:\n" << Ke << std::endl;
-      // std::cout << "Fe:\n" << Fe << std::endl;
+      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
+      // filelog << "Ke:\n" << Ke << std::endl;
+      // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
@@ -203,8 +203,8 @@ struct Builder
       // --- build local matrix and rhs ---
       assembly.build(Ke);
 
-      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      // std::cout << "Ke:\n" << Ke << std::endl;
+      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
+      // filelog << "Ke:\n" << Ke << std::endl;
 
       // --- apply bc ---
       // A_constrained = C^T A C
@@ -248,9 +248,7 @@ struct Builder
         }
       }
       Fe = - Crow * Ke * h;
-      // std::cout << "Ke pre bc:\n" << Ke << std::endl;
       Ke = Crow * Ke * Cclm;
-      // std::cout << "Ke post bc:\n" << Ke << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
@@ -325,8 +323,8 @@ struct Builder
       }
       Fe = C * Fe;
 
-      // std::cout << "\nelement" << e.id << "\n---------------" << std::endl;
-      // std::cout << "Fe:\n" << Fe << std::endl;
+      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
+      // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)

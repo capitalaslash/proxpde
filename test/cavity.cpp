@@ -48,56 +48,23 @@ int main(int argc, char* argv[])
   auto const dofU = feSpaceVel.dof.totalNum;
   auto const dofP = feSpaceP.dof.totalNum;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
-  Mat mat(numDOFs, numDOFs);
-  Vec b = Vec::Zero(numDOFs);
 
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
-//  double const dt = 5.e-3;
-//  AssemblyMass<FESpaceU_T> timederU(1./dt, feSpaceU);
-//  AssemblyMass<FESpaceU_T> timederV(1./dt, feSpaceU);
-//  Vec u_old(dofU);
-//  AssemblyVecRhs<FESpaceU_T> timeder_rhsU(u_old, feSpaceU);
-//  Vec v_old(dofU);
-//  AssemblyVecRhs<FESpaceU_T> timeder_rhsV(v_old, feSpaceU);
-
-  Builder builder(mat, b);
+  Builder builder{numDOFs};
   Var sol{"sol"};
-//  solS.data = Vec::Zero(2*dofU + dofP);
-//  auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
-//  interpolateAnalyticFunction([&ic](Vec3 const & p){return ic(p)[0];}, feSpaceU, solS.data);
-//  interpolateAnalyticFunction([&ic](Vec3 const & p){return ic(p)[1];}, feSpaceU, solS.data, dofU);
-
-//  builder.buildProblem(div, bcsP, bcsVel);
-//  std::cout << "vector triplets:" << std::endl;
-//  for (auto const & t: builder._triplets)
-//  {
-//    std::cout << t.row() << " " << t.col() << " " << t.value() << std::endl;
-//  }
-
-//  builderS.buildProblem(divU, bcsP, bcsU);
-//  builderS.buildProblem(divV, bcsP, bcsV);
-//  std::cout << "scalar triplets:" << std::endl;
-//  for (auto const & t: builderS._triplets)
-//  {
-//    std::cout << t.row() << " " << t.col() << " " << t.value() << std::endl;
-//  }
-
-//  compareTriplets(builder._triplets, builderS._triplets);
-//  exit(0);
-
   builder.buildProblem(stiffness, bcsVel);
   builder.buildProblem(grad, bcsVel, bcsP);
   builder.buildProblem(div, bcsP, bcsVel);
   builder.closeMatrix();
 
-  Eigen::UmfPackLU<Mat> solver(mat);
-  sol.data = solver.solve(b);
+  LUSolver solver(builder.A);
+  sol.data = solver.solve(builder.b);
 
-  // std::cout << "mat:\n" << mat << std::endl;
-  // std::cout << "b:\n" << b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
   Var u{"u", sol.data, 0, dofU};

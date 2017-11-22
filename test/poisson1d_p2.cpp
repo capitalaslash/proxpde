@@ -49,14 +49,11 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
-  Vec b = Vec::Zero(feSpace.dof.totalNum);
-
   AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
   AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
   t.start();
-  Builder builder(A, b);
+  Builder builder{feSpace.dof.totalNum};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
   builder.closeMatrix();
@@ -65,9 +62,9 @@ int main(int argc, char* argv[])
   t.start();
   Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-  sol.data = solver.solve(b);
+  solver.analyzePattern(builder.A);
+  solver.factorize(builder.A);
+  sol.data = solver.solve(builder.b);
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};

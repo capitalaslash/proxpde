@@ -85,32 +85,28 @@ int main(int argc, char* argv[])
   bcs.addNaturalBC(side::RIGHT, bcValue, ALL_COMP);
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  auto const size = dim * feSpace.dof.totalNum;
-  Mat A(size, size);
-  Vec b = Vec::Zero(size);
-
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace, ALL_COMP);
-
-//  auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
-//  AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
-  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace, ALL_COMP);
 
   t.start();
-  Builder builder(A, b);
+  auto const size = dim * feSpace.dof.totalNum;
+  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace, ALL_COMP);
+  // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
+  // AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
+  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace, ALL_COMP);
+  Builder builder{size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
   builder.closeMatrix();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  std::cout << "fe assembly: " << t << " ms" << std::endl;
 
-  std::cout << "A:\n" << A << std::endl;
-  std::cout << "b:\n" << b << std::endl;
+  // filelog << "A:\n" << builder.A << std::endl;
+  // filelog << "b:\n" << builder.b << std::endl;
 
   t.start();
   Var sol{"sol"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-  sol.data = solver.solve(b);
+  solver.analyzePattern(builder.A);
+  solver.factorize(builder.A);
+  sol.data = solver.solve(builder.b);
   std::cout << "solve: " << t << " ms" << std::endl;
 
   std::cout << "sol:\n" << sol.data << std::endl;

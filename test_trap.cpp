@@ -52,22 +52,22 @@ int main()
   // empty bcs
   BCList<FESpace_T> bcs{};
 
-  Mat A(numPts,numPts);
-  Vec b = Vec::Zero(numPts);
+  Mat builder.A(numPts,numPts);
+  Vec builder.b = Vec::Zero(numPts);
 
   FESpace_T feSpace(meshPtr);
 
   AssemblyMass<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 
-  buildProblem(feSpace, assembly, rhs, bcs, A, b);
+  buildProblem(feSpace, assembly, rhs, bcs, builder.A, builder.b);
 
-  std::cout << "A:\n" << A << std::endl;
-  std::cout << "b:\n" << b << std::endl;
+  std::cout << "A:\n" << builder.A << std::endl;
+  std::cout << "b:\n" << builder.b << std::endl;
 
   // std::ofstream fout("output.m");
-  // for( int k=0; k<A.outerSize(); k++)
+  // for( int k=0; k<builder.A.outerSize(); k++)
   // {
-  //   for (Mat::InnerIterator it(A,k); it; ++it)
+  //   for (Mat::InnerIterator it(builder.A,k); it; ++it)
   //   {
   //     std::cout << it.row() << " " << it.col() << " " << it.value() << " " << it.index() << std::endl;
   //     fout << it.row()+1 << " " << it.col()+1 << " " << it.value() << std::endl;
@@ -79,12 +79,12 @@ int main()
 
   Vec sol;
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
-  // Compute the ordering permutation vector from the structural pattern of A
-  solver.analyzePattern(A);
+  // Compute the ordering permutation vector from the structural pattern of builder.A
+  solver.analyzePattern(builder.A);
   // Compute the numerical factorization
-  solver.factorize(A);
+  solver.factorize(builder.A);
 
-  sol = solver.solve(b);
+  sol = solver.solve(builder.b);
   std::cout<< "sol:\n" << sol << std::endl;
 
   IOManager<FeSpace_T> io(feSpace);

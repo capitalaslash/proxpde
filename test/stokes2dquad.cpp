@@ -53,14 +53,12 @@ int main(int argc, char* argv[])
   auto const dofU = feSpaceVel.dof.totalNum;
   auto const dofP = feSpaceP.dof.totalNum;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
-  Mat A(numDOFs, numDOFs);
-  Vec b = Vec::Zero(numDOFs);
 
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
-  Builder builder(A, b);
+  Builder builder{numDOFs};
   // builder.assemblies[0].push_back(&stiffness0);
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
@@ -71,11 +69,11 @@ int main(int argc, char* argv[])
   builder.closeMatrix();
 
   Var sol("vel", numDOFs);
-  Eigen::UmfPackLU<Mat> solver(A);
-  sol.data = solver.solve(b);
+  Eigen::UmfPackLU<Mat> solver(builder.A);
+  sol.data = solver.solve(builder.b);
 
-  // std::cout << "A:\n" << A << std::endl;
-  // std::cout << "b:\n" << b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "builder.b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
   Var exact{"exact", numDOFs};

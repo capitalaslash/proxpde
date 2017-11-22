@@ -43,19 +43,16 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
 
-  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
-  Vec b = Vec::Zero(feSpace.dof.totalNum);
-
-  Builder builder(A, b);
+  Builder builder{feSpace.dof.totalNum};
   builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
   builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-  sol.data = solver.solve(b);
+  solver.analyzePattern(builder.A);
+  solver.factorize(builder.A);
+  sol.data = solver.solve(builder.b);
 
   Var exact{"exact", feSpace.dof.totalNum};
   interpolateAnalyticFunction(exact_sol, feSpace, exact.data);

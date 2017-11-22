@@ -91,9 +91,6 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::TOP, zeroFun);
   bcs.addEssentialBC(side::LEFT, zeroFun);
 
-  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
-  Vec b = Vec::Zero(feSpace.dof.totalNum);
-
   AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
   AssemblyMass<FESpace_T> mass(1.0, feSpace);
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
@@ -101,7 +98,7 @@ int main(int argc, char* argv[])
   AssemblyAnalyticRhs<FESpace_T> f(modifiedRhs, feSpace);
   // AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
-  Builder builder(A, b);
+  Builder builder{feSpace.dof.totalNum};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(mass, bcs);
   builder.buildProblem(f, bcs);
@@ -109,9 +106,9 @@ int main(int argc, char* argv[])
 
   Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-  sol.data = solver.solve(b);
+  solver.analyzePattern(builder.A);
+  solver.factorize(builder.A);
+  sol.data = solver.solve(builder.b);
 
   Var exact{"exact", feSpace.dof.totalNum};
   // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};

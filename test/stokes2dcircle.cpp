@@ -55,8 +55,7 @@ int main(int argc, char* argv[])
   bcsV.addEssentialBC(side::LEFT, zeroFun);
   BCList<FESpaceP_T> bcsP(feSpaceP);
 
-  Mat A(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum, 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  Vec b = Vec::Zero(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
+  uint const numDOFs = 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum;
 
   AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
   AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
@@ -65,7 +64,7 @@ int main(int argc, char* argv[])
   AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
   AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
 
-  Builder builder(A, b);
+  Builder builder{numDOFs};
   // builder.assemblies[0].push_back(&stiffness0);
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
@@ -78,14 +77,14 @@ int main(int argc, char* argv[])
   builder.buildProblem(divV, bcsP, bcsV);
   builder.closeMatrix();
 
-  Vec sol(2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum);
-  // Eigen::GMRES<Mat> solver(A);
-  Eigen::UmfPackLU<Mat> solver(A);
-  // Eigen::SuperLU<Mat> solver(A);
-  sol = solver.solve(b);
+  Vec sol{numDOFs};
+  // Eigen::GMRES<Mat> solver(builder.A);
+  Eigen::UmfPackLU<Mat> solver(builder.A);
+  // Eigen::SuperLU<Mat> solver(builder.A);
+  sol = solver.solve(builder.b);
 
-  // std::cout << "A:\n" << A << std::endl;
-  // std::cout << "b:\n" << b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
   std::cout << sol.norm() << std::endl;

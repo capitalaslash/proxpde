@@ -65,33 +65,32 @@ int main(int argc, char* argv[])
   Vec c_old(feSpace.dof.totalNum);
   AssemblyVecRhs<FESpace_T> timeder_rhs(c_old, feSpace);
 
-  uint const ntime = 200;
   Var c{"conc"};
   c.data = Vec::Zero(feSpace.dof.totalNum);
   interpolateAnalyticFunction(ic, feSpace, c.data);
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   IOManager<FESpace_T> io{feSpace, "sol_advection1d.xmf", 0.0};
 
+  Builder builder{feSpace.dof.totalNum};
+  LUSolver solver;
+  uint const ntime = 200;
   for(uint itime=0; itime<ntime; itime++)
   {
     std::cout << "solving timestep " << itime << std::endl;
 
     c_old = c.data / dt;
 
-    Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
-    Vec b = Vec::Zero(feSpace.dof.totalNum);
-    Builder builder(A, b);
     builder.buildProblem(timeder, bcs);
     builder.buildProblem(timeder_rhs, bcs);
     builder.buildProblem(advection, bcs);
     builder.closeMatrix();
 
-    solver.analyzePattern(A);
-    solver.factorize(A);
-    c.data = solver.solve(b);
+    solver.analyzePattern(builder.A);
+    solver.factorize(builder.A);
+    c.data = solver.solve(builder.b);
+    builder.clear();
 
-    // std::cout << "A:\n" << A << std::endl;
-    // std::cout << "b:\n" << b << std::endl;
+    // std::cout << "A:\n" << builder.A << std::endl;
+    // std::cout << "b:\n" << builder.b << std::endl;
     // std::cout << "sol:\n" << c.data << std::endl;
 
     io.fileName = "output/sol_advection1d_" + std::to_string(itime) + ".xmf";

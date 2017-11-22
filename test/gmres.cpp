@@ -61,37 +61,34 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   filelog << "bcs: " << t << " ms" << std::endl;
 
-  Mat A(feSpace.dof.totalNum, feSpace.dof.totalNum);
-  Vec b = Vec::Zero(feSpace.dof.totalNum);
-
   AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
 
   auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
 
   t.start();
-  Builder builder(A, b);
+  Builder builder{feSpace.dof.totalNum};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
   builder.closeMatrix();
   filelog << "fe build: " << t << " ms" << std::endl;
 
-  // filelog << "A:\n" << A << std::endl;
-  // filelog << "b:\n" << b << std::endl;
+  // filelog << "A:\n" << builder.A << std::endl;
+  // filelog << "b:\n" << builder.b << std::endl;
 
   t.start();
   Var sol{"u"};
   LUSolver solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-  sol.data = solver.solve(b);
+  solver.analyzePattern(builder.A);
+  solver.factorize(builder.A);
+  sol.data = solver.solve(builder.b);
   filelog << "solve LU: " << t << " ms" << std::endl;
 
   t.start();
   Var solNew{"uNew"};
   GMRESSolver solverNew;
-  solverNew.compute(A);
-  solNew.data = solver.solve(b);
+  solverNew.compute(builder.A);
+  solNew.data = solver.solve(builder.b);
   filelog << "solve GMRES: " << t << " ms" << std::endl;
 
   Var exact{"exact", feSpace.dof.totalNum};

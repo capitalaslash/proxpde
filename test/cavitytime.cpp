@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.totalNum;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness<FESpaceVel_T> stiffness(1.e-3, feSpaceVel);
+  AssemblyStiffness<FESpaceVel_T> stiffness(1.e-1, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
   Vec vel_old(2*dofU);
   AssemblyVecRhs<FESpaceVel_T> timeder_rhs(vel_old, feSpaceVel);
 
-  uint const ntime = 10;
 
   Var vel{"vel"};
   vel.data = Vec::Zero(2*dofU + dofP);
@@ -75,22 +74,21 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(ic, feSpaceVel, vel.data);
 
   std::experimental::filesystem::create_directory("output");
-  Eigen::UmfPackLU<Mat> solver;
   IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output/sol_cavitytime_v_0.xmf", 0.0};
   ioVel.print({vel});
   IOManager<FESpaceP_T> ioP{feSpaceP, "output/sol_cavitytime_p_0.xmf", 0.0};
   Var p{"p", vel.data, 2*dofU, dofP};
   ioP.print({p});
 
+  Builder builder{numDOFs};
+  LUSolver solver;
+  uint const ntime = 10;
   for (uint itime=0; itime<ntime; itime++)
   {
     std::cout << "solving timestep " << itime << std::endl;
 
     vel_old = vel.data / dt;
 
-    Mat mat(numDOFs, numDOFs);
-    Vec b = Vec::Zero(numDOFs);
-    Builder builder(mat, b);
     builder.buildProblem(timeder, bcsVel);
     builder.buildProblem(timeder_rhs, bcsVel);
     builder.buildProblem(stiffness, bcsVel);
@@ -98,8 +96,9 @@ int main(int argc, char* argv[])
     builder.buildProblem(div, bcsP, bcsVel);
     builder.closeMatrix();
 
-    solver.compute(mat);
-    vel.data = solver.solve(b);
+    solver.compute(builder.A);
+    vel.data = solver.solve(builder.b);
+    builder.clear();
 
     ioVel.fileName = "output/sol_cavitytime_v_" + std::to_string(itime) + ".xmf";
     ioVel.time = (itime+1) * dt;

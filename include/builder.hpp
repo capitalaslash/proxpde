@@ -15,9 +15,9 @@ inline constexpr T pow(const T base, unsigned const exponent)
 
 struct Builder
 {
-  Builder(Mat & mat, Vec & vec):
-    A(mat),
-    b(vec)
+  Builder(uint const size):
+    A{size, size},
+    b{Vec::Zero(size)}
   {}
 
   template <typename FESpace>
@@ -344,8 +344,15 @@ struct Builder
     A.setFromTriplets(_triplets.begin(), _triplets.end());
   }
 
-  Mat & A;
-  Vec & b;
+  void clear()
+  {
+    // there is no need to clear A as setFromTriplets() discards any content of the matrix
+    b = Vec::Zero(b.size());
+    _triplets.clear();
+  }
+
+  Mat A;
+  Vec b;
   std::vector<Triplet> _triplets;
   array<std::vector<AssemblyBase*>,3> assemblies;
 };

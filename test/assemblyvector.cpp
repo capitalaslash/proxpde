@@ -136,9 +136,7 @@ int main(int argc, char* argv[])
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
-  Mat mat(numDOFs, numDOFs);
-  Vec b = Vec::Zero(numDOFs);
-  Builder builder(mat, b);
+  Builder builder{numDOFs};
   builder.buildProblem(stiffness, bcsVel);
   builder.buildProblem(grad, bcsVel, bcsP);
   builder.buildProblem(div, bcsP, bcsVel);
@@ -151,9 +149,7 @@ int main(int argc, char* argv[])
   AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*dofU, 0);
   AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*dofU, dofU);
 
-  Mat matS(numDOFs, numDOFs);
-  Vec bS = Vec::Zero(numDOFs);
-  Builder builderS(matS, bS);
+  Builder builderS{numDOFs};
   builderS.buildProblem(stiffnessU, bcsU);
   builderS.buildProblem(gradU, bcsU, bcsP);
   builderS.buildProblem(divU, bcsP, bcsU);

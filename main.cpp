@@ -61,22 +61,19 @@ int main()
   BCList<FESpace_T> bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
 
-  Mat A(feSpace.dof.totalNum,feSpace.dof.totalNum);
-  Vec b = Vec::Zero(feSpace.dof.totalNum);
-
   AssemblyStiffness<FESpace_T> assembly(1.0, feSpace);
 
-  Builder builder(A, b);
+  Builder builder{feSpace.dof.totalNum};
   builder.buildProblem(assembly, bcs);
   builder.closeMatrix();
 
-  // std::cout << "A:\n" << A << std::endl;
-  // std::cout << "b:\n" << b << std::endl;
+  // std::cout << "builder.A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   // std::ofstream fout("output.m");
-  // for( int k=0; k<A.outerSize(); k++)
+  // for( int k=0; k<builder.A.outerSize(); k++)
   // {
-  //   for (Mat::InnerIterator it(A,k); it; ++it)
+  //   for (Mat::InnerIterator it(builder.A,k); it; ++it)
   //   {
   //     std::cout << it.row() << " " << it.col() << " " << it.value() << " " << it.index() << std::endl;
   //     fout << it.row()+1 << " " << it.col()+1 << " " << it.value() << std::endl;
@@ -91,24 +88,24 @@ int main()
   {
     case CHOLESKY:
     {
-      Eigen::SimplicialCholesky<Mat> solver(A);
-      sol.data = solver.solve(b);
+      Eigen::SimplicialCholesky<Mat> solver(builder.A);
+      sol.data = solver.solve(builder.b);
       break;
     }
     case BICGSTAB:
     {
-      Eigen::SimplicialCholesky<Mat> solver(A);
-      sol.data = solver.solve(b);
+      Eigen::SimplicialCholesky<Mat> solver(builder.A);
+      sol.data = solver.solve(builder.b);
     }
     case SPARSELU:
     {
       Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
       // Compute the ordering permutation vector from the structural pattern of A
-      solver.analyzePattern(A);
+      solver.analyzePattern(builder.A);
       // Compute the numerical factorization
-      solver.factorize(A);
+      solver.factorize(builder.A);
 
-      sol.data = solver.solve(b);
+      sol.data = solver.solve(builder.b);
     }
   }
   // std::cout<< "sol:\n" << sol << std::endl;

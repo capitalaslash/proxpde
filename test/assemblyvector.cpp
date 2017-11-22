@@ -110,10 +110,10 @@ int main(int argc, char* argv[])
   auto zero = [] (Vec3 const &) {return 0.;};
   auto one = [] (Vec3 const &) {return 1.;};
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
-  bcsVel.addEssentialBC(side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
-  bcsVel.addEssentialBC(side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);}, {0,1});
-  bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}, {0, 1});
+  bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);});
+  bcsVel.addEssentialBC(side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);});
+  bcsVel.addEssentialBC(side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);});
+  bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);});
   BCList<FESpaceU_T> bcsU{feSpaceU};
   bcsU.addEssentialBC(side::RIGHT, zero);
   bcsU.addEssentialBC(side::LEFT, zero);

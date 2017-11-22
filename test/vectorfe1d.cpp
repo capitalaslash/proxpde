@@ -12,7 +12,6 @@
 
 static const int dim = 2;
 
-std::vector<uint> const ALL_COMP {{0, 1}};
 std::vector<uint> const COMP_X {0};
 std::vector<uint> const COMP_Y {1};
 std::vector<uint> const COMP_Z {2};
@@ -81,17 +80,17 @@ int main(int argc, char* argv[])
     }
     return v;
   };
-  bcs.addEssentialBC(side::LEFT, bcValue, ALL_COMP);
-  bcs.addNaturalBC(side::RIGHT, bcValue, ALL_COMP);
+  bcs.addEssentialBC(side::LEFT, bcValue);
+  bcs.addNaturalBC(side::RIGHT, bcValue);
   std::cout << "bcs: " << t << " ms" << std::endl;
 
 
   t.start();
   auto const size = dim * feSpace.dof.totalNum;
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace, ALL_COMP);
+  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   // AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
-  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace, ALL_COMP);
+  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
   Builder builder{size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);

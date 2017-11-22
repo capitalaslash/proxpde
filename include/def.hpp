@@ -28,6 +28,14 @@ using marker_T = uint;
 using DOFid_T = uint;
 DOFid_T const DOFidNotSet = -1;
 
+template <typename FESpace>
+std::vector<uint> allComp()
+{
+  std::vector<uint> comp(FESpace::dim);
+  std::iota(comp.begin(), comp.end(), 0);
+  return comp;
+}
+
 // template <typename T, std::size_t N>
 // using array = std::array<T,N>;
 #include "array.hpp"

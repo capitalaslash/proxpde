@@ -16,14 +16,6 @@ struct AssemblyBase
 };
 
 template <typename FESpace>
-std::vector<uint> allComp()
-{
-  std::vector<uint> comp(FESpace::dim);
-  std::iota(comp.begin(), comp.end(), 0);
-  return comp;
-}
-
-template <typename FESpace>
 struct Diagonal: public AssemblyBase
 {
   using FESpace_T = FESpace;

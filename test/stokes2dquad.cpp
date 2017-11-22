@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::BOTTOM, inlet, {0,1});
-  bcsVel.addEssentialBC(side::RIGHT, zero, {0,1});
+  bcsVel.addEssentialBC(side::BOTTOM, inlet);
+  bcsVel.addEssentialBC(side::RIGHT, zero);
   bcsVel.addEssentialBC(side::TOP, zero, {0});
   bcsVel.addEssentialBC(side::LEFT, zero, {0});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});

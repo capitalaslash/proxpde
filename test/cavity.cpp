@@ -37,10 +37,10 @@ int main(int argc, char* argv[])
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, zero, {0,1});
-  bcsVel.addEssentialBC(side::LEFT, zero, {0,1});
-  bcsVel.addEssentialBC(side::BOTTOM, zero, {0,1});
-  bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}, {0, 1});
+  bcsVel.addEssentialBC(side::RIGHT, zero);
+  bcsVel.addEssentialBC(side::LEFT, zero);
+  bcsVel.addEssentialBC(side::BOTTOM, zero);
+  bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);});
   BCList<FESpaceP_T> bcsP{feSpaceP};
   // DofSet_T pinSet = {1};
   // bcsP.addEssentialBC(pinSet, [] (Vec3 const &) {return 0.;});

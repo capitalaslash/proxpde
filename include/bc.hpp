@@ -168,7 +168,7 @@ public:
   void addEssentialBC(
       marker_T const m,
       Fun<FESpace::dim,3> const & f,
-      std::vector<uint> const & comp = {0})
+      std::vector<uint> const & comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
@@ -185,7 +185,7 @@ public:
   void addEssentialBC(
       marker_T const m,
       scalarFun_T const & f,
-      std::vector<uint> const & comp = {0})
+      std::vector<uint> const & comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
@@ -225,7 +225,7 @@ public:
   void addNaturalBC(
       marker_T const m,
       Fun<FESpace::dim,3> const & f,
-      std::vector<uint> const & comp = {0})
+      std::vector<uint> const & comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
@@ -242,7 +242,7 @@ public:
   void addNaturalBC(
       marker_T const m,
       scalarFun_T const & f,
-      std::vector<uint> const & comp = {0})
+      std::vector<uint> const & comp = allComp<FESpace>())
   {
     addNaturalBC(m, [f] (Vec3 const &p) {return Vec1(f(p));}, comp);
   }

@@ -131,7 +131,7 @@ struct SideQR<GaussQR<Line,3>>
 template <>
 struct SideQR<GaussQR<Triangle,4>>
 {
-  using Type = GaussQR<Line,4>;
+  using Type = GaussQR<Line,3>;
 };
 
 template <>

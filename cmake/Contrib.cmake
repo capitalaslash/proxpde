@@ -87,7 +87,7 @@ if(UMFPACK_USE_INTERNAL)
 endif()
 
 # tinyxml2
-option(TINYXML2_USE_INTERNAL "Use internal self-compiled TinyXML2 library" ON)
+option(TINYXML2_USE_INTERNAL "Use internal self-compiled TinyXML2 library" OFF)
 if(NOT TINYXML2_USE_INTERNAL)
   find_package(TinyXML2)
   if(TINYXML2_FOUND)

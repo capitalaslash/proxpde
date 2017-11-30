@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   builder.buildProblem(div, bcsP, bcsVel);
   builder.closeMatrix();
 
-  LUSolver solver(builder.A);
+  Eigen::UmfPackLU<Mat> solver(builder.A);
   sol.data = solver.solve(builder.b);
 
   // std::cout << "A:\n" << builder.A << std::endl;

@@ -26,6 +26,9 @@ minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)
 
 minifem_add_test(stokes2dquad)
+file(COPY ${PROJECT_SOURCE_DIR}/data/square_uns.msh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+minifem_add_test(stokes2dtri)
 minifem_add_test(stokes2dcircle)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime)

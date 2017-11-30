@@ -42,6 +42,9 @@ int main(int argc, char* argv[])
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
+//  auto inlet = [] (Vec3 const &p) {
+//    return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
+//  };
   BCList<FESpaceVel_T> bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::BOTTOM, inlet);
   bcsVel.addEssentialBC(side::RIGHT, zero);
@@ -54,7 +57,7 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.totalNum;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
+  AssemblyTensorStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
@@ -78,7 +81,7 @@ int main(int argc, char* argv[])
 
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
-  interpolateAnalyticFunction([](Vec3 const & p){return p(1)-1;}, feSpaceP, exact.data, 2*dofU);
+  interpolateAnalyticFunction([](Vec3 const & p){return p(1)-1.;}, feSpaceP, exact.data, 2*dofU);
 
   std::cout << sol.data.norm() << std::endl;
 

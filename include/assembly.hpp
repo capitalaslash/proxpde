@@ -139,6 +139,66 @@ struct AssemblyStiffness: public Diagonal<FESpace>
 };
 
 template <typename FESpace>
+struct AssemblyTensorStiffness: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  AssemblyTensorStiffness(double const c,
+                    FESpace_T & fe,
+                    AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                    uint offset_row = 0,
+                    uint offset_clm = 0):
+    Diagonal<FESpace_T>(fe, offset_row, offset_clm, comp),
+    coeff(c)
+  {}
+
+  void build(LMat_T & Ke) const
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      for (uint di=0; di<FESpace_T::dim; ++di)
+      {
+        // d u_i / d x_j * d \phi_i / d x_j
+        Ke.template block<CurFE_T::size,CurFE_T::size>(di*CurFE_T::size, di*CurFE_T::size) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.dphi[q] *
+            this->feSpace.curFE.dphi[q].transpose();
+        for (uint dj=0; dj<FESpace_T::dim; ++dj)
+        {
+          // d u_j / d x_i * d \phi_i / d x_j
+          Ke.template block<CurFE_T::size,CurFE_T::size>(di*CurFE_T::size, dj*CurFE_T::size) +=
+              coeff * this->feSpace.curFE.JxW[q] *
+              this->feSpace.curFE.dphi[q].col(di) *
+              this->feSpace.curFE.dphi[q].col(dj).transpose();
+//          for (uint i=0; i<CurFE_T::size; ++i)
+//            for (uint j=0; j<CurFE_T::size; ++j)
+//            {
+//              // d u_j / d x_i * d \phi_i / d x_j
+//              Ke(i+di*CurFE_T::size, j+dj*CurFE_T::size) +=
+//                  coeff * this->feSpace.curFE.JxW[q] *
+//                  this->feSpace.curFE.dphi[q].row(j)(di) *
+//                  this->feSpace.curFE.dphi[q].row(i)(dj);
+//            }
+        }
+      }
+    }
+  }
+
+  LMat_T build(/*LMat_T & Ke*/) const
+  {
+    LMat_T Ke;
+    this->build(Ke);
+    return Ke;
+  }
+
+  double coeff;
+};
+
+template <typename FESpace>
 struct AssemblyMass: public Diagonal<FESpace>
 {
   using FESpace_T = FESpace;

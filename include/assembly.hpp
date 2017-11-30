@@ -346,7 +346,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyAdvection(Field3 const u,
+  explicit AssemblyAdvection(Field3 const & u,
                              FESpace_T & fe,
                              AssemblyBase::CompList const & comp = allComp<FESpace>(),
                              uint offset_row = 0,
@@ -366,9 +366,13 @@ struct AssemblyAdvection: public Diagonal<FESpace>
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
         local_vel += vel.row(dofId) * this->feSpace.curFE.phi[q](n);
       }
-      Ke += this->feSpace.curFE.JxW[q] *
-          this->feSpace.curFE.phi[q] *
-          (this->feSpace.curFE.dphi[q] * local_vel).transpose();
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
+            this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            (this->feSpace.curFE.dphi[q] * local_vel).transpose();
+      }
       // for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       // {
       //   for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
@@ -388,7 +392,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     return Ke;
   }
 
-  Field3 vel;
+  Field3 const & vel;
 };
 
 template <typename FESpace1, typename FESpace2>

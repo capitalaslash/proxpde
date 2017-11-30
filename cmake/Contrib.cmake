@@ -1,7 +1,7 @@
 include(ExternalProject)
 
-set(CONTRIB_SOURCE_DIR ${CMAKE_SOURCE_DIR}/${MINIFEM_CONTRIB_DIR})
-set(CONTRIB_BINARY_DIR ${CMAKE_BINARY_DIR}/${MINIFEM_CONTRIB_DIR})
+set(CONTRIB_SOURCE_DIR ${PROJECT_SOURCE_DIR}/${MINIFEM_CONTRIB_DIR})
+set(CONTRIB_BINARY_DIR ${PROJECT_BINARY_DIR}/${MINIFEM_CONTRIB_DIR})
 
 # the blas library is assumed to be installed in the system
 set(BLAS_LIBRARIES blas CACHE FILEPATH "BLAS libraries")
@@ -123,3 +123,46 @@ if(TINYXML2_USE_INTERNAL)
   link_directories(${CONTRIB_BINARY_DIR}/install/tinyxml2/lib)
   set(TINYXML2_LIBRARIES tinyxml2 CACHE FILEPATH "TinyXML2 library" FORCE)
 endif()
+
+# HDF5
+option(HDF5_USE_INTERNAL "Use internal self-compiled HDF5 library" OFF)
+if(NOT HDF5_USE_INTERNAL)
+  find_package(HDF5 COMPONENTS C)
+  if(HDF5_FOUND)
+    message(STATUS "contrib: HDF5 found in system path")
+    message(STATUS "HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
+    message(STATUS "HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+    message(STATUS "HDF5_DEFINITIONS: ${HDF5_DEFINITIONS}")
+  else()
+    set(HDF5_USE_INTERNAL ON)
+  endif()
+endif()
+if(HDF5_USE_INTERNAL)
+  message(STATUS "contrib: HDF5 not found: building")
+  externalproject_add(
+    ep_hdf5
+    PREFIX ${CONTRIB_SOURCE_DIR}/hdf5
+    URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz
+    URL_HASH SHA1=73b77a23ca099ac47d8241f633bf67430007c430
+    STAMP_DIR ${CONTRIB_BINARY_DIR}/stamp
+    DOWNLOAD_DIR ${CONTRIB_SOURCE_DIR}/src
+    SOURCE_DIR ${CONTRIB_SOURCE_DIR}/src/hdf5
+    BINARY_DIR ${CONTRIB_BINARY_DIR}/build/hdf5
+    TMP_DIR ${CONTRIB_BINARY_DIR}/tmp/hdf5
+    INSTALL_DIR ${CONTRIB_BINARY_DIR}/install/hdf5
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
+      -G ${CMAKE_GENERATOR}
+      -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+      -DCMAKE_INSTALL_PREFIX:PATH=${CONTRIB_BINARY_DIR}/install/hdf5
+      -DCMAKE_BUILD_TYPE:STRING=Release
+      -DHDF5_ENABLE_PARALLEL=OFF
+      -DHDF5_BUILD_CPP_LIB=OFF
+      ${CONTRIB_SOURCE_DIR}/src/hdf5
+  )
+  set(HDF5_INCLUDE_DIRS ${CONTRIB_BINARY_DIR}/install/hdf5/include
+    CACHE PATH "HDF5 include" FORCE)
+  # link_directories(${CONTRIB_BINARY_DIR}/install/hdf5/lib)
+  set(HDF5_LIBRARIES ${CONTRIB_BINARY_DIR}/install/hdf5/lib/libhdf5.so;z;dl;m CACHE FILEPATH "HDF5 libraries" FORCE)
+endif()
+

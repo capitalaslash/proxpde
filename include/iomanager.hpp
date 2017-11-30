@@ -6,6 +6,91 @@
 
 #include <fstream>
 #include <tinyxml2.h>
+#include <hdf5.h>
+
+template <typename T, unsigned long I>
+using Table = Eigen::Matrix<T,Eigen::Dynamic,I,Eigen::RowMajor>;
+
+template<typename T>
+struct HDF5Var
+{
+  static hid_t constexpr type = 0;
+};
+
+template <>
+struct HDF5Var<uint>
+{
+  static hid_t type;
+};
+hid_t HDF5Var<uint>::type = H5T_STD_I32LE;
+
+template <>
+struct HDF5Var<double>
+{
+  static hid_t type;
+};
+hid_t HDF5Var<double>::type = H5T_IEEE_F64LE;
+
+struct HDF5
+{
+  HDF5(std::string const & fn):
+    filename(fn),
+    file_id(H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)),
+    status(0)
+  {}
+
+  void print(Var const & var)
+  {
+    hsize_t dimsf[2] = {1, static_cast<hsize_t>(var.data.size())};
+    hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
+    hid_t dataset;
+    // for(uint v = 0; v < varNames.size(); v++)
+    {
+      dataset = H5Dcreate(file_id, var.name.c_str(), H5T_NATIVE_DOUBLE,
+                          dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,H5P_DEFAULT, var.data.data());
+      H5Dclose(dataset);
+    }
+    H5Sclose(dspace);
+  }
+
+  void print(Vec const & vec, std::string const name)
+  {
+    hsize_t dimsf[2] = {1, static_cast<hsize_t>(vec.size())};
+    hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
+    hid_t dataset;
+    // for(uint v = 0; v < varNames.size(); v++)
+    {
+      dataset = H5Dcreate(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
+                          dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,H5P_DEFAULT, vec.data());
+      H5Dclose(dataset);
+    }
+    H5Sclose(dspace);
+  }
+
+  template <typename T, unsigned long I>
+  void print(Table<T, I> const & tab, std::string const name)
+  {
+    hsize_t dimsf[2] = {static_cast<hsize_t>(tab.rows()), static_cast<hsize_t>(tab.cols())};
+    hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
+    hid_t dataset;
+    dataset = H5Dcreate(file_id, name.c_str(), HDF5Var<T>::type,
+                        dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Dwrite(dataset, HDF5Var<T>::type, H5S_ALL, H5S_ALL,H5P_DEFAULT, tab.data());
+    H5Dclose(dataset);
+    H5Sclose(dspace);
+  }
+
+  ~HDF5()
+  {
+    status = H5Fclose(file_id);
+  }
+
+  std::string filename;
+  hid_t       file_id;
+  herr_t      status;
+};
 
 template <typename FESpace>
 struct IOManager
@@ -14,37 +99,62 @@ struct IOManager
   using MeshPtr_T = std::shared_ptr<typename FESpace::Mesh_T>;
   using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
 
-  void print(std::vector<Var> const& data) const;
+  IOManager(FESpace const & fes,
+            std::string const & fn,
+            double tin = 0.0,
+            uint it = 0):
+    feSpace(fes),
+    fileName(fn),
+    h5Time{fileName + ".time.h5"},
+    time(tin),
+    iter(it)
+  {
+    _printMeshData();
+  }
 
+  void print(std::vector<Var> const & data);
+
+protected:
+  void _printMeshData()
+  {
+    typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
+    HDF5 h5Mesh{fileName + ".mesh.h5"};
+    Table<id_T, FESpace::RefFE_T::numFuns> conn(mesh.elementList.size(), FESpace::RefFE_T::numFuns);
+    for (auto const & e: mesh.elementList)
+      for (uint p=0; p<FESpace::RefFE_T::numFuns; ++p)
+        conn(e.id, p) = feSpace.dof.elemMap[e.id][p];
+    h5Mesh.print<id_T, FESpace::RefFE_T::numFuns>(conn, "connectivity");
+
+    Table<double, 3> coords(feSpace.dof.totalNum, 3);
+    for (auto const & e: mesh.elementList)
+    {
+      auto localPts = FESpace::RefFE_T::dofPts(e);
+      for (uint p=0; p<localPts.size(); ++p)
+      {
+        coords.row(feSpace.dof.elemMap[e.id][p]) = localPts[p];
+      }
+    }
+    h5Mesh.print<double, 3>(coords, "coords");
+  }
+
+public:
   FESpace const & feSpace;
   std::string fileName;
+  HDF5 h5Time;
   double time;
+  uint iter;
 };
 
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> const& data) const
+void IOManager<FESpace>::print(std::vector<Var> const & data)
 {
   typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
   uint const numPts = feSpace.dof.totalNum;
   uint const numElems = mesh.elementList.size();
 
-  std::vector<Vec3> points {numPts};
-  for(auto const &e: mesh.elementList)
-  {
-    auto localPts = FESpace::RefFE_T::dofPts(e);
-    for (uint p=0; p<localPts.size(); ++p)
-    {
-      points[feSpace.dof.elemMap[e.id][p]] = localPts[p];
-    }
-  }
-
-  // system("mkdir -p output");
-
-  using namespace tinyxml2;
-
-  XMLDocument doc;
+  tinyxml2::XMLDocument doc;
   doc.InsertEndChild(doc.NewDeclaration());
   doc.InsertEndChild(doc.NewUnknown("DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []"));
 
@@ -73,16 +183,10 @@ void IOManager<FESpace>::print(std::vector<Var> const& data) const
     (std::to_string(numElems) + " " + std::to_string(FESpace::RefFE_T::numFuns)).c_str());
   topodata_el->SetAttribute("NumberType", "Int");
   topodata_el->SetAttribute("Precision", 8);
-  topodata_el->SetAttribute("Format", "XML");
+  topodata_el->SetAttribute("Format", "HDF");
   std::stringstream buf;
   buf << std::endl;
-  for (auto& e: mesh.elementList)
-  {
-    for (uint p=0; p<FESpace::RefFE_T::numFuns; ++p)
-      buf << feSpace.dof.elemMap[e.id][p] << " ";
-    buf << std::endl;
-  }
-  // buf << _data.name << ".mesh.h5:connectivity " << std::endl;
+  buf << fileName << ".mesh.h5:/connectivity " << std::endl;
   topodata_el->SetText(buf.str().c_str());
   topo->InsertEndChild(topodata_el);
 
@@ -92,26 +196,23 @@ void IOManager<FESpace>::print(std::vector<Var> const& data) const
 
   auto geodata_el = doc.NewElement("DataItem");
   geodata_el->SetAttribute("Dimensions",
-    (std::to_string(points.size()) + " 3").c_str());
+    (std::to_string(numPts) + " 3").c_str());
   geodata_el->SetAttribute("NumberType", "Float");
   geodata_el->SetAttribute("Precision", 8);
-  geodata_el->SetAttribute("Format", "XML");
+  geodata_el->SetAttribute("Format", "HDF");
   buf.str("");
   buf << std::endl;
-  for(auto &p: points)
-  {
-    buf << p[0] << " " << p[1] << " " << p[2] << std::endl;
-  }
-  // buf << _data.name << ".mesh.h5:coords " << std::endl;
+  buf << fileName << ".mesh.h5:/coords " << std::endl;
   geodata_el->SetText(buf.str().c_str());
   geometry->InsertEndChild(geodata_el);
 
+  // HDF5 h5Iter{fileName + "." + std::to_string(iter) + ".h5"};
   for(auto& v: data)
   {
     for (uint d=0; d<feSpace.dim; ++d)
     {
-      auto name = v.name;
-      if (feSpace.dim > 0)
+      std::string name = v.name;
+      if (feSpace.dim > 1)
       {
         name += "_" + std::to_string(d);
       }
@@ -125,21 +226,20 @@ void IOManager<FESpace>::print(std::vector<Var> const& data) const
 
       auto vardata_el = doc.NewElement("DataItem");
       vardata_el->SetAttribute("Dimensions",
-                               (std::to_string(numPts) + " 1").c_str());
+                               ("1 " + std::to_string(numPts)).c_str());
       vardata_el->SetAttribute("NumberType", "Float");
       vardata_el->SetAttribute("Precision", 8);
-      vardata_el->SetAttribute("Format", "XML");
+      vardata_el->SetAttribute("Format", "HDF");
       buf.str("");
       buf << std::endl;
-      for (uint p=0; p<numPts; ++p)
-      {
-        buf << v.data[p + d*numPts] << "\n";
-      }
-      // buf << _data.name << "." << step << ".h5:" << varName << std::endl;
+      // buf << fileName << "." << iter << ".h5:/" << v.name << std::endl;
+      buf << fileName << ".time.h5:/" << name << "." << iter << std::endl;
       vardata_el->SetText(buf.str().c_str());
       var->InsertEndChild(vardata_el);
+      // h5Iter.print(v);
+      h5Time.print(v.data, name + "." + std::to_string(iter));
     }
   }
 
-  doc.SaveFile(fileName.c_str());
+  doc.SaveFile((fileName + "." + std::to_string(iter) + ".xmf").c_str());
 }

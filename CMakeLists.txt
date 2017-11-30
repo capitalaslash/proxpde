@@ -21,6 +21,7 @@ include_directories(SYSTEM
   ${EIGEN_INCLUDE_DIRS}
   ${UMFPACK_INCLUDE_DIRS}
   ${TINYXML2_INCLUDE_DIRS}
+  ${HDF5_INCLUDE_DIRS}
 )
 
 set(MINIFEM_HEADERS
@@ -58,12 +59,16 @@ endif()
 if(TINYXML2_USE_INTERNAL)
   add_dependencies(minifem ep_tinyxml2)
 endif()
+if(HDF5_USE_INTERNAL)
+  add_dependencies(minifem ep_hdf5)
+endif()
 
 set(LIBS
   minifem
   Eigen3::Eigen
   ${UMFPACK_LIBRARIES}
   ${TINYXML2_LIBRARIES}
+  ${HDF5_LIBRARIES}
   stdc++fs
 )
 message(STATUS "Final set of libraries to link: ${LIBS}")

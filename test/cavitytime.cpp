@@ -12,6 +12,8 @@
 
 #include <experimental/filesystem>
 
+// #include <yaml-cpp/yaml.h>
+
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
 using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
@@ -22,9 +24,11 @@ using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 
 int main(int argc, char* argv[])
 {
+  // YAML::Node config = YAML::LoadFile("cavitytime.yaml");
+
   MilliTimer t;
-  uint const numPts_x = (argc < 3)? 3 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 3)? 3 : std::stoi(argv[2]);
+  uint const numPts_x = 3; // config["nx"].as<uint>()+1;
+  uint const numPts_y = 3; // config["ny"].as<uint>()+1;
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -58,54 +62,66 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.totalNum;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness<FESpaceVel_T> stiffness(1.e-1, feSpaceVel);
+  double const mu = 0.1; // config["mu"].as<double>();
+  AssemblyTensorStiffness<FESpaceVel_T> stiffness(mu, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
-  double const dt = 5.e-1;
+  double const dt = 0.01; // config["timestep"].as<double>();
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
-  Vec vel_old(2*dofU);
-  AssemblyVecRhs<FESpaceVel_T> timeder_rhs(vel_old, feSpaceVel);
+  Vec velOld{2*dofU};
+  Field3 advVel = Field3::Zero(dofU, 3);
+  AssemblyVecRhs<FESpaceVel_T> timeder_rhs(velOld, feSpaceVel);
+  AssemblyAdvection<FESpaceVel_T> advection(advVel, feSpaceVel);
 
-
-  Var vel{"vel"};
-  vel.data = Vec::Zero(2*dofU + dofP);
+  Var sol{"sol"};
+  sol.data = Vec::Zero(2*dofU + dofP);
   auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
-  interpolateAnalyticFunction(ic, feSpaceVel, vel.data);
+  interpolateAnalyticFunction(ic, feSpaceVel, sol.data);
 
   std::experimental::filesystem::create_directory("output");
   IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output/sol_cavitytime_v_0.xmf", 0.0};
-  ioVel.print({vel});
+  ioVel.print({sol});
   IOManager<FESpaceP_T> ioP{feSpaceP, "output/sol_cavitytime_p_0.xmf", 0.0};
-  Var p{"p", vel.data, 2*dofU, dofP};
+  Var p{"p", sol.data, 2*dofU, dofP};
   ioP.print({p});
 
   Builder builder{numDOFs};
-  LUSolver solver;
-  uint const ntime = 10;
+  Eigen::UmfPackLU<Mat> solver;
+  // GMRESSolver solver;
+  uint const ntime = 100; // config["numsteps"].as<uint>();
+  double time = 0.0;
   for (uint itime=0; itime<ntime; itime++)
   {
-    std::cout << "solving timestep " << itime << std::endl;
+    time += dt;
+    std::cout << "solving timestep " << itime
+              << ", time = " << time << std::endl;
 
-    vel_old = vel.data / dt;
+    velOld = sol.data / dt;
+    advVel.col(0) = sol.data.block(   0, 0, dofU, 1) / dt;
+    advVel.col(1) = sol.data.block(dofU, 0, dofU, 1) / dt;
 
     builder.buildProblem(timeder, bcsVel);
     builder.buildProblem(timeder_rhs, bcsVel);
+    builder.buildProblem(advection, bcsVel);
     builder.buildProblem(stiffness, bcsVel);
     builder.buildProblem(grad, bcsVel, bcsP);
     builder.buildProblem(div, bcsP, bcsVel);
     builder.closeMatrix();
 
     solver.compute(builder.A);
-    vel.data = solver.solve(builder.b);
+    sol.data = solver.solve(builder.b);
+    auto res = builder.A*sol.data-builder.b;
+    std::cout << "residual norm: " << res.norm() << std::endl;
+
     builder.clear();
 
     ioVel.fileName = "output/sol_cavitytime_v_" + std::to_string(itime) + ".xmf";
-    ioVel.time = (itime+1) * dt;
-    ioVel.print({vel});
-    p.data = vel.data.block(2*dofU,0,dofP,1);
+    ioVel.time = time;
+    ioVel.print({sol});
+    p.data = sol.data.block(2*dofU,0,dofP,1);
     ioP.fileName = "output/sol_cavitytime_p_" + std::to_string(itime) + ".xmf";
-    ioP.time = (itime+1) * dt;
+    ioP.time = time;
     ioP.print({p});
   }
 

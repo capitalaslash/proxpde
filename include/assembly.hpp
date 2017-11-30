@@ -106,7 +106,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
 
   AssemblyStiffness(double const c,
                     FESpace_T & fe,
-                    AssemblyBase::CompList const & comp = {0},
+                    AssemblyBase::CompList const & comp = allComp<FESpace>(),
                     uint offset_row = 0,
                     uint offset_clm = 0):
     Diagonal<FESpace_T>(fe, offset_row, offset_clm, comp),
@@ -116,7 +116,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   void build(LMat_T & Ke) const
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
@@ -191,7 +191,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 
   AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const & r,
                       FESpace & fe,
-                      AssemblyBase::CompList const & comp = {0},
+                      AssemblyBase::CompList const & comp = allComp<FESpace>(),
                       uint offset_row = 0):
     AssemblyVector<FESpace>(fe, offset_row, comp),
     rhs(r)
@@ -202,7 +202,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
             std::enable_if_t<FESpace1::dim == 1, bool> = true>
   AssemblyAnalyticRhs(scalarFun_T const & r,
                       FESpace & fe,
-                      AssemblyBase::CompList const & comp = {0},
+                      AssemblyBase::CompList const & comp = allComp<FESpace>(),
                       uint offset_row = 0):
     AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, comp, offset_row)
   {}
@@ -210,9 +210,9 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   // otherwise, we fail
   template <typename FESpace1 = FESpace,
             std::enable_if_t<FESpace1::dim != 1, bool> = true>
-  AssemblyAnalyticRhs(scalarFun_T const & r,
+  AssemblyAnalyticRhs(scalarFun_T const &,
                       FESpace & fe,
-                      AssemblyBase::CompList const & comp = {0},
+                      AssemblyBase::CompList const & comp = allComp<FESpace>(),
                       uint offset_row = 0):
     AssemblyVector<FESpace>(fe, offset_row, comp)
   {
@@ -247,7 +247,7 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
 
   explicit AssemblyVecRhs(Vec const & r,
                           FESpace_T & fe,
-                          AssemblyBase::CompList const & comp = {0},
+                          AssemblyBase::CompList const & comp = allComp<FESpace>(),
                           uint offset_row = 0):
     AssemblyVector<FESpace_T>(fe, offset_row, comp),
     rhs(r)
@@ -288,7 +288,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   explicit AssemblyAdvection(Field3 const u,
                              FESpace_T & fe,
-                             AssemblyBase::CompList const & comp = {0},
+                             AssemblyBase::CompList const & comp = allComp<FESpace>(),
                              uint offset_row = 0,
                              uint offset_clm = 0):
     Diagonal<FESpace>(fe, offset_row, offset_clm, comp),

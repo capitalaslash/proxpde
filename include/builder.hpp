@@ -82,6 +82,7 @@ struct Builder
           facetCounter++;
         }
       }
+      // filelog << "Ke:\n" << Ke << std::endl;
       // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- apply Dirichlet bcs ---

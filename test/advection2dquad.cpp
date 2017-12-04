@@ -59,9 +59,9 @@ int main(int argc, char* argv[])
 
   double const dt = 0.1;
 
-  Field3 vel = Field3::Zero(feSpace.dof.totalNum, 3);
-  vel.col(0) = Vec::Constant(feSpace.dof.totalNum, 0.1);
-  AssemblyAdvection<FESpace_T> advection(vel, feSpace);
+  Vec vel = Vec::Zero(2*feSpace.dof.totalNum);
+  vel.block(0, 0, feSpace.dof.totalNum, 1) = Vec::Constant(feSpace.dof.totalNum, 0.1);
+  AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.totalNum);
   AssemblyVecRhs<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);

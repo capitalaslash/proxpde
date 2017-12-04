@@ -349,12 +349,14 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyAdvection(Field3 const & u,
+  explicit AssemblyAdvection(double const c,
+                             Vec const & u,
                              FESpace_T & fe,
                              AssemblyBase::CompList const & comp = allComp<FESpace>(),
                              uint offset_row = 0,
                              uint offset_clm = 0):
     Diagonal<FESpace>(fe, offset_row, offset_clm, comp),
+    coeff(c),
     vel(u)
   {}
 
@@ -363,28 +365,20 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      Vec3 local_vel = Vec3::Zero();
+      FVec<3> localVel = Vec3::Zero();
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-        local_vel += vel.row(dofId) * this->feSpace.curFE.phi[q](n);
+        for (uint d=0; d<FESpace_T::RefFE_T::dim; ++d)
+          localVel[d] += vel[dofId + d*this->feSpace.dof.totalNum] * this->feSpace.curFE.phi[q](n);
       }
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
             this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
-            (this->feSpace.curFE.dphi[q] * local_vel).transpose();
+            (this->feSpace.curFE.dphi[q] * localVel).transpose();
       }
-      // for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      // {
-      //   for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
-      //   {
-      //     Ke(i,j) += this->feSpace.curFE.JxW[q] *
-      //         (local_vel.dot(this->feSpace.curFE.dphi[q].row(i).transpose())) *
-      //         this->feSpace.curFE.phi[q](j);
-      //   }
-      // }
     }
   }
 
@@ -395,7 +389,8 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     return Ke;
   }
 
-  Field3 const & vel;
+  double const coeff;
+  Vec const & vel;
 };
 
 template <typename FESpace1, typename FESpace2>

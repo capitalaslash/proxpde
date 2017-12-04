@@ -69,8 +69,7 @@ int main(int argc, char* argv[])
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
   Vec velOld{2*dofU};
   AssemblyVecRhs<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
-  Field3 advVel = Field3::Zero(dofU, 3);
-  AssemblyAdvection<FESpaceVel_T> advection(advVel, feSpaceVel);
+  AssemblyAdvection<FESpaceVel_T> advection(1.0, velOld, feSpaceVel);
 
   Var sol{"sol"};
   sol.data = Vec::Zero(2*dofU + dofP);
@@ -95,8 +94,6 @@ int main(int argc, char* argv[])
               << ", time = " << time << std::endl;
 
     velOld = sol.data;
-    advVel.col(0) = sol.data.block(   0, 0, dofU, 1) / dt;
-    advVel.col(1) = sol.data.block(dofU, 0, dofU, 1) / dt;
 
     builder.buildProblem(timeder, bcsVel);
     builder.buildProblem(timeder_rhs, bcsVel);

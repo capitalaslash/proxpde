@@ -22,6 +22,12 @@ struct XDMFTraits<RefTriangleP1>
 };
 
 template <>
+struct XDMFTraits<RefTriangleP2>
+{
+  static constexpr char const * shape_name = "Triangle_6";
+};
+
+template <>
 struct XDMFTraits<RefQuadQ1>
 {
   static constexpr char const * shape_name = "Quadrilateral";

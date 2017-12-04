@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{feSpace, "sol_dr2dquad.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol_dr2dquad"};
   io.print({sol, exact, error});
 
   double norm = error.data.norm();

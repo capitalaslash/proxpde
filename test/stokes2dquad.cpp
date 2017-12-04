@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
+  // auto inlet = [] (Vec3 const & p) {return Vec2(0., 1.);};
 //  auto inlet = [] (Vec3 const &p) {
 //    return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
 //  };
@@ -92,9 +93,9 @@ int main(int argc, char* argv[])
   Var ve{"ve", exact.data, dofU, dofU};
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dquad_vel.xmf"};
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dquad_vel"};
   ioVel.print({sol, exact});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dquad_p.xmf"};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dquad_p"};
   ioP.print({p, pe});
 
   auto uNorm = (u.data - ue.data).norm();

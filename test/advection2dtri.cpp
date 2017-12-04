@@ -69,13 +69,15 @@ int main(int argc, char* argv[])
   Var c{"conc"};
   c.data = Vec::Zero(feSpace.dof.totalNum);
   interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager<FESpace_T> io{feSpace, "sol_advection2dtri.xmf", 0.0};
+  IOManager<FESpace_T> io{feSpace, "output_advection2dtri/sol"};
 
   Builder builder{feSpace.dof.totalNum};
   LUSolver solver;
   uint const ntime = 200;
+  double time = 0.0;
   for(uint itime=0; itime<ntime; itime++)
   {
+    time += dt;
     std::cout << "solving timestep " << itime << std::endl;
 
     c_old = c.data / dt;
@@ -94,8 +96,8 @@ int main(int argc, char* argv[])
 
     // std::cout << "sol:\n" << c.data << std::endl;
 
-    io.fileName = "output/sol_advection2dtri_" + std::to_string(itime) + ".xmf";
-    io.time = (itime+1) * dt;
+    io.time = time;
+    io.iter += 1;
     io.print({c});
   }
 

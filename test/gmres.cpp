@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_gmres.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol_gmres"};
   io.print({sol, solNew, exact, error});
   filelog << "output: " << t << " ms" << std::endl;
 

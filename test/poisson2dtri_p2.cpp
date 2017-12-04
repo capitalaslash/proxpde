@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{feSpace, "sol_poisson2dtri_p2.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol_poisson2dtri_p2"};
   io.print({sol, exact, error});
 
   double norm = error.data.norm();

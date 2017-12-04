@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_poisson1d_p2.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol_poisson1d_p2"};
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

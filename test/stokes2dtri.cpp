@@ -90,9 +90,9 @@ int main(int argc, char* argv[])
   Var ve{"ve", exact.data, dofU, dofU};
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dtri_vel.xmf"};
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dtri_vel"};
   ioVel.print({sol, exact});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dtri_p.xmf"};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dtri_p"};
   ioP.print({p, pe});
 
   auto uNorm = (u.data - ue.data).norm();

@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 //  error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_vectorfe1d.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol_vectorfe1d"};
   io.print({sol}); // io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

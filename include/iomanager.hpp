@@ -4,9 +4,11 @@
 #include "xdmf_traits.hpp"
 #include "var.hpp"
 
-#include <fstream>
 #include <tinyxml2.h>
 #include <hdf5.h>
+#include <fstream>
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 template <typename T, unsigned long I>
 using Table = Eigen::Matrix<T,Eigen::Dynamic,I,Eigen::RowMajor>;
@@ -31,11 +33,13 @@ struct HDF5Var<double>
 };
 hid_t HDF5Var<double>::type = H5T_IEEE_F64LE;
 
-struct HDF5
+class HDF5
 {
-  HDF5(std::string const & fn):
-    filename(fn),
-    file_id(H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)),
+public:
+
+  HDF5(fs::path const & fn):
+    filepath(fn),
+    file_id(H5Fcreate(filepath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)),
     status(0)
   {}
 
@@ -87,9 +91,10 @@ struct HDF5
     status = H5Fclose(file_id);
   }
 
-  std::string filename;
-  hid_t       file_id;
-  herr_t      status;
+protected:
+  fs::path filepath;
+  hid_t file_id;
+  herr_t status;
 };
 
 template <typename FESpace>
@@ -100,15 +105,16 @@ struct IOManager
   using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
 
   IOManager(FESpace const & fes,
-            std::string const & fn,
+            fs::path const & fn,
             double tin = 0.0,
             uint it = 0):
     feSpace(fes),
-    fileName(fn),
-    h5Time{fileName + ".time.h5"},
+    filepath(fn),
+    // h5Time{fs::path{filepath} += ".time.h5"},
     time(tin),
     iter(it)
   {
+    fs::create_directory(filepath.parent_path());
     _printMeshData();
   }
 
@@ -118,7 +124,7 @@ protected:
   void _printMeshData()
   {
     typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
-    HDF5 h5Mesh{fileName + ".mesh.h5"};
+    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
     Table<id_T, FESpace::RefFE_T::numFuns> conn(mesh.elementList.size(), FESpace::RefFE_T::numFuns);
     for (auto const & e: mesh.elementList)
       for (uint p=0; p<FESpace::RefFE_T::numFuns; ++p)
@@ -139,8 +145,8 @@ protected:
 
 public:
   FESpace const & feSpace;
-  std::string fileName;
-  HDF5 h5Time;
+  fs::path filepath;
+  // HDF5 h5Time;
   double time;
   uint iter;
 };
@@ -186,7 +192,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
   topodata_el->SetAttribute("Format", "HDF");
   std::stringstream buf;
   buf << std::endl;
-  buf << fileName << ".mesh.h5:/connectivity " << std::endl;
+  buf << filepath.filename().string() << ".mesh.h5:/connectivity " << std::endl;
   topodata_el->SetText(buf.str().c_str());
   topo->InsertEndChild(topodata_el);
 
@@ -202,11 +208,11 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
   geodata_el->SetAttribute("Format", "HDF");
   buf.str("");
   buf << std::endl;
-  buf << fileName << ".mesh.h5:/coords " << std::endl;
+  buf << filepath.filename().string() << ".mesh.h5:/coords " << std::endl;
   geodata_el->SetText(buf.str().c_str());
   geometry->InsertEndChild(geodata_el);
 
-  // HDF5 h5Iter{fileName + "." + std::to_string(iter) + ".h5"};
+  HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5"};
   for(auto& v: data)
   {
     for (uint d=0; d<feSpace.dim; ++d)
@@ -232,14 +238,17 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
       vardata_el->SetAttribute("Format", "HDF");
       buf.str("");
       buf << std::endl;
-      // buf << fileName << "." << iter << ".h5:/" << v.name << std::endl;
-      buf << fileName << ".time.h5:/" << name << "." << iter << std::endl;
+      buf << filepath.filename().string() << "." << iter << ".h5:/" << name << std::endl;
+      // buf << filepath.filename().string() << ".time.h5:/" << name << "." << iter << std::endl;
       vardata_el->SetText(buf.str().c_str());
       var->InsertEndChild(vardata_el);
-      // h5Iter.print(v);
-      h5Time.print(v.data, name + "." + std::to_string(iter));
+      Vec const compdata = v.data.block(d*feSpace.dof.totalNum, 0, feSpace.dof.totalNum, 1);
+      h5Iter.print(compdata, name);
+      // h5Time.print(compdata, name + "." + std::to_string(iter));
     }
   }
 
-  doc.SaveFile((fileName + "." + std::to_string(iter) + ".xmf").c_str());
+  auto xmlFilepath = filepath;
+  xmlFilepath += std::string(".") + std::to_string(iter) + ".xmf";
+  doc.SaveFile(xmlFilepath.c_str());
 }

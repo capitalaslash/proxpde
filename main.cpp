@@ -117,7 +117,7 @@ int main()
   error.data = sol.data - exact.data;
   std::cout << "error: " << error.data.norm() << std::endl;
 
-  IOManager<FESpace_T> io{feSpace, "sol.xmf"};
+  IOManager<FESpace_T> io{feSpace, "sol"};
   io.print({sol, exact, error});
 
   return 0;

@@ -79,10 +79,9 @@ int main(int argc, char* argv[])
   auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
   interpolateAnalyticFunction(ic, feSpaceVel, sol.data);
 
-  std::experimental::filesystem::create_directory("output");
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output/sol_cavitytime_v_0.xmf", 0.0};
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "output_cavitytime/sol_v"};
   ioVel.print({sol});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "output/sol_cavitytime_p_0.xmf", 0.0};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "output_cavitytime/sol_p"};
   Var p{"p", sol.data, 2*dofU, dofP};
   ioP.print({p});
 
@@ -116,12 +115,12 @@ int main(int argc, char* argv[])
 
     builder.clear();
 
-    ioVel.fileName = "output/sol_cavitytime_v_" + std::to_string(itime) + ".xmf";
     ioVel.time = time;
+    ioVel.iter += 1;
     ioVel.print({sol});
     p.data = sol.data.block(2*dofU,0,dofP,1);
-    ioP.fileName = "output/sol_cavitytime_p_" + std::to_string(itime) + ".xmf";
     ioP.time = time;
+    ioP.iter += 1;
     ioP.print({p});
   }
 

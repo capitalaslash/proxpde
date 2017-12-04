@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
   FESpace_T feSpace{meshPtr};
 
   Var sol{"sol", feSpace.dof.totalNum};
-  IOManager<FESpace_T> io{feSpace, "io"};
+  IOManager<FESpace_T> io{feSpace, "output_io/sol"};
 
   for (auto itime=0; itime<5; ++itime)
   {

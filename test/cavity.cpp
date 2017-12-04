@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
   std::cout << "norm of v: " << vNorm << std::endl;
   std::cout << "norm of p: " << pNorm << std::endl;
 
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_cavity_vel.xmf"};
+  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_cavity_vel"};
   ioVel.print({sol});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_cavity_p.xmf"};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_cavity_p"};
   ioP.print({p});
 
   if(std::fabs(uNorm - 2.72045) > 1.e-4 ||

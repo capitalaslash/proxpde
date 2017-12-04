@@ -98,9 +98,9 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 
-  IOManager<FESpaceU_T> ioU{feSpaceU, "sol_stokes2dcircle_u.xmf"};
+  IOManager<FESpaceU_T> ioU{feSpaceU, "sol_stokes2dcircle_u"};
   ioU.print({u, v});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dcircle_p.xmf"};
+  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dcircle_p"};
   ioP.print({p});
 
   double norm = error.data.norm();

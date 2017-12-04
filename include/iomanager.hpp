@@ -114,7 +114,8 @@ struct IOManager
     time(tin),
     iter(it)
   {
-    fs::create_directory(filepath.parent_path());
+    if (filepath.parent_path() != fs::path(""))
+      fs::create_directory(filepath.parent_path());
     _printMeshData();
   }
 

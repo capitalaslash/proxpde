@@ -62,11 +62,10 @@ int main(int argc, char* argv[])
   vel.col(0) = Vec::Constant(feSpace.dof.totalNum, 0.1);
   AssemblyAdvection<FESpace_T> advection(vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
-  Vec c_old(feSpace.dof.totalNum);
-  AssemblyVecRhs<FESpace_T> timeder_rhs(c_old, feSpace);
+  Vec cOld(feSpace.dof.totalNum);
+  AssemblyVecRhs<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
-  Var c{"conc"};
-  c.data = Vec::Zero(feSpace.dof.totalNum);
+  Var c{"conc", feSpace.dof.totalNum};
   interpolateAnalyticFunction(ic, feSpace, c.data);
   IOManager<FESpace_T> io{feSpace, "output_advection1d/sol"};
 
@@ -79,7 +78,7 @@ int main(int argc, char* argv[])
     time += dt;
     std::cout << "solving timestep " << itime << std::endl;
 
-    c_old = c.data / dt;
+    cOld = c.data;
 
     builder.buildProblem(timeder, bcs);
     builder.buildProblem(timeder_rhs, bcs);

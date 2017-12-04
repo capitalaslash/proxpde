@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
   double const dt = 0.01; // config["timestep"].as<double>();
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
   Vec velOld{2*dofU};
+  AssemblyVecRhs<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
   Field3 advVel = Field3::Zero(dofU, 3);
-  AssemblyVecRhs<FESpaceVel_T> timeder_rhs(velOld, feSpaceVel);
   AssemblyAdvection<FESpaceVel_T> advection(advVel, feSpaceVel);
 
   Var sol{"sol"};
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     std::cout << "solving timestep " << itime
               << ", time = " << time << std::endl;
 
-    velOld = sol.data / dt;
+    velOld = sol.data;
     advVel.col(0) = sol.data.block(   0, 0, dofU, 1) / dt;
     advVel.col(1) = sol.data.block(dofU, 0, dofU, 1) / dt;
 

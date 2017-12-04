@@ -305,11 +305,13 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyVecRhs(Vec const & r,
+  explicit AssemblyVecRhs(double const c,
+                          Vec const & r,
                           FESpace_T & fe,
                           AssemblyBase::CompList const & comp = allComp<FESpace>(),
                           uint offset_row = 0):
     AssemblyVector<FESpace_T>(fe, offset_row, comp),
+    coeff(c),
     rhs(r)
   {}
 
@@ -327,13 +329,14 @@ struct AssemblyVecRhs: public AssemblyVector<FESpace>
           local_rhs += rhs(dofId) * this->feSpace.curFE.phi[q](n);
         }
         Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0) +=
-            this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.JxW[q] * coeff *
             this->feSpace.curFE.phi[q] *
             local_rhs;
       }
     }
   }
 
+  double const coeff;
   Vec const & rhs;
 };
 

@@ -139,6 +139,7 @@ struct DOF
   uint _rows;
   ElemMap_T elemMap;
   PtMap_T ptMap;
+  // total number of DOFs for single component
   uint totalNum;
 };
 

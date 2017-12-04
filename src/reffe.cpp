@@ -1,6 +1,7 @@
 #include "reffe.hpp"
 
 // ----------------------------------------------------------------------------
+uint constexpr RefPointP1::numFuns;
 array<uint,4> constexpr RefPointP1::dof_place;
 array<array<uint,0>,0> constexpr RefPointP1::dofOnFacet;
 
@@ -15,6 +16,7 @@ array<ScalarFun<1>,RefPointP1::numFuns> const RefPointP1::phiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefLineP1::numFuns;
 array<uint,4> constexpr RefLineP1::dof_place;
 array<array<uint,1>,2> constexpr RefLineP1::dofOnFacet;
 
@@ -44,6 +46,7 @@ array<onedFun_T,RefLineP1::numFuns> const RefLineP1::dphiFun =
 //                        -0.5L,  0.5L ).finished();
 
 // ----------------------------------------------------------------------------
+uint constexpr RefLineP2::numFuns;
 array<uint,4> constexpr RefLineP2::dof_place;
 array<array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
 
@@ -82,6 +85,7 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::dphiFun =
 //                        0., 0., 0. ).finished();
 
 // ----------------------------------------------------------------------------
+uint constexpr RefTriangleP1::numFuns;
 array<uint,4> constexpr RefTriangleP1::dof_place;
 array<array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;
 
@@ -100,6 +104,7 @@ array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefTriangleP2::numFuns;
 array<uint,4> constexpr RefTriangleP2::dof_place;
 array<array<uint,3>,3> constexpr RefTriangleP2::dofOnFacet;
 
@@ -130,6 +135,7 @@ array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::dphiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefQuadQ1::numFuns;
 array<uint,4> constexpr RefQuadQ1::dof_place;
 array<array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
 
@@ -150,6 +156,7 @@ array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefQuadP2::numFuns;
 array<uint,4> constexpr RefQuadP2::dof_place;
 array<array<uint,3>,4> constexpr RefQuadP2::dofOnFacet;
 
@@ -186,6 +193,7 @@ array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::dphiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefQuadQ2::numFuns;
 array<uint,4> constexpr RefQuadQ2::dof_place;
 array<array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
 

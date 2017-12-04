@@ -18,9 +18,7 @@ set(MINIFEM_CONTRIB_DIR contrib CACHE STRING "relative path to contrib dir")
 include(Contrib)
 
 include_directories(SYSTEM
-  ${EIGEN_INCLUDE_DIRS}
   ${UMFPACK_INCLUDE_DIRS}
-  ${TINYXML2_INCLUDE_DIRS}
   ${HDF5_INCLUDE_DIRS}
 )
 
@@ -67,7 +65,7 @@ set(LIBS
   minifem
   Eigen3::Eigen
   ${UMFPACK_LIBRARIES}
-  ${TINYXML2_LIBRARIES}
+  tinyxml2
   ${HDF5_LIBRARIES}
   stdc++fs
 )

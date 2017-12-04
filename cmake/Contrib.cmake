@@ -89,8 +89,8 @@ endif()
 # tinyxml2
 option(TINYXML2_USE_INTERNAL "Use internal self-compiled TinyXML2 library" OFF)
 if(NOT TINYXML2_USE_INTERNAL)
-  find_package(TinyXML2)
-  if(TINYXML2_FOUND)
+  find_package(tinyxml2 NO_MODULE)
+  if(TARGET tinyxml2)
     message(STATUS "contrib: TinyXML2 found in system path")
   else()
     set(TINYXML2_USE_INTERNAL ON)
@@ -118,10 +118,13 @@ if(TINYXML2_USE_INTERNAL)
       -DCMAKE_BUILD_TYPE:STRING=Release
       ${CONTRIB_SOURCE_DIR}/src/tinyxml2
   )
-  set(TINYXML2_INCLUDE_DIRS ${CONTRIB_BINARY_DIR}/install/tinyxml2/include
-    CACHE PATH "TinyXML2 include" FORCE)
-  link_directories(${CONTRIB_BINARY_DIR}/install/tinyxml2/lib)
-  set(TINYXML2_LIBRARIES tinyxml2 CACHE FILEPATH "TinyXML2 library" FORCE)
+  set(tinyxml2_DIR ${CONTRIB_BINARY_DIR}/install/tinyxml2
+    CACHE PATH "tinyxml2 directory" FORCE)
+  add_library(tinyxml2 SHARED IMPORTED)
+  file(MAKE_DIRECTORY "${tinyxml2_DIR}/include")
+  set_target_properties(tinyxml2 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${tinyxml2_DIR}/include"
+  )
 endif()
 
 # HDF5

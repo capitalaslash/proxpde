@@ -35,3 +35,5 @@ minifem_add_test(cavity)
 minifem_add_test(cavitytime)
 
 minifem_add_test(gmres)
+
+minifem_add_test(robin_bc)

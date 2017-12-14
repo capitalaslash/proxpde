@@ -1,7 +1,6 @@
 #pragma once
 
 #include "def.hpp"
-#include "array.hpp"
 #include "blockmatrix.hpp"
 #include "fespace.hpp"
 #include "assembly.hpp"
@@ -74,6 +73,49 @@ struct Builder
                     Fe(id) += bc.curFE.JxW[q] *
                               bc.curFE.phi[q](i) *
                         value;
+                  }
+                }
+              }
+            }
+          }
+          facetCounter++;
+        }
+      }
+      // filelog << "Ke:\n" << Ke << std::endl;
+      // filelog << "Fe:\n" << Fe << std::endl;
+
+
+      // --- apply Mixed bcs ---
+      for(auto & bc: bcs.bcMixedList)
+      {
+        uint facetCounter = 0;
+        for(auto const facetId: mesh.elemToFacet[e.id])
+        {
+          // facet exists && has the marker set in the bc
+          if(facetId != DOFidNotSet &&
+             mesh.facetList[facetId].marker == bc.marker)
+          {
+            auto const & facet = mesh.facetList[facetId];
+            bc.curFE.reinit(facet);
+            for(uint q=0; q<BCMixed<FESpace>::QR_T::numPts; ++q)
+            {
+              for (uint d=0; d<assembly.feSpace.dim; ++d)
+              {
+                if (bc.hasComp(d))
+                {
+                  auto const coeff = bc.coeff(bc.curFE.qpoint[q])(d);
+                  for(uint i=0; i<BCMixed<FESpace>::RefFE_T::numFuns; ++i)
+                  {
+                    auto const id =
+                        CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
+                    for (uint j=0; j<BCMixed<FESpace>::RefFE_T::numFuns; ++j)
+                    {
+                      auto const jd =
+                          CurFE_T::RefFE_T::dofOnFacet[facetCounter][j];
+                      Ke(id, jd) += coeff * bc.curFE.JxW[q] *
+                                    bc.curFE.phi[q](j) *
+                                    bc.curFE.phi[q](i);
+                    }
                   }
                 }
               }

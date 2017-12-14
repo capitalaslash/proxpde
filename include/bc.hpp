@@ -152,6 +152,35 @@ struct BCNat
   std::vector<uint> comp;
 };
 
+// this class deals only with the matrix part of the mixed bc, the rhs part is
+// managed as a standard natural bc
+template <typename FESpace>
+struct BCMixed
+{
+  using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
+  using QR_T = typename SideQR<typename FESpace::QR_T>::Type;
+  using CurFE_T = CurFE<Elem_T, QR_T>;
+  using RefFE_T = typename CurFE_T::RefFE_T;
+
+  explicit BCMixed(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = {0}):
+    marker(m),
+    coeff(f),
+    comp(c)
+  {
+    // TODO: create a list of constrained faces at the beginning?
+  }
+
+  bool hasComp(uint c)
+  {
+    return std::find(comp.begin(), comp.end(), c) != comp.end();
+  }
+
+  CurFE_T curFE;
+  marker_T marker;
+  Fun<FESpace::dim,3> const coeff;
+  std::vector<uint> comp;
+};
+
 template <typename FESpace>
 class BCList
 {
@@ -259,6 +288,23 @@ public:
     std::abort();
   }
 
+  // mixed BC: a * u + \nabla u = b
+  // - \lap u = f
+  // (\nabla u, \nabla v) - <\nabla u, v> = (f, v)
+  // (., .) == integration on volume
+  // <., .> == integration on boundary
+  // (\nabla u, \nabla v) + <a*u, v> = (f, v) + <b, v>
+  // a >= \eps > 0 cohercitivity to guarantee solution
+  void addMixedBC(
+      marker_T const m,
+      scalarFun_T const & a,
+      scalarFun_T const & b,
+      std::vector<uint> const & comp = allComp<FESpace>())
+  {
+    addNaturalBC(m, b, comp);
+    bcMixedList.emplace_back(m, [a] (Vec3 const &p) {return Vec1(a(p));}, comp);
+  }
+
   bool checkMarkerFixed(marker_T const m) const
   {
     return fixedMarkers.find(m) != fixedMarkers.end();
@@ -274,6 +320,7 @@ public:
   // std::set<id_T> fixedDofs;
   std::list<BCEss<FESpace>> bcEssList;
   std::list<BCNat<FESpace>> bcNatList;
+  std::list<BCMixed<FESpace>> bcMixedList;
 };
 
 template <typename FESpace>

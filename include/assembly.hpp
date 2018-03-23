@@ -31,7 +31,7 @@ struct Diagonal: public AssemblyBase
   virtual void build(LMat_T & Ke) const = 0;
   virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
-  virtual void reinit(GeoElem const & elem) final
+  virtual void reinit(GeoElem const & elem) const final
   {
     feSpace.curFE.reinit(elem);
   }
@@ -63,7 +63,7 @@ struct Coupling: public AssemblyBase
 
   virtual void build(LMat_T & Ke) const = 0;
 
-  virtual void reinit(GeoElem const & elem)
+  virtual void reinit(GeoElem const & elem) const final
   {
     feSpace1.curFE.reinit(elem);
     feSpace2.curFE.reinit(elem);
@@ -88,7 +88,7 @@ struct AssemblyVector: public AssemblyBase
 
   virtual void build(LVec_T & Fe) const = 0;
 
-  virtual void reinit(GeoElem const & elem)
+  virtual void reinit(GeoElem const & elem) const final
   {
     feSpace.curFE.reinit(elem);
   }

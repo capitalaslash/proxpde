@@ -28,7 +28,6 @@ struct Builder
     using LVec_T = typename Diagonal<FESpace>::LVec_T;
     auto const gSize = assembly.feSpace.dof.totalNum;
 
-    auto & curFE = assembly.feSpace.curFE;
     auto const & mesh = *assembly.feSpace.meshPtr;
 
     // FIXME: compute a proper sparsity pattern
@@ -37,13 +36,13 @@ struct Builder
         pow(CurFE_T::numDOFs*FESpace::dim,2) * mesh.elementList.size();
     _triplets.reserve(approxEntryNum);
 
-    for(auto &e: mesh.elementList)
+    for(auto const & e: mesh.elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
 
       // --- set current fe ---
-      curFE.reinit(e);
+      assembly.reinit(e);
 
       // --- build local matrix and rhs ---
       assembly.build(Ke);
@@ -231,17 +230,13 @@ struct Builder
         assembly.feSpace1.meshPtr->elementList.size();
     _triplets.reserve(approxEntryNum);
 
-    auto & curFE1 = assembly.feSpace1.curFE;
-    auto & curFE2 = assembly.feSpace2.curFE;
-
     for(auto &e: assembly.feSpace1.meshPtr->elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
 
       // --- set current fe ---
-      curFE1.reinit(e);
-      curFE2.reinit(e);
+      assembly.reinit(e);
 
       // --- build local matrix and rhs ---
       assembly.build(Ke);
@@ -329,7 +324,6 @@ struct Builder
     using LMat_T = typename AssemblyVector<FESpace>::LMat_T;
     using LVec_T = typename AssemblyVector<FESpace>::LVec_T;
 
-    auto & curFE = assembly.feSpace.curFE;
     auto const & mesh = *assembly.feSpace.meshPtr;
 
     for(auto &e: mesh.elementList)
@@ -337,7 +331,7 @@ struct Builder
       LVec_T Fe = LVec_T::Zero();
 
       // --- set current fe ---
-      curFE.reinit(e);
+      assembly.reinit(e);
 
       // --- build local matrix and rhs ---
       assembly.build(Fe);

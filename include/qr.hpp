@@ -32,7 +32,7 @@ template<> array<GaussQR<Line,2>::Vec_T,2> const GaussQR<Line,2>::node =
   GaussQR<Line,2>::Vec_T::Constant( sqrt13rd),
 }};
 
-static double constexpr sqrt35th = 0.774596669241483L;
+static long double constexpr sqrt35th = 0.774596669241483L;
 template<> FVec<3> const GaussQR<Line,3>::weight = {5.L/9, 8.L/9, 5.L/9};
 template<> array<GaussQR<Line,3>::Vec_T,3> const GaussQR<Line,3>::node =
 {{

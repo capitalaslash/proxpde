@@ -23,6 +23,7 @@ struct CurFE
       for(uint q=0; q<QR::numPts; ++q)
       {
         phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
+        phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
         dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
       }
     }
@@ -56,6 +57,7 @@ struct CurFE
       // phi values on qpoints are unaffected by the change of coords
       // this update can potentially be done in the constructor
       phi[q] = phiRef[q];
+      phiVect[q] = phiVectRef[q] * jacPlus[q];
       dphi[q] = dphiRef[q] * jacPlus[q];
     }
   }
@@ -71,8 +73,10 @@ struct CurFE
   array<double,QR::numPts> JxW;
   array<Vec3,QR::numPts> qpoint;
   array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
+  array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> phiVectRef;
   array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> dphiRef;
   array<FVec<RefFE::numFuns>,QR::numPts> phi;
+  array<FMat<RefFE::numFuns,3>,QR::numPts> phiVect;
   array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
   // LocalMat_T massMat;
   // LocalMat_T stiffMat;

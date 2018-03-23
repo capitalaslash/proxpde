@@ -69,6 +69,7 @@ using ScalarFun = std::function<
 using Vec1 = FVec<1>;
 using Vec2 = FVec<2>;
 using Vec3 = FVec<3>;
+// using Vec3 = Eigen::Vector4d // this one is vectorizable
 using Triplet = Eigen::Triplet<double>;
 
 using scalarFun_T = ScalarFun<3>;
@@ -76,4 +77,5 @@ using vectorFun_T = Fun<3,3>;
 
 using onedFun_T = Fun<1,1>;
 using twodFun_T = Fun<2,2>;
+using scalarOnedFun_T = ScalarFun<1>;
 using scalarTwodFun_T = ScalarFun<2>;

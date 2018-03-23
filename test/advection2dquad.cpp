@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
   AssemblyVecRhs<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
-  c.data = Vec::Zero(feSpace.dof.totalNum);
   interpolateAnalyticFunction(ic, feSpace, c.data);
   IOManager<FESpace_T> io{feSpace, "output_advection2dquad/sol"};
 

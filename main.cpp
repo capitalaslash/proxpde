@@ -1,15 +1,13 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <memory>
 
-#include "mesh.hpp"
+#include "assembly.hpp"
 #include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
+
+#include <iostream>
 
 scalarFun_T rhs = [] (Vec3 const& p)
 {
@@ -110,7 +108,7 @@ int main()
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 
-  Var exact{"exact", feSpace.dof.totalNum};
+  Var exact{"exact"};
   interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
 
   Var error{"error"};

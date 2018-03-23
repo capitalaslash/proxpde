@@ -1,11 +1,11 @@
 #include "def.hpp"
-#include "mesh.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 #include <iostream>
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
   std::cout << "solve: " << t << " ms" << std::endl;
 
-  Var exact{"exact", feSpace.dof.totalNum};
+  Var exact{"exact"};
   auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
   interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};

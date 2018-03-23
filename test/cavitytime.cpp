@@ -71,8 +71,7 @@ int main(int argc, char* argv[])
   AssemblyVecRhs<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
   AssemblyAdvection<FESpaceVel_T> advection(1.0, velOld, feSpaceVel);
 
-  Var sol{"sol"};
-  sol.data = Vec::Zero(2*dofU + dofP);
+  Var sol{"sol", numDOFs};
   auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
   interpolateAnalyticFunction(ic, feSpaceVel, sol.data);
 

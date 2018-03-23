@@ -27,8 +27,8 @@ int main()
   BCList<FESpace1_T> bc1{feSpace1};
   BCList<FESpace2_T> bc2{feSpace2};
 
-  Var u1("u1", feSpace1.dof.totalNum);
-  Var u2("u2", feSpace2.dof.totalNum);
+  Var u1{"u1"};
+  Var u2{"u2"};
 
   auto inputFun = [] (Vec3 const &p) {return 1.*p(0) + 2.*p(1);};
 //  auto inputFun = [] (Vec3 const &) {return 1.;};

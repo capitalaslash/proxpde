@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
 
-  Var exact{"exact", feSpace.dof.totalNum};
+  Var exact{"exact"};
   // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
   auto modifiedESol = [] (Vec3 const& p) {return exact_sol(mesh_mod_inv(p));};
   interpolateAnalyticFunction(modifiedESol, feSpace, exact.data);

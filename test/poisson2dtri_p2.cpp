@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
 
-  Var exact{"exact", feSpace.dof.totalNum};
+  Var exact{"exact"};
   interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;

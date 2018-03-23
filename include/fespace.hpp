@@ -33,6 +33,11 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
                                  Vec & v,
                                  uint const offset = 0)
 {
+  // set the vector data to the appropriate dimension if it comes with length 0
+  if (v.size() == 0)
+  {
+    v = Vec::Zero(feSpace.dof.totalNum * feSpace.dim);
+  }
   for(auto const & e: feSpace.meshPtr->elementList)
   {
     uint p = 0;

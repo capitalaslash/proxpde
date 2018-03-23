@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 
   t.start();
   Var sol{"sol"};
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
   std::cout << "sol:\n" << sol.data << std::endl;
 
-//  Var exact{"exact", feSpace.dof.totalNum};
+//  Var exact{"exact"};
 //  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
 //  // interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
 //  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);

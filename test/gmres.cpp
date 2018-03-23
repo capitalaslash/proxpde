@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
   solNew.data = solver.solve(builder.b);
   filelog << "solve GMRES: " << t << " ms" << std::endl;
 
-  Var exact{"exact", feSpace.dof.totalNum};
+  Var exact{"exact"};
   auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
   interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};

@@ -40,3 +40,5 @@ minifem_add_test(gmres)
 minifem_add_test(robin_bc)
 minifem_add_test(projection_p1top2)
 minifem_add_test(projection_p2top1)
+minifem_add_test(projection_p1tort0)
+

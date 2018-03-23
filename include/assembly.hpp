@@ -77,9 +77,9 @@ template <typename FESpace>
 struct AssemblyVector: public AssemblyBase
 {
   using FESpace_T = FESpace;
-  using CurFE_T = typename FESpace_T::CurFE_T;
-  using LMat_T = FMat<FESpace::dim*CurFE_T::size,FESpace::dim*CurFE_T::size>;
-  using LVec_T = FVec<FESpace::dim*CurFE_T::size>;
+  using CurFE_T = typename FESpace::CurFE_T;
+  using LMat_T = FMat<FESpace_T::dim*CurFE_T::size, FESpace_T::dim*CurFE_T::size>;
+  using LVec_T = FVec<FESpace_T::dim*CurFE_T::size>;
 
   explicit AssemblyVector(FESpace_T & fe, uint offset_row, CompList const & comp):
     AssemblyBase{offset_row, 0, comp},
@@ -227,6 +227,49 @@ struct AssemblyMass: public Diagonal<FESpace>
             coeff * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
             this->feSpace.curFE.phi[q].transpose();
+      }
+    }
+  }
+
+  LMat_T build(/*LMat_T & Ke*/) const
+  {
+    LMat_T Ke;
+    this->build(Ke);
+    return Ke;
+  }
+
+  double coeff;
+};
+
+template <typename FESpace>
+struct AssemblyVectorMass: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyVectorMass(double const & c,
+                              FESpace_T & fe,
+                              AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                              uint offset_row = 0,
+                              uint offset_clm = 0):
+     Diagonal<FESpace>(fe, offset_row, offset_clm, comp),
+     coeff(c)
+  {}
+
+  void build(LMat_T & Ke) const
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phiVect[q] *
+            this->feSpace.curFE.phiVect[q].transpose();
       }
     }
   }
@@ -558,4 +601,62 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   Vec const & rhs;
   FESpaceRhs_T & feSpaceRhs;
   std::vector<uint> const component;
+};
+
+template <typename FESpace, typename FESpaceRhs>
+struct AssemblyVectorProjection: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceRhs_T = FESpaceRhs;
+  using Super_T = AssemblyVector<FESpace>;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyVectorProjection(double const c,
+                              Vec const & r,
+                              FESpace_T & fe,
+                              FESpaceRhs_T & feRhs,
+                              uint offset_row = 0):
+    AssemblyVector<FESpace_T>(fe, offset_row, {0}),
+    coef(c),
+    rhs(r),
+    feSpaceRhs(feRhs)
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace_T::CurFE_T::QR_T,
+          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpaceRhs.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
+    for (uint d=0; d<CurFE_T::RefFE_T::dim; ++d)
+    {
+      FVec<CurFERhs_T::size> local_rhs;
+      for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + d*feSpaceRhs.dof.totalNum;
+        local_rhs[n] = rhs[dofId];
+      }
+      for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+      {
+        Fe += coef * this->feSpace.curFE.JxW[q] *
+              this->feSpace.curFE.phiVect[q].col(d) *
+              (feSpaceRhs.curFE.phi[q].dot(local_rhs));
+      }
+    }
+  }
+
+  double const coef;
+  Vec const & rhs;
+  FESpaceRhs_T & feSpaceRhs;
 };

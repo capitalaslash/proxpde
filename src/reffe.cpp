@@ -24,6 +24,32 @@ array<onedFun_T,RefPointP1::numFuns> const RefPointP1::dphiFun =
 {{
   [] (Vec_T const &) { return Vec_T::Constant(0.L); }
 }};
+
+// ----------------------------------------------------------------------------
+uint constexpr RefLineP0::numFuns;
+array<uint,4> constexpr RefLineP0::dof_place;
+//array<array<uint,1>,2> constexpr RefLineP0::dofOnFacet;
+
+array<RefLineP0::Vec_T,RefLineP0::numFuns> const RefLineP0::points =
+{{
+  Vec_T::Constant(0.L)
+}};
+
+array<ScalarFun<1>,RefLineP0::numFuns> const RefLineP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.L; },
+}};
+
+array<onedFun_T,RefLineP0::numFuns> const RefLineP0::phiVectFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(1.L);},
+}};
+
+array<onedFun_T,RefLineP0::numFuns> const RefLineP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.L); }
+}};
+
 // ----------------------------------------------------------------------------
 uint constexpr RefLineP1::numFuns;
 array<uint,4> constexpr RefLineP1::dof_place;

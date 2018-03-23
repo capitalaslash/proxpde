@@ -41,6 +41,37 @@ struct RefPointP1
   }
 };
 
+struct RefLineP0
+{
+  using GeoElem_T = Line;
+  using RefFacet_T = NullElem;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 1;
+  static uint constexpr numFuns = 1U;
+  static array<uint,4> constexpr dof_place{{0,0,1,0}};
+  static uint constexpr dofPerFacet = 0U;
+  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  using Vec_T = FVec<dim>;
+//  using LocalVec_T = FVec<2>;
+//  using LocalMat_T = FMat<2,2>;
+
+  static array<Vec_T,numFuns> const points;
+  static array<scalarOnedFun_T,numFuns> const phiFun;
+  static array<onedFun_T,numFuns> const phiVectFun;
+  static array<onedFun_T,numFuns> const dphiFun;
+  // static LocalMat_T const massMat;
+  // static LocalMat_T const gradMat;
+  static double constexpr volume = 2.L;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     array<Vec3,numFuns> dofPts {{
+       .5*(e.pointList[0]->coord + e.pointList[1]->coord)
+     }};
+     return dofPts;
+  }
+};
+
 struct RefLineP1
 {
   using GeoElem_T = Line;

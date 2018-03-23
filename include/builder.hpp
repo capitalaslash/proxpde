@@ -353,7 +353,7 @@ struct Builder
             DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i+d*FESpace::RefFE_T::numFuns];
             if(bc.isConstrained(id))
             {
-              C(i+d*FESpace::RefFE_T::numFuns,i+d*FESpace::RefFE_T::numFuns) = 0.;
+              C(i+d*FESpace::RefFE_T::numFuns, i+d*FESpace::RefFE_T::numFuns) = 0.;
             }
           }
         }

@@ -88,7 +88,7 @@ struct AssemblyVector: public AssemblyBase
 
   virtual void build(LVec_T & Fe) const = 0;
 
-  virtual void reinit(GeoElem const & elem) const final
+  virtual void reinit(GeoElem const & elem) const
   {
     feSpace.curFE.reinit(elem);
   }
@@ -493,5 +493,69 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
     }
   }
 
+  std::vector<uint> const component;
+};
+
+template <typename FESpace, typename FESpaceRhs>
+struct AssemblyProjection: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceRhs_T = FESpaceRhs;
+  using Super_T = AssemblyVector<FESpace>;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyProjection(double const c,
+                              Vec const & r,
+                              FESpace_T & fe,
+                              FESpaceRhs_T & feRhs,
+                              std::vector<uint> comp = allComp<FESpace_T>(),
+                              uint offset_row = 0):
+    AssemblyVector<FESpace_T>(fe, offset_row, comp),
+    coef(c),
+    rhs(r),
+    feSpaceRhs(feRhs),
+    component(comp)
+  {
+    // this works only if the same quad rule is defined on both CurFE
+    static_assert(
+          std::is_same<
+          typename FESpace_T::CurFE_T::QR_T,
+          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          "the two quad rule are not the same");
+  }
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpaceRhs.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
+    uint d = 0;
+    for (auto const c: component)
+    {
+      FVec<CurFERhs_T::size> local_rhs;
+      for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + c*feSpaceRhs.dof.totalNum;
+        local_rhs[n] = rhs[dofId];
+      }
+      auto Fec = Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0);
+      for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+      {
+        Fec += coef * this->feSpace.curFE.JxW[q] *
+               this->feSpace.curFE.phi[q] *
+               (feSpaceRhs.curFE.phi[q].dot(local_rhs));
+      }
+      d++;
+    }
+  }
+
+  double const coef;
+  Vec const & rhs;
+  FESpaceRhs_T & feSpaceRhs;
   std::vector<uint> const component;
 };

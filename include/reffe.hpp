@@ -19,6 +19,7 @@ struct RefPointP1
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numFuns = 1U;
+  static uint constexpr numGeoFuns = 1U;
   static array<uint,4> constexpr dof_place{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
@@ -31,9 +32,9 @@ struct RefPointP1
   static array<onedFun_T,numFuns> const dphiFun;
   static double constexpr volume = 1.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts =
+     array<Vec3,numGeoFuns> dofPts =
      {{
        e.pointList[0]->coord
      }};
@@ -48,6 +49,7 @@ struct RefLineP0
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numFuns = 1U;
+  static uint constexpr numGeoFuns = 1U;
   static array<uint,4> constexpr dof_place{{0,0,1,0}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
@@ -63,9 +65,9 @@ struct RefLineP0
   // static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        .5*(e.pointList[0]->coord + e.pointList[1]->coord)
      }};
      return dofPts;
@@ -79,6 +81,7 @@ struct RefLineP1
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numFuns = 2U;
+  static uint constexpr numGeoFuns = 2U;
   static array<uint,4> constexpr dof_place{{0,0,0,1}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
@@ -96,9 +99,9 @@ struct RefLineP1
   // static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
      }};
@@ -113,6 +116,7 @@ struct RefLineP2
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numFuns = 3U;
+  static uint constexpr numGeoFuns = 3U;
   static array<uint,4> constexpr dof_place{{0,0,1,1}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
@@ -130,9 +134,9 @@ struct RefLineP2
   static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.midpoint()
@@ -148,6 +152,7 @@ struct RefTriangleP1
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 3U;
+  static uint constexpr numGeoFuns = 3U;
   static array<uint,4> constexpr dof_place{{0,0,0,1}};
   static uint constexpr dofPerFacet = 2U;
   static array<array<uint,2>,3> constexpr dofOnFacet = {{
@@ -162,9 +167,9 @@ struct RefTriangleP1
   static array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 0.5L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.pointList[2]->coord
@@ -180,6 +185,7 @@ struct RefTriangleP2
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 6U;
+  static uint constexpr numGeoFuns = 6U;
   static array<uint,4> constexpr dof_place{{0,0,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,3> constexpr dofOnFacet = {{
@@ -194,9 +200,9 @@ struct RefTriangleP2
   static array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 0.5L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.pointList[2]->coord,
@@ -215,6 +221,7 @@ struct RefTriangleRT0
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 3U;
+  static uint constexpr numGeoFuns = 3U;
   static array<uint,4> constexpr dof_place{{0,0,1,0}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,3> constexpr dofOnFacet = {{
@@ -231,9 +238,9 @@ struct RefTriangleRT0
 
   // this points are used in conjunction with dPhi to compute the jacobian
   // of the transformation. we use dPhi from P1 so this points are the same as P1
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
          e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord
@@ -249,6 +256,7 @@ struct RefQuadQ1
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 4U;
+  static uint constexpr numGeoFuns = 4U;
   static array<uint,4> constexpr dof_place{{0,0,0,1}};
   static uint constexpr dofPerFacet = 2U;
   static array<array<uint,2>,4> constexpr dofOnFacet = {{
@@ -263,9 +271,9 @@ struct RefQuadQ1
   static array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 4.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.pointList[2]->coord,
@@ -282,6 +290,7 @@ struct RefQuadP2
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 8U;
+  static uint constexpr numGeoFuns = 8U;
   static array<uint,4> constexpr dof_place{{0,0,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
@@ -296,9 +305,9 @@ struct RefQuadP2
   static array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 4.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts {{
+     array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.pointList[2]->coord,
@@ -319,6 +328,7 @@ struct RefQuadQ2
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numFuns = 9U;
+  static uint constexpr numGeoFuns = 9U;
   static array<uint,4> constexpr dof_place{{0,1,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
@@ -333,9 +343,9 @@ struct RefQuadQ2
   static array<twodFun_T,numFuns> const dphiFun;
   static double constexpr volume = 4.L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  static array<Vec3,numGeoFuns> dofPts(GeoElem const & e)
   {
-    array<Vec3,numFuns> dofPts {{
+    array<Vec3,numGeoFuns> dofPts {{
        e.pointList[0]->coord,
        e.pointList[1]->coord,
        e.pointList[2]->coord,

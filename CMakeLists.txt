@@ -54,11 +54,11 @@ message(STATUS "================================================================
 
 add_executable(main main.cpp)
 target_link_libraries(main MiniFEM::minifem)
-set_target_properties(main
-  PROPERTIES
-    CXX_CLANG_TIDY "clang-tidy;-checks=*,readability-*"
-    CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp"
-  )
+# set_target_properties(main
+#   PROPERTIES
+#     CXX_CLANG_TIDY "clang-tidy;-checks=*,readability-*"
+#     CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp"
+#   )
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
 target_link_libraries(test_eigen MiniFEM::minifem)

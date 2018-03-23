@@ -8,7 +8,8 @@
 #   UMFPACK_INCLUDE_DIRS - UMFPack include files directories
 #   UMFPACK_LIBRARIES    - UMFPack libraries
 #   UMFPACK_FOUND        - True if all required files are found
-
+#   UMFPACK::UMFPACK     - Imported target
+#
 # dependent packages to UMFPack are not yet managed
 # find_package(AMD QUIET)
 # find_package(BLAS QUIET)
@@ -47,3 +48,12 @@ find_package_handle_standard_args(UMFPack
   FOUND_VAR UMFPACK_FOUND
   REQUIRED_VARS UMFPACK_LIBRARIES UMFPACK_INCLUDE_DIRS
 )
+
+if(UMFPACK_FOUND AND NOT TARGET UMFPACK::UMFPACK)
+  add_library(UMFPACK::UMFPACK UNKNOWN IMPORTED)
+  set_target_properties(UMFPACK::UMFPACK PROPERTIES
+    IMPORTED_LINK_INTERFACE_LANGUAGES CXX
+    INTERFACE_INCLUDE_DIRECTORIES ${UMFPACK_INCLUDE_DIR}
+    IMPORTED_LOCATION ${UMFPACK_LIBRARY}
+  )
+endif()

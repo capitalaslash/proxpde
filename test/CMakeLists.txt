@@ -1,8 +1,9 @@
 macro(minifem_add_test test_name)
   add_executable(${test_name} ${test_name}.cpp)
-  target_link_libraries(${test_name} ${LIBS})
+  target_link_libraries(${test_name} MiniFEM::minifem)
+  target_compile_options(${test_name} PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic>)
   add_test(
-    NAME ${test_name}
+    NAME MiniFEM.${test_name}
     COMMAND ${test_name}
   )
 endmacro()

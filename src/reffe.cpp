@@ -174,6 +174,33 @@ array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::dphiFun =
 }};
 
 // ----------------------------------------------------------------------------
+uint constexpr RefTriangleRT0::numFuns;
+array<uint,4> constexpr RefTriangleRT0::dof_place;
+array<array<uint,1>,3> constexpr RefTriangleRT0::dofOnFacet;
+
+array<scalarTwodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiFun =
+{{
+  [] (Vec_T const & ) { return 0.L; },
+  [] (Vec_T const & ) { return 0.L; },
+  [] (Vec_T const & ) { return 0.L; },
+}};
+
+array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiVectFun =
+{{
+  [] (Vec_T const & p) { return Vec_T(p(0), p(1)); },
+  [] (Vec_T const & p) { return Vec_T(p(0)-1., p(1)); },
+  [] (Vec_T const & p) { return Vec_T(p(0), p(1)-1.); }
+}};
+
+// use P1 dphi to define a linear trasnformation for the geometrical transformation
+array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::dphiFun =
+{{
+   [] (Vec_T const & ) { return Vec_T(-1.L, -1.L); },
+   [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
+   [] (Vec_T const & ) { return Vec_T( 0.L,  1.L); }
+}};
+
+// ----------------------------------------------------------------------------
 uint constexpr RefQuadQ1::numFuns;
 array<uint,4> constexpr RefQuadQ1::dof_place;
 array<array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;

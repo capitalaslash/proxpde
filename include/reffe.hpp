@@ -177,6 +177,40 @@ struct RefTriangleP2
   }
 };
 
+struct RefTriangleRT0
+{
+  using GeoElem_T = Triangle;
+  using RefFacet_T = RefLineP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 2;
+  static uint constexpr numFuns = 3U;
+  static array<uint,4> constexpr dof_place{{0,0,1,0}};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,3> constexpr dofOnFacet = {{
+    {{0}}, {{1}}, {{2}}
+  }};
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<scalarTwodFun_T,numFuns> const phiFun;
+  static array<twodFun_T,numFuns> const phiVectFun;
+  static array<twodFun_T,numFuns> const dphiFun;
+  static double constexpr volume = 0.5L;
+
+  // this points are used in conjunction with dPhi to compute the jacobian
+  // of the transformation. we use dPhi from P1 so this points are the same as P1
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     array<Vec3,numFuns> dofPts {{
+         e.pointList[0]->coord,
+         e.pointList[1]->coord,
+         e.pointList[2]->coord
+     }};
+     return dofPts;
+  }
+};
+
 struct RefQuadQ1
 {
   using GeoElem_T = Quad;

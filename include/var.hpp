@@ -20,6 +20,12 @@ struct Var
     data(vec.block(offset,0,size,1))
   {}
 
+  template <typename FESpace>
+  Var(std::string n, FESpace const & feSpace):
+    name(n),
+    data(feSpace.dof.totalNum * feSpace.dim)
+  {}
+
   std::string name;
   Vec data;
 };

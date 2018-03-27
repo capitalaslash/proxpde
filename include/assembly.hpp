@@ -341,53 +341,6 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 };
 
 template <typename FESpace>
-struct AssemblyVecRhs: public AssemblyVector<FESpace>
-{
-  using FESpace_T = FESpace;
-  using Super_T = AssemblyVector<FESpace>;
-  using LVec_T = typename Super_T::LVec_T;
-
-  explicit AssemblyVecRhs(double const c,
-                          Vec const & r,
-                          FESpace_T & fe,
-                          AssemblyBase::CompList const & comp = allComp<FESpace>(),
-                          uint offset_row = 0):
-    AssemblyVector<FESpace_T>(fe, offset_row, comp),
-    coeff(c),
-    rhs(r)
-  {}
-
-  void build(LVec_T & Fe) const
-  {
-    using CurFE_T = typename FESpace_T::CurFE_T;
-    FMat<CurFE_T::size,FESpace::dim> localRhs;
-    for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
-    {
-      id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
-      uint d = 0;
-      for (auto const c: this->comp)
-      {
-        localRhs(n, d) = rhs[dofId + c*this->feSpace.dof.totalNum];
-        d++;
-      }
-    }
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
-    {
-      for (uint d=0; d<this->comp.size(); ++d)
-      {
-        Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0) +=
-            this->feSpace.curFE.JxW[q] * coeff *
-            this->feSpace.curFE.phi[q] *
-            (localRhs.col(d).dot(this->feSpace.curFE.phi[q])); // rhs[q] = sum_k u_k * phi_k[q]
-      }
-    }
-  }
-
-  double const coeff;
-  Vec const & rhs;
-};
-
-template <typename FESpace>
 struct AssemblyAdvection: public Diagonal<FESpace>
 {
   using FESpace_T = FESpace;

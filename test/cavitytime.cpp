@@ -61,17 +61,18 @@ int main(int argc, char* argv[])
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   double const mu = 0.1; // config["mu"].as<double>();
-  AssemblyTensorStiffness<FESpaceVel_T> stiffness(mu, feSpaceVel);
+  // AssemblyTensorStiffness<FESpaceVel_T> stiffness(mu, feSpaceVel);
+  AssemblyStiffness<FESpaceVel_T> stiffness(mu, feSpaceVel);
   AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
   double const dt = 0.01; // config["timestep"].as<double>();
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
   Vec velOld{2*dofU};
-  AssemblyVecRhs<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
+  AssemblyProjection<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
   AssemblyAdvection<FESpaceVel_T> advection(1.0, velOld, feSpaceVel);
 
-  Var sol{"sol", numDOFs};
+  Var sol{"vel", numDOFs};
   auto ic = [](Vec3 const &) {return Vec2(1., 0.);};
   interpolateAnalyticFunction(ic, feSpaceVel, sol.data);
 

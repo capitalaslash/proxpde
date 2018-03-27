@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.totalNum);
-  AssemblyVecRhs<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);
@@ -72,6 +72,8 @@ int main(int argc, char* argv[])
   LUSolver solver;
   uint const ntime = 200;
   double time = 0.0;
+  io.time = time;
+  io.print({c});
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;

@@ -16,18 +16,18 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-scalarFun_T ic = [] (Vec3 const& p)
+static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-  if(p(0) < .4) return 1.;
+  // if(p(0) < .4) return 1.;
   return 0.;
 };
 
-scalarFun_T rhs = [] (Vec3 const& p)
+static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return M_PI*std::sin(M_PI*p(0));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exact_sol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
@@ -35,8 +35,6 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 int main(int argc, char* argv[])
 {
   MilliTimer t;
-  uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -44,8 +42,11 @@ int main(int argc, char* argv[])
   std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
 
   t.start();
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
+//  MeshBuilder<Elem_T> meshBuilder;
+//  uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
+//  uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
+//  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
+  readGMSH(meshPtr, "square_uns.msh");
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
   AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.totalNum);
-  AssemblyVecRhs<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);

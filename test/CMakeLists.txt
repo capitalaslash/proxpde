@@ -24,6 +24,8 @@ minifem_add_test(poisson2dquad_q2)
 minifem_add_test(dr2dquad)
 minifem_add_test(advection2dquad)
 
+minifem_add_test(poisson2dproj)
+
 minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)
 

@@ -7,20 +7,52 @@
 template <typename Mesh,
           typename RefFE,
           typename QR,
-          uint d = 1>
+          uint Dimension = 1>
 struct FESpace
 {
   using Mesh_T = Mesh;
   using RefFE_T = RefFE;
   using QR_T = QR;
-  using DOF_T = DOF<Mesh, RefFE, d>;
+  using DOF_T = DOF<Mesh, RefFE, Dimension>;
   using CurFE_T = CurFE<RefFE, QR>;
-  static uint const dim = d;
+  static uint const dim = Dimension;
 
   explicit FESpace(std::shared_ptr<Mesh> const mesh):
     meshPtr(mesh),
     dof(*mesh)
   {}
+
+  FVec<dim> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
+  {
+    this->curFE.reinit(elem);
+
+    // TODO: this needs inverse mapping
+    // FMat<RefFE_T::numFuns, RefFE_T::numFuns> jac = FMat<RefFE_T::numFuns, RefFE_T::numFuns>::Zero();
+    // for(uint n=0; n<RefFE_T::numGeoFuns; ++n)
+    // {
+    //   jac += curFE.dofPts[n] * RefFE::mapping[n](pt);
+    // }
+
+    FMat<RefFE_T::numFuns, dim> localValue;
+    FVec<RefFE_T::numFuns> phi;
+    for (uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+    {
+      id_T const dofId = this->dof.elemMap[elem.id][n];
+      for (uint d=0; d<dim; ++d)
+      {
+        localValue(n, d) = data[dofId + d*this->dof.totalNum];
+      }
+      // TODO: jacPlus should be computed on the point
+      // here we assume that jacPlus does not change on the element
+      // (this is true only for linear mappings)
+      auto ptRef = this->curFE.jacPlus[QR_T::numPts/2] * pt;
+      // scalar functions do not change from reffe to curfe
+      phi[n] = RefFE_T::phiFun[n](ptRef);
+      // instead of moving the point back to the ref element, we could
+      // instead move the functions to the real element
+    }
+    return localValue.transpose() * phi;
+  }
 
   std::shared_ptr<Mesh> const meshPtr;
   CurFE_T curFE;
@@ -45,7 +77,18 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
     {
       auto const d = p / FESpace::RefFE_T::numFuns;
       auto const pt = FESpace::RefFE_T::dofPts(e)[p % FESpace::RefFE_T::numFuns];
-      v[offset + dof] = f(pt)[d];
+      if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+      {
+        // the value of the dof is the value of the function
+        // u_k = u phi_k
+        v[offset + dof] = f(pt)[d];
+      }
+      else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+      {
+        // the value of the dof is the flux through the face
+        // u_k = u.dot(n_k)
+        v[offset + dof] = f(pt)[d].dot(FESpace::RefFE_T::normal(e)[p % FESpace::RefFE_T::numFuns]);
+      }
       p++;
     }
   }

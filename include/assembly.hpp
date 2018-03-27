@@ -497,14 +497,14 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
 };
 
 template <typename FESpace, typename FESpaceRhs = FESpace>
-struct AssemblyProjection: public AssemblyVector<FESpace>
+struct AssemblyScalarProjection: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
   using FESpaceRhs_T = FESpaceRhs;
   using Super_T = AssemblyVector<FESpace>;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyProjection(double const c,
+  explicit AssemblyScalarProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
                               std::vector<uint> comp = allComp<FESpace_T>(),
@@ -515,7 +515,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     feSpaceRhs(fe)
   {}
 
-  explicit AssemblyProjection(double const c,
+  explicit AssemblyScalarProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
                               FESpaceRhs_T & feRhs,

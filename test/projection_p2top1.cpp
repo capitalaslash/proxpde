@@ -33,7 +33,7 @@ int main()
   interpolateAnalyticFunction(inputFun, feSpace2, u2.data);
 
   AssemblyMass<FESpace1_T> mass1(1.0, feSpace1);
-  AssemblyProjection<FESpace1_T, FESpace2_T> proj2(1.0, u2.data, feSpace1, feSpace2);
+  AssemblyScalarProjection<FESpace1_T, FESpace2_T> proj2(1.0, u2.data, feSpace1, feSpace2);
   Builder builder{feSpace1.dof.totalNum};
   builder.buildProblem(mass1, bc1);
   builder.buildProblem(proj2, bc1);

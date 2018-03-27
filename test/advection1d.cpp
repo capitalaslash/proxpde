@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.totalNum);
-  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyScalarProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);

@@ -58,7 +58,7 @@ int main()
   std::cout << "uRT0:\n" << uRT0.data << std::endl;
 
   AssemblyMass<FESpaceP0_T> massP0(1.0, feSpaceP0);
-  AssemblyProjection<FESpaceP0_T,FESpaceP1_T> projP1P0(1.0, uP1.data, feSpaceP0, feSpaceP1);
+  AssemblyScalarProjection<FESpaceP0_T,FESpaceP1_T> projP1P0(1.0, uP1.data, feSpaceP0, feSpaceP1);
   Builder builderP0{feSpaceP0.dof.totalNum * feSpaceP0.dim};
   builderP0.buildProblem(massP0, bcP0);
   builderP0.buildProblem(projP1P0, bcP0);

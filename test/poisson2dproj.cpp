@@ -47,12 +47,12 @@ int main(int argc, char* argv[])
   builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
   Var rhsVec{"rhs", feSpace.dof.totalNum};
   interpolateAnalyticFunction(rhs, feSpace, rhsVec.data);
-  builder.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
+  builder.buildProblem(AssemblyScalarProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
 
   Builder builderTest{feSpace.dof.totalNum};
   builderTest.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
-  builderTest.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
+  builderTest.buildProblem(AssemblyScalarProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
   // std::cout << "b VecRhs:\n" << builder.b << "\nb Projection:\n" << builderTest.b << std::endl;
 

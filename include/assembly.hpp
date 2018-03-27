@@ -543,7 +543,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
   std::vector<uint> const component;
 };
 
-template <typename FESpace, typename FESpaceRhs>
+template <typename FESpace, typename FESpaceRhs = FESpace>
 struct AssemblyProjection: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
@@ -554,14 +554,24 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   explicit AssemblyProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
+                              std::vector<uint> comp = allComp<FESpace_T>(),
+                              uint offset_row = 0):
+    AssemblyVector<FESpace_T>(fe, offset_row, comp),
+    coef(c),
+    rhs(r),
+    feSpaceRhs(fe)
+  {}
+
+  explicit AssemblyProjection(double const c,
+                              Vec const & r,
+                              FESpace_T & fe,
                               FESpaceRhs_T & feRhs,
                               std::vector<uint> comp = allComp<FESpace_T>(),
                               uint offset_row = 0):
     AssemblyVector<FESpace_T>(fe, offset_row, comp),
     coef(c),
     rhs(r),
-    feSpaceRhs(feRhs),
-    component(comp)
+    feSpaceRhs(feRhs)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -582,20 +592,20 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
     uint d = 0;
-    for (auto const c: component)
+    for (auto const c: this->comp)
     {
-      FVec<CurFERhs_T::size> local_rhs;
+      FVec<CurFERhs_T::size> localRhs;
       for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + c*feSpaceRhs.dof.totalNum;
-        local_rhs[n] = rhs[dofId];
+        localRhs[n] = rhs[dofId];
       }
       auto Fec = Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0);
       for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
       {
         Fec += coef * this->feSpace.curFE.JxW[q] *
                this->feSpace.curFE.phi[q] *
-               (feSpaceRhs.curFE.phi[q].dot(local_rhs));
+               (feSpaceRhs.curFE.phi[q].dot(localRhs));
       }
       d++;
     }
@@ -604,7 +614,6 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   double const coef;
   Vec const & rhs;
   FESpaceRhs_T & feSpaceRhs;
-  std::vector<uint> const component;
 };
 
 template <typename FESpace, typename FESpaceRhs>
@@ -645,17 +654,17 @@ struct AssemblyVectorProjection: public AssemblyVector<FESpace>
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
     for (uint d=0; d<CurFE_T::RefFE_T::dim; ++d)
     {
-      FVec<CurFERhs_T::size> local_rhs;
+      FVec<CurFERhs_T::size> localRhs;
       for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + d*feSpaceRhs.dof.totalNum;
-        local_rhs[n] = rhs[dofId];
+        localRhs[n] = rhs[dofId];
       }
       for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
       {
         Fe += coef * this->feSpace.curFE.JxW[q] *
               this->feSpace.curFE.phiVect[q].col(d) *
-              (feSpaceRhs.curFE.phi[q].dot(local_rhs));
+              (feSpaceRhs.curFE.phi[q].dot(localRhs));
       }
     }
   }

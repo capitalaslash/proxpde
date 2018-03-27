@@ -18,13 +18,17 @@ struct CurFE
 
   CurFE()
   {
-    for(uint i=0; i<RefFE::numFuns; ++i)
+    for(uint q=0; q<QR::numPts; ++q)
     {
-      for(uint q=0; q<QR::numPts; ++q)
+      for(uint i=0; i<RefFE::numFuns; ++i)
       {
         phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
         phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
         dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
+      }
+      for(uint i=0; i<RefFE::numGeoFuns; ++i)
+      {
+        mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
       }
     }
   }
@@ -40,9 +44,9 @@ struct CurFE
     for(uint q=0; q<QR::numPts; ++q)
     {
       jac[q] = JacMat_T::Zero();
-      for(uint n=0; n<RefFE::numFuns; ++n)
+      for(uint n=0; n<RefFE::numGeoFuns; ++n)
       {
-        jac[q] += dofPts[n] * dphiRef[q].row(n);
+        jac[q] += RefFE::mappingPts(elem)[n] * mapping[q].row(n);
       }
 
       // J^+ = (J^T J)^-1 J^T
@@ -64,8 +68,6 @@ struct CurFE
 
   GeoElem const* e;
   static int const size = RefFE::numFuns;
-  // vectorFun_T map;
-  // vectorFun_T imap;
   array<Vec3,RefFE::numFuns> dofPts;
   array<JacMat_T,QR::numPts> jac;
   array<JacTMat_T,QR::numPts> jacPlus;
@@ -75,6 +77,8 @@ struct CurFE
   array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
   array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> phiVectRef;
   array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> dphiRef;
+  array<FMat<RefFE::numGeoFuns,RefFE::dim>,QR::numPts> mapping;
+  // vectorFun_T inverseMapping;
   array<FVec<RefFE::numFuns>,QR::numPts> phi;
   array<FMat<RefFE::numFuns,3>,QR::numPts> phiVect;
   array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;

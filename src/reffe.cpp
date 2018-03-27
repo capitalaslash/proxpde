@@ -25,6 +25,8 @@ array<onedFun_T,RefPointP1::numFuns> const RefPointP1::dphiFun =
   [] (Vec_T const &) { return Vec_T::Constant(0.L); }
 }};
 
+array<onedFun_T,RefPointP1::numGeoFuns> const RefPointP1::mapping = RefPointP1::dphiFun;
+
 // ----------------------------------------------------------------------------
 uint constexpr RefLineP0::numFuns;
 array<uint,4> constexpr RefLineP0::dof_place;
@@ -48,6 +50,13 @@ array<onedFun_T,RefLineP0::numFuns> const RefLineP0::phiVectFun =
 array<onedFun_T,RefLineP0::numFuns> const RefLineP0::dphiFun =
 {{
   [] (Vec_T const &) { return Vec_T::Constant(0.L); }
+}};
+
+// linear mapping
+array<onedFun_T,RefLineP0::numGeoFuns> const RefLineP0::mapping =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(-0.5L); },
+  [] (Vec_T const &) { return Vec_T::Constant(+0.5L); }
 }};
 
 // ----------------------------------------------------------------------------
@@ -78,6 +87,8 @@ array<onedFun_T,RefLineP1::numFuns> const RefLineP1::dphiFun =
   [] (Vec_T const &) { return Vec_T::Constant(-0.5L); },
   [] (Vec_T const &) { return Vec_T::Constant(+0.5L); }
 }};
+
+array<onedFun_T,RefLineP1::numFuns> const RefLineP1::mapping = RefLineP1::dphiFun;
 
 //RefLineP1::LocalMat_T const RefLineP1::massMat =
 //  (RefLineP1::LocalMat_T() << 2.L/3, 1.L/3,
@@ -123,6 +134,8 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::dphiFun =
   [] (Vec_T const & p) { return Vec_T::Constant(-2.*p(0)); }
 }};
 
+array<onedFun_T,RefLineP2::numFuns> const RefLineP2::mapping = RefLineP2::dphiFun;
+
 //RefLineP2::LocalMat_T const RefLineP2::massMat =
 //  (RefLineP2::LocalMat_T() << 0., 0., 0.,
 //                        0., 0., 0.,
@@ -157,6 +170,8 @@ array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
   [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
   [] (Vec_T const & ) { return Vec_T( 0.L,  1.L); }
 }};
+
+array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::mapping = RefTriangleP1::dphiFun;
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleP2::numFuns;
@@ -199,6 +214,8 @@ array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::dphiFun =
                                     -4.*p(1)+4.*(1.-p(0)-p(1))); }
 }};
 
+array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::mapping = RefTriangleP2::dphiFun;
+
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleRT0::numFuns;
 array<uint,4> constexpr RefTriangleRT0::dof_place;
@@ -218,8 +235,15 @@ array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiVectFun =
   [] (Vec_T const & p) { return Vec_T(p(0), p(1)-1.); }
 }};
 
-// use P1 dphi to define a linear trasnformation for the geometrical transformation
 array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); },
+  [] (Vec_T const &) { return Vec_T::Constant(0.); },
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// linear mapping
+array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::mapping =
 {{
    [] (Vec_T const & ) { return Vec_T(-1.L, -1.L); },
    [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
@@ -254,6 +278,8 @@ array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
   [] (Vec_T const & p) { return Vec_T( 0.25*(1.+p(1)),  0.25*(1.+p(0))); },
   [] (Vec_T const & p) { return Vec_T(-0.25*(1.+p(1)),  0.25*(1.-p(0))); }
 }};
+
+array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::mapping = RefQuadQ1::dphiFun;
 
 // ----------------------------------------------------------------------------
 uint constexpr RefQuadP2::numFuns;
@@ -303,6 +329,8 @@ array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::dphiFun =
   [] (Vec_T const & p) { return Vec_T(-0.5*(1-p(1)*p(1)),
                                       -(1.-p(0))*p(1)); }
 }};
+
+array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::mapping = RefQuadP2::dphiFun;
 
 // ----------------------------------------------------------------------------
 uint constexpr RefQuadQ2::numFuns;
@@ -356,3 +384,5 @@ array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
   [] (Vec_T const & p) { return Vec_T(-2.*p(0)*(1.-p(1)*p(1)),
                                     -2.*(1.-p(0)*p(0))*p(1)); }
 }};
+
+array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::mapping = RefQuadQ2::dphiFun;

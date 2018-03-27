@@ -135,10 +135,9 @@ protected:
     Table<double, 3> coords(feSpace.dof.totalNum, 3);
     for (auto const & e: mesh.elementList)
     {
-      auto localPts = FESpace::RefFE_T::dofPts(e);
-      for (uint p=0; p<localPts.size(); ++p)
+      for (uint p=0; p<FESpace::RefFE_T::numGeoFuns; ++p)
       {
-        coords.row(feSpace.dof.elemMap[e.id][p]) = localPts[p];
+        coords.row(feSpace.dof.elemMap[e.id][p]) = FESpace::RefFE_T::mappingPts(e)[p];
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");

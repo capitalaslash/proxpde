@@ -176,6 +176,46 @@ struct RefLineP2
   }
 };
 
+struct RefTriangleP0
+{
+  using GeoElem_T = Triangle;
+  using RefFacet_T = RefLineP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 2;
+  static uint constexpr numFuns = 1U;
+  static uint constexpr numGeoFuns = 3U;
+  static array<uint,4> constexpr dof_place{{0,1,0,0}};
+  static uint constexpr dofPerFacet = 0U;
+  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<scalarTwodFun_T,numFuns> const phiFun;
+  static array<twodFun_T,numFuns> const phiVectFun;
+  static array<twodFun_T,numFuns> const dphiFun;
+  static array<twodFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 0.5L;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+    array<Vec3,numFuns> dofPts {{
+        e.midpoint()
+    }};
+    return dofPts;
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+    array<Vec3,numGeoFuns> mappingPts {{
+        e.pointList[0]->coord,
+        e.pointList[1]->coord,
+        e.pointList[2]->coord
+    }};
+    return mappingPts;
+  }
+};
+
 struct RefTriangleP1
 {
   using GeoElem_T = Triangle;

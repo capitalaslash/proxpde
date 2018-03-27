@@ -146,6 +146,34 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::mapping = RefLineP2::dphiFu
 //                        0., 0., 0. ).finished();
 
 // ----------------------------------------------------------------------------
+uint constexpr RefTriangleP0::numFuns;
+array<uint,4> constexpr RefTriangleP0::dof_place;
+array<array<uint,0>,0> constexpr RefTriangleP0::dofOnFacet;
+
+array<scalarTwodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.; }
+}};
+
+array<twodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::phiVectFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(1.); }
+}};
+
+array<twodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// linear mapping
+array<twodFun_T,RefTriangleP0::numGeoFuns> const RefTriangleP0::mapping =
+{{
+   [] (Vec_T const & ) { return Vec_T(-1.L, -1.L); },
+   [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
+   [] (Vec_T const & ) { return Vec_T( 0.L,  1.L); }
+}};
+
+// ----------------------------------------------------------------------------
 uint constexpr RefTriangleP1::numFuns;
 array<uint,4> constexpr RefTriangleP1::dof_place;
 array<array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;

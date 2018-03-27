@@ -486,3 +486,36 @@ template <>
 struct Order<RefQuadP2>{ static constexpr uint value = 2; };
 template <>
 struct Order<RefQuadQ2>{ static constexpr uint value = 2; };
+
+enum class FamilyType : int8_t
+{
+  NONE=0,
+  LAGRANGE=1,
+  RAVIART_THOMAS=2
+};
+
+template <typename RefFE>
+struct Family{ static constexpr FamilyType value = FamilyType::NONE; };
+
+template <>
+struct Family<RefPointP1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefLineP0>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefLineP1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefLineP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefTriangleP0>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefTriangleP1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefTriangleP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefTriangleRT0>{ static constexpr FamilyType value = FamilyType::RAVIART_THOMAS; };
+template <>
+struct Family<RefQuadQ1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefQuadP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefQuadQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };

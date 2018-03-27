@@ -519,3 +519,36 @@ template <>
 struct Family<RefQuadP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefQuadQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+
+enum class FEDimType : int8_t
+{
+  NONE=0,
+  SCALAR=1,
+  VECTOR=2
+};
+
+template <typename RefFE>
+struct FEDim{ static constexpr FEDimType value = FEDimType::NONE; };
+
+template <>
+struct FEDim<RefPointP1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefLineP0>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefLineP1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefLineP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefTriangleP0>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefTriangleP1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefTriangleP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefTriangleRT0>{ static constexpr FEDimType value = FEDimType::VECTOR; };
+template <>
+struct FEDim<RefQuadQ1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefQuadP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefQuadQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };

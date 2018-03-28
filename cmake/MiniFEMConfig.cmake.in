@@ -1,0 +1,19 @@
+get_filename_component(MiniFEM_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${MiniFEM_CMAKE_DIR})
+
+find_dependency(Eigen 3.3.3 REQUIRED)
+find_dependency(UMFPack REQUIRED MODULE)
+find_dependency(tinyxml2 REQUIRED)
+find_dependency(HDF5 REQUIRED COMPONENTS C)
+find_dependency(yaml-cpp 0.6 REQUIRED)
+find_dependency(OpenMP REQUIRED)
+list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+if(NOT TARGET MiniFEM::MiniFEM)
+    include("${MiniFEM_CMAKE_DIR}/MiniFEMTargets.cmake")
+endif()
+
+set(MiniFEM_LIBRARIES MiniFEM::MiniFEM)
+

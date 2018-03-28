@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8.0)
 
 project(MiniFEM
   VERSION 0.1
@@ -7,14 +7,14 @@ project(MiniFEM
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
-      "Choose the type of build, RelWithDebInfo will be the default." FORCE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, Release will be the default." FORCE)
   # set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_DEBUG_POSTFIX "-dbg")
 
@@ -33,16 +33,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_STATIC_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
-
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-# add external packages in contrib dir
-set(MINIFEM_CONTRIB_DIR contrib CACHE STRING "relative path to contrib dir")
 include(Contrib)
-
-add_subdirectory(include)
-
-add_subdirectory(src)
 
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_FLAGS)
 message(STATUS "================================================================")
@@ -52,7 +45,36 @@ message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
 message(STATUS "c++ flags       : ${${BUILD_FLAGS}}")
 message(STATUS "================================================================")
 
-add_executable(main main.cpp)
+add_library(minifem SHARED
+  src/geo.cpp
+  src/mesh.cpp
+  src/reffe.cpp
+)
+add_library(MiniFEM::minifem ALIAS minifem)
+
+target_include_directories(minifem PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  # $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+  ${HDF5_INCLUDE_DIRS}
+  )
+
+# use generic c++17 dependency until specific cxx_if_constexpr is available
+target_compile_features(minifem PUBLIC cxx_std_17)
+
+target_compile_options(minifem PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic>)
+
+target_link_libraries(minifem PUBLIC
+  Eigen3::Eigen
+  UMFPACK::UMFPACK
+  tinyxml2
+  yaml-cpp
+  ${HDF5_LIBRARIES}
+  OpenMP::OpenMP_CXX
+  stdc++fs
+)
+
+add_executable(main EXCLUDE_FROM_ALL main.cpp)
 target_link_libraries(main MiniFEM::minifem)
 # set_target_properties(main
 #   PROPERTIES
@@ -66,15 +88,52 @@ target_link_libraries(test_eigen MiniFEM::minifem)
 add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
 target_link_libraries(test_trap MiniFEM::minifem)
 
-include(CTest)
-#enable_testing()
-add_subdirectory(test)
+install(TARGETS minifem
+  EXPORT MiniFEMTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+  )
+
+install(DIRECTORY include/ DESTINATION include/minifem)
+
+install(EXPORT MiniFEMTargets
+  FILE MiniFEMTargets.cmake
+  NAMESPACE MiniFEM::
+  DESTINATION lib/cmake/MiniFEM
+)
 
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file(MiniFEMConfigVersion.cmake
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/MiniFEMConfigVersion.cmake
   VERSION ${MiniFEM_VERSION}
   COMPATIBILITY ExactVersion
-  )
-install(FILES ${PROJECT_BINARY_DIR}/MiniFEMConfigVersion.cmake
-  DESTINATION lib # lib/cmake/MiniFEM
-  )
+)
+
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/MiniFEMConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/MiniFEMConfig.cmake
+    INSTALL_DESTINATION lib/cmake/MiniFEM
+)
+
+install(FILES
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/FindUMFPack.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/MiniFEMConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/MiniFEMConfigVersion.cmake
+  DESTINATION lib/cmake/MiniFEM
+)
+
+configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/FindUMFPack.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/FindUMFPack.cmake
+  COPYONLY
+)
+
+export(EXPORT MiniFEMTargets
+  FILE ${CMAKE_CURRENT_BINARY_DIR}/MiniFEMTargets.cmake
+  NAMESPACE MiniFEM::
+)
+
+export(PACKAGE MiniFEM)
+
+add_subdirectory(test)

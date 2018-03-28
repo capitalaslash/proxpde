@@ -11,7 +11,7 @@ find_package(tinyxml2 NO_MODULE REQUIRED)
 find_package(HDF5 COMPONENTS C REQUIRED)
 
 # yaml-cpp
-find_package(YamlCpp REQUIRED)
+find_package(yaml-cpp NO_MODULE REQUIRED)
 
 # openmp
 find_package(OpenMP REQUIRED)

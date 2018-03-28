@@ -8,6 +8,9 @@ macro(minifem_add_test test_name)
   )
 endmacro()
 
+include(CTest)
+# enable_testing()
+
 minifem_add_test(blockmatrix)
 minifem_add_test(hdf5write)
 

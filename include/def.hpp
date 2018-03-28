@@ -79,3 +79,5 @@ using onedFun_T = Fun<1,1>;
 using twodFun_T = Fun<2,2>;
 using scalarOnedFun_T = ScalarFun<1>;
 using scalarTwodFun_T = ScalarFun<2>;
+
+template<class T> struct dependent_false : std::false_type {};

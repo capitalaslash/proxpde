@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
   double const dt = 0.01; // config["timestep"].as<double>();
   AssemblyMass<FESpaceVel_T> timeder(1./dt, feSpaceVel);
   Vec velOld{2*dofU};
-  AssemblyScalarProjection<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
+  AssemblyProjection<FESpaceVel_T> timeder_rhs(1./dt, velOld, feSpaceVel);
   AssemblyAdvection<FESpaceVel_T> advection(1.0, velOld, feSpaceVel);
 
   Var sol{"vel", numDOFs};

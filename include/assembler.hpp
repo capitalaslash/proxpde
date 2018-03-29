@@ -29,7 +29,7 @@ template <typename FESpaceTuple>
 uint computeDOFTotalNum(FESpaceTuple & list)
 {
   uint num = 0;
-  utility::for_each_in_tuple(list, [&num](auto const & feSpace){num += feSpace.dim*feSpace.dof.totalNum;});
+  utility::for_each_in_tuple(list, [&num](auto const & feSpace){num += feSpace.dim*feSpace.dof.size;});
   return num;
 }
 

@@ -32,6 +32,8 @@ int main()
   FESpaceP1_T feSpaceP1{trianglePtr};
   FESpaceRT0_T feSpaceRT0{trianglePtr};
 
+  std::cout << "dofP0:\n" << feSpaceP0.dof << std::endl;
+
   BCList<FESpaceRT0_T> bcRT0{feSpaceRT0};
   BCList<FESpaceP0_T> bcP0{feSpaceP0};
 
@@ -45,7 +47,7 @@ int main()
 
   AssemblyVectorMass<FESpaceRT0_T> massRT0(1.0, feSpaceRT0);
   AssemblyProjection<FESpaceRT0_T,FESpaceP1_T> projP1RT0(1.0, uP1.data, feSpaceRT0, feSpaceP1);
-  Builder builderRT0{feSpaceRT0.dof.totalNum};
+  Builder builderRT0{feSpaceRT0.dof.size};
   builderRT0.buildProblem(massRT0, bcRT0);
   builderRT0.buildProblem(projP1RT0, bcRT0);
   builderRT0.closeMatrix();
@@ -59,7 +61,7 @@ int main()
 
   AssemblyMass<FESpaceP0_T> massP0(1.0, feSpaceP0);
   AssemblyProjection<FESpaceP0_T,FESpaceRT0_T> projRT0P0(1.0, uRT0.data, feSpaceP0, feSpaceRT0);
-  Builder builderP0{feSpaceP0.dof.totalNum * feSpaceP0.dim};
+  Builder builderP0{feSpaceP0.dof.size * feSpaceP0.dim};
   builderP0.buildProblem(massP0, bcP0);
   builderP0.buildProblem(projRT0P0, bcP0);
   builderP0.closeMatrix();
@@ -69,12 +71,10 @@ int main()
   uP0.data = solverP0.solve(builderP0.b);
   std::cout << "uP0:\n" << uP0.data << std::endl;
 
-
-
-  //  IOManager<FESpace1_T> io1{feSpace1, "projection1"};
-//  io1.print({u1});
-//  IOManager<FESpace2_T> io2{feSpace2, "projection2"};
-//  io2.print({u2});
+  IOManager<FESpaceP1_T> ioP1{feSpaceP1, "p1"};
+  ioP1.print({uP1});
+  IOManager<FESpaceP0_T> ioP0{feSpaceP0, "p0"};
+  ioP0.print({uP0});
 
   return 0;
 }

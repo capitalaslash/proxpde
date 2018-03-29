@@ -36,7 +36,7 @@ int main()
 
   AssemblyMass<FESpace2_T> mass2(1.0, feSpace2);
   AssemblyProjection<FESpace2_T, FESpace1_T> mass1(1.0, u1.data, feSpace2, feSpace1);
-  Builder builder{feSpace2.dof.totalNum};
+  Builder builder{feSpace2.dof.size};
   builder.buildProblem(mass2, bc2);
   builder.buildProblem(mass1, bc2);
   builder.closeMatrix();

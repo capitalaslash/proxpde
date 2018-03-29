@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
   // DofSet_T pinSet = {1};
   // bcsP.addEssentialBC(pinSet, [] (Vec3 const &) {return 0.;});
 
-  auto const dofU = feSpaceVel.dof.totalNum;
-  auto const dofP = feSpaceP.dof.totalNum;
+  auto const dofU = feSpaceVel.dof.size;
+  auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);

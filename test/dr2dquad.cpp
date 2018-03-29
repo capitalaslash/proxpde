@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
   AssemblyAnalyticRhs<FESpace_T> f(modifiedRhs, feSpace);
   // AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
 
-  Builder builder{feSpace.dof.totalNum};
+  Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(mass, bcs);
   builder.buildProblem(f, bcs);

@@ -55,14 +55,14 @@ int main(int argc, char* argv[])
   bcsV.addEssentialBC(side::LEFT, zeroFun);
   BCList<FESpaceP_T> bcsP(feSpaceP);
 
-  uint const numDOFs = 2*feSpaceU.dof.totalNum + feSpaceP.dof.totalNum;
+  uint const numDOFs = 2*feSpaceU.dof.size + feSpaceP.dof.size;
 
   AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
-  // AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.totalNum, 0);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.totalNum, 2*feSpaceU.dof.totalNum);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.totalNum, feSpaceU.dof.totalNum);
+  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.size, feSpaceU.dof.size);
+  // AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.size);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.size, 0);
+  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.size, 2*feSpaceU.dof.size);
+  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.size, feSpaceU.dof.size);
 
   Builder builder{numDOFs};
   // builder.assemblies[0].push_back(&stiffness0);
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
   builder.buildProblem(stiffnessU, bcsU);
-  builder.buildProblem(make_assemblyGrad(feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.totalNum), bcsU, bcsP);
+  builder.buildProblem(make_assemblyGrad(feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
   builder.buildProblem(divU, bcsP, bcsU);
   builder.buildProblem(stiffnessV, bcsV);
   builder.buildProblem(gradV, bcsV, bcsP);
@@ -89,9 +89,9 @@ int main(int argc, char* argv[])
 
   std::cout << sol.norm() << std::endl;
 
-  Var u{"u", sol, 0, feSpaceU.dof.totalNum};
-  Var v{"v", sol, feSpaceU.dof.totalNum, feSpaceU.dof.totalNum};
-  Var p{"p", sol, 2*feSpaceU.dof.totalNum, feSpaceP.dof.totalNum};
+  Var u{"u", sol, 0, feSpaceU.dof.size};
+  Var v{"v", sol, feSpaceU.dof.size, feSpaceU.dof.size};
+  Var p{"p", sol, 2*feSpaceU.dof.size, feSpaceP.dof.size};
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);

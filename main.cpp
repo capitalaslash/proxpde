@@ -61,7 +61,7 @@ int main()
 
   AssemblyStiffness<FESpace_T> assembly(1.0, feSpace);
 
-  Builder builder{feSpace.dof.totalNum};
+  Builder builder{feSpace.dof.size};
   builder.buildProblem(assembly, bcs);
   builder.closeMatrix();
 

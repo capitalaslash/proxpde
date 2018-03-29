@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // t.start();
-  auto const dofU = feSpaceVel.dof.totalNum;
-  auto const dofP = feSpaceP.dof.totalNum;
+  auto const dofU = feSpaceVel.dof.size;
+  auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   double const mu = 0.1; // config["mu"].as<double>();

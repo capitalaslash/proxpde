@@ -6,41 +6,62 @@
 template <typename RefFE>
 struct XDMFTraits
 {
-  static constexpr char const * shape_name = "None";
+  // static constexpr char const * shapeName = "None";
+  // static constexpr char const * attributeType = "None";
 };
 
 template <>
 struct XDMFTraits<RefLineP1>
 {
-  static constexpr char const * shape_name = "Polyline";
+  static constexpr char const * shapeName = "Polyline";
+  static constexpr char const * attributeType = "Node";
+};
+
+template <>
+struct XDMFTraits<RefLineP2>
+{
+  static constexpr char const * shapeName = "Polyline";
+  static constexpr char const * attributeType = "Node";
+};
+
+template <>
+struct XDMFTraits<RefTriangleP0>
+{
+  static constexpr char const * shapeName = "Triangle";
+  static constexpr char const * attributeType = "Cell";
 };
 
 template <>
 struct XDMFTraits<RefTriangleP1>
 {
-  static constexpr char const * shape_name = "Triangle";
+  static constexpr char const * shapeName = "Triangle";
+  static constexpr char const * attributeType = "Node";
 };
 
 template <>
 struct XDMFTraits<RefTriangleP2>
 {
-  static constexpr char const * shape_name = "Triangle_6";
+  static constexpr char const * shapeName = "Triangle_6";
+  static constexpr char const * attributeType = "Node";
 };
 
 template <>
 struct XDMFTraits<RefQuadQ1>
 {
-  static constexpr char const * shape_name = "Quadrilateral";
+  static constexpr char const * shapeName = "Quadrilateral";
+  static constexpr char const * attributeType = "Node";
 };
 
 template <>
 struct XDMFTraits<RefQuadP2>
 {
-  static constexpr char const * shape_name = "Quadrilateral_8";
+  static constexpr char const * shapeName = "Quadrilateral_8";
+  static constexpr char const * attributeType = "Node";
 };
 
 template <>
 struct XDMFTraits<RefQuadQ2>
 {
-  static constexpr char const * shape_name = "Quadrilateral_9";
+  static constexpr char const * shapeName = "Quadrilateral_9";
+  static constexpr char const * attributeType = "Node";
 };

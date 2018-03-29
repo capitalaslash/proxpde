@@ -27,14 +27,14 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace{meshPtr};
 
-  Var sol{"sol", feSpace.dof.totalNum};
+  Var sol{"sol", feSpace.dof.size};
   IOManager<FESpace_T> io{feSpace, "output_io/sol"};
 
   for (auto itime=0; itime<5; ++itime)
   {
     io.iter = itime;
     io.time = itime;
-    sol.data = Vec::LinSpaced(feSpace.dof.totalNum, itime, itime*2);
+    sol.data = Vec::LinSpaced(feSpace.dof.size, itime, itime*2);
     io.print({sol});
   }
 

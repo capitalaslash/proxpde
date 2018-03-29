@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   t.start();
   AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
-  Builder builder{feSpace.dof.totalNum};
+  Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();

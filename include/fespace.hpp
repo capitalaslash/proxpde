@@ -40,7 +40,7 @@ struct FESpace
       id_T const dofId = this->dof.elemMap[elem.id][n];
       for (uint d=0; d<dim; ++d)
       {
-        localValue(n, d) = data[dofId + d*this->dof.totalNum];
+        localValue(n, d) = data[dofId + d*this->dof.size];
       }
       // TODO: jacPlus should be computed on the point
       // here we assume that jacPlus does not change on the element
@@ -68,7 +68,7 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
   // set the vector data to the appropriate dimension if it comes with length 0
   if (v.size() == 0)
   {
-    v = Vec::Zero(feSpace.dof.totalNum * feSpace.dim);
+    v = Vec::Zero(feSpace.dof.size * feSpace.dim);
   }
   for(auto const & e: feSpace.meshPtr->elementList)
   {

@@ -6,10 +6,10 @@
 template <typename RefElem>
 uint constexpr numDOFs()
 {
-  return 1 * RefElem::dof_place[0] +
-    RefElem::GeoElem_T::numFaces * RefElem::dof_place[1] +
-    RefElem::GeoElem_T::numEdges * RefElem::dof_place[2] +
-    RefElem::GeoElem_T::numPts * RefElem::dof_place[3];
+  return 1 * RefElem::dofPlace[0] +
+    RefElem::GeoElem_T::numFaces * RefElem::dofPlace[1] +
+    RefElem::GeoElem_T::numEdges * RefElem::dofPlace[2] +
+    RefElem::GeoElem_T::numPts * RefElem::dofPlace[3];
 }
 
 struct RefPointP1
@@ -20,7 +20,7 @@ struct RefPointP1
   static int constexpr dim = 1;
   static uint constexpr numFuns = 1U;
   static uint constexpr numGeoFuns = 1U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
   using Vec_T = FVec<dim>;
@@ -59,7 +59,7 @@ struct RefLineP0
   static int constexpr dim = 1;
   static uint constexpr numFuns = 1U;
   static uint constexpr numGeoFuns = 2U;
-  static array<uint,4> constexpr dof_place{{0,0,1,0}};
+  static array<uint,4> constexpr dofPlace{{0,0,1,0}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
   using Vec_T = FVec<dim>;
@@ -101,7 +101,7 @@ struct RefLineP1
   static int constexpr dim = 1;
   static uint constexpr numFuns = 2U;
   static uint constexpr numGeoFuns = 2U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
     {{0}}, {{1}}
@@ -142,7 +142,7 @@ struct RefLineP2
   static int constexpr dim = 1;
   static uint constexpr numFuns = 3U;
   static uint constexpr numGeoFuns = 3U;
-  static array<uint,4> constexpr dof_place{{0,0,1,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,1,1}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
     {{0}}, {{1}}
@@ -184,7 +184,8 @@ struct RefTriangleP0
   static int constexpr dim = 2;
   static uint constexpr numFuns = 1U;
   static uint constexpr numGeoFuns = 3U;
-  static array<uint,4> constexpr dof_place{{0,1,0,0}};
+  static array<uint,4> constexpr dofPlace{{0,1,0,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
   using Vec_T = FVec<dim>;
@@ -224,7 +225,7 @@ struct RefTriangleP1
   static int constexpr dim = 2;
   static uint constexpr numFuns = 3U;
   static uint constexpr numGeoFuns = 3U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 2U;
   static array<array<uint,2>,3> constexpr dofOnFacet = {{
     {{0,1}}, {{1,2}}, {{2,0}}
@@ -263,7 +264,7 @@ struct RefTriangleP2
   static int constexpr dim = 2;
   static uint constexpr numFuns = 6U;
   static uint constexpr numGeoFuns = 6U;
-  static array<uint,4> constexpr dof_place{{0,0,1,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,3> constexpr dofOnFacet = {{
     {{0,1,3}}, {{1,2,4}}, {{2,0,5}}
@@ -305,7 +306,8 @@ struct RefTriangleRT0
   static int constexpr dim = 2;
   static uint constexpr numFuns = 3U;
   static uint constexpr numGeoFuns = 3U;
-  static array<uint,4> constexpr dof_place{{0,0,1,0}};
+  static array<uint,4> constexpr dofPlace{{0,0,1,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,3> constexpr dofOnFacet = {{
     {{0}}, {{1}}, {{2}}
@@ -344,7 +346,7 @@ struct RefQuadQ1
   static int constexpr dim = 2;
   static uint constexpr numFuns = 4U;
   static uint constexpr numGeoFuns = 4U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 2U;
   static array<array<uint,2>,4> constexpr dofOnFacet = {{
     {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}
@@ -384,7 +386,7 @@ struct RefQuadP2
   static int constexpr dim = 2;
   static uint constexpr numFuns = 8U;
   static uint constexpr numGeoFuns = 8U;
-  static array<uint,4> constexpr dof_place{{0,0,1,1}};
+  static array<uint,4> constexpr dofPlace{{0,0,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
     {{0,1,4}}, {{1,2,5}}, {{2,3,6}}, {{3,0,7}}
@@ -428,7 +430,7 @@ struct RefQuadQ2
   static int constexpr dim = 2;
   static uint constexpr numFuns = 9U;
   static uint constexpr numGeoFuns = 9U;
-  static array<uint,4> constexpr dof_place{{0,1,1,1}};
+  static array<uint,4> constexpr dofPlace{{0,1,1,1}};
   static uint constexpr dofPerFacet = 3U;
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
     {{0,1,4}}, {{1,2,5}}, {{2,3,6}}, {{3,0,7}}
@@ -552,3 +554,10 @@ template <>
 struct FEDim<RefQuadP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefQuadQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <typename RefFE>
+struct MappingIsSeparate{ static constexpr bool value = false; };
+
+template <>
+struct MappingIsSeparate<RefTriangleP0>{ static constexpr bool value = true; };
+template <>
+struct MappingIsSeparate<RefTriangleRT0>{ static constexpr bool value = true; };

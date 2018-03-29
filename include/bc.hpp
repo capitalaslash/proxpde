@@ -35,7 +35,7 @@ DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> c
               );
           if(compIsConstrained)
           {
-            constrainedDOFset.insert(dof + d*feSpace.dof.totalNum);
+            constrainedDOFset.insert(dof + d*feSpace.dof.size);
           }
         }
       }
@@ -54,8 +54,8 @@ public:
         DofSet_T const & dofSet,
         Fun<FESpace::dim,3> const & v):
     constrainedDOFset(dofSet),
-    boolVector(BoolArray_T::Constant(feSpace.dof.totalNum*FESpace::dim, false)),
-    dimSize(feSpace.dof.totalNum),
+    boolVector(BoolArray_T::Constant(feSpace.dof.size*FESpace::dim, false)),
+    dimSize(feSpace.dof.size),
     value(v)
   {
     fillBoolVector();

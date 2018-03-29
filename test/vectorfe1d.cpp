@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
 
   t.start();
-  auto const size = dim * feSpace.dof.totalNum;
+  auto const size = dim * feSpace.dof.size;
   AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   // AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);

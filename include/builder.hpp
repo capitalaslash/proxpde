@@ -26,7 +26,7 @@ struct Builder
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename Diagonal<FESpace>::LMat_T;
     using LVec_T = typename Diagonal<FESpace>::LVec_T;
-    auto const gSize = assembly.feSpace.dof.totalNum;
+    auto const gSize = assembly.feSpace.dof.size;
 
     auto const & mesh = *assembly.feSpace.meshPtr;
 
@@ -219,8 +219,8 @@ struct Builder
     using SquareMat1_T = FMat<FESpace1::dim*CurFE1_T::size,FESpace1::dim*CurFE1_T::size>;
     using SquareMat2_T = FMat<FESpace2::dim*CurFE2_T::size,FESpace2::dim*CurFE2_T::size>;
     using Vec2_T = FVec<FESpace2::dim*CurFE2_T::size>;
-    auto const gSize1 = assembly.feSpace1.dof.totalNum;
-    auto const gSize2 = assembly.feSpace2.dof.totalNum;
+    auto const gSize1 = assembly.feSpace1.dof.size;
+    auto const gSize2 = assembly.feSpace2.dof.size;
 
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
@@ -370,7 +370,7 @@ struct Builder
         for (uint d=0; d<FESpace::dim; ++d)
         {
           auto val = Fe(i+d*FESpace::CurFE_T::size);
-          b(assembly.offset_row + d*assembly.feSpace.dof.totalNum + id_i) += val;
+          b(assembly.offset_row + d*assembly.feSpace.dof.size + id_i) += val;
         }
       }
     }

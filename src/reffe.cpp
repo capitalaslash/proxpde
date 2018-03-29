@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------------
 uint constexpr RefPointP1::numFuns;
-array<uint,4> constexpr RefPointP1::dof_place;
+array<uint,4> constexpr RefPointP1::dofPlace;
 array<array<uint,0>,0> constexpr RefPointP1::dofOnFacet;
 
 array<RefPointP1::Vec_T,RefPointP1::numFuns> const RefPointP1::points =
@@ -29,7 +29,7 @@ array<onedFun_T,RefPointP1::numGeoFuns> const RefPointP1::mapping = RefPointP1::
 
 // ----------------------------------------------------------------------------
 uint constexpr RefLineP0::numFuns;
-array<uint,4> constexpr RefLineP0::dof_place;
+array<uint,4> constexpr RefLineP0::dofPlace;
 //array<array<uint,1>,2> constexpr RefLineP0::dofOnFacet;
 
 array<RefLineP0::Vec_T,RefLineP0::numFuns> const RefLineP0::points =
@@ -61,7 +61,7 @@ array<onedFun_T,RefLineP0::numGeoFuns> const RefLineP0::mapping =
 
 // ----------------------------------------------------------------------------
 uint constexpr RefLineP1::numFuns;
-array<uint,4> constexpr RefLineP1::dof_place;
+array<uint,4> constexpr RefLineP1::dofPlace;
 array<array<uint,1>,2> constexpr RefLineP1::dofOnFacet;
 
 array<RefLineP1::Vec_T,RefLineP1::numFuns> const RefLineP1::points =
@@ -99,7 +99,7 @@ array<onedFun_T,RefLineP1::numFuns> const RefLineP1::mapping = RefLineP1::dphiFu
 
 // ----------------------------------------------------------------------------
 uint constexpr RefLineP2::numFuns;
-array<uint,4> constexpr RefLineP2::dof_place;
+array<uint,4> constexpr RefLineP2::dofPlace;
 array<array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
 
 static Point line_p0{-1., 0., 0.};
@@ -147,7 +147,7 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::mapping = RefLineP2::dphiFu
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleP0::numFuns;
-array<uint,4> constexpr RefTriangleP0::dof_place;
+array<uint,4> constexpr RefTriangleP0::dofPlace;
 array<array<uint,0>,0> constexpr RefTriangleP0::dofOnFacet;
 
 array<scalarTwodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::phiFun =
@@ -175,7 +175,7 @@ array<twodFun_T,RefTriangleP0::numGeoFuns> const RefTriangleP0::mapping =
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleP1::numFuns;
-array<uint,4> constexpr RefTriangleP1::dof_place;
+array<uint,4> constexpr RefTriangleP1::dofPlace;
 array<array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;
 
 array<scalarTwodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::phiFun =
@@ -203,7 +203,7 @@ array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::mapping = RefTriang
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleP2::numFuns;
-array<uint,4> constexpr RefTriangleP2::dof_place;
+array<uint,4> constexpr RefTriangleP2::dofPlace;
 array<array<uint,3>,3> constexpr RefTriangleP2::dofOnFacet;
 
 array<scalarTwodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::phiFun =
@@ -246,7 +246,7 @@ array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::mapping = RefTriang
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTriangleRT0::numFuns;
-array<uint,4> constexpr RefTriangleRT0::dof_place;
+array<uint,4> constexpr RefTriangleRT0::dofPlace;
 array<array<uint,1>,3> constexpr RefTriangleRT0::dofOnFacet;
 
 array<scalarTwodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiFun =
@@ -280,7 +280,7 @@ array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::mapping =
 
 // ----------------------------------------------------------------------------
 uint constexpr RefQuadQ1::numFuns;
-array<uint,4> constexpr RefQuadQ1::dof_place;
+array<uint,4> constexpr RefQuadQ1::dofPlace;
 array<array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
 
 array<scalarTwodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::phiFun =
@@ -311,7 +311,7 @@ array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::mapping = RefQuadQ1::dphiFu
 
 // ----------------------------------------------------------------------------
 uint constexpr RefQuadP2::numFuns;
-array<uint,4> constexpr RefQuadP2::dof_place;
+array<uint,4> constexpr RefQuadP2::dofPlace;
 array<array<uint,3>,4> constexpr RefQuadP2::dofOnFacet;
 
 array<scalarTwodFun_T,RefQuadP2::numFuns> const RefQuadP2::phiFun =
@@ -362,7 +362,7 @@ array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::mapping = RefQuadP2::dphiFu
 
 // ----------------------------------------------------------------------------
 uint constexpr RefQuadQ2::numFuns;
-array<uint,4> constexpr RefQuadQ2::dof_place;
+array<uint,4> constexpr RefQuadQ2::dofPlace;
 array<array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
 
 array<scalarTwodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::phiFun =

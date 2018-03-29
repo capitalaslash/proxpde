@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [](Vec3 const &){return 0.;});
 
-  Builder builder{feSpace.dof.totalNum};
+  Builder builder{feSpace.dof.size};
   builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
   builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
   builder.closeMatrix();

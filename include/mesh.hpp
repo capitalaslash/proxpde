@@ -370,7 +370,7 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
         if (ElemToGmsh<Elem>::type == elType)
         {
           // read connectivity from file
-          std::array<uint, Elem::numPts> conn;
+          array<uint, Elem::numPts> conn;
           for (uint c=0; c<Elem::numPts; c++)
           {
             in >> conn[c];
@@ -389,7 +389,7 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
         else if (ElemToGmsh<typename Elem::Facet_T>::type == elType)
         {
           // read connectivity from file
-          std::array<uint, Elem::Facet_T::numPts> conn;
+          array<uint, Elem::Facet_T::numPts> conn;
           for (uint c=0; c<Elem::Facet_T::numPts; c++)
           {
             in >> conn[c];

@@ -58,17 +58,17 @@ int main(int argc, char* argv[])
 
   double const dt = 0.1;
 
-  Vec vel = Vec::Constant(feSpace.dof.totalNum, 0.1);
+  Vec vel = Vec::Constant(feSpace.dof.size, 0.1);
   AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
-  Vec cOld(feSpace.dof.totalNum);
+  Vec cOld(feSpace.dof.size);
   AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);
   IOManager<FESpace_T> io{feSpace, "output_advection1d/sol"};
 
-  Builder builder{feSpace.dof.totalNum};
+  Builder builder{feSpace.dof.size};
   LUSolver solver;
   uint const ntime = 200;
   double time = 0.0;

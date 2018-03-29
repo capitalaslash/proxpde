@@ -11,7 +11,7 @@
 namespace fs = std::experimental::filesystem;
 
 template <typename T, unsigned long I>
-using Table = Eigen::Matrix<T,Eigen::Dynamic,I,Eigen::RowMajor>;
+using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
 
 template<typename T>
 struct HDF5Var
@@ -126,18 +126,23 @@ protected:
   {
     typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
-    Table<id_T, FESpace::RefFE_T::numFuns> conn(mesh.elementList.size(), FESpace::RefFE_T::numFuns);
-    for (auto const & e: mesh.elementList)
-      for (uint p=0; p<FESpace::RefFE_T::numFuns; ++p)
-        conn(e.id, p) = feSpace.dof.elemMap[e.id][p];
-    h5Mesh.print<id_T, FESpace::RefFE_T::numFuns>(conn, "connectivity");
 
-    Table<double, 3> coords(feSpace.dof.totalNum, 3);
+    Table<id_T, FESpace::RefFE_T::numGeoFuns> conn(mesh.elementList.size(), FESpace::RefFE_T::numGeoFuns);
     for (auto const & e: mesh.elementList)
     {
       for (uint p=0; p<FESpace::RefFE_T::numGeoFuns; ++p)
       {
-        coords.row(feSpace.dof.elemMap[e.id][p]) = FESpace::RefFE_T::mappingPts(e)[p];
+        conn(e.id, p) = feSpace.dof.geoMap[e.id][p];
+      }
+    }
+    h5Mesh.print<id_T, FESpace::RefFE_T::numGeoFuns>(conn, "connectivity");
+
+    Table<double, 3> coords(feSpace.dof.mapSize, 3);
+    for (auto const & e: mesh.elementList)
+    {
+      for (uint p=0; p<FESpace::RefFE_T::numGeoFuns; ++p)
+      {
+        coords.row(feSpace.dof.geoMap[e.id][p]) = FESpace::RefFE_T::mappingPts(e)[p];
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");
@@ -157,7 +162,6 @@ template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> const & data)
 {
   typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
-  uint const numPts = feSpace.dof.totalNum;
   uint const numElems = mesh.elementList.size();
 
   tinyxml2::XMLDocument doc;
@@ -180,13 +184,13 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
   grid->InsertEndChild(time_el);
 
   auto topo_el = doc.NewElement("Topology");
-  topo_el->SetAttribute("TopologyType", Traits_T::shape_name);
+  topo_el->SetAttribute("TopologyType", Traits_T::shapeName);
   topo_el->SetAttribute("Dimensions", numElems);
   auto topo = grid->InsertEndChild(topo_el);
 
   auto topodata_el = doc.NewElement("DataItem");
   topodata_el->SetAttribute("Dimensions",
-    (std::to_string(numElems) + " " + std::to_string(FESpace::RefFE_T::numFuns)).c_str());
+    (std::to_string(numElems) + " " + std::to_string(FESpace::RefFE_T::numGeoFuns)).c_str());
   topodata_el->SetAttribute("NumberType", "Int");
   topodata_el->SetAttribute("Precision", 8);
   topodata_el->SetAttribute("Format", "HDF");
@@ -202,7 +206,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
 
   auto geodata_el = doc.NewElement("DataItem");
   geodata_el->SetAttribute("Dimensions",
-    (std::to_string(numPts) + " 3").c_str());
+    (std::to_string(feSpace.dof.mapSize) + " 3").c_str());
   geodata_el->SetAttribute("NumberType", "Float");
   geodata_el->SetAttribute("Precision", 8);
   geodata_el->SetAttribute("Format", "HDF");
@@ -227,12 +231,12 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
       var_el->SetAttribute("Name", name.c_str());
       var_el->SetAttribute("Active", 1);
       var_el->SetAttribute("AttributeType", "Scalar");
-      var_el->SetAttribute("Center", "Node");
+      var_el->SetAttribute("Center", Traits_T::attributeType);
       auto var = grid->InsertEndChild(var_el);
 
       auto vardata_el = doc.NewElement("DataItem");
       vardata_el->SetAttribute("Dimensions",
-                               ("1 " + std::to_string(numPts)).c_str());
+                               ("1 " + std::to_string(feSpace.dof.size)).c_str());
       vardata_el->SetAttribute("NumberType", "Float");
       vardata_el->SetAttribute("Precision", 8);
       vardata_el->SetAttribute("Format", "HDF");
@@ -242,7 +246,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
       // buf << filepath.filename().string() << ".time.h5:/" << name << "." << iter << std::endl;
       vardata_el->SetText(buf.str().c_str());
       var->InsertEndChild(vardata_el);
-      Vec const compdata = v.data.block(d*feSpace.dof.totalNum, 0, feSpace.dof.totalNum, 1);
+      Vec const compdata = v.data.block(d*feSpace.dof.size, 0, feSpace.dof.size, 1);
       h5Iter.print(compdata, name);
       // h5Time.print(compdata, name + "." + std::to_string(iter));
     }

@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
   BCList<FESpaceP_T> bcsP{feSpaceP};
 
-  auto const dofU = feSpaceVel.dof.totalNum;
-  auto const dofP = feSpaceP.dof.totalNum;
+  auto const dofU = feSpaceVel.dof.size;
+  auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   AssemblyTensorStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);

@@ -8,8 +8,8 @@ class Point
 {
 public:
   explicit Point(Vec3 const & c = Vec3::Zero(),
-                 id_T const i = -1,
-                 marker_T const m = -1):
+                 id_T const i = DOFidNotSet,
+                 marker_T const m = MarkerNotSet):
     coord(c),
     id(i),
     marker(m)
@@ -17,8 +17,8 @@ public:
   explicit Point(double const x,
                  double const y,
                  double const z,
-                 id_T const i = -1,
-                 marker_T const m = -1):
+                 id_T const i = DOFidNotSet,
+                 marker_T const m = MarkerNotSet):
     Point(Vec3(x, y, z), i, m)
   {}
 
@@ -45,8 +45,8 @@ struct GeoElem
   using FacingElem_T = std::pair<GeoElem const*, uint>;
 
   explicit GeoElem(std::initializer_list<Point*> const & list = {nullptr},
-                   id_T i = -1,
-                   marker_T m = -1):
+                   id_T const i = DOFidNotSet,
+                   marker_T const m = MarkerNotSet):
     pointList(list),
     id(i),
     marker(m),
@@ -55,13 +55,15 @@ struct GeoElem
 
   // TODO: use array instead of vector, the number of points is fixed by the elem type
   explicit GeoElem(std::vector<Point*> const & list,
-                   id_T i = -1,
-                   marker_T m = -1):
+                   id_T const i = DOFidNotSet,
+                   marker_T const m = MarkerNotSet):
     pointList(list),
     id(i),
     marker(m),
     facingElem{{std::make_pair(nullptr, -1), std::make_pair(nullptr, -1)}}
   {}
+
+  virtual ~GeoElem() {}
 
   virtual Vec3 midpoint() const = 0;
   virtual Vec3 origin() const = 0;
@@ -127,16 +129,18 @@ struct PointElem: public GeoElem
   static uint const numFacets = 0U;
 
   explicit PointElem(std::initializer_list<Point*> list = {nullptr},
-                 id_T i = -1,
-                 marker_T m = -1):
+                 id_T const i = DOFidNotSet,
+                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
   explicit PointElem(std::vector<Point*> const & list,
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
+
+  virtual ~PointElem() {}
 
   virtual Vec3 midpoint() const final {return pointList[0]->coord;}
   virtual Vec3 origin() const {return pointList[0]->coord;}
@@ -158,26 +162,27 @@ public:
   static uint const numEdges = 1U;
   static uint const numFaces = 0U;
   static uint const numFacets = 2U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
-  static array<array<id_T,1>,2> constexpr elemToFacet{{
+  static array<array<id_T,1>,2> constexpr elemToFacet = {{
     {{0}}, {{1}}
   }};
   static array<array<id_T,0>,0> constexpr elemToFace = {{}};
-  static array<array<id_T,2>,1> constexpr elemToEdge{{
+  static array<array<id_T,2>,1> constexpr elemToEdge = {{
     {{0,1}}
   }};
 
   explicit Line(std::initializer_list<Point*> const & list = {nullptr},
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
   explicit Line(std::vector<Point*> const & list,
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
+
+  virtual ~Line() {}
 
   Vec3 midpoint() const
   {
@@ -215,26 +220,27 @@ public:
   static uint const numEdges = 3U;
   static uint const numFaces = 1U;
   static uint const numFacets = 3U;
-  static array<uint,4> constexpr dof_place{{0,0,0,1}};
-  static array<array<id_T,2>,3> constexpr elemToFacet{
-    {{{0,1}}, {{1,2}}, {{2,0}}}
-  };
+  static array<array<id_T,2>,3> constexpr elemToFacet = {{
+    {{0,1}}, {{1,2}}, {{2,0}}
+  }};
   static array<array<id_T,2>,3> constexpr elemToEdge = elemToFacet;
-  static array<array<id_T,3>,1> constexpr elemToFace{
-    {{{0,1,2}}}
-  };
+  static array<array<id_T,3>,1> constexpr elemToFace = {{
+    {{0,1,2}}
+  }};
 
   explicit Triangle(std::initializer_list<Point*> const & list = {nullptr},
-                    id_T i = -1,
-                    marker_T m = -1):
+                    id_T const i = DOFidNotSet,
+                    marker_T const m = MarkerNotSet):
         GeoElem(list, i, m)
   {}
 
   explicit Triangle(std::vector<Point*> const & list,
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
+
+  virtual ~Triangle() {}
 
   Vec3 midpoint() const
   {
@@ -273,25 +279,27 @@ public:
   static uint const numEdges = 4U;
   static uint const numFaces = 1U;
   static uint const numFacets = 4U;
-  static array<array<id_T,2>,4> constexpr elemToFacet{{
+  static array<array<id_T,2>,4> constexpr elemToFacet = {{
       {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}
   }};
   static array<array<id_T,2>,4> constexpr elemToEdge = elemToFacet;
-  static array<array<id_T,4>,1> constexpr elemToFace{{
+  static array<array<id_T,4>,1> constexpr elemToFace = {{
     {{0,1,2,3}}
   }};
 
   explicit Quad(std::initializer_list<Point*> list = {nullptr},
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
   explicit Quad(std::vector<Point*> const & list,
-                id_T i = -1,
-                marker_T m = -1):
+                id_T const i = DOFidNotSet,
+                marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
+
+  virtual ~Quad() {}
 
   Vec3 midpoint() const
   {
@@ -325,7 +333,7 @@ public:
 template <typename Elem>
 bool geoEqual(Elem const & e1, Elem const & e2)
 {
-  std::array<id_T, Elem::numPts> ids1, ids2;
+  array<id_T, Elem::numPts> ids1, ids2;
   uint counter= 0;
   std::for_each(e1.pointList.begin(), e1.pointList.end(), [&ids1, &counter](Point* const p)
   {

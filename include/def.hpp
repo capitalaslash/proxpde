@@ -26,7 +26,8 @@ static std::ofstream filelog{"minifem.log"};
 using id_T = uint;
 using marker_T = uint;
 using DOFid_T = uint;
-DOFid_T const DOFidNotSet = -1;
+DOFid_T const DOFidNotSet = static_cast<DOFid_T>(-1);
+marker_T const MarkerNotSet = static_cast<marker_T>(-1);
 
 template <typename FESpace>
 std::vector<uint> allComp()

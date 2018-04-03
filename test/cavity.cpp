@@ -42,22 +42,24 @@ int main(int argc, char* argv[])
   bcsVel.addEssentialBC(side::BOTTOM, zero);
   bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);});
   BCList<FESpaceP_T> bcsP{feSpaceP};
-  // DofSet_T pinSet = {1};
-  // bcsP.addEssentialBC(pinSet, [] (Vec3 const &) {return 0.;});
+  bcsP.addEssentialBC(DofSet_T{1}, [] (Vec3 const &) {return 0.;});
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  AssemblyStiffness stiffness(1.0, feSpaceVel);
+  AssemblyGrad grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  // this is required to properly apply the pinning on the pressure
+  AssemblyMass mass(0.0, feSpaceP, {0}, 2*dofU, 2*dofU);
 
   Builder builder{numDOFs};
   Var sol{"sol"};
   builder.buildProblem(stiffness, bcsVel);
   builder.buildProblem(grad, bcsVel, bcsP);
   builder.buildProblem(div, bcsP, bcsVel);
+  builder.buildProblem(mass, bcsP);
   builder.closeMatrix();
 
   Eigen::UmfPackLU<Mat> solver(builder.A);
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
-  // std::cout << "sol:\n" << sol << std::endl;
+  // std::cout << "sol:\n" << sol.data << std::endl;
 
   Var u{"u", sol.data, 0, dofU};
   Var v{"v", sol.data, dofU, dofU};
@@ -79,14 +81,14 @@ int main(int argc, char* argv[])
   std::cout << "norm of v: " << vNorm << std::endl;
   std::cout << "norm of p: " << pNorm << std::endl;
 
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_cavity_vel"};
+  IOManager ioVel{feSpaceVel, "sol_cavity_vel"};
   ioVel.print({sol});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_cavity_p"};
+  IOManager ioP{feSpaceP, "sol_cavity_p"};
   ioP.print({p});
 
   if(std::fabs(uNorm - 2.72045) > 1.e-4 ||
      std::fabs(vNorm - 0.47505) > 1.e-4 ||
-     std::fabs(pNorm - 52.9371) > 1.e-4)
+     std::fabs(pNorm - 20.8162) > 1.e-4)
   {
     std::cerr << "one of the norms is not the prescribed value" << std::endl;
     return 1;

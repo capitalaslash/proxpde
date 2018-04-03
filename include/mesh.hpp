@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
   return out;
 }
 
-enum side
+enum side: marker_T
 {
   BOTTOM = 1,
   RIGHT = 2,
@@ -253,7 +253,7 @@ void buildNormals(std::shared_ptr<Mesh> meshPtr)
   }
 }
 
-enum GMSHElemType
+enum  GMSHElemType: int8_t
 {
   GMSHNull = 0,
   GMSHLine = 1,

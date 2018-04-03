@@ -50,7 +50,7 @@ struct GeoElem
     pointList(list),
     id(i),
     marker(m),
-    facingElem{{std::make_pair(nullptr, -1), std::make_pair(nullptr, -1)}}
+    facingElem{{std::pair(nullptr, -1), std::pair(nullptr, -1)}}
   {}
 
   // TODO: use array instead of vector, the number of points is fixed by the elem type
@@ -60,7 +60,7 @@ struct GeoElem
     pointList(list),
     id(i),
     marker(m),
-    facingElem{{std::make_pair(nullptr, -1), std::make_pair(nullptr, -1)}}
+    facingElem{{std::pair(nullptr, -1), std::pair(nullptr, -1)}}
   {}
 
   virtual ~GeoElem() {}
@@ -73,6 +73,7 @@ struct GeoElem
   // check if geoelem is on boundary
   bool onBoundary()
   {
+    // the facet is on the boundary iff there is an inside element and no outside element
     return facingElem[1].first == nullptr && facingElem[0].first != nullptr;
   }
 
@@ -96,12 +97,14 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
     out << p->id << " ";
   }
   out << "id: " << e.id << ", m: " << e.marker;
-  if(e.facingElem[0].first)
+  auto const & [insideFacePtr, insideFaceLoc] = e.facingElem[0];
+  if (insideFacePtr)
   {
-    out << ", fe: (" << e.facingElem[0].first->id << ", " << e.facingElem[0].second << ")";
-    if(e.facingElem[1].first)
+    out << ", fe: (" << insideFacePtr->id << ", " << insideFaceLoc << ")";
+    auto const [outsideFacePtr, outsideFaceLoc] = e.facingElem[1];
+    if(outsideFacePtr)
     {
-      out << ", " << e.facingElem[1].first->id << ", " << e.facingElem[1].second << ")";
+      out << ", " << outsideFacePtr->id << ", " << outsideFaceLoc << ")";
     }
     else
     {

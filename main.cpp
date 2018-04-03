@@ -25,7 +25,7 @@ scalarFun_T exact_sol = [] (Vec3 const& p)
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
 // scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
-enum SolverType
+enum class SolverType
 {
   CHOLESKY,
   BICGSTAB,
@@ -37,7 +37,7 @@ using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           GaussQR<Elem_T,9>>;
-const SolverType solver_type = SPARSELU;
+auto const solver_type = SolverType::SPARSELU;
 
 int main()
 {
@@ -84,18 +84,18 @@ int main()
   Var sol{"u"};
   switch(solver_type)
   {
-    case CHOLESKY:
+    case SolverType::CHOLESKY:
     {
       Eigen::SimplicialCholesky<Mat> solver(builder.A);
       sol.data = solver.solve(builder.b);
       break;
     }
-    case BICGSTAB:
+    case SolverType::BICGSTAB:
     {
       Eigen::SimplicialCholesky<Mat> solver(builder.A);
       sol.data = solver.solve(builder.b);
     }
-    case SPARSELU:
+    case SolverType::SPARSELU:
     {
       Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
       // Compute the ordering permutation vector from the structural pattern of A

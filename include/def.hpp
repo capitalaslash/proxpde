@@ -41,8 +41,6 @@ std::vector<uint> allComp()
 // using array = std::array<T,N>;
 #include "array.hpp"
 
-using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
-
 using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
 // using Mat = Eigen::SparseMatrix<double,Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;

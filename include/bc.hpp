@@ -9,6 +9,7 @@
 // TODO: add static map to set components via flags
 
 using DofSet_T = std::unordered_set<DOFid_T>;
+using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
 
 template <typename FESpace>
 DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> const & comp)
@@ -19,12 +20,11 @@ DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> c
     if(f.marker == marker)
     {
       // TODO: assert that facingElem[1] is null, so the facet is on the boundary
-      id_T const iElemId = f.facingElem[0].first->id;
-      uint side = f.facingElem[0].second;
+      auto const [elem, side] = f.facingElem[0];
       for(uint i=0; i<FESpace::RefFE_T::dofPerFacet; i++)
       {
         DOFid_T const dof =
-            feSpace.dof.elemMap[iElemId][FESpace::RefFE_T::dofOnFacet[side][i]];
+            feSpace.dof.elemMap[elem->id][FESpace::RefFE_T::dofOnFacet[side][i]];
         for(uint d=0; d<FESpace::dim; ++d)
         {
           bool const compIsConstrained =

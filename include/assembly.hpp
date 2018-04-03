@@ -28,6 +28,8 @@ struct Diagonal: public AssemblyBase
     feSpace(fe)
   {}
 
+  virtual ~Diagonal() {}
+
   virtual void build(LMat_T & Ke) const = 0;
   virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
@@ -61,6 +63,8 @@ struct Coupling: public AssemblyBase
     feSpace2(fe2)
   {}
 
+  virtual ~Coupling() {}
+
   virtual void build(LMat_T & Ke) const = 0;
 
   virtual void reinit(GeoElem const & elem) const final
@@ -85,6 +89,8 @@ struct AssemblyVector: public AssemblyBase
     AssemblyBase{offset_row, 0, comp},
     feSpace(fe)
   {}
+
+  virtual ~AssemblyVector() {}
 
   virtual void build(LVec_T & Fe) const = 0;
 

@@ -41,6 +41,13 @@ template<> array<GaussQR<Line,3>::Vec_T,3> const GaussQR<Line,3>::node =
   GaussQR<Line,2>::Vec_T::Constant( sqrt35th)
 }};
 
+template<> FVec<1> const GaussQR<Triangle,1>::weight =
+    FVec<1>::Constant(1./2);
+template<> array<GaussQR<Triangle,1>::Vec_T,1> const GaussQR<Triangle,1>::node =
+{{
+   GaussQR<Triangle,1>::Vec_T(1./3, 1./3)
+}};
+
 template<> FVec<3> const GaussQR<Triangle,3>::weight =
     FVec<3>::Constant(1.L/6);
 template<> array<GaussQR<Triangle,3>::Vec_T,3> const GaussQR<Triangle,3>::node =

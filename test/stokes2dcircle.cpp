@@ -46,23 +46,23 @@ int main(int argc, char* argv[])
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   auto oneFun = [] (Vec3 const&) {return 1.;};
-  BCList<FESpaceU_T> bcsU{feSpaceU};
+  BCList bcsU{feSpaceU};
   bcsU.addEssentialBC(side::CIRCLE, zeroFun);
   bcsU.addEssentialBC(side::TOP, zeroFun);
   bcsU.addNaturalBC(side::LEFT, oneFun);
-  BCList<FESpaceU_T> bcsV{feSpaceU};
+  BCList bcsV{feSpaceU};
   bcsV.addEssentialBC(side::CIRCLE, zeroFun);
   bcsV.addEssentialBC(side::LEFT, zeroFun);
-  BCList<FESpaceP_T> bcsP(feSpaceP);
+  BCList bcsP(feSpaceP);
 
   uint const numDOFs = 2*feSpaceU.dof.size + feSpaceP.dof.size;
 
-  AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.size, feSpaceU.dof.size);
-  // AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.size);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.size, 0);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, feSpaceU.dof.size, 2*feSpaceU.dof.size);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.size, feSpaceU.dof.size);
+  AssemblyStiffness stiffnessU(1.0, feSpaceU);
+  AssemblyStiffness stiffnessV(1.0, feSpaceU, {1}, feSpaceU.dof.size, feSpaceU.dof.size);
+  // AssemblyGrad gradU(0, feSpaceU, feSpaceP, 0, 2*feSpaceU.dof.size);
+  AssemblyDiv divU(-1.0, feSpaceP, feSpaceU, {0}, 2*feSpaceU.dof.size, 0);
+  AssemblyGrad gradV(-1.0, feSpaceU, feSpaceP, {1}, feSpaceU.dof.size, 2*feSpaceU.dof.size);
+  AssemblyDiv divV(-1.0, feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.size, feSpaceU.dof.size);
 
   Builder builder{numDOFs};
   // builder.assemblies[0].push_back(&stiffness0);
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
   builder.buildProblem(stiffnessU, bcsU);
-  builder.buildProblem(make_assemblyGrad(feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
+  builder.buildProblem(make_assemblyGrad(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
   builder.buildProblem(divU, bcsP, bcsU);
   builder.buildProblem(stiffnessV, bcsV);
   builder.buildProblem(gradV, bcsV, bcsP);
@@ -98,9 +98,9 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 
-  IOManager<FESpaceU_T> ioU{feSpaceU, "sol_stokes2dcircle_u"};
+  IOManager ioU{feSpaceU, "sol_stokes2dcircle_u"};
   ioU.print({u, v});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dcircle_p"};
+  IOManager ioP{feSpaceP, "sol_stokes2dcircle_p"};
   ioP.print({p});
 
   double norm = error.data.norm();

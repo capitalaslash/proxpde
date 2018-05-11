@@ -408,13 +408,14 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyGrad(FESpace1_T & fe1,
+  explicit AssemblyGrad(double const c,
+                        FESpace1_T & fe1,
                         FESpace2_T & fe2,
                         std::vector<uint> comp = allComp<FESpace1_T>(),
                         uint offset_row = 0,
                         uint offset_clm = 0):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, comp),
-    component(comp)
+    coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -429,12 +430,12 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
     uint d=0;
-    for (auto const c: component)
+    for (auto const c: this->comp)
     {
       auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(d*CurFE1_T::size, 0);
       for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
       {
-        Kec += this->feSpace1.curFE.JxW[q] *
+        Kec += coeff * this->feSpace1.curFE.JxW[q] *
                this->feSpace1.curFE.dphi[q].col(c)*
                this->feSpace2.curFE.phi[q].transpose();
       }
@@ -442,18 +443,19 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
     }
   }
 
-  std::vector<uint> const component;
+  double const coeff;
 };
 
 template <typename FESpace1, typename FESpace2>
 AssemblyGrad<FESpace1, FESpace2> make_assemblyGrad(
+    double const c,
     FESpace1 & fe1,
     FESpace2 & fe2,
     std::vector<uint> comp = allComp<FESpace1>(),
     uint offset_row = 0,
     uint offset_clm = 0)
 {
-  return AssemblyGrad<FESpace1, FESpace2>(fe1, fe2, comp, offset_row, offset_clm);
+  return AssemblyGrad<FESpace1, FESpace2>(c, fe1, fe2, comp, offset_row, offset_clm);
 }
 
 template <typename FESpace1, typename FESpace2>
@@ -465,13 +467,14 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyDiv(FESpace1_T & fe1,
+  explicit AssemblyDiv(double const c,
+                       FESpace1_T & fe1,
                        FESpace2_T & fe2,
                        std::vector<uint> comp = allComp<FESpace2_T>(),
                        uint offset_row = 0,
                        uint offset_clm = 0):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, offset_row, offset_clm, comp),
-    component(comp)
+    coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -486,12 +489,12 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
     uint d = 0;
-    for (auto const c: component)
+    for (auto const c: this->comp)
     {
       auto Kec = Ke.template block<CurFE1_T::size,CurFE2_T::size>(0, d*CurFE2_T::size);
       for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
       {
-        Kec += this->feSpace1.curFE.JxW[q] *
+        Kec += coeff * this->feSpace1.curFE.JxW[q] *
                this->feSpace1.curFE.phi[q] *
                this->feSpace2.curFE.dphi[q].col(c).transpose();
       }
@@ -499,7 +502,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
     }
   }
 
-  std::vector<uint> const component;
+  double const coeff;
 };
 
 template <typename FESpace, typename FESpaceRhs = FESpace>

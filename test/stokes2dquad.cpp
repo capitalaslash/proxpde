@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 //  auto inlet = [] (Vec3 const &p) {
 //    return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
 //  };
-  BCList<FESpaceVel_T> bcsVel{feSpaceVel};
+  BCList bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::BOTTOM, inlet);
   bcsVel.addEssentialBC(side::RIGHT, zero);
   bcsVel.addEssentialBC(side::TOP, zero, {0});
@@ -56,9 +56,9 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyTensorStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  AssemblyTensorStiffness stiffness(1.0, feSpaceVel);
+  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
   Builder builder{numDOFs};
   // builder.assemblies[0].push_back(&stiffness0);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
-  interpolateAnalyticFunction([](Vec3 const & p){return p(1)-1.;}, feSpaceP, exact.data, 2*dofU);
+  interpolateAnalyticFunction([](Vec3 const & p){return 1.-p(1);}, feSpaceP, exact.data, 2*dofU);
 
   std::cout << sol.data.norm() << std::endl;
 
@@ -91,9 +91,9 @@ int main(int argc, char* argv[])
   Var ve{"ve", exact.data, dofU, dofU};
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager<FESpaceVel_T> ioVel{feSpaceVel, "sol_stokes2dquad_vel"};
+  IOManager ioVel{feSpaceVel, "sol_stokes2dquad_vel"};
   ioVel.print({sol, exact});
-  IOManager<FESpaceP_T> ioP{feSpaceP, "sol_stokes2dquad_p"};
+  IOManager ioP{feSpaceP, "sol_stokes2dquad_p"};
   ioP.print({p, pe});
 
   auto uNorm = (u.data - ue.data).norm();

@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   AssemblyStiffness stiffness(1.0, feSpaceVel);
-  AssemblyGrad grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
   // this is required to properly apply the pinning on the pressure
   AssemblyMass mass(0.0, feSpaceP, {0}, 2*dofU, 2*dofU);
 

@@ -109,22 +109,22 @@ int main(int argc, char* argv[])
 
   auto zero = [] (Vec3 const &) {return 0.;};
   auto one = [] (Vec3 const &) {return 1.;};
-  BCList<FESpaceVel_T> bcsVel{feSpaceVel};
+  BCList bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);});
   bcsVel.addEssentialBC(side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);});
   bcsVel.addEssentialBC(side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);});
   bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);});
-  BCList<FESpaceU_T> bcsU{feSpaceU};
+  BCList bcsU{feSpaceU};
   bcsU.addEssentialBC(side::RIGHT, zero);
   bcsU.addEssentialBC(side::LEFT, zero);
   bcsU.addEssentialBC(side::BOTTOM, zero);
   bcsU.addEssentialBC(side::TOP, one);
-  BCList<FESpaceU_T> bcsV{feSpaceU};
+  BCList bcsV{feSpaceU};
   bcsV.addEssentialBC(side::RIGHT, zero);
   bcsV.addEssentialBC(side::LEFT, zero);
   bcsV.addEssentialBC(side::BOTTOM, zero);
   bcsV.addEssentialBC(side::TOP, zero);
-  BCList<FESpaceP_T> bcsP{feSpaceP};
+  BCList bcsP{feSpaceP};
   // DofSet_T pinSet = {1};
   // bcsP.addEssentialBC(pinSet, zero);
 
@@ -132,9 +132,9 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness<FESpaceVel_T> stiffness(1.0, feSpaceVel);
-  AssemblyGrad<FESpaceVel_T, FESpaceP_T> grad(feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv<FESpaceP_T, FESpaceVel_T> div(feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  AssemblyStiffness stiffness(1.0, feSpaceVel);
+  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
+  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
 
   Builder builder{numDOFs};
   builder.buildProblem(stiffness, bcsVel);
@@ -142,12 +142,12 @@ int main(int argc, char* argv[])
   builder.buildProblem(div, bcsP, bcsVel);
   builder.closeMatrix();
 
-  AssemblyStiffness<FESpaceU_T> stiffnessU(1.0, feSpaceU);
-  AssemblyStiffness<FESpaceU_T> stiffnessV(1.0, feSpaceU, {1}, dofU, dofU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradU(feSpaceU, feSpaceP, {0}, 0, 2*dofU);
-  AssemblyGrad<FESpaceU_T, FESpaceP_T> gradV(feSpaceU, feSpaceP, {1}, dofU, 2*dofU);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divU(feSpaceP, feSpaceU, {0}, 2*dofU, 0);
-  AssemblyDiv<FESpaceP_T, FESpaceU_T> divV(feSpaceP, feSpaceU, {1}, 2*dofU, dofU);
+  AssemblyStiffness stiffnessU(1.0, feSpaceU);
+  AssemblyStiffness stiffnessV(1.0, feSpaceU, {1}, dofU, dofU);
+  AssemblyGrad gradU(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*dofU);
+  AssemblyGrad gradV(-1.0, feSpaceU, feSpaceP, {1}, dofU, 2*dofU);
+  AssemblyDiv divU(-1.0, feSpaceP, feSpaceU, {0}, 2*dofU, 0);
+  AssemblyDiv divV(-1.0, feSpaceP, feSpaceU, {1}, 2*dofU, dofU);
 
   Builder builderS{numDOFs};
   builderS.buildProblem(stiffnessU, bcsU);

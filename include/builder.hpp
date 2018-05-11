@@ -381,11 +381,21 @@ struct Builder
     A.setFromTriplets(_triplets.begin(), _triplets.end());
   }
 
-  void clear()
+  void clearRhs()
+  {
+    b = Vec::Zero(b.size());
+  }
+
+  void clearLhs()
   {
     // there is no need to clear A as setFromTriplets() discards any content of the matrix
-    b = Vec::Zero(b.size());
     _triplets.clear();
+  }
+
+  void clear()
+  {
+    clearLhs();
+    clearRhs();
   }
 
   Mat A;

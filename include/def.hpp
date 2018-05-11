@@ -22,6 +22,7 @@ static std::ostream & debug = std::cout;
 #endif
 
 static std::ofstream filelog{"minifem.log"};
+static const std::string separator = std::string(80, '=') + "\n";
 
 using id_T = uint;
 using marker_T = uint16_t;

@@ -3,6 +3,7 @@
 #include "def.hpp"
 #include "blockmatrix.hpp"
 #include "fespace.hpp"
+#include "bc.hpp"
 
 #include <type_traits>
 
@@ -13,6 +14,11 @@ struct AssemblyBase
   uint const offset_row;
   uint const offset_clm;
   CompList const comp;
+
+  bool hasComp(uint c) const
+  {
+    return std::find(comp.begin(), comp.end(), c) != comp.end();
+  }
 };
 
 template <typename FESpace>
@@ -202,6 +208,61 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
   }
 
   double coeff;
+};
+
+template <typename FESpace>
+struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  AssemblyTensorStiffnessRhs(double const c,
+                             Vec const & uOld,
+                             FESpace_T & fe,
+                             AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                             uint offset_row = 0):
+    AssemblyVector<FESpace_T>(fe, offset_row, comp),
+    coeff(c),
+    velOld(uOld)
+  {}
+
+  void build(LVec_T & Fe) const
+  {
+//     using CurFE_T = typename FESpace_T::CurFE_T;
+//     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+//     {
+//       for (uint di=0; di<FESpace_T::dim; ++di)
+//       {
+//         // d u_i / d x_j * d \phi_i / d x_j
+//         Ke.template block<CurFE_T::size,CurFE_T::size>(di*CurFE_T::size, di*CurFE_T::size) +=
+//             coeff * this->feSpace.curFE.JxW[q] *
+//             this->feSpace.curFE.dphi[q] *
+//             this->feSpace.curFE.dphi[q].transpose();
+//         for (uint dj=0; dj<FESpace_T::dim; ++dj)
+//         {
+//           // d u_j / d x_i * d \phi_i / d x_j
+//           Ke.template block<CurFE_T::size,CurFE_T::size>(di*CurFE_T::size, dj*CurFE_T::size) +=
+//               coeff * this->feSpace.curFE.JxW[q] *
+//               this->feSpace.curFE.dphi[q].col(di) *
+//               this->feSpace.curFE.dphi[q].col(dj).transpose();
+// //          for (uint i=0; i<CurFE_T::size; ++i)
+// //            for (uint j=0; j<CurFE_T::size; ++j)
+// //            {
+// //              // d u_j / d x_i * d \phi_i / d x_j
+// //              Ke(i+di*CurFE_T::size, j+dj*CurFE_T::size) +=
+// //                  coeff * this->feSpace.curFE.JxW[q] *
+// //                  this->feSpace.curFE.dphi[q].row(j)(di) *
+// //                  this->feSpace.curFE.dphi[q].row(i)(dj);
+// //            }
+//         }
+//       }
+//     }
+  }
+
+  double coeff;
+  Vec const & velOld;
 };
 
 template <typename FESpace>
@@ -782,4 +843,350 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   // }
 
   std::unique_ptr<AssemblyVector<FESpace_T>> assembly;
+};
+
+template <typename FESpace1, typename FESpace2>
+struct AssemblyDivRhs: public AssemblyVector<FESpace1>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = AssemblyVector<FESpace1_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyDivRhs(double const c,
+                          Vec const & vec,
+                          FESpace1_T & fe1,
+                          FESpace2_T & fe2,
+                          std::vector<uint> comp = allComp<FESpace2_T>(),
+                          uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    feSpace2(fe2),
+    data(vec)
+  {}
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpace2.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    FVec<CurFE2_T::size> localData;
+
+    uint d = 0;
+    for (auto const c: this->comp)
+    {
+      for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+        localData[n] = data[dofId + d*feSpace2.dof.size];
+      }
+
+      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      {
+        Fe += coeff * this->feSpace.curFE.JxW[q] *
+              this->feSpace.curFE.phi[q] *
+              (feSpace2.curFE.dphi[q].col(c).dot(localData));
+      }
+      d++;
+    }
+  }
+
+  LVec_T build(/*LVec_T & Fe*/) const
+  {
+    LVec_T Fe;
+    this->build(Fe);
+    return Fe;
+  }
+
+  double const coeff;
+  FESpace2 & feSpace2;
+  Vec const & data;
+};
+
+template <typename FESpace1, typename FESpace2>
+struct AssemblyGradRhs: public AssemblyVector<FESpace1>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = AssemblyVector<FESpace1_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyGradRhs(double const c,
+                          Vec const & vec,
+                          FESpace1_T & fe1,
+                          FESpace2_T & fe2,
+                          std::vector<uint> comp = allComp<FESpace1_T>(),
+                          uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    feSpace2(fe2),
+    data(vec)
+  {}
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpace2.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    FVec<CurFE2_T::size> localData;
+
+    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    {
+      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      localData[n] = data[dofId];
+    }
+    uint d = 0;
+    for (auto const c: this->comp)
+    {
+      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      {
+        Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            (feSpace2.curFE.dphi[q].col(c).dot(localData));
+        // Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+        //     coeff * this->feSpace.curFE.JxW[q] *
+        //     this->feSpace.curFE.dphi[q].col(c) *
+        //     (feSpace2.curFE.phi[q].dot(localData));
+      }
+      d++;
+    }
+  }
+
+  LVec_T build(/*LVec_T & Fe*/) const
+  {
+    LVec_T Fe;
+    this->build(Fe);
+    return Fe;
+  }
+
+  double const coeff;
+  FESpace2_T & feSpace2;
+  Vec const & data;
+};
+
+template <typename FESpace1, typename FESpace2 = FESpace1>
+struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = AssemblyVector<FESpace1_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyStiffnessRhs(double const c,
+                                Vec const & vec,
+                                FESpace1_T & fe1,
+                                FESpace2_T & fe2,
+                                std::vector<uint> comp = allComp<FESpace1_T>(),
+                                uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    feSpace2(fe2),
+    data(vec)
+  {}
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpace2.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    FVec<CurFE2_T::size> localData;
+
+    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    {
+      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      localData[n] = data[dofId];
+    }
+    uint d = 0;
+    for (auto const c: this->comp)
+    {
+      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      {
+        Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.dphi[q].col(c) *
+            (feSpace2.curFE.dphi[q].col(c).dot(localData));
+      }
+      d++;
+    }
+  }
+
+  LVec_T build(/*LVec_T & Fe*/) const
+  {
+    LVec_T Fe;
+    this->build(Fe);
+    return Fe;
+  }
+
+  double const coeff;
+  FESpace2_T & feSpace2;
+  Vec const & data;
+};
+
+template <typename FESpace1, typename FESpace2 = FESpace1>
+struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = AssemblyVector<FESpace1_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyAdvectionRhs(double const c,
+                                Vec const & u,
+                                Vec const & vec,
+                                FESpace1_T & fe1,
+                                FESpace2_T & fe2,
+                                std::vector<uint> comp = allComp<FESpace1_T>(),
+                                uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    vel(u),
+    feSpace2(fe2),
+    data(vec)
+  {}
+
+  explicit AssemblyAdvectionRhs(double const c,
+                                Vec const & u,
+                                Vec const & vec,
+                                FESpace1_T & fe1,
+                                std::vector<uint> comp = allComp<FESpace1_T>(),
+                                uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    vel(u),
+    feSpace2(fe1),
+    data(vec)
+  {}
+
+  void reinit(GeoElem const & elem) const
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpace2.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    FVec<CurFE2_T::size> localData;
+
+    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    {
+      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      localData[n] = data[dofId];
+    }
+    uint d = 0;
+    for (auto const c: this->comp)
+    {
+      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      {
+        FVec<3> localVel = FVec<3>::Zero();
+        for(uint n=0; n<CurFE1_T::RefFE_T::numFuns; ++n)
+        {
+          id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
+          for (uint d=0; d<FESpace1_T::RefFE_T::dim; ++d)
+            localVel[d] += vel[dofId + d*this->feSpace.dof.size] * this->feSpace.curFE.phi[q](n);
+        }
+
+        Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            (feSpace2.curFE.dphi[q].col(c).dot(localData)) * localVel[d];
+      }
+      d++;
+    }
+  }
+
+  LVec_T build(/*LVec_T & Fe*/) const
+  {
+    LVec_T Fe;
+    this->build(Fe);
+    return Fe;
+  }
+
+  double const coeff;
+  Vec const & vel;
+  FESpace2_T & feSpace2;
+  Vec const & data;
+};
+
+template <typename FESpace>
+struct AssemblyBCNormal: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = AssemblyVector<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
+  using QR_T = typename SideQR<typename FESpace::QR_T>::type;
+  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+
+  AssemblyBCNormal(scalarFun_T const & r,
+                   marker_T const m,
+                   FESpace & fe,
+                   AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                   uint offset_row = 0):
+    AssemblyVector<FESpace>(fe, offset_row, comp),
+    rhs(r),
+    marker(m)
+  {}
+
+  void build(LVec_T & Fe) const
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    auto & mesh = *this->feSpace.meshPtr;
+    auto const & e = *this->feSpace.curFE.e;
+    uint facetCounter = 0;
+    for(auto const facetId: mesh.elemToFacet[e.id])
+    {
+      if(facetId != DOFidNotSet &&
+         mesh.facetList[facetId].marker == marker)
+      {
+        auto & facet = mesh.facetList[facetId];
+        facet.buildNormal();
+        facetCurFE.reinit(facet);
+        for(uint q=0; q<QR_T::numPts; ++q)
+        {
+          for (uint d=0; d<FESpace::dim; ++d)
+          {
+            if (this->hasComp(d))
+            {
+              auto const value = rhs(facetCurFE.qpoint[q]);
+              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+              {
+                auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * facet.normal[d] * value;
+              }
+            }
+          }
+        }
+      }
+      facetCounter++;
+    }
+  }
+
+  scalarFun_T const rhs;
+  marker_T const marker;
+  mutable FacetCurFE_T facetCurFE;
 };

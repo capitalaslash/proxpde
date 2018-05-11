@@ -37,6 +37,7 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/square_uns.msh
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 minifem_add_test(stokes2dtri)
 minifem_add_test(stokes2dcircle)
+minifem_add_test(ipcs)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime)
 

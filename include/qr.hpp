@@ -138,25 +138,34 @@ template<> array<TrapQR<Quad>::Vec_T,4> const TrapQR<Quad>::node =
 }};
 
 template <typename QR>
-struct SideQR
-{
-  using Type = GaussQR<NullElem,0>;
-};
+struct SideQR {};
 
 template <>
 struct SideQR<GaussQR<Line,3>>
 {
-  using Type = GaussQR<PointElem,1>;
+  using type = GaussQR<PointElem,1>;
+};
+
+template <>
+struct SideQR<GaussQR<Triangle,3>>
+{
+  using type = GaussQR<Line,2>;
 };
 
 template <>
 struct SideQR<GaussQR<Triangle,4>>
 {
-  using Type = GaussQR<Line,3>;
+  using type = GaussQR<Line,2>;
+};
+
+template <>
+struct SideQR<GaussQR<Triangle,7>>
+{
+  using type = GaussQR<Line,3>;
 };
 
 template <>
 struct SideQR<GaussQR<Quad,9>>
 {
-  using Type = GaussQR<Line,3>;
+  using type = GaussQR<Line,3>;
 };

@@ -129,7 +129,7 @@ template <typename FESpace>
 struct BCNat
 {
   using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = typename SideQR<typename FESpace::QR_T>::Type;
+  using QR_T = typename SideQR<typename FESpace::QR_T>::type;
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
@@ -158,7 +158,7 @@ template <typename FESpace>
 struct BCMixed
 {
   using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = typename SideQR<typename FESpace::QR_T>::Type;
+  using QR_T = typename SideQR<typename FESpace::QR_T>::type;
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 

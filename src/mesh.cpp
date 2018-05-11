@@ -91,12 +91,14 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
     {
       id_T const base = i + j*numPts[0];
       array<id_T,3> triplet_b, triplet_t;
-      if((i-0.5*(numPts[0]-2))*(j-0.5*(numPts[1]-2)) > 0)
+      // TODO: make the traingle pattern configurable via a templated flag
+      // if ((i-0.5*(numPts[0]-2))*(j-0.5*(numPts[1]-2)) < 0)
+      if (base % 2)
       {
         triplet_b[0] = base;
         triplet_b[1] = base+1;
-        triplet_b[2] = base+numPts[0]+1;
-        triplet_t[0] = base;
+        triplet_b[2] = base+numPts[0];
+        triplet_t[0] = base+1;
         triplet_t[1] = base+numPts[0]+1;
         triplet_t[2] = base+numPts[0];
       }
@@ -104,8 +106,8 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
       {
         triplet_b[0] = base;
         triplet_b[1] = base+1;
-        triplet_b[2] = base+numPts[0];
-        triplet_t[0] = base+1;
+        triplet_b[2] = base+numPts[0]+1;
+        triplet_t[0] = base;
         triplet_t[1] = base+numPts[0]+1;
         triplet_t[2] = base+numPts[0];
       }

@@ -15,11 +15,11 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-scalarFun_T rhs = [] (Vec3 const& p)
+static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exact_sol = [] (Vec3 const& p)
 {
   return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
@@ -46,10 +46,14 @@ int main(int argc, char* argv[])
   Builder builder{feSpace.dof.size};
   builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
   builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
+  // using an interpolated rhs makes its quality independent of the chosen qr
+  // Vec rhsProj;
+  // interpolateAnalyticFunction(rhs, feSpace, rhsProj);
+  // builder.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsProj, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
@@ -64,7 +68,7 @@ int main(int argc, char* argv[])
 
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.0530736) > 1.e-5)
+  if(std::fabs(norm - 0.052576) > 1.e-5)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

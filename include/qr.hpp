@@ -52,10 +52,18 @@ template<> FVec<3> const GaussQR<Triangle,3>::weight =
     FVec<3>::Constant(1.L/6);
 template<> array<GaussQR<Triangle,3>::Vec_T,3> const GaussQR<Triangle,3>::node =
 {{
-  GaussQR<Triangle,3>::Vec_T(0.5L, 0.0L),
-  GaussQR<Triangle,3>::Vec_T(0.5L, 0.5L),
-  GaussQR<Triangle,3>::Vec_T(0.0L, 0.5L)
+  GaussQR<Triangle,3>::Vec_T(1./6, 1./6),
+  GaussQR<Triangle,3>::Vec_T(2./3, 1./6),
+  GaussQR<Triangle,3>::Vec_T(1./6, 2./3)
 }};
+// this node positioning seems to give smaller errors in some cases but it is
+// not ideal since they coincide with the location of the dofs of the P2 element
+// template<> array<GaussQR<Triangle,3>::Vec_T,3> const GaussQR<Triangle,3>::node =
+// {{
+//   GaussQR<Triangle,3>::Vec_T(0.5L, 0.0L),
+//   GaussQR<Triangle,3>::Vec_T(0.5L, 0.5L),
+//   GaussQR<Triangle,3>::Vec_T(0.0L, 0.5L)
+// }};
 
 template<> FVec<4> const GaussQR<Triangle,4>::weight =
     (FVec<4>() <<

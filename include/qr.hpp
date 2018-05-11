@@ -68,6 +68,20 @@ template<> array<GaussQR<Triangle,4>::Vec_T,4> const GaussQR<Triangle,4>::node =
   GaussQR<Triangle,4>::Vec_T(1.L/3., 1.L/3.)
 }};
 
+template<> FVec<7> const GaussQR<Triangle,7>::weight = .5*
+    (FVec<7>() <<
+    0.22500000000000, 0.13239415278851, 0.13239415278851, 0.13239415278851, 0.12593918054483, 0.12593918054483, 0.12593918054483).finished();
+template<> array<GaussQR<Triangle,7>::Vec_T,7> const GaussQR<Triangle,7>::node =
+{{
+  GaussQR<Triangle,7>::Vec_T(1./3, 1./3),
+  GaussQR<Triangle,7>::Vec_T(0.47014206410511, 0.47014206410511),
+  GaussQR<Triangle,7>::Vec_T(0.47014206410511, 0.05971587178977),
+  GaussQR<Triangle,7>::Vec_T(0.05971587178977, 0.47014206410511),
+  GaussQR<Triangle,7>::Vec_T(0.10128650732346, 0.10128650732346),
+  GaussQR<Triangle,7>::Vec_T(0.10128650732346, 0.79742698535309),
+  GaussQR<Triangle,7>::Vec_T(0.79742698535309, 0.10128650732346),
+}};
+
 template<> FVec<9> const GaussQR<Quad,9>::weight =
     (FVec<9>() <<
      25.L/81, 40.L/81, 25.L/81,

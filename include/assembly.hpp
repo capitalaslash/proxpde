@@ -294,7 +294,7 @@ template <typename FESpace>
 struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
-  using Super_T = Diagonal<FESpace>;
+  using Super_T = AssemblyVector<FESpace>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
@@ -371,7 +371,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      FVec<3> localVel = Vec3::Zero();
+      FVec<3> localVel = FVec<3>::Zero();
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
         id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
@@ -381,7 +381,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::size,CurFE_T::size>(d*CurFE_T::size, d*CurFE_T::size) +=
-            this->feSpace.curFE.JxW[q] *
+            coeff * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
             (this->feSpace.curFE.dphi[q] * localVel).transpose();
       }

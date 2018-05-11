@@ -24,7 +24,7 @@ static std::ostream & debug = std::cout;
 static std::ofstream filelog{"minifem.log"};
 
 using id_T = uint;
-using marker_T = uint;
+using marker_T = uint16_t;
 using DOFid_T = uint;
 DOFid_T const DOFidNotSet = static_cast<DOFid_T>(-1);
 marker_T const MarkerNotSet = static_cast<marker_T>(-1);

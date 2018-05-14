@@ -60,18 +60,15 @@ struct Builder
             bc.curFE.reinit(facet);
             for(uint q=0; q<BCNat<FESpace>::QR_T::numPts; ++q)
             {
-              for (uint d=0; d<assembly.feSpace.dim; ++d)
+              for (uint d=0; d<FESpace::dim; ++d)
               {
                 if (bc.hasComp(d))
                 {
                   auto const value = bc.value(bc.curFE.qpoint[q])(d);
                   for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
                   {
-                    auto const id =
-                        CurFE_T::RefFE_T::dofOnFacet[facetCounter][i];
-                    Fe(id) += bc.curFE.JxW[q] *
-                              bc.curFE.phi[q](i) *
-                        value;
+                    auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+                    Fe(id) += bc.curFE.JxW[q] * bc.curFE.phi[q](i) * value;
                   }
                 }
               }
@@ -146,6 +143,7 @@ struct Builder
             if(bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
+              // TODO: this is a crude implementation that works only for Lagrange elements
               h(pos) = bc.value(assembly.feSpace.curFE.dofPts[i])(d);
             }
           }
@@ -280,6 +278,7 @@ struct Builder
             if(bc.isConstrained(id))
             {
               Cclm(pos,pos) = 0.;
+              // TODO: this is a crude implementation that works only for Lagrange elements
               h(pos) = bc.value(assembly.feSpace2.curFE.dofPts[i])[d];
             }
           }
@@ -350,10 +349,11 @@ struct Builder
         {
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
-            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][i+d*FESpace::RefFE_T::numFuns];
+            auto const pos = i+d*FESpace::RefFE_T::numFuns;
+            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
             if(bc.isConstrained(id))
             {
-              C(i+d*FESpace::RefFE_T::numFuns, i+d*FESpace::RefFE_T::numFuns) = 0.;
+              C(pos, pos) = 0.;
             }
           }
         }

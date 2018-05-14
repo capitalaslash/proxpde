@@ -133,7 +133,7 @@ struct BCNat
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCNat(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = {0}):
+  explicit BCNat(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = allComp<FESpace>()):
     marker(m),
     value(f),
     comp(c)
@@ -316,8 +316,8 @@ public:
   // }
 
   FESpace const & feSpace;
-  std::set<marker_T> fixedMarkers;
-  // std::set<id_T> fixedDofs;
+  std::unordered_set<marker_T> fixedMarkers;
+  // std::unordered_set<id_T> fixedDofs;
   std::list<BCEss<FESpace>> bcEssList;
   std::list<BCNat<FESpace>> bcNatList;
   std::list<BCMixed<FESpace>> bcMixedList;

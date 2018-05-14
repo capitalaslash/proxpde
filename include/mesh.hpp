@@ -78,7 +78,7 @@ enum side: marker_T
 };
 
 template <typename Mesh>
-void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
+void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
 {
   using Facet_T = typename Mesh::Facet_T;
   std::map<std::set<id_T>, Facet_T> facetMap;
@@ -119,53 +119,53 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keep_internal = false)
     }
   }
 
-  uint bFacetTotal = facetCount - iFacetCount;
-  if(keep_internal)
+  uint bFacetSize = facetCount - iFacetCount;
+  if(keepInternal)
   {
     meshPtr->facetList.resize(facetCount);
   }
   else
   {
-    meshPtr->facetList.resize(bFacetTotal);
+    meshPtr->facetList.resize(bFacetSize);
   }
   meshPtr->elemToFacet.resize(meshPtr->elementList.size());
-  for(uint i=0; i<meshPtr->elemToFacet.size(); ++i)
+  for(auto & row: meshPtr->elemToFacet)
   {
-    meshPtr->elemToFacet[i].fill(DOFidNotSet);
+    row.fill(DOFidNotSet);
   }
 
-  iFacetCount = bFacetTotal;
+  iFacetCount = bFacetSize;
   uint bFacetCount = 0;
-  for(auto const & facet: facetMap)
+  for(auto const & [idSet, facet]: facetMap)
   {
-    if(facet.second.facingElem[1].first == nullptr)
+    if(facet.facingElem[1].first == nullptr)
     {
       // this is a boundary facet
-      meshPtr->facetList[bFacetCount] = facet.second;
+      meshPtr->facetList[bFacetCount] = facet;
       meshPtr->facetList[bFacetCount].id = bFacetCount;
       meshPtr->elemToFacet
-        [facet.second.facingElem[0].first->id]
-        [facet.second.facingElem[0].second] = bFacetCount;
+        [facet.facingElem[0].first->id]
+        [facet.facingElem[0].second] = bFacetCount;
       bFacetCount++;
     }
     else
     {
       // this is an internal facet
-      if(keep_internal)
+      if(keepInternal)
       {
-        meshPtr->facetList[iFacetCount] = facet.second;
+        meshPtr->facetList[iFacetCount] = facet;
         meshPtr->facetList[iFacetCount].id = iFacetCount;
         meshPtr->elemToFacet
-          [facet.second.facingElem[0].first->id]
-          [facet.second.facingElem[0].second] = iFacetCount;
+          [facet.facingElem[0].first->id]
+          [facet.facingElem[0].second] = iFacetCount;
         meshPtr->elemToFacet
-          [facet.second.facingElem[1].first->id]
-          [facet.second.facingElem[1].second] = iFacetCount;
+          [facet.facingElem[1].first->id]
+          [facet.facingElem[1].second] = iFacetCount;
       }
       iFacetCount++;
     }
   }
-  assert(bFacetCount == bFacetTotal);
+  assert(bFacetCount == bFacetSize);
   assert(iFacetCount == facetCount);
 }
 

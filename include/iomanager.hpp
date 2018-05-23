@@ -10,6 +10,118 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+
+template <typename RefFE>
+class XDMFDoc
+{
+public:
+  explicit XDMFDoc(fs::path const & fp, std::string const s, std::string const geoS = "mesh"):
+    filepath(fp),
+    suffix(s),
+    geoSuffix(geoS)
+  {
+    doc.InsertEndChild(doc.NewDeclaration());
+    doc.InsertEndChild(doc.NewUnknown("DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []"));
+    auto xdmf_el = doc.NewElement("Xdmf");
+    xdmf_el->SetAttribute("xmlns:xi", "http://www.w3.org/2003/XInclude");
+    xdmf_el->SetAttribute("Version", "2.2");
+    auto xdmf = doc.InsertEndChild(xdmf_el);
+
+    auto domain = xdmf->InsertEndChild(doc.NewElement("Domain"));
+
+    auto grid_el = doc.NewElement("Grid");
+    grid_el->SetAttribute("GridType", "Uniform");
+    grid = domain->InsertEndChild(grid_el);
+  }
+
+  ~XDMFDoc()
+  {
+    auto xmlFilepath = filepath;
+    if (!suffix.empty())
+    {
+      xmlFilepath += std::string(".") + suffix;
+    }
+    xmlFilepath += ".xmf";
+    doc.SaveFile(xmlFilepath.c_str());
+  }
+
+  void setTime(double const time)
+  {
+    auto time_el = doc.NewElement("Time");
+    time_el->SetAttribute("Value", time);
+    grid->InsertEndChild(time_el);
+  }
+
+  void setTopology(uint const numElems)
+  {
+    auto topo_el = doc.NewElement("Topology");
+    topo_el->SetAttribute("TopologyType", XDMFTraits<RefFE>::shapeName);
+    topo_el->SetAttribute("Dimensions", numElems);
+    auto topo = grid->InsertEndChild(topo_el);
+
+    auto topodata_el = doc.NewElement("DataItem");
+    topodata_el->SetAttribute("Dimensions",
+      (std::to_string(numElems) + " " + std::to_string(RefFE::numGeoFuns)).c_str());
+    topodata_el->SetAttribute("NumberType", "Int");
+    topodata_el->SetAttribute("Precision", 8);
+    topodata_el->SetAttribute("Format", "HDF");
+    std::stringstream buf;
+    buf << std::endl;
+    buf << filepath.filename().string() << "." << geoSuffix << ".h5:/connectivity " << std::endl;
+    topodata_el->SetText(buf.str().c_str());
+    topo->InsertEndChild(topodata_el);
+  }
+
+  void setGeometry(uint const mapSize)
+  {
+    auto geometry_el = doc.NewElement("Geometry");
+    geometry_el->SetAttribute("GeometryType", "XYZ");
+    auto geometry = grid->InsertEndChild(geometry_el);
+
+    auto geodata_el = doc.NewElement("DataItem");
+    geodata_el->SetAttribute("Dimensions",
+      (std::to_string(mapSize) + " 3").c_str());
+    geodata_el->SetAttribute("NumberType", "Float");
+    geodata_el->SetAttribute("Precision", 8);
+    geodata_el->SetAttribute("Format", "HDF");
+    std::stringstream buf;
+    buf << std::endl;
+    buf << filepath.filename().string() << "." << geoSuffix << ".h5:/coords " << std::endl;
+    geodata_el->SetText(buf.str().c_str());
+    geometry->InsertEndChild(geodata_el);
+  }
+
+  // TODO: set up struct with all relevant data (name, type, size, format, number type)
+  void setVar(std::string const name, std::string const type, uint const size)
+  {
+    auto var_el = doc.NewElement("Attribute");
+    var_el->SetAttribute("Name", name.c_str());
+    var_el->SetAttribute("Active", 1);
+    var_el->SetAttribute("AttributeType", "Scalar");
+    var_el->SetAttribute("Center", type.c_str());
+    auto var = grid->InsertEndChild(var_el);
+
+    auto vardata_el = doc.NewElement("DataItem");
+    vardata_el->SetAttribute("Dimensions",
+                             ("1 " + std::to_string(size)).c_str());
+    vardata_el->SetAttribute("NumberType", "Float");
+    vardata_el->SetAttribute("Precision", 8);
+    vardata_el->SetAttribute("Format", "HDF");
+    std::stringstream buf;
+    buf << std::endl;
+    buf << filepath.filename().string() << "." << suffix << ".h5:/" << name << std::endl;
+    // buf << filepath.filename().string() << ".time.h5:/" << name << "." << iter << std::endl;
+    vardata_el->SetText(buf.str().c_str());
+    var->InsertEndChild(vardata_el);
+  }
+
+  fs::path filepath;
+  std::string const suffix;
+  std::string const geoSuffix;
+  tinyxml2::XMLDocument doc;
+  tinyxml2::XMLNode* grid;
+};
+
 template <typename T, unsigned long I>
 using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
 
@@ -100,49 +212,51 @@ protected:
 template <typename FESpace>
 struct IOManager
 {
-  using Elem_T = typename FESpace::Mesh_T::Elem_T;
-  using MeshPtr_T = std::shared_ptr<typename FESpace::Mesh_T>;
+  using FESpace_T = FESpace;
+  using Mesh_T = typename FESpace::Mesh_T;
+  using Elem_T = typename Mesh_T::Elem_T;
   using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
 
-  IOManager(FESpace const & fes,
-            fs::path const & fn,
-            double tin = 0.0,
-            uint it = 0):
-    feSpace(fes),
-    filepath(fn),
+  IOManager(FESpace_T const & fe,
+            fs::path const & fp,
+            double const tin = 0.0,
+            uint const it = 0):
+    feSpace(fe),
+    filepath(fp),
     // h5Time{fs::path{filepath} += ".time.h5"},
     time(tin),
     iter(it)
   {
     if (filepath.parent_path() != fs::path(""))
       fs::create_directory(filepath.parent_path());
-    _printMeshData();
+    printMeshData();
   }
 
   void print(std::vector<Var> const & data);
 
 protected:
-  void _printMeshData()
+  void printMeshData()
   {
-    typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
+    using FE_T = typename FESpace_T::RefFE_T;
+    Mesh_T const & mesh = *(feSpace.meshPtr);
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
 
-    Table<id_T, FESpace::RefFE_T::numGeoFuns> conn(mesh.elementList.size(), FESpace::RefFE_T::numGeoFuns);
+    Table<id_T, FE_T::numGeoFuns> conn(mesh.elementList.size(), FE_T::numGeoFuns);
     for (auto const & e: mesh.elementList)
     {
-      for (uint p=0; p<FESpace::RefFE_T::numGeoFuns; ++p)
+      for (uint p=0; p<FE_T::numGeoFuns; ++p)
       {
         conn(e.id, p) = feSpace.dof.geoMap[e.id][p];
       }
     }
-    h5Mesh.print<id_T, FESpace::RefFE_T::numGeoFuns>(conn, "connectivity");
+    h5Mesh.print<id_T, FE_T::numGeoFuns>(conn, "connectivity");
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: mesh.elementList)
     {
-      for (uint p=0; p<FESpace::RefFE_T::numGeoFuns; ++p)
+      for (uint p=0; p<FE_T::numGeoFuns; ++p)
       {
-        coords.row(feSpace.dof.geoMap[e.id][p]) = FESpace::RefFE_T::mappingPts(e)[p];
+        coords.row(feSpace.dof.geoMap[e.id][p]) = FE_T::mappingPts(e)[p];
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");
@@ -161,60 +275,10 @@ public:
 template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> const & data)
 {
-  typename FESpace::Mesh_T const & mesh = *(feSpace.meshPtr);
-  uint const numElems = mesh.elementList.size();
-
-  tinyxml2::XMLDocument doc;
-  doc.InsertEndChild(doc.NewDeclaration());
-  doc.InsertEndChild(doc.NewUnknown("DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []"));
-
-  auto xdmf_el = doc.NewElement("Xdmf");
-  xdmf_el->SetAttribute("xmlns:xi", "http://www.w3.org/2003/XInclude");
-  xdmf_el->SetAttribute("Version", "2.2");
-  auto xdmf = doc.InsertEndChild(xdmf_el);
-
-  auto domain = xdmf->InsertEndChild(doc.NewElement("Domain"));
-
-  auto grid_el = doc.NewElement("Grid");
-  grid_el->SetAttribute("GridType", "Uniform");
-  auto grid = domain->InsertEndChild(grid_el);
-
-  auto time_el = doc.NewElement("Time");
-  time_el->SetAttribute("Value", time);
-  grid->InsertEndChild(time_el);
-
-  auto topo_el = doc.NewElement("Topology");
-  topo_el->SetAttribute("TopologyType", Traits_T::shapeName);
-  topo_el->SetAttribute("Dimensions", numElems);
-  auto topo = grid->InsertEndChild(topo_el);
-
-  auto topodata_el = doc.NewElement("DataItem");
-  topodata_el->SetAttribute("Dimensions",
-    (std::to_string(numElems) + " " + std::to_string(FESpace::RefFE_T::numGeoFuns)).c_str());
-  topodata_el->SetAttribute("NumberType", "Int");
-  topodata_el->SetAttribute("Precision", 8);
-  topodata_el->SetAttribute("Format", "HDF");
-  std::stringstream buf;
-  buf << std::endl;
-  buf << filepath.filename().string() << ".mesh.h5:/connectivity " << std::endl;
-  topodata_el->SetText(buf.str().c_str());
-  topo->InsertEndChild(topodata_el);
-
-  auto geometry_el = doc.NewElement("Geometry");
-  geometry_el->SetAttribute("GeometryType", "XYZ");
-  auto geometry = grid->InsertEndChild(geometry_el);
-
-  auto geodata_el = doc.NewElement("DataItem");
-  geodata_el->SetAttribute("Dimensions",
-    (std::to_string(feSpace.dof.mapSize) + " 3").c_str());
-  geodata_el->SetAttribute("NumberType", "Float");
-  geodata_el->SetAttribute("Precision", 8);
-  geodata_el->SetAttribute("Format", "HDF");
-  buf.str("");
-  buf << std::endl;
-  buf << filepath.filename().string() << ".mesh.h5:/coords " << std::endl;
-  geodata_el->SetText(buf.str().c_str());
-  geometry->InsertEndChild(geodata_el);
+  XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
+  doc.setTime(time);
+  doc.setTopology(feSpace.meshPtr->elementList.size());
+  doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5"};
   for(auto& v: data)
@@ -222,37 +286,17 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
     for (uint d=0; d<feSpace.dim; ++d)
     {
       std::string name = v.name;
-      if (feSpace.dim > 1)
+      if constexpr (FESpace_T::dim > 1)
       {
         name += "_" + std::to_string(d);
       }
 
-      auto var_el = doc.NewElement("Attribute");
-      var_el->SetAttribute("Name", name.c_str());
-      var_el->SetAttribute("Active", 1);
-      var_el->SetAttribute("AttributeType", "Scalar");
-      var_el->SetAttribute("Center", Traits_T::attributeType);
-      auto var = grid->InsertEndChild(var_el);
+      doc.setVar(name, Traits_T::attributeType, feSpace.dof.size);
 
-      auto vardata_el = doc.NewElement("DataItem");
-      vardata_el->SetAttribute("Dimensions",
-                               ("1 " + std::to_string(feSpace.dof.size)).c_str());
-      vardata_el->SetAttribute("NumberType", "Float");
-      vardata_el->SetAttribute("Precision", 8);
-      vardata_el->SetAttribute("Format", "HDF");
-      buf.str("");
-      buf << std::endl;
-      buf << filepath.filename().string() << "." << iter << ".h5:/" << name << std::endl;
-      // buf << filepath.filename().string() << ".time.h5:/" << name << "." << iter << std::endl;
-      vardata_el->SetText(buf.str().c_str());
-      var->InsertEndChild(vardata_el);
+      // this works only with Lagrange elements
       Vec const compdata = v.data.block(d*feSpace.dof.size, 0, feSpace.dof.size, 1);
       h5Iter.print(compdata, name);
       // h5Time.print(compdata, name + "." + std::to_string(iter));
     }
   }
-
-  auto xmlFilepath = filepath;
-  xmlFilepath += std::string(".") + std::to_string(iter) + ".xmf";
-  doc.SaveFile(xmlFilepath.c_str());
 }

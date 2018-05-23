@@ -131,22 +131,22 @@ inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
 
 struct NullElem: public GeoElem
 {
-  static int const dim = -1;
-  static uint const numPts = 0U;
-  static uint const numEdges = 0U;
-  static uint const numFaces = 0U;
-  static uint const numFacets = 0U;
+  static int constexpr dim = -1;
+  static uint constexpr numPts = 0U;
+  static uint constexpr numEdges = 0U;
+  static uint constexpr numFaces = 0U;
+  static uint constexpr numFacets = 0U;
 };
 
 struct PointElem: public GeoElem
 {
-  static int const dim = 0;
-  static uint const numPts = 1U;
-  static uint const numEdges = 0U;
-  static uint const numFaces = 0U;
-  static uint const numFacets = 0U;
+  static int constexpr dim = 0;
+  static uint constexpr numPts = 1U;
+  static uint constexpr numEdges = 0U;
+  static uint constexpr numFaces = 0U;
+  static uint constexpr numFacets = 0U;
 
-  explicit PointElem(std::initializer_list<Point*> list = {nullptr},
+  explicit PointElem(std::initializer_list<Point*> const & list = {nullptr},
                  id_T const i = DOFidNotSet,
                  marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -161,8 +161,8 @@ struct PointElem: public GeoElem
   virtual ~PointElem() {}
 
   virtual Vec3 midpoint() const final {return pointList[0]->coord;}
-  virtual Vec3 origin() const {return pointList[0]->coord;}
-  virtual double volume() const {return 1.;}
+  virtual Vec3 origin() const final {return pointList[0]->coord;}
+  virtual double volume() const final {return 1.;}
   virtual void buildNormal() final
   {
     normal = Vec3{0.0, 0.0, 0.0};
@@ -175,11 +175,11 @@ public:
   using Facet_T = PointElem;
   using Face_T = NullElem;
   using Edge_T = Line;
-  static int const dim = 1;
-  static uint const numPts = 2U;
-  static uint const numEdges = 1U;
-  static uint const numFaces = 0U;
-  static uint const numFacets = 2U;
+  static int constexpr dim = 1;
+  static uint constexpr numPts = 2U;
+  static uint constexpr numEdges = 1U;
+  static uint constexpr numFaces = 0U;
+  static uint constexpr numFacets = 2U;
   static array<array<id_T,1>,2> constexpr elemToFacet = {{
     {{0}}, {{1}}
   }};
@@ -202,17 +202,17 @@ public:
 
   virtual ~Line() {}
 
-  Vec3 midpoint() const
+  Vec3 midpoint() const final
   {
     return Vec3(0.5*(pointList[1]->coord+pointList[0]->coord));
   }
 
-  Vec3 origin() const
+  Vec3 origin() const final
   {
     return this->midpoint();
   }
 
-  double volume() const
+  double volume() const final
   {
     return (pointList[1]->coord-pointList[0]->coord).norm();
   }
@@ -233,11 +233,11 @@ public:
   using Facet_T = Line;
   using Face_T = Triangle;
   using Edge_T = Line;
-  static int const dim = 2;
-  static uint const numPts = 3U;
-  static uint const numEdges = 3U;
-  static uint const numFaces = 1U;
-  static uint const numFacets = 3U;
+  static int constexpr dim = 2;
+  static uint constexpr numPts = 3U;
+  static uint constexpr numEdges = 3U;
+  static uint constexpr numFaces = 1U;
+  static uint constexpr numFacets = 3U;
   static array<array<id_T,2>,3> constexpr elemToFacet = {{
     {{0,1}}, {{1,2}}, {{2,0}}
   }};
@@ -260,22 +260,23 @@ public:
 
   virtual ~Triangle() {}
 
-  Vec3 midpoint() const
+  Vec3 midpoint() const final
   {
-    return Vec3((pointList[0]->coord
-                +pointList[1]->coord
-                +pointList[2]->coord)/3.);
+    return Vec3{
+      (pointList[0]->coord + pointList[1]->coord + pointList[2]->coord)/3.
+    };
   }
 
-  Vec3 origin() const
+  Vec3 origin() const final
   {
     return pointList[0]->coord;
   }
 
-  double volume() const
+  double volume() const final
   {
-    return ((pointList[1]->coord-pointList[0]->coord).cross(
-            (pointList[2]->coord-pointList[0]->coord))).norm();
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    return .5 * v1.cross(v2).norm();
   }
 
   virtual void buildNormal() final
@@ -292,11 +293,11 @@ public:
   using Facet_T = Line;
   using Face_T = Quad;
   using Edge_T = Line;
-  static int const dim = 2;
-  static uint const numPts = 4U;
-  static uint const numEdges = 4U;
-  static uint const numFaces = 1U;
-  static uint const numFacets = 4U;
+  static int constexpr dim = 2;
+  static uint constexpr numPts = 4U;
+  static uint constexpr numEdges = 4U;
+  static uint constexpr numFaces = 1U;
+  static uint constexpr numFacets = 4U;
   static array<array<id_T,2>,4> constexpr elemToFacet = {{
       {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}
   }};
@@ -305,7 +306,7 @@ public:
     {{0,1,2,3}}
   }};
 
-  explicit Quad(std::initializer_list<Point*> list = {nullptr},
+  explicit Quad(std::initializer_list<Point*> const & list = {nullptr},
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -319,29 +320,33 @@ public:
 
   virtual ~Quad() {}
 
-  Vec3 midpoint() const
+  Vec3 midpoint() const final
   {
-    return Vec3(0.25*(pointList[0]->coord
-                     +pointList[1]->coord
-                     +pointList[2]->coord
-                     +pointList[3]->coord));
+    return Vec3{
+      0.25*(pointList[0]->coord + pointList[1]->coord +
+            pointList[2]->coord + pointList[3]->coord)
+    };
   }
 
-  Vec3 origin() const
+  Vec3 origin() const final
   {
     return midpoint();
   }
 
-  double volume() const
+  double volume() const final
   {
-    return ((pointList[2]->coord-pointList[0]->coord).cross(
-            (pointList[3]->coord-pointList[1]->coord))).norm();
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    auto const v3 = pointList[3]->coord-pointList[0]->coord;
+    return .5*(v2.cross(v1).norm() + v2.cross(v3).norm());
   }
 
   virtual void buildNormal() final
   {
-    normal = (pointList[1]->coord-pointList[0]->coord).cross(
-          pointList[2]->coord-pointList[0]->coord);
+    // TODO: we consider only planar quads
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    normal = v1.cross(v2);
     normal.normalize();
   }
 };

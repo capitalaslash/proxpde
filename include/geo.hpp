@@ -70,6 +70,21 @@ struct GeoElem
   virtual double volume() const = 0;
   virtual void buildNormal() = 0;
 
+  virtual std::tuple<Vec3, Vec3> bbox() const final
+  {
+    Vec3 min = Vec3::Constant(std::numeric_limits<double>::max());
+    Vec3 max = Vec3::Constant(std::numeric_limits<double>::min());
+    for (auto const & p: pointList)
+    {
+      for(uint c=0; c<3; ++c)
+      {
+        min[c] = std::min(min[c], p->coord[c]);
+        max[c] = std::max(max[c], p->coord[c]);
+      }
+    }
+    return std::tie(min, max);
+  }
+
   // check if geoelem is on boundary
   bool onBoundary()
   {

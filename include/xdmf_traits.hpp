@@ -4,10 +4,13 @@
 #include "reffe.hpp"
 
 template <typename RefFE>
-struct XDMFTraits
+struct XDMFTraits {};
+
+template <>
+struct XDMFTraits<RefLineP0>
 {
-  // static constexpr char const * shapeName = "None";
-  // static constexpr char const * attributeType = "None";
+  static constexpr char const * shapeName = "Polyline";
+  static constexpr char const * attributeType = "Cell";
 };
 
 template <>

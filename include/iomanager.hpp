@@ -230,6 +230,10 @@ struct IOManager
     if (filepath.parent_path() != fs::path(""))
       fs::create_directory(filepath.parent_path());
     printMeshData();
+    if constexpr (Elem_T::dim > 1)
+    {
+      printBoundary();
+    }
   }
 
   void print(std::vector<Var> const & data);
@@ -260,6 +264,51 @@ protected:
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");
+  }
+
+  void printBoundary()
+  {
+    using Facet_T = typename Mesh_T::Facet_T;
+    Mesh_T const & mesh = *(feSpace.meshPtr);
+
+    XDMFDoc<typename FESpace::RefFE_T::RefFacet_T> doc{filepath, "meshb", "meshb"};
+    doc.setTopology(mesh.facetList.size());
+    doc.setGeometry(mesh.pointList.size());
+    doc.setVar("facetMarker", "Cell", mesh.facetList.size());
+    doc.setVar("nodeMarker", "Node", mesh.pointList.size());
+
+    HDF5 h5Mesh{fs::path{filepath} += ".meshb.h5"};
+
+    Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
+    for (auto const & f: mesh.facetList)
+    {
+      for (uint p=0; p<Facet_T::numPts; ++p)
+      {
+        conn(f.id, p) = f.pointList[p]->id;
+      }
+    }
+    h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity");
+
+    Table<double, 3> coords(mesh.pointList.size(), 3);
+    for (auto const & p: mesh.pointList)
+    {
+      coords.row(p.id) = p.coord;
+    }
+    h5Mesh.print<double, 3>(coords, "coords");
+
+    Vec facetMarkerData(mesh.facetList.size());
+    for (auto const & f: mesh.facetList)
+    {
+      facetMarkerData[f.id] = static_cast<double>(f.marker);
+    }
+    h5Mesh.print(facetMarkerData, "facetMarker");
+
+    Vec nodeMarkerData(mesh.pointList.size());
+    for (auto const & p: mesh.pointList)
+    {
+      nodeMarkerData[p.id] = static_cast<double>(p.marker);
+    }
+    h5Mesh.print(nodeMarkerData, "nodeMarker");
   }
 
 public:

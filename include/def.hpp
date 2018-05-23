@@ -77,7 +77,9 @@ using vectorFun_T = Fun<3,3>;
 
 using onedFun_T = Fun<1,1>;
 using twodFun_T = Fun<2,2>;
+using threedFun_T = Fun<3,3>;
 using scalarOnedFun_T = ScalarFun<1>;
 using scalarTwodFun_T = ScalarFun<2>;
+using scalarThreedFun_T = ScalarFun<3>;
 
 template<class T> struct dependent_false : std::false_type {};

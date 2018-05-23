@@ -414,3 +414,34 @@ array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
 }};
 
 array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::mapping = RefQuadQ2::dphiFun;
+
+// ----------------------------------------------------------------------------
+uint constexpr RefTetrahedronP1::numFuns;
+array<uint,4> constexpr RefTetrahedronP1::dofPlace;
+array<array<uint,3>,4> constexpr RefTetrahedronP1::dofOnFacet;
+
+array<scalarThreedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::phiFun =
+{{
+  [] (Vec_T const & p) { return 1. - p(0) - p(1) - p(2); },
+  [] (Vec_T const & p) { return p(0); },
+  [] (Vec_T const & p) { return p(1); },
+  [] (Vec_T const & p) { return p(2); }
+}};
+
+array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::phiVectFun =
+{{
+  [] (Vec_T const & p) { return Vec_T::Constant(1. - p(0) - p(1) - p(2)); },
+  [] (Vec_T const & p) { return Vec_T::Constant(p(0)); },
+  [] (Vec_T const & p) { return Vec_T::Constant(p(1)); },
+  [] (Vec_T const & p) { return Vec_T::Constant(p(2)); }
+}};
+
+array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::dphiFun =
+{{
+  [] (Vec_T const & ) { return Vec_T(-1.L, -1.L, -1.L); },
+  [] (Vec_T const & ) { return Vec_T( 1.L,  0.L,  0.L); },
+  [] (Vec_T const & ) { return Vec_T( 0.L,  1.L,  0.L); },
+  [] (Vec_T const & ) { return Vec_T( 0.L,  0.L,  1.L); }
+}};
+
+array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::mapping = RefTetrahedronP1::dphiFun;

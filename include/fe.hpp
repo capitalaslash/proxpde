@@ -48,3 +48,10 @@ struct FEType<Quad,2>
   using RefFE_T = RefQuadQ2;
   using RecommendedQR = GaussQR<Quad,9>;
 };
+
+template <>
+struct FEType<Tetrahedron,1>
+{
+  using RefFE_T = RefTetrahedronP1;
+  using RecommendedQR = GaussQR<Tetrahedron,4>;
+};

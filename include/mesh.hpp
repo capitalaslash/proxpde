@@ -74,6 +74,8 @@ enum side: marker_T
   RIGHT = 2,
   TOP = 3,
   LEFT = 4,
+  BACK = 5,
+  FRONT = 6,
   CIRCLE = 101
 };
 
@@ -189,6 +191,11 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
                      double const& radius,
                      array<uint, 3> const numPts);
 
+void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 array<uint, 3> const numPts);
+
 template <class Elem>
 struct MeshBuilder
 {
@@ -234,6 +241,18 @@ struct MeshBuilder<Quad>
   }
 };
 
+template <>
+struct MeshBuilder<Tetrahedron>
+{
+  void build(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
+             Vec3 const& origin,
+             Vec3 const& length,
+             array<uint, 3> const numPts)
+  {
+    buildMesh3D(meshPtr, origin, length, numPts);
+  }
+};
+
 template <typename Mesh>
 void buildNormals(std::shared_ptr<Mesh> meshPtr)
 {
@@ -259,7 +278,7 @@ enum  GMSHElemType: int8_t
   GMSHLine = 1,
   GMSHTriangle = 2,
   GMSHQuad = 3,
-//  GMSHTet = 4,
+  GMSHTet = 4,
 //  GMSHHexa = 5,
 //  GMSHQuadraticLine = 8,
 //  GMSHQuadraticTriangle = 9,
@@ -269,7 +288,7 @@ enum  GMSHElemType: int8_t
 };
 
 template <typename Elem>
-struct ElemToGmsh { static GMSHElemType constexpr type = GMSHNull; };
+struct ElemToGmsh {};
 
 template <>
 struct ElemToGmsh<Line> { static GMSHElemType constexpr type = GMSHLine; };
@@ -277,6 +296,8 @@ template <>
 struct ElemToGmsh<Triangle> { static GMSHElemType constexpr type = GMSHTriangle; };
 template <>
 struct ElemToGmsh<Quad> { static GMSHElemType constexpr type = GMSHQuad; };
+template <>
+struct ElemToGmsh<Tetrahedron> { static GMSHElemType constexpr type = GMSHTet; };
 
 template <typename Elem>
 void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,

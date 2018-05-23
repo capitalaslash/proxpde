@@ -351,6 +351,66 @@ public:
   }
 };
 
+class Tetrahedron: public GeoElem
+{
+public:
+  using Facet_T = Triangle;
+  using Face_T = Triangle;
+  using Edge_T = Line;
+  static int constexpr dim = 3;
+  static uint constexpr numPts = 4U;
+  static uint constexpr numEdges = 6U;
+  static uint constexpr numFaces = 4U;
+  static uint constexpr numFacets = 4U;
+  static array<array<id_T,3>,4> constexpr elemToFacet = {{
+    {{0,2,1}}, {{0,1,3}}, {{0,3,2}}, {{1,2,3}}
+  }};
+  static array<array<id_T,2>,6> constexpr elemToEdge = {{
+    {{0,1}}, {{1,2}}, {{2,0}}, {{0,3}}, {{1,3}}, {{2,3}}
+  }};
+  static array<array<id_T,3>,4> constexpr elemToFace = elemToFacet;
+
+  explicit Tetrahedron(std::initializer_list<Point*> const & list = {nullptr},
+                       id_T const i = DOFidNotSet,
+                       marker_T const m = MarkerNotSet):
+    GeoElem(list, i, m)
+  {}
+
+  explicit Tetrahedron(std::vector<Point*> const & list,
+                       id_T const i = DOFidNotSet,
+                       marker_T const m = MarkerNotSet):
+    GeoElem(list, i, m)
+  {}
+
+  virtual ~Tetrahedron() {}
+
+  Vec3 midpoint() const final
+  {
+    return Vec3{.25*(
+      pointList[0]->coord + pointList[1]->coord +
+      pointList[2]->coord + pointList[3]->coord)
+    };
+  }
+
+  Vec3 origin() const final
+  {
+    return pointList[0]->coord;
+  }
+
+  double volume() const final
+  {
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    auto const v3 = pointList[3]->coord-pointList[0]->coord;
+    return (v1.cross(v2)).dot(v3) / 6.;
+  }
+
+  virtual void buildNormal() final
+  {
+    std::abort();
+  }
+};
+
 // this method checks only to see if the 2 elems are equivalent from the geometric pov, i.e. they
 // have the same point ids (or a permutation of it)
 template <typename Elem>

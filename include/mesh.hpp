@@ -138,7 +138,8 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
 
   iFacetCount = bFacetSize;
   uint bFacetCount = 0;
-  for(auto const & [idSet, facet]: facetMap)
+  // check https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
+  for([[maybe_unused]] auto const & [idSet, facet]: facetMap)
   {
     if(facet.facingElem[1].first == nullptr)
     {

@@ -39,18 +39,18 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
 //  MeshBuilder<Elem_T> meshBuilder;
 //  uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
 //  uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
-//  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
-  readGMSH(meshPtr, "square_uns.msh");
+//  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  readGMSH(*mesh, "square_uns.msh");
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();

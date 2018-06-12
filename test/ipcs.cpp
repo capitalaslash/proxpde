@@ -22,18 +22,18 @@ int main(int argc, char* argv[])
   MilliTimer t;
 
   t.start();
-  std::shared_ptr<Mesh_T> meshPtr{new Mesh_T};
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{3, 2, 0}});
+  meshBuilder.build(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{3, 2, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
-  FESpaceVel_T feSpaceVel{meshPtr};
-  FESpaceP_T feSpaceP{meshPtr};
+  FESpaceVel_T feSpaceVel{*mesh};
+  FESpaceP_T feSpaceP{*mesh};
 
-  Eqn<Mesh_T, QuadraticRefFE, QuadraticQR, 2> eqnUstar{"uStar", meshPtr};
-  Eqn<Mesh_T, LinearRefFE, QuadraticQR> eqnP{"p", meshPtr};
-  Eqn<Mesh_T, QuadraticRefFE, QuadraticQR, 2> eqnU{"u", meshPtr};
+  Eqn<Mesh_T, QuadraticRefFE, QuadraticQR, 2> eqnUstar{"uStar", *mesh};
+  Eqn<Mesh_T, LinearRefFE, QuadraticQR> eqnP{"p", *mesh};
+  Eqn<Mesh_T, QuadraticRefFE, QuadraticQR, 2> eqnU{"u", *mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();

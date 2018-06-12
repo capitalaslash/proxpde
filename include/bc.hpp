@@ -15,7 +15,7 @@ template <typename FESpace>
 DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> const & comp)
 {
   DofSet_T constrainedDOFset;
-  for(auto& f: feSpace.meshPtr->facetList)
+  for(auto& f: feSpace.mesh.facetList)
   {
     if(f.marker == marker)
     {

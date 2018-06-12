@@ -17,9 +17,9 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static uint const dim = Dimension;
 
-  explicit FESpace(std::shared_ptr<Mesh> const mesh):
-    meshPtr(mesh),
-    dof(*mesh)
+  explicit FESpace(Mesh const & m):
+    mesh(m),
+    dof(m)
   {}
 
   FVec<dim> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
@@ -54,7 +54,7 @@ struct FESpace
     return localValue.transpose() * phi;
   }
 
-  std::shared_ptr<Mesh> const meshPtr;
+  Mesh const & mesh;
   CurFE_T curFE;
   DOF_T dof;
 };
@@ -70,7 +70,7 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
   {
     v = Vec::Zero(feSpace.dof.size * feSpace.dim);
   }
-  for(auto const & e: feSpace.meshPtr->elementList)
+  for(auto const & e: feSpace.mesh.elementList)
   {
     uint p = 0;
     for(auto const & dof: feSpace.dof.elemMap[e.id])

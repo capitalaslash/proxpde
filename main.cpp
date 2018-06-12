@@ -47,13 +47,13 @@ int main()
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0.02, 0.);
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
-  // std::cout << *meshPtr << std::endl;
+  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  // std::cout << *mesh << std::endl;
 
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace{*mesh};
 
   // right bc not used here
   BCList<FESpace_T> bcs{feSpace};

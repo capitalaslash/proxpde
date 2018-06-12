@@ -25,13 +25,13 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr{new Mesh_T};
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
+  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
 
-  FESpaceVel_T feSpaceVel{meshPtr};
-  FESpaceP_T feSpaceP{meshPtr};
+  FESpaceVel_T feSpaceVel{*mesh};
+  FESpaceP_T feSpaceP{*mesh};
   // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);

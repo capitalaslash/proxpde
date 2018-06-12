@@ -1,37 +1,37 @@
 #include "mesh.hpp"
 
-void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
+void buildMesh1D(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  uint const numPts)
 {
   Vec3 const h = length / (numPts-1);
-  meshPtr->pointList.reserve(numPts);
+  mesh.pointList.reserve(numPts);
   for(uint p=0; p<numPts; ++p)
   {
-    meshPtr->pointList.emplace_back(origin + p * h, p);
+    mesh.pointList.emplace_back(origin + p * h, p);
   }
 
   uint const numElems = numPts-1;
-  meshPtr->elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems);
   for(uint e=0; e<numElems; ++e)
   {
-    Line line({&meshPtr->pointList[e], &meshPtr->pointList[e+1]}, e);
-    meshPtr->elementList.push_back(std::move(line));
+    Line line({&mesh.pointList[e], &mesh.pointList[e+1]}, e);
+    mesh.elementList.push_back(std::move(line));
   }
 
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
-  meshPtr->facetList[0].marker = side::LEFT;
-  meshPtr->facetList[1].marker = side::RIGHT;
+  mesh.buildConnectivity();
+  buildFacets(mesh);
+  mesh.facetList[0].marker = side::LEFT;
+  mesh.facetList[1].marker = side::RIGHT;
 }
 
 template <typename Mesh>
-void markFacetsCube(std::shared_ptr<Mesh> meshPtr,
+void markFacetsCube(Mesh & mesh,
                     Vec3 const& origin,
                     Vec3 const& length)
 {
-  for(auto & f: meshPtr->facetList)
+  for(auto & f: mesh.facetList)
   {
     auto const [min, max] = f.bbox();
     if(std::fabs(max[1]-origin[1]) < 1e-6*length[1])
@@ -61,35 +61,35 @@ void markFacetsCube(std::shared_ptr<Mesh> meshPtr,
   }
 }
 
-void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
+void buildMesh2D(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numPts)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
-  meshPtr->pointList.reserve(numPts[0]*numPts[1]);
+  mesh.pointList.reserve(numPts[0]*numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
   {
     for(uint i=0; i<numPts[0]; ++i)
     {
       Vec3 p(i * h(0), j * h(1), 0.0);
-      meshPtr->pointList.emplace_back(origin + p, i + numPts[0]*j);
+      mesh.pointList.emplace_back(origin + p, i + numPts[0]*j);
     }
   }
 
   for(uint s=0; s<numPts[0]; s++)
   {
-    meshPtr->pointList[s].marker = side::BOTTOM;
-    meshPtr->pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
+    mesh.pointList[s].marker = side::BOTTOM;
+    mesh.pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
   }
   for(uint s=0; s<numPts[1]; s++)
   {
-    meshPtr->pointList[0+numPts[0]*s].marker = side::LEFT;
-    meshPtr->pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
+    mesh.pointList[0+numPts[0]*s].marker = side::LEFT;
+    mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
   }
 
   uint const numElems = (numPts[0]-1)*(numPts[1]-1);
-  meshPtr->elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems);
   id_T counter = 0;
   for(uint j=0; j<numPts[1]-1; ++j)
     for(uint i=0; i<numPts[0]-1; ++i)
@@ -116,74 +116,74 @@ void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
         triplet_t[1] = base+numPts[0]+1;
         triplet_t[2] = base+numPts[0];
       }
-      meshPtr->elementList.emplace_back(
-        Triangle{{&meshPtr->pointList[triplet_b[0]],
-                  &meshPtr->pointList[triplet_b[1]],
-                  &meshPtr->pointList[triplet_b[2]]},
+      mesh.elementList.emplace_back(
+        Triangle{{&mesh.pointList[triplet_b[0]],
+                  &mesh.pointList[triplet_b[1]],
+                  &mesh.pointList[triplet_b[2]]},
                  counter++});
-      meshPtr->elementList.emplace_back(
-        Triangle{{&meshPtr->pointList[triplet_t[0]],
-                  &meshPtr->pointList[triplet_t[1]],
-                  &meshPtr->pointList[triplet_t[2]]},
+      mesh.elementList.emplace_back(
+        Triangle{{&mesh.pointList[triplet_t[0]],
+                  &mesh.pointList[triplet_t[1]],
+                  &mesh.pointList[triplet_t[2]]},
                  counter++});
     }
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
-  markFacetsCube(meshPtr, origin, length);
+  mesh.buildConnectivity();
+  buildFacets(mesh);
+  markFacetsCube(mesh, origin, length);
 }
 
-void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
+void buildMesh2D(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numPts)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
-  meshPtr->pointList.reserve(numPts[0]*numPts[1]);
+  mesh.pointList.reserve(numPts[0]*numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
   {
     for(uint i=0; i<numPts[0]; ++i)
     {
       Vec3 p(i * h(0), j * h(1), 0.0);
-      meshPtr->pointList.emplace_back(origin + p, i + numPts[0]*j);
+      mesh.pointList.emplace_back(origin + p, i + numPts[0]*j);
     }
   }
 
   for(uint s=0; s<numPts[0]; s++)
   {
-    meshPtr->pointList[s].marker = side::BOTTOM;
-    meshPtr->pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
+    mesh.pointList[s].marker = side::BOTTOM;
+    mesh.pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
   }
   for(uint s=0; s<numPts[1]; s++)
   {
-    meshPtr->pointList[0+numPts[0]*s].marker = side::LEFT;
-    meshPtr->pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
+    mesh.pointList[0+numPts[0]*s].marker = side::LEFT;
+    mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
   }
 
   uint const numElems = (numPts[0]-1)*(numPts[1]-1);
-  meshPtr->elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems);
   id_T counter = 0;
   for(uint j=0; j<numPts[1]-1; ++j)
     for(uint i=0; i<numPts[0]-1; ++i)
     {
       id_T const base = i + j*numPts[0];
-      meshPtr->elementList.emplace_back(
-        Quad{{&meshPtr->pointList[base],
-              &meshPtr->pointList[base+1],
-              &meshPtr->pointList[base+numPts[0]+1],
-              &meshPtr->pointList[base+numPts[0]]},
+      mesh.elementList.emplace_back(
+        Quad{{&mesh.pointList[base],
+              &mesh.pointList[base+1],
+              &mesh.pointList[base+numPts[0]+1],
+              &mesh.pointList[base+numPts[0]]},
              counter++});
     }
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
-  markFacetsCube(meshPtr, origin, length);
+  mesh.buildConnectivity();
+  buildFacets(mesh);
+  markFacetsCube(mesh, origin, length);
 }
 
-void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
+void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
                      double const& radius,
                      array<uint, 3> const numPts)
 {
-  meshPtr->pointList.resize(
+  mesh.pointList.resize(
     numPts[0]*numPts[1] +
     numPts[0]*(numPts[2]-1) +
     (numPts[1]-1)*(numPts[2]-1)
@@ -203,7 +203,7 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
       double si = i/(numPts[0]-1.);
       Vec3 p = (1.-si)*b + si*e;
       const id_T id = i + numPts[0]*j;
-      meshPtr->pointList[id] = Point(origin + p, id);
+      mesh.pointList[id] = Point(origin + p, id);
     }
   }
 
@@ -219,7 +219,7 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
       double sj = j/(numPts[2]-1.);
       Vec3 const p = b*(1-sj) + e*sj;
       const id_T id = offset + i + numPts[0]*(j-1);
-      meshPtr->pointList[id] = Point(origin + p, id);
+      mesh.pointList[id] = Point(origin + p, id);
     }
   }
 
@@ -235,18 +235,18 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
       double const si = i/(numPts[2]-1.);
       Vec3 p = b*(1.-si) + e*si;
       const id_T id = offset + i-1 + (numPts[2]-1)*j;
-      meshPtr->pointList[id] = Point(origin + p, id);
+      mesh.pointList[id] = Point(origin + p, id);
     }
   }
 
   // for(uint s=0; s<numPts[0]; s++)
   // {
-  //   meshPtr->pointList[s].marker = side::TOP;
+  //   mesh.pointList[s].marker = side::TOP;
   // }
   // for(uint s=0; s<numPts[1]; s++)
   // {
-  //   meshPtr->pointList[0+numPts[0]*s].marker = side::LEFT;
-  //   meshPtr->pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
+  //   mesh.pointList[0+numPts[0]*s].marker = side::LEFT;
+  //   mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
   // }
 
   uint const numElems =
@@ -254,17 +254,17 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
     (numPts[0]-1)*(numPts[2]-1) +
     (numPts[1]-1)*(numPts[2]-1);
 
-  meshPtr->elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems);
   id_T counter = 0;
   for(uint j=0; j<numPts[1]-1 + numPts[2]-1; ++j)
     for(uint i=0; i<numPts[0]-1; ++i)
     {
       id_T const base = i + j*numPts[0];
-      meshPtr->elementList.emplace_back(
-        Quad{{&meshPtr->pointList[base],
-              &meshPtr->pointList[base+1],
-              &meshPtr->pointList[base+numPts[0]+1],
-              &meshPtr->pointList[base+numPts[0]]},
+      mesh.elementList.emplace_back(
+        Quad{{&mesh.pointList[base],
+              &mesh.pointList[base+1],
+              &mesh.pointList[base+numPts[0]+1],
+              &mesh.pointList[base+numPts[0]]},
              counter++});
     }
 
@@ -272,18 +272,18 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
   for(uint j=0; j<numPts[1]-2; ++j)
   {
     id_T const base = numPts[0]-1 + j*numPts[0];
-    meshPtr->elementList.emplace_back(
-      Quad{{&meshPtr->pointList[base],
-            &meshPtr->pointList[blockOffset+j*(numPts[2]-1)],
-            &meshPtr->pointList[blockOffset+(j+1)*(numPts[2]-1)],
-            &meshPtr->pointList[base+numPts[0]]},
+    mesh.elementList.emplace_back(
+      Quad{{&mesh.pointList[base],
+            &mesh.pointList[blockOffset+j*(numPts[2]-1)],
+            &mesh.pointList[blockOffset+(j+1)*(numPts[2]-1)],
+            &mesh.pointList[base+numPts[0]]},
             counter++});
   }
-  meshPtr->elementList.emplace_back(
-    Quad{{&meshPtr->pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]],
-          &meshPtr->pointList[blockOffset+(numPts[1]-2)*(numPts[2]-1)],
-          &meshPtr->pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]+numPts[0] + numPts[0]],
-          &meshPtr->pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]+numPts[0]]},
+  mesh.elementList.emplace_back(
+    Quad{{&mesh.pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]],
+          &mesh.pointList[blockOffset+(numPts[1]-2)*(numPts[2]-1)],
+          &mesh.pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]+numPts[0] + numPts[0]],
+          &mesh.pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]+numPts[0]]},
           counter++});
 
   for(uint i=1; i<numPts[2]-1; ++i)
@@ -291,25 +291,25 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
     for(uint j=0; j<numPts[1]-2; ++j)
     {
       id_T const base = blockOffset + i-1 + j*(numPts[2]-1);
-      meshPtr->elementList.emplace_back(
-        Quad{{&meshPtr->pointList[base],
-              &meshPtr->pointList[base+1],
-              &meshPtr->pointList[base+numPts[2]-1+1],
-              &meshPtr->pointList[base+numPts[2]-1]},
+      mesh.elementList.emplace_back(
+        Quad{{&mesh.pointList[base],
+              &mesh.pointList[base+1],
+              &mesh.pointList[base+numPts[2]-1+1],
+              &mesh.pointList[base+numPts[2]-1]},
               counter++});
     }
     id_T const base = blockOffset + i-1 +(numPts[1]-2)*(numPts[2]-1);
-    meshPtr->elementList.emplace_back(
-      Quad{{&meshPtr->pointList[base],
-            &meshPtr->pointList[base+1],
-            &meshPtr->pointList[numPts[0]*numPts[1]-1+numPts[0]*(i+1)],
-            &meshPtr->pointList[numPts[0]*numPts[1]-1+numPts[0]*i]},
+    mesh.elementList.emplace_back(
+      Quad{{&mesh.pointList[base],
+            &mesh.pointList[base+1],
+            &mesh.pointList[numPts[0]*numPts[1]-1+numPts[0]*(i+1)],
+            &mesh.pointList[numPts[0]*numPts[1]-1+numPts[0]*i]},
             counter++});
   }
 
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
-  for(auto & f: meshPtr->facetList)
+  mesh.buildConnectivity();
+  buildFacets(mesh);
+  for(auto & f: mesh.facetList)
   {
     if(std::fabs(f.pointList[0]->coord[1]-origin[1]) < 1e-6*radius &&
        std::fabs(f.pointList[1]->coord[1]-origin[1]) < 1e-6*radius)
@@ -329,13 +329,13 @@ void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
   }
 }
 
-void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
+void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 3> const numPts)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
-  meshPtr->pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
+  mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
   for(uint k=0; k<numPts[2]; ++k)
   {
     for(uint j=0; j<numPts[1]; ++j)
@@ -344,7 +344,7 @@ void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
       {
         Vec3 p(i * h(0), j * h(1), k * h(2));
         auto const id = i + numPts[0]*j + numPts[0]*numPts[1]*k;
-        meshPtr->pointList.emplace_back(origin + p, id);
+        mesh.pointList.emplace_back(origin + p, id);
       }
     }
   }
@@ -353,29 +353,29 @@ void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
     for(uint sj=0; sj<numPts[1]; sj++)
     {
       auto const sb = si + numPts[0]*sj;
-      meshPtr->pointList[sb].marker = side::BACK;
+      mesh.pointList[sb].marker = side::BACK;
       auto const sf = si + numPts[0]*sj + numPts[1]*numPts[0]*(numPts[2]-1);
-      meshPtr->pointList[sf].marker = side::FRONT;
+      mesh.pointList[sf].marker = side::FRONT;
     }
   for(uint si=0; si<numPts[0]; si++)
     for(uint sk=0; sk<numPts[2]; sk++)
     {
       auto const sb = si + numPts[1]*numPts[0]*sk;
-      meshPtr->pointList[sb].marker = side::BOTTOM;
+      mesh.pointList[sb].marker = side::BOTTOM;
       auto const st = si + numPts[0]*(numPts[1]-1) + numPts[1]*numPts[0]*sk;
-      meshPtr->pointList[st].marker = side::TOP;
+      mesh.pointList[st].marker = side::TOP;
     }
   for(uint sj=0; sj<numPts[1]; sj++)
     for(uint sk=0; sk<numPts[2]; sk++)
     {
       auto const sl = numPts[0]*sj + numPts[1]*numPts[0]*sk;
-      meshPtr->pointList[sl].marker = side::LEFT;
+      mesh.pointList[sl].marker = side::LEFT;
       auto const sr = numPts[0]-1 + numPts[0]*sj + numPts[1]*numPts[0]*sk;
-      meshPtr->pointList[sr].marker = side::RIGHT;
+      mesh.pointList[sr].marker = side::RIGHT;
     }
 
   uint const numElems = 6*(numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
-  meshPtr->elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems);
   id_T counter = 0;
   auto const dx = 1;
   auto const dy = numPts[0];
@@ -385,50 +385,50 @@ void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
       for(uint i=0; i<numPts[0]-1; ++i)
       {
         id_T const base = i + j*numPts[0] + k*numPts[1]*numPts[0];
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base], // 0
-                            &meshPtr->pointList[base + dx], // 1
-                            &meshPtr->pointList[base + dy], // 3
-                            &meshPtr->pointList[base + dz]}, // 4
+                            &mesh.pointList[base], // 0
+                            &mesh.pointList[base + dx], // 1
+                            &mesh.pointList[base + dy], // 3
+                            &mesh.pointList[base + dz]}, // 4
              counter++});
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base + dx], // 1
-                            &meshPtr->pointList[base + dx + dy], // 2
-                            &meshPtr->pointList[base + dz], // 4
-                            &meshPtr->pointList[base + dx + dz]}, // 5
+                            &mesh.pointList[base + dx], // 1
+                            &mesh.pointList[base + dx + dy], // 2
+                            &mesh.pointList[base + dz], // 4
+                            &mesh.pointList[base + dx + dz]}, // 5
              counter++});
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base + dx], // 1
-                            &meshPtr->pointList[base + dx + dy], // 2
-                            &meshPtr->pointList[base + dy], // 3
-                            &meshPtr->pointList[base + dz]}, // 4
+                            &mesh.pointList[base + dx], // 1
+                            &mesh.pointList[base + dx + dy], // 2
+                            &mesh.pointList[base + dy], // 3
+                            &mesh.pointList[base + dz]}, // 4
              counter++});
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base + dx + dy], // 2
-                            &meshPtr->pointList[base + dx + dz], // 5
-                            &meshPtr->pointList[base + dx + dy + dz], // 6
-                            &meshPtr->pointList[base + dy + dz]}, // 7
+                            &mesh.pointList[base + dx + dy], // 2
+                            &mesh.pointList[base + dx + dz], // 5
+                            &mesh.pointList[base + dx + dy + dz], // 6
+                            &mesh.pointList[base + dy + dz]}, // 7
              counter++});
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base + dx + dy], // 2
-                            &meshPtr->pointList[base + dz], // 4
-                            &meshPtr->pointList[base + dx + dz], // 5
-                            &meshPtr->pointList[base + dy + dz]}, // 7
+                            &mesh.pointList[base + dx + dy], // 2
+                            &mesh.pointList[base + dz], // 4
+                            &mesh.pointList[base + dx + dz], // 5
+                            &mesh.pointList[base + dy + dz]}, // 7
              counter++});
-        meshPtr->elementList.emplace_back(
+        mesh.elementList.emplace_back(
               Tetrahedron{{
-                            &meshPtr->pointList[base + dx + dy], // 2
-                            &meshPtr->pointList[base + dy], // 3
-                            &meshPtr->pointList[base + dz], // 4
-                            &meshPtr->pointList[base + dy + dz]}, // 7
+                            &mesh.pointList[base + dx + dy], // 2
+                            &mesh.pointList[base + dy], // 3
+                            &mesh.pointList[base + dz], // 4
+                            &mesh.pointList[base + dy + dz]}, // 7
              counter++});
     }
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
-  markFacetsCube(meshPtr, origin, length);
+  mesh.buildConnectivity();
+  buildFacets(mesh);
+  markFacetsCube(mesh, origin, length);
 }

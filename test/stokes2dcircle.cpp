@@ -37,12 +37,12 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   double const radius = 1.;
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
-  buildCircleMesh(meshPtr, origin, radius, {{numPts_x, numPts_y, numPts_r}});
-  // std::cout << *meshPtr << std::endl;
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  buildCircleMesh(*mesh, origin, radius, {{numPts_x, numPts_y, numPts_r}});
+  // std::cout << *mesh << std::endl;
 
-  FESpaceU_T feSpaceU(meshPtr);
-  FESpaceP_T feSpaceP(meshPtr);
+  FESpaceU_T feSpaceU{*mesh};
+  FESpaceP_T feSpaceP{*mesh};
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   auto oneFun = [] (Vec3 const&) {return 1.;};

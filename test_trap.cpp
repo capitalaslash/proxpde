@@ -39,23 +39,24 @@ int main()
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 1., 0.);
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {numPts_x, numPts_y, 0});
-  std::cout << *meshPtr << std::endl;
+  meshBuilder.build(*mesh, origin, length, {numPts_x, numPts_y, 0});
+  std::cout << *mesh << std::endl;
+
+  FESpace_T feSpace{*mesh};
 
   // bc setup
-//  BCEss<FESpace_T>  left(*meshPtr,  side::LEFT, [] (Vec3 const&) {return 0.;});
-//  BCEss<FESpace_T> right(*meshPtr, side::RIGHT, [] (Vec3 const&) {return 1.;});
+//  BCEss<FESpace_T>  left(*mesh,  side::LEFT, [] (Vec3 const&) {return 0.;});
+//  BCEss<FESpace_T> right(*mesh, side::RIGHT, [] (Vec3 const&) {return 1.;});
 
   // empty bcs
-  BCList<FESpace_T> bcs{};
+  BCList bcs{feSpace};
 
   Mat builder.A(numPts,numPts);
   Vec builder.b = Vec::Zero(numPts);
 
-  FESpace_T feSpace(meshPtr);
 
   AssemblyMass<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
 

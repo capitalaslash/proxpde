@@ -18,7 +18,7 @@ struct DOF
   using edgeIdList_T = std::set<id_T>;
   using faceIdList_T = std::set<id_T>;
 
-  explicit DOF(Mesh & mesh):
+  explicit DOF(Mesh const & mesh):
     rows(mesh.elementList.size())
   {
     elemMap.resize(rows);
@@ -42,7 +42,7 @@ struct DOF
         for(auto & p: e.pointList)
         {
           // check if dofs have already been assigned to this point
-          if(ptMap[p->id] == DOFidNotSet)
+          if (ptMap[p->id] == DOFidNotSet)
           {
             elemMap[e.id][localDofCount] = size;
             ptMap[p->id] = size;

@@ -52,13 +52,13 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts_x, numPts_y, 0}});
+  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
 
   // mesh modifier
-  for (auto & p: meshPtr->pointList)
+  for (auto & p: mesh->pointList)
   {
     p.coord = mesh_mod(p.coord);
   }
@@ -77,12 +77,12 @@ int main(int argc, char* argv[])
   // auto Rt = R.transpose();
   //
   // // rotate mesh
-  // for (auto & p: meshPtr->pointList)
+  // for (auto & p: mesh->pointList)
   // {
   //   p.coord = R * p.coord;
   // }
 
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace{*mesh};
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   BCList<FESpace_T> bcs{feSpace};

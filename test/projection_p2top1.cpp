@@ -17,12 +17,12 @@ int main()
 {
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
-  std::shared_ptr<Mesh_T> meshPtr{new Mesh_T};
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{2, 2, 0}});
+  meshBuilder.build(*mesh, origin, length, {{2, 2, 0}});
 
-  FESpace1_T feSpace1{meshPtr};
-  FESpace2_T feSpace2{meshPtr};
+  FESpace1_T feSpace1{*mesh};
+  FESpace2_T feSpace2{*mesh};
   BCList<FESpace1_T> bc1{feSpace1};
 
   Var u1{"u1"};

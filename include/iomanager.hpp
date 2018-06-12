@@ -242,7 +242,7 @@ protected:
   void printMeshData()
   {
     using FE_T = typename FESpace_T::RefFE_T;
-    Mesh_T const & mesh = *(feSpace.meshPtr);
+    Mesh_T const & mesh = feSpace.mesh;
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
 
     Table<id_T, FE_T::numGeoFuns> conn(mesh.elementList.size(), FE_T::numGeoFuns);
@@ -269,7 +269,7 @@ protected:
   void printBoundary()
   {
     using Facet_T = typename Mesh_T::Facet_T;
-    Mesh_T const & mesh = *(feSpace.meshPtr);
+    Mesh_T const & mesh = feSpace.mesh;
 
     XDMFDoc<typename FESpace::RefFE_T::RefFacet_T> doc{filepath, "meshb", "meshb"};
     doc.setTopology(mesh.facetList.size());
@@ -326,7 +326,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
 {
   XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
   doc.setTime(time);
-  doc.setTopology(feSpace.meshPtr->elementList.size());
+  doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5"};

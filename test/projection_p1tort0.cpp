@@ -16,21 +16,21 @@ using FESpaceRT0_T = FESpace<Mesh_T, RefTriangleRT0, QR>;
 
 int main()
 {
-  std::shared_ptr<Mesh_T> trianglePtr{new Mesh_T};
-  trianglePtr->pointList = {
+  std::unique_ptr<Mesh_T> triangleMesh{new Mesh_T};
+  triangleMesh->pointList = {
     Point(Vec3(0., 0., 0.), 0),
     Point(Vec3(1., 0., 0.), 1),
     Point(Vec3(0., 1., 0.), 2)
   };
-  trianglePtr->elementList = {Triangle{{&trianglePtr->pointList[0],
-                                    &trianglePtr->pointList[1],
-                                    &trianglePtr->pointList[2]},
-                                    0}};
-  trianglePtr->buildConnectivity();
+  triangleMesh->elementList = {Triangle{{&triangleMesh->pointList[0],
+                                         &triangleMesh->pointList[1],
+                                         &triangleMesh->pointList[2]},
+                                         0}};
+  triangleMesh->buildConnectivity();
 
-  FESpaceP0_T feSpaceP0{trianglePtr};
-  FESpaceP1_T feSpaceP1{trianglePtr};
-  FESpaceRT0_T feSpaceRT0{trianglePtr};
+  FESpaceP0_T feSpaceP0{*triangleMesh};
+  FESpaceP1_T feSpaceP1{*triangleMesh};
+  FESpaceRT0_T feSpaceRT0{*triangleMesh};
 
   std::cout << "dofP0:\n" << feSpaceP0.dof << std::endl;
 
@@ -51,8 +51,8 @@ int main()
   builderRT0.buildProblem(massRT0, bcRT0);
   builderRT0.buildProblem(projP1RT0, bcRT0);
   builderRT0.closeMatrix();
-  std::cout << "A:\n" << builderRT0.A << std::endl;
-  std::cout << "b:\n" << builderRT0.b << std::endl;
+  // std::cout << "A:\n" << builderRT0.A << std::endl;
+  // std::cout << "b:\n" << builderRT0.b << std::endl;
 
   LUSolver solver(builderRT0.A);
   uRT0.data = solver.solve(builderRT0.b);
@@ -65,15 +65,15 @@ int main()
   builderP0.buildProblem(massP0, bcP0);
   builderP0.buildProblem(projRT0P0, bcP0);
   builderP0.closeMatrix();
-  std::cout << "A:\n" << builderP0.A << std::endl;
-  std::cout << "b:\n" << builderP0.b << std::endl;
+  // std::cout << "A:\n" << builderP0.A << std::endl;
+  // std::cout << "b:\n" << builderP0.b << std::endl;
   LUSolver solverP0(builderP0.A);
   uP0.data = solverP0.solve(builderP0.b);
   std::cout << "uP0:\n" << uP0.data << std::endl;
 
-  IOManager<FESpaceP1_T> ioP1{feSpaceP1, "p1"};
+  IOManager ioP1{feSpaceP1, "output_projrt0/p1"};
   ioP1.print({uP1});
-  IOManager<FESpaceP0_T> ioP0{feSpaceP0, "p0"};
+  IOManager ioP0{feSpaceP0, "output_projrt0/p0"};
   ioP0.print({uP0});
 
   return 0;

@@ -42,15 +42,15 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 1.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, numPts);
-  // readGMSH(meshPtr, "cube_uns.msh");
+  meshBuilder.build(*mesh, origin, length, numPts);
+  // readGMSH(*mesh, "cube_uns.msh");
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();

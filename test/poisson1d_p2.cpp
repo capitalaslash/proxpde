@@ -33,15 +33,15 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts, 0, 0}});
+  meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();

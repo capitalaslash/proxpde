@@ -80,14 +80,14 @@ enum side: marker_T
 };
 
 template <typename Mesh>
-void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
+void buildFacets(Mesh & mesh, bool keepInternal = false)
 {
   using Facet_T = typename Mesh::Facet_T;
   std::map<std::set<id_T>, Facet_T> facetMap;
 
   uint facetCount = 0;
   uint iFacetCount = 0;
-  for(auto const & e: meshPtr->elementList)
+  for(auto const & e: mesh.elementList)
   {
     uint side = 0;
     for(auto const & row: Mesh::Elem_T::elemToFacet)
@@ -102,19 +102,19 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
         i++;
       }
       Facet_T facet(facetPts);
-      auto inserted = facetMap.insert(std::make_pair(facetIds, facet));
-      if(inserted.second)
+      auto && [it, inserted] = facetMap.insert(std::pair(facetIds, facet));
+      if(inserted)
       {
         // we are the first element to cross this facet
-        inserted.first->second.facingElem[0].first = &e;
-        inserted.first->second.facingElem[0].second = side;
+        it->second.facingElem[0].first = &e;
+        it->second.facingElem[0].second = side;
         facetCount++;
       }
       else
       {
-        // we are the second element crossing this facet, this is internal
-        inserted.first->second.facingElem[1].first = &e;
-        inserted.first->second.facingElem[1].second = side;
+        // we are the second element crossing this facet, this is an internal facet
+        it->second.facingElem[1].first = &e;
+        it->second.facingElem[1].second = side;
         iFacetCount++;
       }
       side++;
@@ -124,14 +124,14 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
   uint bFacetSize = facetCount - iFacetCount;
   if(keepInternal)
   {
-    meshPtr->facetList.resize(facetCount);
+    mesh.facetList.resize(facetCount);
   }
   else
   {
-    meshPtr->facetList.resize(bFacetSize);
+    mesh.facetList.resize(bFacetSize);
   }
-  meshPtr->elemToFacet.resize(meshPtr->elementList.size());
-  for(auto & row: meshPtr->elemToFacet)
+  mesh.elemToFacet.resize(mesh.elementList.size());
+  for(auto & row: mesh.elemToFacet)
   {
     row.fill(DOFidNotSet);
   }
@@ -144,9 +144,9 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
     if(facet.facingElem[1].first == nullptr)
     {
       // this is a boundary facet
-      meshPtr->facetList[bFacetCount] = facet;
-      meshPtr->facetList[bFacetCount].id = bFacetCount;
-      meshPtr->elemToFacet
+      mesh.facetList[bFacetCount] = facet;
+      mesh.facetList[bFacetCount].id = bFacetCount;
+      mesh.elemToFacet
         [facet.facingElem[0].first->id]
         [facet.facingElem[0].second] = bFacetCount;
       bFacetCount++;
@@ -156,12 +156,12 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
       // this is an internal facet
       if(keepInternal)
       {
-        meshPtr->facetList[iFacetCount] = facet;
-        meshPtr->facetList[iFacetCount].id = iFacetCount;
-        meshPtr->elemToFacet
+        mesh.facetList[iFacetCount] = facet;
+        mesh.facetList[iFacetCount].id = iFacetCount;
+        mesh.elemToFacet
           [facet.facingElem[0].first->id]
           [facet.facingElem[0].second] = iFacetCount;
-        meshPtr->elemToFacet
+        mesh.elemToFacet
           [facet.facingElem[1].first->id]
           [facet.facingElem[1].second] = iFacetCount;
       }
@@ -172,27 +172,27 @@ void buildFacets(std::shared_ptr<Mesh> meshPtr, bool keepInternal = false)
   assert(iFacetCount == facetCount);
 }
 
-void buildMesh1D(std::shared_ptr<Mesh<Line>> meshPtr,
+void buildMesh1D(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  uint const numPts);
 
-void buildMesh2D(std::shared_ptr<Mesh<Triangle>> meshPtr,
+void buildMesh2D(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numPts);
 
-void buildMesh2D(std::shared_ptr<Mesh<Quad>> meshPtr,
+void buildMesh2D(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numPts);
 
-void buildCircleMesh(std::shared_ptr<Mesh<Quad>> meshPtr,
+void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
                      double const& radius,
                      array<uint, 3> const numPts);
 
-void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
+void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 3> const numPts);
@@ -200,7 +200,7 @@ void buildMesh3D(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
 template <class Elem>
 struct MeshBuilder
 {
-  void build(std::shared_ptr<Mesh<Line>> meshPtr,
+  void build(Mesh<Elem> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts);
@@ -209,55 +209,55 @@ struct MeshBuilder
 template <>
 struct MeshBuilder<Line>
 {
-  void build(std::shared_ptr<Mesh<Line>> meshPtr,
+  void build(Mesh<Line> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh1D(meshPtr, origin, length, numPts[0]);
+    buildMesh1D(mesh, origin, length, numPts[0]);
   }
 };
 
 template <>
 struct MeshBuilder<Triangle>
 {
-  void build(std::shared_ptr<Mesh<Triangle>> meshPtr,
+  void build(Mesh<Triangle> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh2D(meshPtr, origin, length, {{numPts[0], numPts[1]}});
+    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}});
   }
 };
 
 template <>
 struct MeshBuilder<Quad>
 {
-  void build(std::shared_ptr<Mesh<Quad>> meshPtr,
+  void build(Mesh<Quad> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh2D(meshPtr, origin, length, {{numPts[0], numPts[1]}});
+    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}});
   }
 };
 
 template <>
 struct MeshBuilder<Tetrahedron>
 {
-  void build(std::shared_ptr<Mesh<Tetrahedron>> meshPtr,
+  void build(Mesh<Tetrahedron> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts)
   {
-    buildMesh3D(meshPtr, origin, length, numPts);
+    buildMesh3D(mesh, origin, length, numPts);
   }
 };
 
 template <typename Mesh>
-void buildNormals(std::shared_ptr<Mesh> meshPtr)
+void buildNormals(Mesh & mesh)
 {
-  for (auto & facet: meshPtr->facetList)
+  for (auto & facet: mesh.facetList)
   {
       if (facet.onBoundary())
       {
@@ -301,7 +301,7 @@ template <>
 struct ElemToGmsh<Tetrahedron> { static GMSHElemType constexpr type = GMSHTet; };
 
 template <typename Elem>
-void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
+void readGMSH(Mesh<Elem> & mesh,
               std::string filename)
 {
   auto in = std::ifstream(filename);
@@ -352,7 +352,7 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
     {
       uint numNodes;
       in >> numNodes;
-      meshPtr->pointList.reserve(numNodes);
+      mesh.pointList.reserve(numNodes);
 
       // format: node-number(one-based) x-coord y-coord z-coord
       for (uint n=0; n<numNodes; n++)
@@ -362,7 +362,7 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
         in >> id >> x >> y >> z;
         // currently only sonsecutive ids are supported
         assert(n == id-1);
-        meshPtr->pointList.emplace_back(Vec3{x, y, z}, n);
+        mesh.pointList.emplace_back(Vec3{x, y, z}, n);
       }
       in >> buf;
       if (buf != "$EndNodes")
@@ -375,7 +375,7 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
     {
       uint numElements;
       in >> numElements;
-      meshPtr->elementList.reserve(numElements);
+      mesh.elementList.reserve(numElements);
       // format: elm-number(one-based) elm-type number-of-tags < tag > ... node-number-list
       uint eVol = 0, eBd = 0;
       for (uint e=0; e<numElements; e++)
@@ -400,12 +400,12 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
 
           // get points pointers from connectivity
           std::vector<Point*> connPts;
-          std::for_each(conn.begin(), conn.end(), [&connPts, &meshPtr](uint const c){
-            connPts.push_back(&meshPtr->pointList[c-1]);
+          std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
+            connPts.push_back(&mesh.pointList[c-1]);
           });
 
           // create mesh element
-          meshPtr->elementList.emplace_back(Elem(connPts, eVol));
+          mesh.elementList.emplace_back(Elem(connPts, eVol));
           eVol++;
         }
         else if (ElemToGmsh<typename Elem::Facet_T>::type == elType)
@@ -419,8 +419,8 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
 
           // get points pointers from connectivity
           std::vector<Point*> connPts;
-          std::for_each(conn.begin(), conn.end(), [&connPts, &meshPtr](uint const c){
-            connPts.push_back(&meshPtr->pointList[c-1]);
+          std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
+            connPts.push_back(&mesh.pointList[c-1]);
           });
 
           // create mesh boundary element
@@ -448,14 +448,14 @@ void readGMSH(std::shared_ptr<Mesh<Elem>> meshPtr,
     // get next section
     in >> buf;
   }
-  meshPtr->buildConnectivity();
-  buildFacets(meshPtr);
+  mesh.buildConnectivity();
+  buildFacets(mesh);
 
   // the file should contain all the boundary facets
-  assert(meshPtr->facetList.size() == facets.size());
+  assert(mesh.facetList.size() == facets.size());
 
   // use file facets to set boundary flags
-  for (auto & meshFacet: meshPtr->facetList)
+  for (auto & meshFacet: mesh.facetList)
   {
     for (auto it = facets.begin(); it != facets.end(); ++it)
     {

@@ -1155,7 +1155,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    auto & mesh = *this->feSpace.meshPtr;
+    auto const & mesh = this->feSpace.mesh;
     auto const & e = *this->feSpace.curFE.e;
     uint facetCounter = 0;
     for(auto const facetId: mesh.elemToFacet[e.id])

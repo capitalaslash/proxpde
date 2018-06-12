@@ -31,11 +31,11 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
 
-  std::shared_ptr<Mesh_T> meshPtr(new Mesh_T);
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(meshPtr, origin, length, {{numPts, 0, 0}});
+  meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
   filelog << "mesh build: " << t << " ms" << std::endl;
 
   // rotation matrix
@@ -47,13 +47,13 @@ int main(int argc, char* argv[])
   auto Rt = R.transpose();
 
   // rotate mesh
-  for (auto & p: meshPtr->pointList)
+  for (auto & p: mesh->pointList)
   {
     p.coord = R * p.coord;
   }
 
   t.start();
-  FESpace_T feSpace(meshPtr);
+  FESpace_T feSpace(*mesh);
   filelog << "fespace: " << t << " ms" << std::endl;
 
   t.start();

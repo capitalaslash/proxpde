@@ -1163,8 +1163,8 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
       if(facetId != DOFidNotSet &&
          mesh.facetList[facetId].marker == marker)
       {
-        auto & facet = mesh.facetList[facetId];
-        facet.buildNormal();
+        auto const & facet = mesh.facetList[facetId];
+        auto const normal = facet.normal();
         facetCurFE.reinit(facet);
         for(uint q=0; q<QR_T::numPts; ++q)
         {
@@ -1176,7 +1176,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
               for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
               {
                 auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
-                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * facet.normal[d] * value;
+                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * value;
               }
             }
           }

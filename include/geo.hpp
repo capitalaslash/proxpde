@@ -69,6 +69,7 @@ struct GeoElem
   virtual Vec3 origin() const = 0;
   virtual double volume() const = 0;
   virtual void buildNormal() = 0;
+  virtual Vec3 normal() const = 0;
 
   virtual std::tuple<Vec3, Vec3> bbox() const final
   {
@@ -96,7 +97,7 @@ struct GeoElem
   id_T id;
   marker_T marker;
   array<FacingElem_T, 2> facingElem;
-  Vec3 normal;
+  Vec3 _normal;
 };
 
 inline bool operator< (GeoElem const & e1, GeoElem const & e2)
@@ -165,7 +166,12 @@ struct PointElem: public GeoElem
   virtual double volume() const final {return 1.;}
   virtual void buildNormal() final
   {
-    normal = Vec3{0.0, 0.0, 0.0};
+    _normal = Vec3{0.0, 0.0, 0.0};
+  }
+
+  virtual Vec3 normal() const final
+  {
+    return Vec3{0.0, 0.0, 0.0};
   }
 };
 
@@ -219,11 +225,21 @@ public:
 
   virtual void buildNormal() final
   {
-    normal = Vec3{
+    _normal = Vec3{
         pointList[1]->coord[1]-pointList[0]->coord[1],
         pointList[0]->coord[0]-pointList[1]->coord[0],
         0.0};
-    normal.normalize();
+    _normal.normalize();
+  }
+
+  virtual Vec3 normal() const final
+  {
+    auto n = Vec3{
+        pointList[1]->coord[1]-pointList[0]->coord[1],
+        pointList[0]->coord[0]-pointList[1]->coord[0],
+        0.0};
+    n.normalize();
+    return n;
   }
 };
 
@@ -281,9 +297,17 @@ public:
 
   virtual void buildNormal() final
   {
-    normal = (pointList[1]->coord-pointList[0]->coord).cross(
+    _normal = (pointList[1]->coord-pointList[0]->coord).cross(
           pointList[2]->coord-pointList[0]->coord);
-    normal.normalize();
+    _normal.normalize();
+  }
+
+  virtual Vec3 normal() const final
+  {
+    auto n = (pointList[1]->coord-pointList[0]->coord).cross(
+          pointList[2]->coord-pointList[0]->coord);
+    n.normalize();
+    return n;
   }
 };
 
@@ -346,8 +370,18 @@ public:
     // TODO: we consider only planar quads
     auto const v1 = pointList[1]->coord-pointList[0]->coord;
     auto const v2 = pointList[2]->coord-pointList[0]->coord;
-    normal = v1.cross(v2);
-    normal.normalize();
+    _normal = v1.cross(v2);
+    _normal.normalize();
+  }
+
+  virtual Vec3 normal() const final
+  {
+    // TODO: we consider only planar quads
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    auto n = v1.cross(v2);
+    n.normalize();
+    return n;
   }
 };
 
@@ -406,6 +440,11 @@ public:
   }
 
   virtual void buildNormal() final
+  {
+    std::abort();
+  }
+
+  virtual Vec3 normal() const final
   {
     std::abort();
   }

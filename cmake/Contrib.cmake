@@ -4,8 +4,8 @@ find_package(Eigen3 3.3 NO_MODULE REQUIRED)
 # umfpack (used through eigen)
 find_package(UMFPack REQUIRED)
 
-# tinyxml2
-find_package(tinyxml2 NO_MODULE REQUIRED)
+# pugixml
+find_package(pugixml NO_MODULE REQUIRED)
 
 # HDF5 (does not yet support targets)
 find_package(HDF5 COMPONENTS C REQUIRED)

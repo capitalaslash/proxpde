@@ -2,36 +2,88 @@
 
 #include "def.hpp"
 #include "xdmf_traits.hpp"
+#include "fe.hpp"
 #include "var.hpp"
 
-#include <tinyxml2.h>
+#include <pugixml.hpp>
 #include <hdf5.h>
 #include <fstream>
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+template <typename T>
+std::string join(std::vector<T> const & v)
+{
+  std::string buf;
+  for (auto const & i: v)
+  {
+    buf += " " + std::to_string(i);
+  }
+  buf = buf.substr(1, buf.size()-1);
+  return buf;
+}
+
+enum class XDMFNumberType
+{
+    INT,
+    FLOAT
+};
+
+template <XDMFNumberType T>
+struct XDMFNumberTypeToString {};
+
+template <>
+struct XDMFNumberTypeToString<XDMFNumberType::INT>
+{
+    static constexpr char const * type = "Int";
+};
+
+template <>
+struct XDMFNumberTypeToString<XDMFNumberType::FLOAT>
+{
+    static constexpr char const * type = "Float";
+};
+
+enum class XDMFFormat
+{
+    HDF,
+    //INLINE
+};
+
+template <XDMFFormat F>
+struct XDMFFormatToString {};
+
+template <>
+struct XDMFFormatToString<XDMFFormat::HDF>
+{
+    static constexpr char const * type = "HDF";
+};
 
 template <typename RefFE>
 class XDMFDoc
 {
 public:
-  explicit XDMFDoc(fs::path const & fp, std::string const s, std::string const geoS = "mesh"):
+  explicit XDMFDoc(fs::path const & fp,
+                   std::string const s,
+                   std::string const geoS = "mesh"):
     filepath(fp),
     suffix(s),
     geoSuffix(geoS)
   {
-    doc.InsertEndChild(doc.NewDeclaration());
-    doc.InsertEndChild(doc.NewUnknown("DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []"));
-    auto xdmf_el = doc.NewElement("Xdmf");
-    xdmf_el->SetAttribute("xmlns:xi", "http://www.w3.org/2003/XInclude");
-    xdmf_el->SetAttribute("Version", "2.2");
-    auto xdmf = doc.InsertEndChild(xdmf_el);
+    auto decl = doc.prepend_child(pugi::node_declaration);
+    decl.append_attribute("version") = "1.0";
+    decl.append_attribute("encoding") = "UTF-8";
 
-    auto domain = xdmf->InsertEndChild(doc.NewElement("Domain"));
+    doc.append_child(pugi::node_doctype).set_value("Xdmf SYSTEM \"Xdmf.dtd\" []");
 
-    auto grid_el = doc.NewElement("Grid");
-    grid_el->SetAttribute("GridType", "Uniform");
-    grid = domain->InsertEndChild(grid_el);
+    auto xdmfNode = doc.append_child("Xdmf");
+    xdmfNode.append_attribute("xmlns:xi") = "http://www.w3.org/2003/XInclude";
+    xdmfNode.append_attribute("Version") = "2.2";
+
+    auto domainNode = xdmfNode.append_child("Domain");
+
+    gridNode = domainNode.append_child("Grid");
+    gridNode.append_attribute("GridType") = "Uniform";
   }
 
   ~XDMFDoc()
@@ -42,94 +94,93 @@ public:
       xmlFilepath += std::string(".") + suffix;
     }
     xmlFilepath += ".xmf";
-    doc.SaveFile(xmlFilepath.c_str());
+    doc.save_file(xmlFilepath.c_str());
   }
 
   void setTime(double const time)
   {
-    auto time_el = doc.NewElement("Time");
-    time_el->SetAttribute("Value", time);
-    grid->InsertEndChild(time_el);
+    auto timeNode = gridNode.append_child("Time");
+    timeNode.append_attribute("Value") = time;
   }
 
   void setTopology(uint const numElems)
   {
-    auto topo_el = doc.NewElement("Topology");
-    topo_el->SetAttribute("TopologyType", XDMFTraits<RefFE>::shapeName);
-    topo_el->SetAttribute("Dimensions", numElems);
-    auto topo = grid->InsertEndChild(topo_el);
+    auto topoNode = gridNode.append_child("Topology");
+    topoNode.append_attribute("TopologyType") = XDMFTraits<RefFE>::shapeName;
+    topoNode.append_attribute("Dimensions") = numElems;
 
-    auto topodata_el = doc.NewElement("DataItem");
-    topodata_el->SetAttribute("Dimensions",
-      (std::to_string(numElems) + " " + std::to_string(RefFE::numGeoFuns)).c_str());
-    topodata_el->SetAttribute("NumberType", "Int");
-    topodata_el->SetAttribute("Precision", 8);
-    topodata_el->SetAttribute("Format", "HDF");
-    std::stringstream buf;
-    buf << std::endl;
-    buf << filepath.filename().string() << "." << geoSuffix << ".h5:/connectivity " << std::endl;
-    topodata_el->SetText(buf.str().c_str());
-    topo->InsertEndChild(topodata_el);
+    auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
+        + ".h5:/connectivity\n";
+    createDataItem<XDMFNumberType::INT, XDMFFormat::HDF>(
+            topoNode,
+            {numElems, RefFE::numGeoFuns},
+            8,
+            buf);
   }
 
   void setGeometry(uint const mapSize)
   {
-    auto geometry_el = doc.NewElement("Geometry");
-    geometry_el->SetAttribute("GeometryType", "XYZ");
-    auto geometry = grid->InsertEndChild(geometry_el);
+    auto geoNode = gridNode.append_child("Geometry");
+    geoNode.append_attribute("GeometryType") = "XYZ";
 
-    auto geodata_el = doc.NewElement("DataItem");
-    geodata_el->SetAttribute("Dimensions",
-      (std::to_string(mapSize) + " 3").c_str());
-    geodata_el->SetAttribute("NumberType", "Float");
-    geodata_el->SetAttribute("Precision", 8);
-    geodata_el->SetAttribute("Format", "HDF");
-    std::stringstream buf;
-    buf << std::endl;
-    buf << filepath.filename().string() << "." << geoSuffix << ".h5:/coords " << std::endl;
-    geodata_el->SetText(buf.str().c_str());
-    geometry->InsertEndChild(geodata_el);
+    auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
+        + ".h5:/coords\n";
+    createDataItem<XDMFNumberType::FLOAT, XDMFFormat::HDF>(
+            geoNode,
+            {mapSize, 3},
+            8,
+            buf);
   }
 
   // TODO: set up struct with all relevant data (name, type, size, format, number type)
   void setVar(std::string const name, std::string const type, uint const size)
   {
-    auto var_el = doc.NewElement("Attribute");
-    var_el->SetAttribute("Name", name.c_str());
-    var_el->SetAttribute("Active", 1);
-    var_el->SetAttribute("AttributeType", "Scalar");
-    var_el->SetAttribute("Center", type.c_str());
-    auto var = grid->InsertEndChild(var_el);
+    auto varNode = gridNode.append_child("Attribute");
+    varNode.append_attribute("Name") = name.c_str();
+    varNode.append_attribute("Active") = 1;
+    varNode.append_attribute("AttributeType") = "Scalar";
+    varNode.append_attribute("Center") = type.c_str();
 
-    auto vardata_el = doc.NewElement("DataItem");
-    vardata_el->SetAttribute("Dimensions",
-                             ("1 " + std::to_string(size)).c_str());
-    vardata_el->SetAttribute("NumberType", "Float");
-    vardata_el->SetAttribute("Precision", 8);
-    vardata_el->SetAttribute("Format", "HDF");
-    std::stringstream buf;
-    buf << std::endl;
-    buf << filepath.filename().string() << "." << suffix << ".h5:/" << name << std::endl;
-    // buf << filepath.filename().string() << ".time.h5:/" << name << "." << iter << std::endl;
-    vardata_el->SetText(buf.str().c_str());
-    var->InsertEndChild(vardata_el);
+    auto const buf = "\n" + filepath.filename().string() + "." + suffix
+        + ".h5:/" + name + "\n";
+    // auto const buf = "\n" + filepath.filename().string() + ".time.h5:/"
+    //     + name + "." + iter + "\n";
+    createDataItem<XDMFNumberType::FLOAT, XDMFFormat::HDF>(
+            varNode,
+            {1, size},
+            8,
+            buf);
+  }
+
+private:
+  template <XDMFNumberType Type, XDMFFormat Format>
+  pugi::xml_node createDataItem(
+          pugi::xml_node & parent,
+          std::vector<uint> const & dims,
+          uint const precision,
+          std::string const & content)
+  {
+    auto node = parent.append_child("DataItem");
+    node.append_attribute("Dimensions") = join(dims).c_str();
+    node.append_attribute("NumberType") = XDMFNumberTypeToString<Type>::type;
+    node.append_attribute("Precision") = precision;
+    node.append_attribute("Format") = XDMFFormatToString<Format>::type;
+    node.text() = content.c_str();
+    return node;
   }
 
   fs::path filepath;
   std::string const suffix;
   std::string const geoSuffix;
-  tinyxml2::XMLDocument doc;
-  tinyxml2::XMLNode* grid;
+  pugi::xml_document doc;
+  pugi::xml_node gridNode;
 };
 
 template <typename T, unsigned long I>
 using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
 
 template<typename T>
-struct HDF5Var
-{
-  static hid_t constexpr type = 0;
-};
+struct HDF5Var {};
 
 template <>
 struct HDF5Var<uint>
@@ -164,7 +215,8 @@ public:
     {
       dataset = H5Dcreate(file_id, var.name.c_str(), H5T_NATIVE_DOUBLE,
                           dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,H5P_DEFAULT, var.data.data());
+      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
+                        H5P_DEFAULT, var.data.data());
       H5Dclose(dataset);
     }
     H5Sclose(dspace);
@@ -179,7 +231,8 @@ public:
     {
       dataset = H5Dcreate(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
                           dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,H5P_DEFAULT, vec.data());
+      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
+                        H5P_DEFAULT, vec.data());
       H5Dclose(dataset);
     }
     H5Sclose(dspace);
@@ -193,7 +246,8 @@ public:
     hid_t dataset;
     dataset = H5Dcreate(file_id, name.c_str(), HDF5Var<T>::type,
                         dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, HDF5Var<T>::type, H5S_ALL, H5S_ALL,H5P_DEFAULT, tab.data());
+    status = H5Dwrite(dataset, HDF5Var<T>::type, H5S_ALL, H5S_ALL,
+                      H5P_DEFAULT, tab.data());
     H5Dclose(dataset);
     H5Sclose(dspace);
   }
@@ -271,7 +325,8 @@ protected:
     using Facet_T = typename Mesh_T::Facet_T;
     Mesh_T const & mesh = feSpace.mesh;
 
-    XDMFDoc<typename FESpace::RefFE_T::RefFacet_T> doc{filepath, "meshb", "meshb"};
+    // we always use linear elements for boundary facets
+    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filepath, "meshb", "meshb"};
     doc.setTopology(mesh.facetList.size());
     doc.setGeometry(mesh.pointList.size());
     doc.setVar("facetMarker", "Cell", mesh.facetList.size());

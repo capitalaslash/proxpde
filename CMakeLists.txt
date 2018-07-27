@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.9)
 
 project(MiniFEM
   VERSION 0.1
@@ -67,7 +67,7 @@ target_compile_options(minifem PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic
 target_link_libraries(minifem PUBLIC
   Eigen3::Eigen
   UMFPACK::UMFPACK
-  tinyxml2
+  pugixml
   yaml-cpp
   ${HDF5_LIBRARIES}
   OpenMP::OpenMP_CXX

@@ -18,6 +18,8 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_DEBUG_POSTFIX "-dbg")
 
+include(FeatureSummary)
+
 include(WriteCompilerDetectionHeader)
 write_compiler_detection_header(
   FILE "${CMAKE_CURRENT_BINARY_DIR}/minifem_compiler_detection.h"
@@ -137,3 +139,5 @@ export(EXPORT MiniFEMTargets
 export(PACKAGE MiniFEM)
 
 add_subdirectory(test)
+
+feature_summary(WHAT ALL)

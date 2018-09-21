@@ -14,7 +14,7 @@ find_package(HDF5 COMPONENTS C REQUIRED)
 find_package(yaml-cpp NO_MODULE REQUIRED)
 
 # openmp
-find_package(OpenMP REQUIRED)
+find_package(OpenMP MODULE REQUIRED COMPONENTS CXX)
 
 # stdc++fs
 #add_library(stdc++fs UNKNOWN IMPORTED)

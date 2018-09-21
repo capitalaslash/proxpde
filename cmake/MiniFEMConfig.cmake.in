@@ -3,12 +3,12 @@ include(CMakeFindDependencyMacro)
 
 list(APPEND CMAKE_MODULE_PATH ${MiniFEM_CMAKE_DIR})
 
-find_dependency(Eigen 3.3.3 REQUIRED)
+find_dependency(Eigen3 3.3.3 REQUIRED NO_MODULE)
 find_dependency(UMFPack REQUIRED MODULE)
 find_dependency(pugixml REQUIRED NO_MODULE)
-find_dependency(HDF5 REQUIRED COMPONENTS C)
-find_dependency(yaml-cpp 0.6 REQUIRED)
-find_dependency(OpenMP REQUIRED)
+find_dependency(HDF5 REQUIRED MODULE COMPONENTS C)
+find_dependency(yaml-cpp 0.6 REQUIRED NO_MODULE)
+find_dependency(OpenMP REQUIRED MODULE COMPONENTS CXX)
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
 if(NOT TARGET MiniFEM::MiniFEM)

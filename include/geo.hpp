@@ -96,6 +96,7 @@ struct GeoElem
   PointList_T pointList;
   id_T id;
   marker_T marker;
+  // stores internal and external (element, facet side) pairs
   array<FacingElem_T, 2> facingElem;
   Vec3 _normal;
 };

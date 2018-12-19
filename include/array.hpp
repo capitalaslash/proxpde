@@ -276,15 +276,15 @@ noexcept
 }
 namespace detail {
 template<typename T, std::size_t N, index_t... Indexes>
-inline constexpr array<typename std::remove_cv<T>::type, N>
+inline constexpr array<std::remove_cv_t<T>, N>
 to_array_impl(T (& arr)[N], index_tuple<Indexes...>)
 noexcept
 {
-  return array<typename std::remove_cv<T>::type, N>{{arr[Indexes]...}};
+  return array<std::remove_cv_t<T>, N>{{arr[Indexes]...}};
 }
 }	// namespace detail
 template<typename T, std::size_t N>
-inline constexpr array<typename std::remove_cv<T>::type, N>
+inline constexpr array<std::remove_cv_t<T>, N>
 to_array(T (& arr)[N])
 noexcept
 {

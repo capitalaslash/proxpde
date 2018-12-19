@@ -56,7 +56,7 @@ struct FESpace
 
   Mesh const & mesh;
   CurFE_T curFE;
-  DOF_T dof;
+  DOF_T const dof;
 };
 
 template <typename FESpace>

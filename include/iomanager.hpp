@@ -176,9 +176,6 @@ private:
   pugi::xml_node gridNode;
 };
 
-template <typename T, unsigned long I>
-using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
-
 template<typename T>
 struct HDF5Var {};
 
@@ -299,22 +296,14 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
 
-    Table<id_T, FE_T::numGeoFuns> conn(mesh.elementList.size(), FE_T::numGeoFuns);
-    for (auto const & e: mesh.elementList)
-    {
-      for (uint p=0; p<FE_T::numGeoFuns; ++p)
-      {
-        conn(e.id, p) = feSpace.dof.geoMap[e.id][p];
-      }
-    }
-    h5Mesh.print<id_T, FE_T::numGeoFuns>(conn, "connectivity");
+    h5Mesh.print<id_T, FE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: mesh.elementList)
     {
       for (uint p=0; p<FE_T::numGeoFuns; ++p)
       {
-        coords.row(feSpace.dof.geoMap[e.id][p]) = FE_T::mappingPts(e)[p];
+        coords.row(feSpace.dof.geoMap(e.id, p)) = FE_T::mappingPts(e)[p];
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");

@@ -139,7 +139,7 @@ struct Builder
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
+            DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
             if(bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
@@ -157,7 +157,7 @@ struct Builder
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
           auto const pos = i+d*FESpace::RefFE_T::numFuns;
-          DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
+          DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
 
           for(auto& bc: bcs.bcEssList)
           {
@@ -180,14 +180,14 @@ struct Builder
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id_i = assembly.feSpace.dof.elemMap[e.id][i];
+        DOFid_T const id_i = assembly.feSpace.dof.getId(e.id, i);
         for (uint d1=0; d1<FESpace::dim; ++d1)
         {
           b(assembly.offset_row + d1*gSize + id_i) += Fe(i + d1*FESpace::CurFE_T::size);
 
           for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
-            DOFid_T const id_j = assembly.feSpace.dof.elemMap[e.id][j];
+            DOFid_T const id_j = assembly.feSpace.dof.getId(e.id, j);
             for (uint d2=0; d2<FESpace::dim; ++d2)
             {
               auto val = Ke(i+d1*FESpace::CurFE_T::size,j+d2*FESpace::CurFE_T::size);
@@ -257,7 +257,7 @@ struct Builder
           for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace1::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace1.dof.elemMap[e.id][pos];
+            DOFid_T const id = assembly.feSpace1.dof.getId(e.id, pos);
             if(bc.isConstrained(id))
             {
               Crow(pos,pos) = 0.;
@@ -274,7 +274,7 @@ struct Builder
           for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace2::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace2.dof.elemMap[e.id][pos];
+            DOFid_T const id = assembly.feSpace2.dof.getId(e.id, pos);
             if(bc.isConstrained(id))
             {
               Cclm(pos,pos) = 0.;
@@ -290,14 +290,14 @@ struct Builder
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id_i = assembly.feSpace1.dof.elemMap[e.id][i];
+        DOFid_T const id_i = assembly.feSpace1.dof.getId(e.id, i);
         for (uint d1=0; d1<FESpace1::dim; ++d1)
         {
           b(assembly.offset_row + d1*gSize1 + id_i) += Fe(i + d1*FESpace1::CurFE_T::size);
 
           for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
           {
-            DOFid_T const id_j = assembly.feSpace2.dof.elemMap[e.id][j];
+            DOFid_T const id_j = assembly.feSpace2.dof.getId(e.id, j);
             for (uint d2=0; d2<FESpace2::dim; ++d2)
             {
               auto val = Ke(i+d1*FESpace1::CurFE_T::size,j+d2*FESpace2::CurFE_T::size);
@@ -350,7 +350,7 @@ struct Builder
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace.dof.elemMap[e.id][pos];
+            DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
             if(bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
@@ -366,7 +366,7 @@ struct Builder
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        DOFid_T const id_i = assembly.feSpace.dof.elemMap[e.id][i];
+        DOFid_T const id_i = assembly.feSpace.dof.getId(e.id, i);
         for (uint d=0; d<FESpace::dim; ++d)
         {
           auto val = Fe(i+d*FESpace::CurFE_T::size);

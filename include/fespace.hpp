@@ -37,7 +37,7 @@ struct FESpace
     FVec<RefFE_T::numFuns> phi;
     for (uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = this->dof.elemMap[elem.id][n];
+      id_T const dofId = this->dof.getId(elem.id, n);
       for (uint d=0; d<dim; ++d)
       {
         localValue(n, d) = data[dofId + d*this->dof.size];
@@ -61,7 +61,7 @@ struct FESpace
 
 template <typename FESpace>
 void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
-                                 FESpace const & feSpace,
+                                 FESpace & feSpace,
                                  Vec & v,
                                  uint const offset = 0)
 {
@@ -70,33 +70,36 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
   {
     v = Vec::Zero(feSpace.dof.size * feSpace.dim);
   }
+
   for(auto const & e: feSpace.mesh.elementList)
   {
-    uint p = 0;
-    for(auto const & dof: feSpace.dof.elemMap[e.id])
+    feSpace.curFE.reinit(e);
+    for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
     {
-      auto const d = p / FESpace::RefFE_T::numFuns;
-      auto const pt = FESpace::RefFE_T::dofPts(e)[p % FESpace::RefFE_T::numFuns];
-      if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+      auto const value = f(feSpace.curFE.dofPts[i]);
+      auto const baseDof = feSpace.dof.getId(e.id, i);
+      for (uint d=0; d<FESpace::dim; ++d)
       {
-        // the value of the dof is the value of the function
-        // u_k = u phi_k
-        v[offset + dof] = f(pt)[d];
+        if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+        {
+          // the value of the dof is the value of the function
+          // u_k = u phi_k
+          v[offset + baseDof + d*feSpace.dof.size] = value[d];
+        }
+        else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+        {
+          // the value of the dof is the flux through the face
+          // u_k = u.dot(n_k)
+          v[offset + baseDof + d*feSpace.dof.size] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
+        }
       }
-      else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
-      {
-        // the value of the dof is the flux through the face
-        // u_k = u.dot(n_k)
-        v[offset + dof] = f(pt)[d].dot(FESpace::RefFE_T::normal(e)[p % FESpace::RefFE_T::numFuns]);
-      }
-      p++;
     }
   }
 }
 
 template <typename FESpace>
 void interpolateAnalyticFunction(scalarFun_T const & f,
-                                 FESpace const & feSpace,
+                                 FESpace & feSpace,
                                  Vec & v,
                                  uint const offset = 0)
 {

@@ -47,6 +47,56 @@ using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
 using Vec = Eigen::VectorXd;
 using Field3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
+// template <typename T, unsigned long I>
+// using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
+
+// cannot partial instantiate alias
+// // column vectors cannot be stored by RowMajor
+// template <typename T>
+// using Table = Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>;
+
+template <typename T, unsigned long I>
+struct Table: public Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>
+{
+  using Super_T = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
+
+  Table() = default;
+
+  template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
+  Table<T, I> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
+  {
+    Super_T::operator= (b);
+    return *this;
+  }
+
+  Table(std::size_t rows, uint const clms):
+    Super_T(rows, clms)
+  {}
+};
+
+// column vectors cannot be stored by RowMajor
+template <typename T>
+struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
+{
+  using Super_T = Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>;
+
+  Table() = default;
+
+  template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
+  Table<T, 1> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
+  {
+    Super_T::operator= (b);
+    return *this;
+  }
+
+  Table(std::size_t rows, uint const clms):
+    Super_T(rows, clms)
+  {
+    // the number of columns must be one
+    assert(clms == 1);
+  }
+};
+
 using LUSolver = Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>>;
 using GMRESSolver = Eigen::GMRES<Mat, Eigen::IncompleteLUT<double>>;
 

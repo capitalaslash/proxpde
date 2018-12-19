@@ -6,24 +6,33 @@
 
 #include <set>
 
-template <typename Mesh, typename RefFE, uint dim>
+template <typename Mesh, typename RefFE, uint Dimension>
+struct DOF;
+
+template <typename Mesh, typename RefFE, uint Dimension>
+std::ostream & operator<< (std::ostream &, DOF<Mesh, RefFE, Dimension> const &);
+
+template <typename Mesh, typename RefFE, uint Dimension>
 struct DOF
 {
+  static uint const dim = Dimension;
   static uint constexpr clms = numDOFs<RefFE>();
   using RefFE_T = RefFE;
-  using ElemMap_T = std::vector<array<DOFid_T,clms*dim>>;
-  using GeoMap_T = std::vector<array<DOFid_T,RefFE::numGeoFuns>>;
+  // using ElemMap_T = std::vector<array<DOFid_T,clms*dim>>;
+  using ElemMap_T = Table<DOFid_T, clms*dim>;
+  // using GeoMap_T = std::vector<array<DOFid_T,RefFE::numGeoFuns>>;
+  using GeoMap_T = Table<DOFid_T, RefFE::numGeoFuns>;
   using PtMap_T = std::vector<DOFid_T>;
   // we need ordered sets in order to compare them avoiding permutation issues
   using edgeIdList_T = std::set<id_T>;
   using faceIdList_T = std::set<id_T>;
 
   explicit DOF(Mesh const & mesh):
-    rows(mesh.elementList.size())
+    rows{mesh.elementList.size()},
+    elemMap(rows, clms*dim),
+    ptMap(mesh.pointList.size(), DOFidNotSet),
+    geoMap(rows, RefFE::numGeoFuns)
   {
-    elemMap.resize(rows);
-    geoMap.resize(rows);
-    PtMap_T ptMap(mesh.pointList.size(), DOFidNotSet);
     PtMap_T geoPtMap(mesh.pointList.size(), DOFidNotSet);
     std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), DOFidNotSet);
     // mappings from a list of ids that identifies uniquely a face/edge and the dof associated to it
@@ -44,14 +53,14 @@ struct DOF
           // check if dofs have already been assigned to this point
           if (ptMap[p->id] == DOFidNotSet)
           {
-            elemMap[e.id][localDofCount] = size;
+            elemMap(e.id, localDofCount) = size;
             ptMap[p->id] = size;
             size++;
             localDofCount++;
           }
           else
           {
-            elemMap[e.id][localDofCount] = ptMap[p->id];
+            elemMap(e.id, localDofCount) = ptMap[p->id];
             localDofCount++;
           }
         }
@@ -73,13 +82,13 @@ struct DOF
           if (edgeDOFs.find(edgeIDs) == edgeDOFs.end())
           {
             edgeDOFs[edgeIDs] = size;
-            elemMap[e.id][localDofCount] = size;
+            elemMap(e.id, localDofCount) = size;
             size++;
             localDofCount++;
           }
           else
           {
-            elemMap[e.id][localDofCount] = edgeDOFs[edgeIDs];
+            elemMap(e.id, localDofCount) = edgeDOFs[edgeIDs];
             localDofCount++;
           }
         }
@@ -100,13 +109,13 @@ struct DOF
           if(faceDOFs.find(faceIDs) == faceDOFs.end())
           {
             faceDOFs[faceIDs] = size;
-            elemMap[e.id][localDofCount] = size;
+            elemMap(e.id, localDofCount) = size;
             size++;
             localDofCount++;
           }
           else
           {
-            elemMap[e.id][localDofCount] = faceDOFs[faceIDs];
+            elemMap(e.id, localDofCount) = faceDOFs[faceIDs];
             localDofCount++;
           }
         }
@@ -142,13 +151,13 @@ struct DOF
             // check if dofs have already been assigned to this point
             if(geoPtMap[p->id] == DOFidNotSet)
             {
-              geoMap[e.id][localMapCount] = mapSize;
+              geoMap(e.id, localMapCount) = mapSize;
               geoPtMap[p->id] = mapSize;
               mapSize++;
             }
             else
             {
-              geoMap[e.id][localMapCount] = geoPtMap[p->id];
+              geoMap(e.id, localMapCount) = geoPtMap[p->id];
             }
             localMapCount++;
           }
@@ -158,34 +167,45 @@ struct DOF
 
     for(uint d=0; d<dim-1; d++)
     {
-      for(uint e=0; e<rows; ++e)
-      {
-        for(uint i=0; i<clms; i++)
-        {
-          elemMap[e][clms*(d+1)+i] = size * (d+1) + elemMap[e][i];
-        }
-      }
+      elemMap.block(0, clms*(d+1), rows, clms).setConstant(size * (d+1));
+      elemMap.block(0, clms*(d+1), rows, clms) += elemMap.block(0, 0, rows, clms);
+      // TODO: use eigen blocks
+      // for(uint e=0; e<rows; ++e)
+      // {
+      //   for(uint i=0; i<clms; i++)
+      //   {
+      //      elemMap(e, clms*(d+1)+i) = size * (d+1) + elemMap(e, i);
+      //   }
+      // }
     }
 
     if constexpr (!MappingIsSeparate<RefFE>::value)
     {
-      // check sizes
-      assert(geoMap.size() == elemMap.size() && geoMap[0].size() == RefFE::numGeoFuns);
-      // no point in building the same matrix twice
-      // geoMap = elemMap;
-      for (uint r=0; r<geoMap.size(); ++r)
-      {
-        for (uint c=0; c<RefFE::numGeoFuns; ++c)
-        {
-          geoMap[r][c] = elemMap[r][c];
-        }
-      }
+      geoMap = elemMap.block(0, 0, rows, RefFE::numGeoFuns);
+      // for (uint r=0; r<geoMap.rows(); ++r)
+      // {
+      //   for (uint c=0; c<geoMap.cols(); ++c)
+      //   {
+      //     geoMap(r, c) = elemMap(r, c);
+      //   }
+      // }
       mapSize = size;
     }
   }
 
-  uint rows;
+  DOFid_T getId(id_T elemId, id_T pos) const
+  {
+    return elemMap(elemId, pos);
+  }
+
+  friend std::ostream & operator<< <>(std::ostream & out, DOF const & dof);
+
+private:
+  std::size_t rows;
   ElemMap_T elemMap;
+  PtMap_T ptMap;
+
+public:
   GeoMap_T geoMap;
   // total number of DOFs for single component
   uint size;
@@ -193,22 +213,12 @@ struct DOF
 };
 
 template <typename Mesh, typename RefFE, uint dim>
-inline std::ostream & operator<<(std::ostream & out, DOF<Mesh,RefFE,dim> const & dof)
+inline std::ostream & operator<<(std::ostream & out, DOF<Mesh, RefFE, dim> const & dof)
 {
   out << "DOF map\n";
   out << "elemMap: " << dof.rows << "x" << dof.clms << "\n";
-  for(auto & row: dof.elemMap)
-  {
-    for(auto & id: row)
-      out << id << " ";
-    out << "\n";
-  }
+  out << dof.elemMap;
   out << "geoMap: " << dof.rows << "x" << RefFE::numGeoFuns << "\n";
-  for(auto & row: dof.geoMap)
-  {
-    for(auto & id: row)
-      out << id << " ";
-    out << "\n";
-  }
+  out << dof.geoMap;
   return out;
 }

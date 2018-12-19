@@ -435,7 +435,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       FVec<3> localVel = FVec<3>::Zero();
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
-        id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
+        id_T const dofId = this->feSpace.dof.getId(this->feSpace.curFE.e->id, n);
         for (uint d=0; d<FESpace_T::RefFE_T::dim; ++d)
           localVel[d] += vel[dofId + d*this->feSpace.dof.size] * this->feSpace.curFE.phi[q](n);
       }
@@ -623,7 +623,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
       FVec<CurFERhs_T::size> localRhs;
       for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
       {
-        id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + c*feSpaceRhs.dof.size;
+        id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.e->id, n) + c*feSpaceRhs.dof.size;
         localRhs[n] = rhs[dofId];
       }
       auto Fec = Fe.template block<CurFE_T::size,1>(d*CurFE_T::size, 0);
@@ -683,7 +683,7 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
       FVec<CurFERhs_T::size> localRhs;
       for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
       {
-        id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n] + d*feSpaceRhs.dof.size;
+        id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.e->id, n) + d*feSpaceRhs.dof.size;
         localRhs[n] = rhs[dofId];
       }
       for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -739,7 +739,7 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
     FVec<CurFERhs_T::size> localRhs;
     for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = feSpaceRhs.dof.elemMap[feSpaceRhs.curFE.e->id][n];
+      id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.e->id, n);
       localRhs[n] = rhs[dofId];
     }
     for (uint d=0; d<CurFE_T::RefFE_T::dim; ++d)
@@ -883,7 +883,7 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace1>
     {
       for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
       {
-        id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.e->id, n);
         localData[n] = data[dofId + d*feSpace2.dof.size];
       }
 
@@ -944,7 +944,7 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
 
     for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.e->id, n);
       localData[n] = data[dofId];
     }
     uint d = 0;
@@ -1012,7 +1012,7 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
 
     for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.e->id, n);
       localData[n] = data[dofId];
     }
     uint d = 0;
@@ -1091,7 +1091,7 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
 
     for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = feSpace2.dof.elemMap[feSpace2.curFE.e->id][n];
+      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.e->id, n);
       localData[n] = data[dofId];
     }
     uint d = 0;
@@ -1102,7 +1102,7 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
         FVec<3> localVel = FVec<3>::Zero();
         for(uint n=0; n<CurFE1_T::RefFE_T::numFuns; ++n)
         {
-          id_T const dofId = this->feSpace.dof.elemMap[this->feSpace.curFE.e->id][n];
+          id_T const dofId = this->feSpace.dof.getId(this->feSpace.curFE.e->id, n);
           for (uint d=0; d<FESpace1_T::RefFE_T::dim; ++d)
             localVel[d] += vel[dofId + d*this->feSpace.dof.size] * this->feSpace.curFE.phi[q](n);
         }

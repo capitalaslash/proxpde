@@ -21,8 +21,8 @@ DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> c
     if(f.marker == marker)
     {
       // TODO: assert that facingElem[1] is null, so the facet is on the boundary
-      auto const [elem, side] = f.facingElem[0];
-      for(uint i=0; i<FESpace::RefFE_T::dofPerFacet; i++)
+      auto const & [elem, side] = f.facingElem[0];
+      for(uint i=0; i<RefFE_T::dofPerFacet; i++)
       {
         DOFid_T const dof = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i]);
         for(uint d=0; d<FESpace::dim; ++d)

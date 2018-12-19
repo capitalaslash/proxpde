@@ -49,7 +49,7 @@ struct FESpace
       // scalar functions do not change from reffe to curfe
       phi[n] = RefFE_T::phiFun[n](ptRef);
       // instead of moving the point back to the ref element, we could
-      // instead move the functions to the real element
+      // instead move the shape functions to the real element
     }
     return localValue.transpose() * phi;
   }

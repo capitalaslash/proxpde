@@ -16,23 +16,25 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-static scalarFun_T ic = [] (Vec3 const& p)
+static scalarFun_T ic = [] (Vec3 const& /*p*/)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
   // if(p(0) < .4) return 1.;
   return 0.;
 };
 
-static scalarFun_T rhs = [] (Vec3 const& p)
+template <typename Mesh>
+double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
 {
-  return M_PI*std::sin(M_PI*p(0));
-};
-static scalarFun_T exact_sol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
+  double cfl = 0.;
+  for (auto const & e: mesh.elementList)
+  {
+    cfl = std::max(cfl, vel.norm() * dt / e.h_min());
+  }
+  return cfl;
+}
 
-int main(int argc, char* argv[])
+int main()
 {
   MilliTimer t;
 
@@ -42,10 +44,10 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
-//  MeshBuilder<Elem_T> meshBuilder;
-//  uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
-//  uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
-//  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  // MeshBuilder<Elem_T> meshBuilder;
+  // uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
+  // uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
+  // meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
   readGMSH(*mesh, "square_uns.msh");
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
@@ -58,23 +60,33 @@ int main(int argc, char* argv[])
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  double const dt = 0.1;
+  auto const velocity = Vec2(0.1, 0.0);
+  double const dt = 0.4;
+  auto const cfl = computeMaxCFL(*mesh, velocity, dt);
+  std::cout << "max cfl = " << cfl << std::endl;
 
-  Vec vel = Vec::Zero(2*feSpace.dof.size);
-  vel.block(0, 0, feSpace.dof.size, 1) = Vec::Constant(feSpace.dof.size, 0.1);
+  auto const & size = feSpace.dof.size;
+  Vec vel = Vec::Zero(2*size);
+  vel.block(   0, 0, size, 1) = Vec::Constant(size, velocity[0]);
+  vel.block(size, 0, size, 1) = Vec::Constant(size, velocity[1]);
   AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
   AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
-  Vec cOld(feSpace.dof.size);
+  Vec cOld(size);
   AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);
   IOManager<FESpace_T> io{feSpace, "output_advection2dtri/sol"};
 
-  Builder builder{feSpace.dof.size};
+  Builder builder{size};
   LUSolver solver;
-  uint const ntime = 200;
+
+  uint const ntime = 50;
   double time = 0.0;
+  io.time = time;
+  io.iter = 0;
+  io.print({c});
+
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
@@ -101,13 +113,13 @@ int main(int argc, char* argv[])
     io.print({c});
   }
 
-  // double norm = error.data.norm();
-  // std::cout << "the norm of the error is " << norm << std::endl;
-  // if(std::fabs(norm - 2.61664e-11) > 1.e-10)
-  // {
-  //   std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-  //   return 1;
-  // }
+  double norm = c.data.norm();
+  std::cout << "the norm of the solution is " << std::setprecision(12) << norm << std::endl;
+  if(std::fabs(norm - 11.9149220338) > 1.e-10)
+  {
+    std::cerr << "the norm of the solution is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

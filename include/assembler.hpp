@@ -40,7 +40,7 @@ struct ComputeDOFLocal
 {
   static uint constexpr sum()
   {
-    using FESpaceT = typename std::tuple_element<std::tuple_size<FESpaceTuple>::value-remaining, FESpaceTuple>::type;
+    using FESpaceT = std::tuple_element_t<std::tuple_size<FESpaceTuple>::value-remaining, FESpaceTuple>;
     return FESpaceT::RefFE_T::numFuns * FESpaceT::dim +
         ComputeDOFLocal<FESpaceTuple, remaining - 1>::sum();
   }
@@ -70,7 +70,9 @@ template <typename FESpaceTuple, int... Is>
 static array<uint, std::tuple_size<FESpaceTuple>::value> constexpr
 getBlockStructure(seq<Is...>)
 {
-  return {{std::tuple_element<Is, FESpaceTuple>::type::dim*std::tuple_element<Is, FESpaceTuple>::type::RefFE_T::numFuns...}};
+  return {{
+          std::tuple_element_t<Is, FESpaceTuple>::dim *
+          std::tuple_element_t<Is, FESpaceTuple>::RefFE_T::numFuns...}};
 }
 }
 

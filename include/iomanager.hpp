@@ -23,40 +23,27 @@ std::string join(std::vector<T> const & v)
   return buf;
 }
 
-enum class XDMFNumberType
+enum class XDMFNumberType : int8_t
 {
     INT,
     FLOAT
 };
 
-template <XDMFNumberType T>
-struct XDMFNumberTypeToString {};
-
-template <>
-struct XDMFNumberTypeToString<XDMFNumberType::INT>
+static const std::map<XDMFNumberType, char const *> XDMFNumberTypeToString =
 {
-    static constexpr char const * type = "Int";
+    {XDMFNumberType::INT, "Int"},
+    {XDMFNumberType::FLOAT, "Float"},
 };
 
-template <>
-struct XDMFNumberTypeToString<XDMFNumberType::FLOAT>
-{
-    static constexpr char const * type = "Float";
-};
-
-enum class XDMFFormat
+enum class XDMFFormat : int8_t
 {
     HDF,
     //INLINE
 };
 
-template <XDMFFormat F>
-struct XDMFFormatToString {};
-
-template <>
-struct XDMFFormatToString<XDMFFormat::HDF>
+static const std::map<XDMFFormat, char const *> XDMFFormatToString =
 {
-    static constexpr char const * type = "HDF";
+    {XDMFFormat::HDF, "HDF"},
 };
 
 template <typename RefFE>
@@ -91,7 +78,7 @@ public:
     auto xmlFilepath = filepath;
     if (!suffix.empty())
     {
-      xmlFilepath += std::string(".") + suffix;
+      xmlFilepath += "." + suffix;
     }
     xmlFilepath += ".xmf";
     doc.save_file(xmlFilepath.c_str());
@@ -111,10 +98,12 @@ public:
 
     auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
         + ".h5:/connectivity\n";
-    createDataItem<XDMFNumberType::INT, XDMFFormat::HDF>(
+    createDataItem(
             topoNode,
             {numElems, RefFE::numGeoFuns},
+            XDMFNumberType::INT,
             8,
+            XDMFFormat::HDF,
             buf);
   }
 
@@ -125,10 +114,12 @@ public:
 
     auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
         + ".h5:/coords\n";
-    createDataItem<XDMFNumberType::FLOAT, XDMFFormat::HDF>(
+    createDataItem(
             geoNode,
             {mapSize, 3},
+            XDMFNumberType::FLOAT,
             8,
+            XDMFFormat::HDF,
             buf);
   }
 
@@ -145,26 +136,29 @@ public:
         + ".h5:/" + name.data() + "\n";
     // auto const buf = "\n" + filepath.filename().string() + ".time.h5:/"
     //     + name + "." + iter + "\n";
-    createDataItem<XDMFNumberType::FLOAT, XDMFFormat::HDF>(
+    createDataItem(
             varNode,
             {1, size},
+            XDMFNumberType::FLOAT,
             8,
+            XDMFFormat::HDF,
             buf);
   }
 
 private:
-  template <XDMFNumberType Type, XDMFFormat Format>
   pugi::xml_node createDataItem(
           pugi::xml_node & parent,
           std::vector<uint> const & dims,
+          XDMFNumberType const type,
           uint const precision,
+          XDMFFormat const format,
           std::string_view const content)
   {
     auto node = parent.append_child("DataItem");
     node.append_attribute("Dimensions") = join(dims).c_str();
-    node.append_attribute("NumberType") = XDMFNumberTypeToString<Type>::type;
+    node.append_attribute("NumberType") = XDMFNumberTypeToString.at(type);
     node.append_attribute("Precision") = precision;
-    node.append_attribute("Format") = XDMFFormatToString<Format>::type;
+    node.append_attribute("Format") = XDMFFormatToString.at(format);
     node.text() = content.data();
     return node;
   }
@@ -182,16 +176,16 @@ struct HDF5Var {};
 template <>
 struct HDF5Var<uint>
 {
-  static hid_t type;
+  static hid_t value;
 };
-hid_t HDF5Var<uint>::type = H5T_STD_I32LE;
+hid_t HDF5Var<uint>::value = H5T_STD_I32LE;
 
 template <>
 struct HDF5Var<double>
 {
-  static hid_t type;
+  static hid_t value;
 };
-hid_t HDF5Var<double>::type = H5T_IEEE_F64LE;
+hid_t HDF5Var<double>::value = H5T_IEEE_F64LE;
 
 class HDF5
 {
@@ -243,7 +237,7 @@ public:
     hid_t dataset;
     dataset = H5Dcreate(file_id, name.data(), HDF5Var<T>::value,
                         dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, HDF5Var<T>::type, H5S_ALL, H5S_ALL,
+    status = H5Dwrite(dataset, HDF5Var<T>::value, H5S_ALL, H5S_ALL,
                       H5P_DEFAULT, tab.data());
     H5Dclose(dataset);
     H5Sclose(dspace);

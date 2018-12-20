@@ -14,11 +14,11 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-scalarFun_T rhs = [] (Vec3 const& p)
+static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return M_PI*std::sin(M_PI*p(0));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
@@ -57,14 +57,14 @@ int main(int argc, char* argv[])
   filelog << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   filelog << "bcs: " << t << " ms" << std::endl;
 
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
+  AssemblyStiffness stiffness(1.0, feSpace);
 
   auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
-  AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
+  AssemblyAnalyticRhs f(rotatedRhs, feSpace);
 
   t.start();
   Builder builder{feSpace.dof.size};
@@ -92,13 +92,13 @@ int main(int argc, char* argv[])
   filelog << "solve GMRES: " << t << " ms" << std::endl;
 
   Var exact{"exact"};
-  auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
+  auto rotatedESol = [&Rt] (Vec3 const& p) {return exactSol(Rt * p);};
   interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_gmres"};
+  IOManager io{feSpace, "output/sol_gmres"};
   io.print({sol, solNew, exact, error});
   filelog << "output: " << t << " ms" << std::endl;
 

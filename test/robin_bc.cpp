@@ -43,14 +43,11 @@ double test(YAML::Node const & config)
 
   uint const numPts = config["n"].as<uint>()+1;
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 0., 0.};
-
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
   MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
+  meshBuilder.build(*mesh, {0., 0., 0.}, {1., 0., 0.}, {{numPts, 0, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
@@ -157,6 +154,23 @@ int main()
     {
       std::cerr << "the norm of the error is not the prescribed value" << std::endl;
       return 3;
+    }
+  }
+
+  {
+    YAML::Node config;
+    config["n"] = 20;
+    config["hConv"] = 1.0;
+    config["temp0"] = 1.0;
+    config["tempA"] = 0.0;
+    config["filename"] = "sol_robin_test4";
+
+    auto const error = test(config);
+    std::cout << "test3: the norm of the error is " << error << std::endl;
+    if(std::fabs(error - 3.074036919958064e-11) > 1.e-15)
+    {
+      std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+      return 4;
     }
   }
 

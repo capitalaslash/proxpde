@@ -20,7 +20,7 @@ using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
 using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 
-int compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
+uint compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
 {
   using KeyT = std::pair<int,int>;
   using DbT = std::map<KeyT, double>;
@@ -59,32 +59,32 @@ int compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const 
     }
   }
 
-  for (auto & kv: db)
+  for (auto & [key, value]: db)
   {
-    if (std::fabs(kv.second) < 1e-12)
+    if (std::fabs(value) < 1e-12)
     {
-      db.erase(kv.first);
+      db.erase(key);
     }
   }
 
-  for (auto & kv: missing)
+  for (auto & [key, value]: missing)
   {
-    if (std::fabs(kv.second) < 1e-12)
+    if (std::fabs(value) < 1e-12)
     {
-      missing.erase(kv.first);
+      missing.erase(key);
     }
   }
 
   std::cout << "different values:" << std::endl;
-  for (auto & kv: db)
+  for (auto & [key, value]: db)
   {
-    std::cout << "(" << kv.first.first << ", " << kv.first.second << "): " << kv.second << std::endl;
+    std::cout << "(" << key.first << ", " << key.second << "): " << value << std::endl;
   }
 
   std::cout << "missing values:" << std::endl;
-  for (auto & kv: missing)
+  for (auto & [key, value]: missing)
   {
-    std::cout << "(" << kv.first.first << ", " << kv.first.second << "): " << kv.second << std::endl;
+    std::cout << "(" << key.first << ", " << key.second << "): " << value << std::endl;
   }
 
   return db.size() + missing.size();
@@ -158,5 +158,10 @@ int main(int argc, char* argv[])
   builderS.buildProblem(divV, bcsP, bcsV);
   builderS.closeMatrix();
 
-  return compareTriplets(builder._triplets, builderS._triplets);
+  if (compareTriplets(builder._triplets, builderS._triplets))
+  {
+    std::cerr << "the two matrices do not coincide" << std::endl;
+    return 1;
+  }
+  return 0;
 }

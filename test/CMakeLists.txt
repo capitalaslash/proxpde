@@ -16,6 +16,8 @@ minifem_add_test(hdf5write)
 
 minifem_add_test(poisson1d)
 minifem_add_test(poisson1d_p2)
+file(COPY ${PROJECT_SOURCE_DIR}/data/advection1d.yaml
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 minifem_add_test(advection1d)
 
 minifem_add_test(poisson2dtri)

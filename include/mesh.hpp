@@ -302,9 +302,9 @@ struct ElemToGmsh<Tetrahedron> { static GMSHElemType constexpr type = GMSHTet; }
 
 template <typename Elem>
 void readGMSH(Mesh<Elem> & mesh,
-              std::string filename)
+              std::string_view const filename)
 {
-  auto in = std::ifstream(filename);
+  auto in = std::ifstream(filename.data());
   if (!in.is_open())
   {
     std::cerr << "mesh file " << filename << " not found" << std::endl;

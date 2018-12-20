@@ -5,17 +5,17 @@
 
 struct Var
 {
-  explicit Var(std::string n, uint size = 0):
+  explicit Var(std::string_view const n, uint size = 0):
     name(n),
     data(size)
   {}
 
-  Var(std::string n, Vec const & vec):
+  Var(std::string_view const n, Vec const & vec):
     name(n),
     data(vec)
   {}
 
-  Var(std::string n, Vec const & vec, uint offset, uint size):
+  Var(std::string_view const n, Vec const & vec, uint offset, uint size):
     name(n),
     data(vec.block(offset,0,size,1))
   {}
@@ -39,7 +39,7 @@ std::vector<uint> offsetInit(std::vector<uint> blocks)
 
 struct BlockVar: public Var
 {
-  BlockVar(std::string n, std::vector<uint> const & bs):
+  BlockVar(std::string_view const n, std::vector<uint> const & bs):
     Var{n, std::accumulate(bs.begin(), bs.end(), 0U)},
     offsets{offsetInit(bs)},
     blocks{bs}

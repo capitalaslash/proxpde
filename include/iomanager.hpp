@@ -64,8 +64,8 @@ class XDMFDoc
 {
 public:
   explicit XDMFDoc(fs::path const & fp,
-                   std::string const s,
-                   std::string const geoS = "mesh"):
+                   std::string_view s,
+                   std::string_view geoS = "mesh"):
     filepath(fp),
     suffix(s),
     geoSuffix(geoS)
@@ -133,16 +133,16 @@ public:
   }
 
   // TODO: set up struct with all relevant data (name, type, size, format, number type)
-  void setVar(std::string const name, std::string const type, uint const size)
+  void setVar(std::string_view const name, std::string_view const type, uint const size)
   {
     auto varNode = gridNode.append_child("Attribute");
-    varNode.append_attribute("Name") = name.c_str();
+    varNode.append_attribute("Name") = name.data();
     varNode.append_attribute("Active") = 1;
     varNode.append_attribute("AttributeType") = "Scalar";
-    varNode.append_attribute("Center") = type.c_str();
+    varNode.append_attribute("Center") = type.data();
 
     auto const buf = "\n" + filepath.filename().string() + "." + suffix
-        + ".h5:/" + name + "\n";
+        + ".h5:/" + name.data() + "\n";
     // auto const buf = "\n" + filepath.filename().string() + ".time.h5:/"
     //     + name + "." + iter + "\n";
     createDataItem<XDMFNumberType::FLOAT, XDMFFormat::HDF>(
@@ -158,14 +158,14 @@ private:
           pugi::xml_node & parent,
           std::vector<uint> const & dims,
           uint const precision,
-          std::string const & content)
+          std::string_view const content)
   {
     auto node = parent.append_child("DataItem");
     node.append_attribute("Dimensions") = join(dims).c_str();
     node.append_attribute("NumberType") = XDMFNumberTypeToString<Type>::type;
     node.append_attribute("Precision") = precision;
     node.append_attribute("Format") = XDMFFormatToString<Format>::type;
-    node.text() = content.c_str();
+    node.text() = content.data();
     return node;
   }
 
@@ -219,14 +219,14 @@ public:
     H5Sclose(dspace);
   }
 
-  void print(Vec const & vec, std::string const name)
+  void print(Vec const & vec, std::string_view const name)
   {
     hsize_t dimsf[2] = {1, static_cast<hsize_t>(vec.size())};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
     // for(uint v = 0; v < varNames.size(); v++)
     {
-      dataset = H5Dcreate(file_id, name.c_str(), H5T_NATIVE_DOUBLE,
+      dataset = H5Dcreate(file_id, name.data(), H5T_NATIVE_DOUBLE,
                           dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
                         H5P_DEFAULT, vec.data());
@@ -236,12 +236,12 @@ public:
   }
 
   template <typename T, unsigned long I>
-  void print(Table<T, I> const & tab, std::string const name)
+  void print(Table<T, I> const & tab, std::string_view const name)
   {
     hsize_t dimsf[2] = {static_cast<hsize_t>(tab.rows()), static_cast<hsize_t>(tab.cols())};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
-    dataset = H5Dcreate(file_id, name.c_str(), HDF5Var<T>::type,
+    dataset = H5Dcreate(file_id, name.data(), HDF5Var<T>::value,
                         dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Dwrite(dataset, HDF5Var<T>::type, H5S_ALL, H5S_ALL,
                       H5P_DEFAULT, tab.data());
@@ -378,7 +378,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
   {
     for (uint d=0; d<feSpace.dim; ++d)
     {
-      std::string name = v.name;
+      auto name = v.name;
       if constexpr (FESpace_T::dim > 1)
       {
         name += "_" + std::to_string(d);

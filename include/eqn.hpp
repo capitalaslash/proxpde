@@ -20,7 +20,7 @@ struct Eqn
   using FESpace_T = FESpace<Mesh_T, RefFE_T, QR_T, Dimension>;
   static uint const dim = Dimension;
 
-  Eqn(std::string const name, Mesh const & mesh):
+  Eqn(std::string_view const name, Mesh const & mesh):
     feSpace{mesh},
     bcList{feSpace},
     sol{name, std::vector<uint>(dim, feSpace.dof.size)},

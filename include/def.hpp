@@ -133,3 +133,5 @@ using scalarTwodFun_T = ScalarFun<2>;
 using scalarThreedFun_T = ScalarFun<3>;
 
 template<class T> struct dependent_false : std::false_type {};
+
+static constexpr int ERROR_GMSH = 1;

@@ -292,13 +292,25 @@ template <typename Elem>
 struct ElemToGmsh {};
 
 template <>
-struct ElemToGmsh<Line> { static GMSHElemType constexpr type = GMSHLine; };
+struct ElemToGmsh<Line>
+{
+  static GMSHElemType constexpr value = GMSHLine;
+};
 template <>
-struct ElemToGmsh<Triangle> { static GMSHElemType constexpr type = GMSHTriangle; };
+struct ElemToGmsh<Triangle>
+{
+  static GMSHElemType constexpr value = GMSHTriangle;
+};
 template <>
-struct ElemToGmsh<Quad> { static GMSHElemType constexpr type = GMSHQuad; };
+struct ElemToGmsh<Quad>
+{
+  static GMSHElemType constexpr value = GMSHQuad;
+};
 template <>
-struct ElemToGmsh<Tetrahedron> { static GMSHElemType constexpr type = GMSHTet; };
+struct ElemToGmsh<Tetrahedron>
+{
+  static GMSHElemType constexpr value = GMSHTet;
+};
 
 template <typename Elem>
 void readGMSH(Mesh<Elem> & mesh,
@@ -308,7 +320,7 @@ void readGMSH(Mesh<Elem> & mesh,
   if (!in.is_open())
   {
     std::cerr << "mesh file " << filename << " not found" << std::endl;
-    std::exit(1);
+    std::exit(ERROR_GMSH);
   }
 
   // header
@@ -317,7 +329,7 @@ void readGMSH(Mesh<Elem> & mesh,
   if (buf != "$MeshFormat")
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(1);
+    std::exit(ERROR_GMSH);
   }
 
   int filetype, datasize; // filetype = 0 -> ascii
@@ -325,14 +337,14 @@ void readGMSH(Mesh<Elem> & mesh,
   if (buf != "2.2" || filetype != 0 || datasize != 8)
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(1);
+    std::exit(ERROR_GMSH);
   }
 
   in >> buf;
   if (buf != "$EndMeshFormat")
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(1);
+    std::exit(ERROR_GMSH);
   }
 
   std::set<typename Elem::Facet_T> facets;
@@ -342,7 +354,7 @@ void readGMSH(Mesh<Elem> & mesh,
   {
     if (buf == "$PhysicalNames")
     {
-      // TODO
+      // TODO: stop discarding physical names
       while(buf != "$EndPhysicalNames")
       {
         in >> buf;
@@ -368,7 +380,7 @@ void readGMSH(Mesh<Elem> & mesh,
       if (buf != "$EndNodes")
       {
         std::cerr << "error reading nodes" << std::endl;
-        std::exit(1);
+        std::exit(ERROR_GMSH);
       }
     }
     else if (buf == "$Elements")
@@ -389,7 +401,7 @@ void readGMSH(Mesh<Elem> & mesh,
         }
 
         // check if volume or boundary element
-        if (ElemToGmsh<Elem>::type == elType)
+        if (ElemToGmsh<Elem>::value == elType)
         {
           // read connectivity from file
           array<uint, Elem::numPts> conn;
@@ -408,7 +420,7 @@ void readGMSH(Mesh<Elem> & mesh,
           mesh.elementList.emplace_back(Elem(connPts, eVol));
           eVol++;
         }
-        else if (ElemToGmsh<typename Elem::Facet_T>::type == elType)
+        else if (ElemToGmsh<typename Elem::Facet_T>::value == elType)
         {
           // read connectivity from file
           array<uint, Elem::Facet_T::numPts> conn;
@@ -430,20 +442,20 @@ void readGMSH(Mesh<Elem> & mesh,
         else
         {
           std::cerr << "error reading elements" << std::endl;
-          std::exit(1);
+          std::exit(ERROR_GMSH);
         }
       }
       in >> buf;
       if (buf != "$EndElements")
       {
         std::cerr << "error reading elements" << std::endl;
-        std::exit(1);
+        std::exit(ERROR_GMSH);
       }
     }
     else
     {
       std::cerr << "file section not recognized" << std::endl;
-      std::exit(1);
+      std::exit(ERROR_GMSH);
     }
     // get next section
     in >> buf;

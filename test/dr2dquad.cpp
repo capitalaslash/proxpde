@@ -85,18 +85,18 @@ int main(int argc, char* argv[])
   FESpace_T feSpace{*mesh};
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::BOTTOM, zeroFun);
   bcs.addEssentialBC(side::RIGHT, zeroFun);
   bcs.addEssentialBC(side::TOP, zeroFun);
   bcs.addEssentialBC(side::LEFT, zeroFun);
 
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
-  AssemblyMass<FESpace_T> mass(1.0, feSpace);
+  AssemblyStiffness stiffness{1.0, feSpace};
+  AssemblyMass mass{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   auto modifiedRhs = [] (Vec3 const& p) {return rhs(mesh_mod_inv(p));};
-  AssemblyAnalyticRhs<FESpace_T> f(modifiedRhs, feSpace);
-  // AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
+  AssemblyAnalyticRhs<FESpace_T> f{modifiedRhs, feSpace};
+  // AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{feSpace, "sol_dr2dquad"};
+  IOManager io{feSpace, "output_dr2dquad/sol"};
   io.print({sol, exact, error});
 
   double norm = error.data.norm();

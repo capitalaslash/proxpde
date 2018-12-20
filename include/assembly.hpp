@@ -1138,7 +1138,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = typename SideQR<typename FESpace::QR_T>::type;
+  using QR_T = SideQR_T<typename FESpace::QR_T>;
   using FacetCurFE_T = CurFE<Facet_T, QR_T>;
 
   AssemblyBCNormal(scalarFun_T const & r,

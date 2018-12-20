@@ -163,6 +163,9 @@ template<> array<TrapQR<Quad>::Vec_T,4> const TrapQR<Quad>::node =
 template <typename QR>
 struct SideQR {};
 
+template <typename QR>
+using SideQR_T = typename SideQR<QR>::type;
+
 template <>
 struct SideQR<GaussQR<Line,3>>
 {
@@ -191,6 +194,12 @@ template <>
 struct SideQR<GaussQR<Quad,9>>
 {
   using type = GaussQR<Line,3>;
+};
+
+template <>
+struct SideQR<TrapQR<Quad>>
+{
+  using type = TrapQR<Line>;
 };
 
 template <>

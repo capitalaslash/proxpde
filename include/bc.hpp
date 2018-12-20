@@ -12,11 +12,14 @@ using DofSet_T = std::unordered_set<DOFid_T>;
 using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
 
 template <typename FESpace>
-DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> const & comp)
+DofSet_T fillDofSet(
+    FESpace const & feSpace,
+    marker_T marker,
+    std::vector<uint> const & comp)
 {
   using RefFE_T = typename FESpace::RefFE_T;
   DofSet_T constrainedDOFset;
-  for(auto& f: feSpace.mesh.facetList)
+  for(auto const & f: feSpace.mesh.facetList)
   {
     if(f.marker == marker)
     {
@@ -44,62 +47,81 @@ DofSet_T fillDofSet(FESpace const& feSpace, marker_T marker, std::vector<uint> c
   return constrainedDOFset;
 }
 
-template <typename FESpace>
+template <typename FESpace, typename Value = Fun<FESpace::dim,3>>
 class BCEss
 {
 public:
+  using FESpace_T = FESpace;
+  using Value_T = Value;
+  using CurFE_T = typename FESpace_T::CurFE_T;
 
   // use manual-provided set of DOFs
-  BCEss(FESpace const& feSpace,
+  BCEss(FESpace_T const & feSpace,
         DofSet_T const & dofSet,
-        Fun<FESpace::dim,3> const & v):
-    constrainedDOFset(dofSet),
-    boolVector(BoolArray_T::Constant(feSpace.dof.size*FESpace::dim, false)),
+        Value_T const & v):
+    curFE(feSpace.curFE),
+    constrainedDOFSet(dofSet),
+    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
     dimSize(feSpace.dof.size),
     value(v)
   {
-    fillBoolVector();
+    fillConstrainedDOFVector();
   }
 
   // this can be used with scalar FESpaces only
-  BCEss(FESpace const& feSpace,
+  BCEss(FESpace_T const & feSpace,
         DofSet_T const & dofSet,
         scalarFun_T const & v):
-    BCEss(feSpace, dofSet, [v](Vec3 const &p){return Vec1{v(p)};})
+    BCEss(feSpace, dofSet, [v](Vec3 const & p){return Vec1{v(p)};})
   {
-    fillBoolVector();
+    fillConstrainedDOFVector();
   }
 
-  BCEss(FESpace const& feSpace,
+  BCEss(FESpace_T const & feSpace,
         marker_T m,
-        Fun<FESpace::dim,3> const & v,
+        Fun<FESpace_T::dim,3> const & v,
         std::vector<uint> const & comp = {0}):
     BCEss(feSpace, fillDofSet(feSpace, m, comp), v)
-  {}
+  {
+    std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
+  }
 
   // this can be used with scalar FESpaces only
-  BCEss(FESpace const& feSpace,
+  BCEss(FESpace_T const & feSpace,
         marker_T m,
         scalarFun_T const & v,
         std::vector<uint> const & comp = {0}):
-    BCEss(feSpace, m, [v](Vec3 const &p){return Vec1{v(p)};}, comp)
+    BCEss(feSpace, m, [v](Vec3 const & p){return Vec1{v(p)};}, comp)
   {}
 
-  bool isConstrained(DOFid_T const& id, int const d = 0) const
+  bool isConstrained(DOFid_T const id, int const d = 0) const
   {
-    return boolVector[id + d*dimSize];
+    return constrainedDOFVector[id + d*dimSize];
   }
 
-  friend std::ostream & operator<<(std::ostream &out, BCEss<FESpace> const & bc)
+  FVec<FESpace_T::dim> evaluate(DOFid_T const & i) const
   {
-    out << "bc boolVector: ";
-    for(uint i=0; i<bc.boolVector.size(); i++)
+    if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::LAGRANGE)
     {
-      out << bc.boolVector(i) << " ";
+      // TODO: this is a crude implementation that works only for Lagrange elements
+      return value(curFE.dofPts[i]);
     }
-    out << "\n";
+    else if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+    {
+      std::abort();
+      //return value(curFE.dofPts[i]).dot(normal);
+    }
+    else
+    {
+      std::abort();
+    }
+  }
+
+  friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T, Value> const & bc)
+  {
+    out << "bc constrainedDOFVector: " << bc.constrainedDOFVector << "\n";
     out << "constrainedDOFset: ";
-    for(auto & i: bc.constrainedDOFset)
+    for(auto const i: bc.constrainedDOFSet)
     {
       out << i << " ";
     }
@@ -108,20 +130,21 @@ public:
   }
 
 protected:
-  void fillBoolVector()
+  void fillConstrainedDOFVector()
   {
-    for(auto& id: constrainedDOFset)
+    for(auto const id: constrainedDOFSet)
     {
-      boolVector[id] = true;
+      constrainedDOFVector[id] = true;
     }
   }
 
-  DofSet_T constrainedDOFset;
-  BoolArray_T boolVector;
+  CurFE_T const & curFE;
+  DofSet_T constrainedDOFSet;
+  BoolArray_T constrainedDOFVector;
   uint const dimSize;
+  Value_T const value;
 
 public:
-  Fun<FESpace::dim,3> const value;
   double diag = 1.0;
 };
 
@@ -273,7 +296,7 @@ public:
       scalarFun_T const & f,
       std::vector<uint> const & comp = allComp<FESpace>())
   {
-    addNaturalBC(m, [f] (Vec3 const &p) {return Vec1(f(p));}, comp);
+    addNaturalBC(m, [f] (Vec3 const & p) {return Vec1(f(p));}, comp);
   }
 
   // otherwise, we should fail
@@ -302,7 +325,7 @@ public:
       std::vector<uint> const & comp = allComp<FESpace>())
   {
     addNaturalBC(m, b, comp);
-    bcMixedList.emplace_back(m, [a] (Vec3 const &p) {return Vec1(a(p));}, comp);
+    bcMixedList.emplace_back(m, [a] (Vec3 const & p) {return Vec1(a(p));}, comp);
   }
 
   bool checkMarkerFixed(marker_T const m) const

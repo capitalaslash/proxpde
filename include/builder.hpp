@@ -14,8 +14,8 @@ inline constexpr T pow(const T base, unsigned const exponent)
 
 struct Builder
 {
-  Builder(uint const size):
-    A{size, size},
+  explicit Builder(uint const size):
+    A(size, size),
     b{Vec::Zero(size)}
   {}
 
@@ -132,7 +132,7 @@ struct Builder
 
       LMat_T C = LMat_T ::Identity();
       LVec_T h = LVec_T::Zero();
-      for(auto& bc: bcs.bcEssList)
+      for(auto const & bc: bcs.bcEssList)
       {
         for (uint d=0; d<FESpace::dim; ++d)
         {
@@ -140,11 +140,10 @@ struct Builder
           {
             auto const pos = i+d*FESpace::RefFE_T::numFuns;
             DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
-            if(bc.isConstrained(id))
+            if (bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
-              // TODO: this is a crude implementation that works only for Lagrange elements
-              h(pos) = bc.value(assembly.feSpace.curFE.dofPts[i])(d);
+              h[pos] = bc.evaluate(i)[d];
             }
           }
         }
@@ -159,7 +158,7 @@ struct Builder
           auto const pos = i+d*FESpace::RefFE_T::numFuns;
           DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
 
-          for(auto& bc: bcs.bcEssList)
+          for(auto const & bc: bcs.bcEssList)
           {
             // dofs can be fixed with essential conditions only once!
             // all other bcs will be silently discarded
@@ -250,7 +249,7 @@ struct Builder
       // h is the vector of local constraint values
 
       SquareMat1_T Crow = SquareMat1_T::Identity();
-      for(auto& bc: bcs1.bcEssList)
+      for(auto const & bc: bcs1.bcEssList)
       {
         for (uint d=0; d<FESpace1::dim; ++d)
         {
@@ -267,7 +266,7 @@ struct Builder
       }
       SquareMat2_T Cclm = SquareMat2_T::Identity();
       Vec2_T h = Vec2_T::Zero();
-      for(auto& bc: bcs2.bcEssList)
+      for(auto const & bc: bcs2.bcEssList)
       {
         for (uint d=0; d<FESpace2::dim; ++d)
         {
@@ -277,9 +276,8 @@ struct Builder
             DOFid_T const id = assembly.feSpace2.dof.getId(e.id, pos);
             if(bc.isConstrained(id))
             {
-              Cclm(pos,pos) = 0.;
-              // TODO: this is a crude implementation that works only for Lagrange elements
-              h(pos) = bc.value(assembly.feSpace2.curFE.dofPts[i])[d];
+              Cclm(pos, pos) = 0.;
+              h[pos] = bc.evaluate(i)[d];
             }
           }
         }
@@ -335,7 +333,7 @@ struct Builder
       // --- build local matrix and rhs ---
       assembly.build(Fe);
 
-      // --- apply bc ---
+      // --- apply Dirichlet bc ---
       // A_constrained = C^T A C
       // b_constrained = C^T (b-Ah)
       // C^T clears constrained rows
@@ -343,7 +341,7 @@ struct Builder
       // h is the vector of local constraint values
 
       LMat_T C = LMat_T::Identity();
-      for(auto& bc: bcs.bcEssList)
+      for(auto const & bc: bcs.bcEssList)
       {
         for (uint d=0; d<FESpace::dim; ++d)
         {
@@ -401,5 +399,5 @@ struct Builder
   Mat A;
   Vec b;
   std::vector<Triplet> _triplets;
-  array<std::vector<AssemblyBase*>,3> assemblies;
+  // array<std::vector<AssemblyBase*>,3> assemblies;
 };

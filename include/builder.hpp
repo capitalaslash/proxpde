@@ -33,7 +33,7 @@ struct Builder
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
     uint const approxEntryNum =
-        pow(CurFE_T::numDOFs*FESpace::dim,2) * mesh.elementList.size();
+        pow(CurFE_T::numDOFs, 2)* FESpace::dim * mesh.elementList.size();
     _triplets.reserve(approxEntryNum);
 
     for(auto const & e: mesh.elementList)

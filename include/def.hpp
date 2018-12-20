@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <array>
 #include <vector>
@@ -30,6 +31,7 @@ using DOFid_T = uint;
 DOFid_T constexpr DOFidNotSet = static_cast<DOFid_T>(-1);
 marker_T constexpr MarkerNotSet = static_cast<marker_T>(-1);
 
+// TODO: maybe use an std::integer_sequence
 template <typename FESpace>
 std::vector<uint> allComp()
 {

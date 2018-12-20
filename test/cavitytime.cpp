@@ -1,5 +1,3 @@
-#include <iomanip>
-
 #include "def.hpp"
 #include "mesh.hpp"
 #include "fe.hpp"

@@ -10,8 +10,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <iomanip>
-
 using Elem_T = Line;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,

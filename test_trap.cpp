@@ -4,25 +4,28 @@
 #include <memory>
 
 #include "geo.hpp"
-#include "bc.hpp"
 #include "fe.hpp"
+#include "bc.hpp"
+#include "assembly.hpp"
+#include "builder.hpp"
 #include "iomanager.hpp"
 
-scalarFun_T rhs = [] (Vec3 const& p)
+static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return M_PI*std::sin(M_PI*p(0));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+
+static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
 
-// scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
+// static scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
+// static scalarFun_T exactSol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
 
-// scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
+// static scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+// static scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
+// static scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
@@ -32,9 +35,8 @@ using FESpace_T = FESpace<Mesh_T,
 
 int main()
 {
-  uint const numPts_x = 3;
+  uint const numPts_x = 11;
   uint const numPts_y = 3;
-  uint const numPts = numPts_x*numPts_y;
 
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 1., 0.);
@@ -43,27 +45,25 @@ int main()
 
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(*mesh, origin, length, {numPts_x, numPts_y, 0});
-  std::cout << *mesh << std::endl;
+  // std::cout << *mesh << std::endl;
 
   FESpace_T feSpace{*mesh};
 
   // bc setup
-//  BCEss<FESpace_T>  left(*mesh,  side::LEFT, [] (Vec3 const&) {return 0.;});
-//  BCEss<FESpace_T> right(*mesh, side::RIGHT, [] (Vec3 const&) {return 1.;});
-
-  // empty bcs
   BCList bcs{feSpace};
+  // bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
 
-  Mat builder.A(numPts,numPts);
-  Vec builder.b = Vec::Zero(numPts);
+  AssemblyMass mass{1.0, feSpace};
 
+  AssemblyAnalyticRhs f{exactSol, feSpace};
 
-  AssemblyMass<FESpace_T::CurFE_T> assembly(rhs, feSpace.curFE);
+  Builder builder{feSpace.dof.size};
+  builder.buildProblem(mass, bcs);
+  builder.buildProblem(f, bcs);
+  builder.closeMatrix();
 
-  buildProblem(feSpace, assembly, rhs, bcs, builder.A, builder.b);
-
-  std::cout << "A:\n" << builder.A << std::endl;
-  std::cout << "b:\n" << builder.b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   // std::ofstream fout("output.m");
   // for( int k=0; k<builder.A.outerSize(); k++)
@@ -78,30 +78,26 @@ int main()
   // std::cout << "=====" << std::endl;
   // fout.close();
 
-  Vec sol;
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  Var sol{"sol"};
+  LUSolver solver;
   // Compute the ordering permutation vector from the structural pattern of builder.A
   solver.analyzePattern(builder.A);
   // Compute the numerical factorization
   solver.factorize(builder.A);
 
-  sol = solver.solve(builder.b);
-  std::cout<< "sol:\n" << sol << std::endl;
+  sol.data = solver.solve(builder.b);
+  std::cout<< "sol:\n" << sol.data << std::endl;
 
-  IOManager<FeSpace_T> io(feSpace);
+  Var exact{"exact"};
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
 
-  io.print(sol);
+  Var error{"error"};
+  error.data = sol.data - exact.data;
 
-  Vec exact = Vec::Zero(numPts);
-  for(uint j=0; j<numPts_y; ++j)
-    for(uint i=0; i<numPts_x; ++i)
-    {
-      uint const pos = i + j*numPts_x;
-      exact(pos) = exact_sol(meshPtr->pointList[pos].coord);
-    }
+  IOManager io{feSpace, "sol_trap"};
+  io.print({sol, exact, error});
 
-  Vec error = sol - exact;
-  std::cout << "error: " << error.norm() << std::endl;
+  std::cout << "error: " << error.data.norm() << std::endl;
 
   return 0;
 }

@@ -87,7 +87,7 @@ target_link_libraries(main MiniFEM::minifem)
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
 target_link_libraries(test_eigen MiniFEM::minifem)
 
-add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
+add_executable(test_trap test_trap.cpp)
 target_link_libraries(test_trap MiniFEM::minifem)
 
 install(TARGETS minifem

@@ -357,3 +357,33 @@ std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bcList)
   }
   return out;
 }
+
+template <typename FESpace>
+class DOFCoordSet
+{
+public:
+  using FESpace_T = FESpace;
+  using Predicate_T = std::function<bool (Vec3 const &)>;
+
+  DOFCoordSet(FESpace_T & fe, Predicate_T const & p):
+    feSpace(fe),
+    predicate(p)
+  {
+    for (auto const & e: feSpace.mesh.elementList)
+    {
+      feSpace.curFE.reinit(e);
+      for (uint d=0; d<numDOFs<typename FESpace_T::RefFE_T>(); ++d)
+      {
+        if (predicate(feSpace.curFE.dofPts[d]))
+        {
+          ids.insert(feSpace.dof.getId(e.id, d));
+        }
+      }
+    }
+    std::cout << "new DOFCoordSet with " << ids.size() << " dofs" << std::endl;
+  }
+
+  FESpace_T & feSpace;
+  Predicate_T const & predicate;
+  DofSet_T ids;
+};

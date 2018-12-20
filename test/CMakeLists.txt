@@ -41,6 +41,8 @@ minifem_add_test(stokes2dtri)
 minifem_add_test(stokes2dcircle)
 minifem_add_test(ipcs)
 minifem_add_test(cavity)
+file(COPY ${PROJECT_SOURCE_DIR}/data/cavitytime.yaml
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 minifem_add_test(cavitytime)
 
 minifem_add_test(gmres)

@@ -310,6 +310,15 @@ public:
     n.normalize();
     return n;
   }
+
+  double h_min() const
+  {
+    // triangle size based on diameter of the inscribed circle
+    return 4 * volume() / (
+          (pointList[1]->coord-pointList[0]->coord).norm() +
+          (pointList[2]->coord-pointList[1]->coord).norm() +
+          (pointList[0]->coord-pointList[2]->coord).norm());
+  }
 };
 
 class Quad: public GeoElem

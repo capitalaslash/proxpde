@@ -16,11 +16,11 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,2>::RefFE_T,
                           FEType<Elem_T,2>::RecommendedQR>;
 
-scalarFun_T rhs = [] (Vec3 const& p)
+static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return M_PI*std::sin(M_PI*p(0));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
@@ -45,12 +45,12 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
-  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
+  AssemblyStiffness stiffness(1.0, feSpace);
+  AssemblyAnalyticRhs f(rhs, feSpace);
 
   t.start();
   Builder builder{feSpace.dof.size};
@@ -68,12 +68,12 @@ int main(int argc, char* argv[])
   std::cout << "solve: " << t << " ms" << std::endl;
 
   Var exact{"exact"};
-  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_poisson1d_p2"};
+  IOManager io{feSpace, "output/sol_poisson1d_p2"};
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

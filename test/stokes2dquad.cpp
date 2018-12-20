@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   bcsVel.addEssentialBC(side::TOP, zero, {0});
   bcsVel.addEssentialBC(side::LEFT, zero, {0});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
-  BCList<FESpaceP_T> bcsP{feSpaceP};
+  BCList bcsP{feSpaceP};
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
   interpolateAnalyticFunction([](Vec3 const & p){return 1.-p(1);}, feSpaceP, exact.data, 2*dofU);
 
-  std::cout << sol.data.norm() << std::endl;
+  // std::cout << "solution:\n" << sol.data << std::endl;
+  // std::cout << sol.data.norm() << std::endl;
 
   Var u{"u", sol.data, 0, dofU};
   Var v{"v", sol.data, dofU, dofU};
@@ -91,9 +92,9 @@ int main(int argc, char* argv[])
   Var ve{"ve", exact.data, dofU, dofU};
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager ioVel{feSpaceVel, "sol_stokes2dquad_vel"};
+  IOManager ioVel{feSpaceVel, "output_stokes2dquad/vel"};
   ioVel.print({sol, exact});
-  IOManager ioP{feSpaceP, "sol_stokes2dquad_p"};
+  IOManager ioP{feSpaceP, "output_stokes2dquad/p"};
   ioP.print({p, pe});
 
   auto uNorm = (u.data - ue.data).norm();

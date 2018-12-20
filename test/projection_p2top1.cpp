@@ -23,7 +23,7 @@ int main()
 
   FESpace1_T feSpace1{*mesh};
   FESpace2_T feSpace2{*mesh};
-  BCList<FESpace1_T> bc1{feSpace1};
+  BCList bc1{feSpace1};
 
   Var u1{"u1"};
   Var u2{"u2"};
@@ -32,8 +32,8 @@ int main()
 //  auto inputFun = [] (Vec3 const &) {return 1.;};
   interpolateAnalyticFunction(inputFun, feSpace2, u2.data);
 
-  AssemblyMass<FESpace1_T> mass1(1.0, feSpace1);
-  AssemblyProjection<FESpace1_T, FESpace2_T> proj2(1.0, u2.data, feSpace1, feSpace2);
+  AssemblyMass mass1(1.0, feSpace1);
+  AssemblyProjection proj2(1.0, u2.data, feSpace1, feSpace2);
   Builder builder{feSpace1.dof.size};
   builder.buildProblem(mass1, bc1);
   builder.buildProblem(proj2, bc1);
@@ -46,9 +46,9 @@ int main()
   std::cout << "u1:\n" << u1.data << std::endl;
   std::cout << "u2:\n" << u2.data << std::endl;
 
-  IOManager<FESpace1_T> io1{feSpace1, "projection1"};
+  IOManager io1{feSpace1, "output_projp2p1/projection1"};
   io1.print({u1});
-  IOManager<FESpace2_T> io2{feSpace2, "projection2"};
+  IOManager io2{feSpace2, "output_projp2p1/projection2"};
   io2.print({u2});
 
   return 0;

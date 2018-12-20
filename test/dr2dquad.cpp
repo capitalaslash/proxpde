@@ -19,7 +19,7 @@ scalarFun_T rhs = [] (Vec3 const& p)
 {
   return (1.+2*M_PI*M_PI)*std::sin(M_PI*p(0))*std::sin(M_PI*p(1));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))*std::sin(M_PI*p(1));
 };
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   AssemblyMass mass{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   auto modifiedRhs = [] (Vec3 const& p) {return rhs(mesh_mod_inv(p));};
-  AssemblyAnalyticRhs<FESpace_T> f{modifiedRhs, feSpace};
+  AssemblyAnalyticRhs f{modifiedRhs, feSpace};
   // AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 
   Var exact{"exact"};
   // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
-  auto modifiedESol = [] (Vec3 const& p) {return exact_sol(mesh_mod_inv(p));};
+  auto modifiedESol = [] (Vec3 const& p) {return exactSol(mesh_mod_inv(p));};
   interpolateAnalyticFunction(modifiedESol, feSpace, exact.data);
   // interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
   Var error{"e"};

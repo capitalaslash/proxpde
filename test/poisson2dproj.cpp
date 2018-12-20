@@ -39,20 +39,20 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace{*mesh};
 
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
+  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
   Var rhsVec{"rhs", feSpace.dof.size};
   interpolateAnalyticFunction(rhs, feSpace, rhsVec.data);
-  builder.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
+  builder.buildProblem(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
 
   Builder builderTest{feSpace.dof.size};
-  builderTest.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
-  builderTest.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsVec.data, feSpace), bcs);
+  builderTest.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
+  builderTest.buildProblem(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
   // std::cout << "b VecRhs:\n" << builder.b << "\nb Projection:\n" << builderTest.b << std::endl;
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = exact.data - sol.data;
 
-  IOManager<FESpace_T> io{feSpace, "sol_poisson2dproj"};
+  IOManager io{feSpace, "output_poisson2dproj/sol"};
   io.print({sol, exact, error, rhsVec});
 
   double norm = error.data.norm();

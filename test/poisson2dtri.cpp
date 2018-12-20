@@ -19,7 +19,7 @@ static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
-static scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
@@ -39,17 +39,17 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace{*mesh};
 
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
-  builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
+  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   // Vec rhsProj;
   // interpolateAnalyticFunction(rhs, feSpace, rhsProj);
-  // builder.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsProj, feSpace), bcs);
+  // builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
 
   Var exact{"exact"};
-  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 

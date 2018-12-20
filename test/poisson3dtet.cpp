@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
   bcs.addEssentialBC(side::LEFT /*5*/, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM /*2*/, [] (Vec3 const&) {return 0.;});
@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
   Builder builder{feSpace.dof.size};
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildProblem(AssemblyStiffness<FESpace_T>(1.0, feSpace), bcs);
+  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  // builder.buildProblem(AssemblyAnalyticRhs<FESpace_T>(rhs, feSpace), bcs);
+  // builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   std::cout << tBuild << std::endl;
   tBuild.start();
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildProblem(AssemblyProjection<FESpace_T>(1.0, rhsProj, feSpace), bcs);
+  builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
   builder.closeMatrix();
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager<FESpace_T> io{feSpace, "output_poisson3dtet/sol"};
+  IOManager io{feSpace, "output_poisson3dtet/sol"};
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

@@ -42,17 +42,17 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   double const dt = config["dt"].as<double>();
 
   Vec vel = Vec::Constant(feSpace.dof.size, config["velocity"].as<double>());
-  AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
-  AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
+  AssemblyAdvection advection(1.0, vel, feSpace);
+  AssemblyMass timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.size);
-  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyProjection timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   double const threshold = config["threshold"].as<double>();
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     return 0.;
   };
   interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager<FESpace_T> io{feSpace, "output_advection1d/sol"};
+  IOManager io{feSpace, "output_advection1d/sol"};
 
   Builder builder{feSpace.dof.size};
   LUSolver solver;

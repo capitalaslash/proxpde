@@ -34,8 +34,8 @@ int main()
 
   std::cout << "dofP0:\n" << feSpaceP0.dof << std::endl;
 
-  BCList<FESpaceRT0_T> bcRT0{feSpaceRT0};
-  BCList<FESpaceP0_T> bcP0{feSpaceP0};
+  BCList bcRT0{feSpaceRT0};
+  BCList bcP0{feSpaceP0};
 
   Var uP0{"uP0"};
   Var uP1{"uP1"};
@@ -45,8 +45,8 @@ int main()
   // auto inputFun = [] (Vec3 const &) {return FVec<2>(1., 2.);};
   interpolateAnalyticFunction(inputFun, feSpaceP1, uP1.data);
 
-  AssemblyVectorMass<FESpaceRT0_T> massRT0(1.0, feSpaceRT0);
-  AssemblyProjection<FESpaceRT0_T,FESpaceP1_T> projP1RT0(1.0, uP1.data, feSpaceRT0, feSpaceP1);
+  AssemblyVectorMass massRT0(1.0, feSpaceRT0);
+  AssemblyProjection projP1RT0(1.0, uP1.data, feSpaceRT0, feSpaceP1);
   Builder builderRT0{feSpaceRT0.dof.size};
   builderRT0.buildProblem(massRT0, bcRT0);
   builderRT0.buildProblem(projP1RT0, bcRT0);
@@ -59,8 +59,8 @@ int main()
   std::cout << "uP1:\n" << uP1.data << std::endl;
   std::cout << "uRT0:\n" << uRT0.data << std::endl;
 
-  AssemblyMass<FESpaceP0_T> massP0(1.0, feSpaceP0);
-  AssemblyProjection<FESpaceP0_T,FESpaceRT0_T> projRT0P0(1.0, uRT0.data, feSpaceP0, feSpaceRT0);
+  AssemblyMass massP0(1.0, feSpaceP0);
+  AssemblyProjection projRT0P0(1.0, uRT0.data, feSpaceP0, feSpaceRT0);
   Builder builderP0{feSpaceP0.dof.size * feSpaceP0.dim};
   builderP0.buildProblem(massP0, bcP0);
   builderP0.buildProblem(projRT0P0, bcP0);

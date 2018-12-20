@@ -19,15 +19,6 @@ using FESpaceP_T = FESpace<Mesh_T,
                            FEType<Elem_T,1>::RefFE_T,
                            FEType<Elem_T,2>::RecommendedQR>;
 
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-scalarFun_T exact_sol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-
 int main(int argc, char* argv[])
 {
   uint const numPts_x = (argc < 4)? 3 : std::stoi(argv[1]);
@@ -98,9 +89,9 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol /*- exact.data*/;
 
-  IOManager ioU{feSpaceU, "sol_stokes2dcircle_u"};
+  IOManager ioU{feSpaceU, "output_stokes2dcircle/vel"};
   ioU.print({u, v});
-  IOManager ioP{feSpaceP, "sol_stokes2dcircle_p"};
+  IOManager ioP{feSpaceP, "output_stokes2dcircle/p"};
   ioP.print({p});
 
   double norm = error.data.norm();

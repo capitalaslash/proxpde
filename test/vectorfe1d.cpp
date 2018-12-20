@@ -31,7 +31,7 @@ auto rhs = [] (Vec3 const& p)
   return rhs;
 };
 
-scalarFun_T exact_sol = [] (Vec3 const& p)
+static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   auto bcValue = [](Vec3 const &)
   {
     FVec<dim> v;
@@ -87,10 +87,10 @@ int main(int argc, char* argv[])
 
   t.start();
   auto const size = dim * feSpace.dof.size;
-  AssemblyStiffness<FESpace_T> stiffness(1.0, feSpace);
+  AssemblyStiffness stiffness(1.0, feSpace);
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
-  // AssemblyAnalyticRhs<FESpace_T> f(rotatedRhs, feSpace);
-  AssemblyAnalyticRhs<FESpace_T> f(rhs, feSpace);
+  // AssemblyAnalyticRhs f(rotatedRhs, feSpace);
+  AssemblyAnalyticRhs f(rhs, feSpace);
   Builder builder{size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 //  error.data = sol.data - exact.data;
 
   t.start();
-  IOManager<FESpace_T> io{feSpace, "sol_vectorfe1d"};
+  IOManager io{feSpace, "output_vectorfe1d/sol"};
   io.print({sol}); // io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

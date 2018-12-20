@@ -16,20 +16,11 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-scalarFun_T ic = [] (Vec3 const& p)
+static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
   if(p(0) < .4) return 1.;
   return 0.;
-};
-
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-scalarFun_T exact_sol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
 };
 
 int main(int argc, char* argv[])
@@ -53,7 +44,7 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
@@ -61,14 +52,14 @@ int main(int argc, char* argv[])
 
   Vec vel = Vec::Zero(2*feSpace.dof.size);
   vel.block(0, 0, feSpace.dof.size, 1) = Vec::Constant(feSpace.dof.size, 0.1);
-  AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
-  AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
+  AssemblyAdvection advection(1.0, vel, feSpace);
+  AssemblyMass timeder(1./dt, feSpace);
   Vec cOld(feSpace.dof.size);
-  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyProjection timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager<FESpace_T> io{feSpace, "output_advection2dquad/sol"};
+  IOManager io{feSpace, "output_advection2dquad/sol"};
 
   Builder builder{feSpace.dof.size};
   LUSolver solver;

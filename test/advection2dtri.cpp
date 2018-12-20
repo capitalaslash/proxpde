@@ -56,7 +56,7 @@ int main()
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
@@ -69,14 +69,14 @@ int main()
   Vec vel = Vec::Zero(2*size);
   vel.block(   0, 0, size, 1) = Vec::Constant(size, velocity[0]);
   vel.block(size, 0, size, 1) = Vec::Constant(size, velocity[1]);
-  AssemblyAdvection<FESpace_T> advection(1.0, vel, feSpace);
-  AssemblyMass<FESpace_T> timeder(1./dt, feSpace);
+  AssemblyAdvection advection(1.0, vel, feSpace);
+  AssemblyMass timeder(1./dt, feSpace);
   Vec cOld(size);
-  AssemblyProjection<FESpace_T> timeder_rhs(1./dt, cOld, feSpace);
+  AssemblyProjection timeder_rhs(1./dt, cOld, feSpace);
 
   Var c{"conc"};
   interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager<FESpace_T> io{feSpace, "output_advection2dtri/sol"};
+  IOManager io{feSpace, "output_advection2dtri/sol"};
 
   Builder builder{size};
   LUSolver solver;

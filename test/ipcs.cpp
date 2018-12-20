@@ -42,11 +42,11 @@ int main(int argc, char* argv[])
   // auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 6.0*p[0]*(1-p[0]));};
   auto pIn = [] (Vec3 const &) {return -12.;};
 
-  BCList<FESpaceVel_T> bcsVel{feSpaceVel};
+  BCList bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::RIGHT, zero);
   bcsVel.addEssentialBC(side::LEFT, zero);
   // bcsVel.addEssentialBC(side::BOTTOM, inlet);
-  BCList<FESpaceP_T> bcsP{feSpaceP};
+  BCList bcsP{feSpaceP};
   bcsP.addEssentialBC(side::TOP, [] (Vec3 const &) {return 0.;});
   // DofSet_T pinSet = {1};
   // bcsP.addEssentialBC(pinSet, [] (Vec3 const &) {return 0.;});

@@ -43,13 +43,13 @@ int main(int argc, char* argv[])
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
-  BCList<FESpaceVel_T> bcsVel{feSpaceVel};
+  BCList bcsVel{feSpaceVel};
   bcsVel.addEssentialBC(side::BOTTOM, inlet);
   bcsVel.addEssentialBC(side::RIGHT, zero);
   bcsVel.addEssentialBC(side::TOP, zero, {0});
   bcsVel.addEssentialBC(side::LEFT, zero, {0});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
-  BCList<FESpaceP_T> bcsP{feSpaceP};
+  BCList bcsP{feSpaceP};
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
@@ -90,9 +90,9 @@ int main(int argc, char* argv[])
   Var ve{"ve", exact.data, dofU, dofU};
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
-  IOManager ioVel{feSpaceVel, "sol_stokes2dtri_vel"};
+  IOManager ioVel{feSpaceVel, "output_stokes2dtri/vel"};
   ioVel.print({sol, exact});
-  IOManager ioP{feSpaceP, "sol_stokes2dtri_p"};
+  IOManager ioP{feSpaceP, "output_stokes2dtri/p"};
   ioP.print({p, pe});
 
   auto uNorm = (u.data - ue.data).norm();

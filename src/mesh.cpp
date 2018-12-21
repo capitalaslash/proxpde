@@ -6,6 +6,8 @@ void buildMesh1D(Mesh<Line> & mesh,
                  uint const numPts,
                  bool keepInternalFacets)
 {
+  assert(numPts > 1);
+  assert(length[0] > 0.);
   Vec3 const h = length / (numPts-1);
   mesh.pointList.reserve(numPts);
   for(uint p=0; p<numPts; ++p)
@@ -68,6 +70,8 @@ void buildMesh2D(Mesh<Triangle> & mesh,
                  array<uint, 2> const numPts,
                  bool keepInternalFacets)
 {
+  assert(numPts[0] > 1 && numPts[1] > 1);
+  assert(length[0] > 0. && length[1] > 0.);
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   mesh.pointList.reserve(numPts[0]*numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
@@ -140,6 +144,8 @@ void buildMesh2D(Mesh<Quad> & mesh,
                  array<uint, 2> const numPts,
                  bool keepInternalFacets)
 {
+  assert(numPts[0] > 1 && numPts[1] > 1);
+  assert(length[0] > 0. && length[1] > 0.);
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   mesh.pointList.reserve(numPts[0]*numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
@@ -338,6 +344,8 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  array<uint, 3> const numPts,
                  bool keepInternalFacets)
 {
+  assert(numPts[0] > 1 && numPts[1] > 1 && numPts[2] > 1);
+  assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
   mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
   for(uint k=0; k<numPts[2]; ++k)

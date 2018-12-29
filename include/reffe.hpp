@@ -54,7 +54,7 @@ struct RefPointP1
 struct RefLineP0
 {
   using GeoElem_T = Line;
-  using RefFacet_T = NullElem;
+  using RefFacet_T = RefPointP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numFuns = 1U;

@@ -44,8 +44,8 @@ std::vector<uint> allComp()
 // using array = std::array<T,N>;
 #include "array.hpp"
 
-using Mat = Eigen::SparseMatrix<double,Eigen::ColMajor>; // ColMajor is default
-// using Mat = Eigen::SparseMatrix<double,Eigen::RowMajor>;
+using Mat = Eigen::SparseMatrix<double, Eigen::ColMajor>; // ColMajor is default
+// using Mat = Eigen::SparseMatrix<double, Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
 using Field3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
@@ -64,16 +64,16 @@ struct Table: public Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>
 
   Table() = default;
 
+  Table(std::size_t rows, uint const clms):
+    Super_T(rows, clms)
+  {}
+
   template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
   Table<T, I> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
   {
     Super_T::operator= (b);
     return *this;
   }
-
-  Table(std::size_t rows, uint const clms):
-    Super_T(rows, clms)
-  {}
 };
 
 // column vectors cannot be stored by RowMajor
@@ -84,18 +84,18 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
 
   Table() = default;
 
-  template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
-  Table<T, 1> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
-  {
-    Super_T::operator= (b);
-    return *this;
-  }
-
   Table(std::size_t rows, uint const clms):
     Super_T(rows, clms)
   {
     // the number of columns must be one
     assert(clms == 1);
+  }
+
+  template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
+  Table<T, 1> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
+  {
+    Super_T::operator= (b);
+    return *this;
   }
 };
 
@@ -122,6 +122,25 @@ using Vec1 = FVec<1>;
 using Vec2 = FVec<2>;
 using Vec3 = FVec<3>;
 // using Vec3 = Eigen::Vector4d // this one is vectorizable
+
+template<int dim1, int dim2>
+FVec<dim2> promote(FVec<dim1> const & v1)
+{
+  static_assert (dim2 >= dim1, "promoting to shorter vector");
+  FVec<dim2> v2 = FVec<dim2>::Zero();
+  for (uint i=0; i<dim1; ++i)
+  {
+    v2[i] = v1[i];
+  }
+  return v2;
+}
+
+template<int dim>
+FVec<dim> promote(FVec<dim> const & v)
+{
+  return v;
+}
+
 using Triplet = Eigen::Triplet<double>;
 
 using scalarFun_T = ScalarFun<3>;

@@ -203,9 +203,9 @@ struct DOF
 private:
   std::size_t rows;
   ElemMap_T elemMap;
-  PtMap_T ptMap;
 
 public:
+  PtMap_T ptMap;
   GeoMap_T geoMap;
   // total number of DOFs for single component
   uint size;

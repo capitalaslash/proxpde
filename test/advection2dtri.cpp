@@ -7,19 +7,25 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
+#include "fv.hpp"
 
 #include <iostream>
 
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
+// implicit finite element central
+using FESpaceP1_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
+// explicit finite volume upwind
+using FESpaceP0_T = FESpace<Mesh_T,
+                          FEType<Elem_T,0>::RefFE_T,
+                          FEType<Elem_T,0>::RecommendedQR>;
 
-static scalarFun_T ic = [] (Vec3 const& /*p*/)
+static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-  // if(p(0) < .4) return 1.;
+  if (p(0) < .4) return 1.;
   return 0.;
 };
 
@@ -34,88 +40,114 @@ double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
   return cfl;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   MilliTimer t;
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
-
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-
   t.start();
+  // we need internal facets
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  hexagonSquare(*mesh, true);
   // MeshBuilder<Elem_T> meshBuilder;
-  // uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
-  // uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
-  // meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
-  readGMSH(*mesh, "square_uns.msh");
+  // uint const numPtsX = (argc < 3)? 17 : std::stoul(argv[1]);
+  // uint const numPtsY = (argc < 3)? 17 : std::stoul(argv[2]);
+  // meshBuilder.build(
+  //       *mesh,
+  //       {0., 0., 0.},
+  //       {1., 1., 0.},
+  //       {{numPtsX, numPtsY, 0}},
+  //       true);
+  // readGMSH(*mesh, "square_uns.msh");
+  buildNormals(*mesh);
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
-  FESpace_T feSpace{*mesh};
+  FESpaceP1_T feSpaceP1{*mesh};
+  FESpaceP0_T feSpaceP0{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
+  auto const leftBC = [](Vec3 const &){return 1.;};
+  BCList bcsP1{feSpaceP1};
+  bcsP1.addEssentialBC(side::LEFT, leftBC);
+  BCList bcsP0{feSpaceP0};
+  bcsP0.addEssentialBC(side::LEFT, leftBC);
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  auto const velocity = Vec2(0.1, 0.0);
-  double const dt = 0.4;
+  auto const velocity = Vec2(0.2, 0.0);
+  double const dt = 0.1;
   auto const cfl = computeMaxCFL(*mesh, velocity, dt);
   std::cout << "max cfl = " << cfl << std::endl;
 
-  auto const & size = feSpace.dof.size;
-  Vec vel = Vec::Zero(2*size);
-  vel.block(   0, 0, size, 1) = Vec::Constant(size, velocity[0]);
-  vel.block(size, 0, size, 1) = Vec::Constant(size, velocity[1]);
-  AssemblyAdvection advection(1.0, vel, feSpace);
-  AssemblyMass timeder(1./dt, feSpace);
-  Vec cOld(size);
-  AssemblyProjection timeder_rhs(1./dt, cOld, feSpace);
-
-  Var c{"conc"};
-  interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager io{feSpace, "output_advection2dtri/sol"};
-
-  Builder builder{size};
+  auto const & sizeP1 = feSpaceP1.dof.size;
+  Builder builder{sizeP1};
   LUSolver solver;
+  Vec velOldStyle = Vec::Zero(2*sizeP1);
+  velOldStyle.block(   0, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[0]);
+  velOldStyle.block(sizeP1, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[1]);
+  AssemblyAdvection advection(1.0, velOldStyle, feSpaceP1);
+  AssemblyMass timeder(1./dt, feSpaceP1);
+  Vec concP1Old(sizeP1);
+  AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
+
+  Var concP1{"concP1"};
+  interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
+  Var concP0{"concP0"};
+  interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
+
+  FVSolver fv{feSpaceP0, bcsP0};
+  Table<double, 2> vel(sizeP1, 2);
+  vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
+  vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);
 
   uint const ntime = 50;
   double time = 0.0;
-  io.time = time;
-  io.iter = 0;
-  io.print({c});
+  IOManager ioP1{feSpaceP1, "output_advection2dtri/solP1"};
+  ioP1.print({concP1});
+  IOManager ioP0{feSpaceP0, "output_advection2dtri/solP0"};
+  ioP0.print({concP0});
 
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << std::endl;
 
-    cOld = c.data;
+    // central implicit
+    concP1Old = concP1.data;
 
-    builder.buildProblem(timeder, bcs);
-    builder.buildProblem(timeder_rhs, bcs);
-    builder.buildProblem(advection, bcs);
+    builder.buildProblem(timeder, bcsP1);
+    builder.buildProblem(timeder_rhs, bcsP1);
+    builder.buildProblem(advection, bcsP1);
     builder.closeMatrix();
-    // std::cout << "A:\n" << builder.A << std::endl;
-    // std::cout << "b:\n" << builder.b << std::endl;
 
     solver.analyzePattern(builder.A);
     solver.factorize(builder.A);
-    c.data = solver.solve(builder.b);
+    concP1.data = solver.solve(builder.b);
     builder.clear();
 
+    // std::cout << "A:\n" << builder.A << std::endl;
+    // std::cout << "b:\n" << builder.b << std::endl;
     // std::cout << "sol:\n" << c.data << std::endl;
 
-    io.time = time;
-    io.iter += 1;
-    io.print({c});
+    // explicit upwind
+    fv.uOld = concP0.data;
+    fv.computeFluxes(vel, feSpaceP1);
+    fv.advance(concP0.data, dt);
+
+    // print
+    ioP1.time = time;
+    ioP1.iter += 1;
+    ioP1.print({concP1});
+    ioP0.time = time;
+    ioP0.iter += 1;
+    ioP0.print({concP0});
   }
 
-  double norm = c.data.norm();
-  std::cout << "the norm of the solution is " << std::setprecision(12) << norm << std::endl;
-  if(std::fabs(norm - 11.9149220338) > 1.e-10)
+  double normP1 = concP1.data.norm();
+  std::cout << "the norm of the P1 solution is " << std::setprecision(12) << normP1 << std::endl;
+  double normP0 = concP0.data.norm();
+  std::cout << "the norm of the P0 solution is " << std::setprecision(12) << normP0 << std::endl;
+  if(std::fabs(normP1 - 10.8594759676) > 1.e-10 || std::fabs(normP0 - 13.7780000857) > 1.e-10)
   {
     std::cerr << "the norm of the solution is not the prescribed value" << std::endl;
     return 1;

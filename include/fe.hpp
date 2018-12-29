@@ -29,6 +29,13 @@ struct FEType<Line,2>
 };
 
 template <>
+struct FEType<Triangle,0>
+{
+  using RefFE_T = RefTriangleP0;
+  using RecommendedQR = GaussQR<Triangle,1>;
+};
+
+template <>
 struct FEType<Triangle,1>
 {
   using RefFE_T = RefTriangleP1;

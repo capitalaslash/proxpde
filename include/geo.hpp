@@ -167,12 +167,12 @@ struct PointElem: public GeoElem
   virtual double volume() const final {return 1.;}
   virtual void buildNormal() final
   {
-    _normal = Vec3{0.0, 0.0, 0.0};
+    _normal = Vec3{1.0, 0.0, 0.0};
   }
 
   virtual Vec3 normal() const final
   {
-    return Vec3{0.0, 0.0, 0.0};
+    return Vec3{1.0, 0.0, 0.0};
   }
 };
 

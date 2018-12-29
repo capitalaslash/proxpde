@@ -268,17 +268,17 @@ void buildNormals(Mesh & mesh)
 {
   for (auto & facet: mesh.facetList)
   {
-      if (facet.onBoundary())
+    facet.buildNormal();
+
+    // normals on boundary facets should all point outside
+    if (facet.onBoundary())
+    {
+      // check orientation wrt. midpoint of internal element
+      if ((facet.midpoint() - facet.facingElem[0].first->midpoint()).dot(facet._normal) < 0.)
       {
-        facet.buildNormal();
-
-        // check orientation wrt. midpoint of internal element
-        if ((facet.midpoint() - facet.facingElem[0].first->midpoint()).dot(facet.normal) < 0.)
-        {
-          facet.normal = -1.0 * facet.normal;
-        }
-
+        facet._normal = -1.0 * facet._normal;
       }
+    }
   }
 }
 

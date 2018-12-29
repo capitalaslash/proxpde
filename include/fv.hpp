@@ -21,7 +21,7 @@ struct FVSolver
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),
-    fluxes(fe.mesh.facetList.size()),
+    fluxes(Vec::Zero(fe.mesh.facetList.size())),
     normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
   {
     for (auto const & elem: feSpace.mesh.elementList)
@@ -55,7 +55,10 @@ struct FVSolver
       if (upwindElem)
       {
         double const upwindU = uOld[feSpace.dof.getId(upwindElem->id, 0)];
-        fluxes[facet.id] = vNorm * upwindU;
+        fluxes[facet.id] =
+            vNorm *
+            facet.volume() *
+            upwindU;
       }
       // no upwind element means that we are on a boundary and the flux is
       // coming from outside
@@ -66,7 +69,10 @@ struct FVSolver
         {
           if (bc.marker == facet.marker)
           {
-            fluxes[facet.id] = vNorm * bc.evaluate(0)[0];
+            fluxes[facet.id] =
+                vNorm *
+                facet.volume() *
+                bc.evaluate(0)[0];
           }
         }
       }
@@ -110,7 +116,6 @@ struct FVSolver
         auto const & facet = feSpace.mesh.facetList[facetIds[f]];
         u[id] += dt *
             normalSgn(elem.id, f) *
-            facet.volume() *
             fluxes[facet.id] *
             hinv;
         // std::cout << normalSgn(elem.id, f) << " " << fluxes[feSpace.mesh.facetList[facetIds[f]].id] << std::endl;

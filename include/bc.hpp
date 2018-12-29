@@ -83,6 +83,7 @@ public:
         std::vector<uint> const & comp = {0}):
     BCEss(feSpace, fillDofSet(feSpace, m, comp), v)
   {
+    marker = m;
     std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
@@ -145,6 +146,7 @@ protected:
   Value_T const value;
 
 public:
+  marker_T marker = MarkerNotSet;
   double diag = 1.0;
 };
 

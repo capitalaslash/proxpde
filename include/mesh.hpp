@@ -263,6 +263,10 @@ struct MeshBuilder<Tetrahedron>
   }
 };
 
+void refTriangleMesh(Mesh<Triangle> & mesh);
+void hexagonMesh(Mesh<Triangle> & mesh);
+void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets = false);
+
 template <typename Mesh>
 void buildNormals(Mesh & mesh)
 {

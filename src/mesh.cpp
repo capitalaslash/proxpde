@@ -436,3 +436,205 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
   buildFacets(mesh, keepInternalFacets);
   markFacetsCube(mesh, origin, length);
 }
+
+void refTriangleMesh(Mesh<Triangle> & mesh)
+{
+  mesh.pointList = {
+    Point(Vec3(0., 0., 0.), 0),
+    Point(Vec3(1., 0., 0.), 1),
+    Point(Vec3(0., 1., 0.), 2),
+  };
+  mesh.elementList = {
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[1],
+              &mesh.pointList[2]},
+              0},
+  };
+  mesh.buildConnectivity();
+}
+
+void hexagonMesh(Mesh<Triangle> & mesh)
+{
+  double const sr3o2 = 0.5*sqrt(3.);
+  mesh.pointList = {
+    Point(Vec3(0., 0., 0.), 0),
+    Point(Vec3(    0.,  1.0, 0.), 1),
+    Point(Vec3( sr3o2,  0.5, 0.), 2),
+    Point(Vec3( sr3o2, -0.5, 0.), 3),
+    Point(Vec3(    0., -1.0, 0.), 4),
+    Point(Vec3(-sr3o2, -0.5, 0.), 5),
+    Point(Vec3(-sr3o2,  0.5, 0.), 6),
+  };
+  mesh.elementList = {
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[1],
+              &mesh.pointList[2]},
+              0},
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[2],
+              &mesh.pointList[3]},
+              1},
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[3],
+              &mesh.pointList[4]},
+              2},
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[4],
+              &mesh.pointList[5]},
+              3},
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[5],
+              &mesh.pointList[6]},
+              4},
+    Triangle{{&mesh.pointList[0],
+              &mesh.pointList[6],
+              &mesh.pointList[1]},
+              5},
+  };
+  mesh.buildConnectivity();
+  buildFacets(mesh, true);
+  for (auto & facet: mesh.facetList)
+  {
+    if (facet.onBoundary())
+    {
+      facet.marker = 1;
+      for (auto point: facet.pointList)
+      {
+        point->marker = 1;
+      }
+    }
+  }
+  buildNormals(mesh);
+  std::cout << mesh << std::endl;
+}
+
+void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets)
+{
+  id_T counter = 0;
+  double const h = 0.1;
+  for (uint p=0; p<11; ++p) // id 1-10
+  {
+    mesh.pointList.emplace_back(Vec3(p*h, 0.0, 0.0), counter++);
+  }
+  double const oneOnSr3 = 1. / std::sqrt(3.);
+  uint const rows = 8;
+  for (uint r=0; r<rows; ++r)
+  {
+    for (uint p=0; p<5; ++p) // id 11-15
+    {
+      mesh.pointList.emplace_back(Vec3((1+2*p)*h, (1+2*r)*h*oneOnSr3, 0.0), counter++);
+    }
+    for (uint p=0; p<6; ++p) // id 16-21
+    {
+      mesh.pointList.emplace_back(Vec3(2*p*h, 2*(1+r)*h*oneOnSr3, 0.0), counter++);
+    }
+  }
+  for (uint p=0; p<5; ++p) // id 22-26
+  {
+    mesh.pointList.emplace_back(Vec3((1+2*p)*h, (1+2*rows)*h*oneOnSr3, 0.0), counter++);
+  }
+  for (uint p=0; p<11; ++p) // id 27-37
+  {
+    mesh.pointList.emplace_back(Vec3(p*h, (2+2*rows)*h*oneOnSr3, 0.0), counter++);
+  }
+
+  counter = 0;
+  for (uint e=0; e<5; ++e)
+  {
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[0 + 2*e],
+      &mesh.pointList[1 + 2*e],
+      &mesh.pointList[11 + e]},
+      counter++);
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[1 + 2*e],
+      &mesh.pointList[2 + 2*e],
+      &mesh.pointList[11 + e]},
+      counter++);
+  }
+  for (uint e=0; e<5; ++e)
+  {
+    mesh.elementList.emplace_back(std::vector<Point*>{
+                                    &mesh.pointList[0 + 2*e],
+                                    &mesh.pointList[11 + e],
+                                    &mesh.pointList[16 + e]},
+                                  counter++);
+    mesh.elementList.emplace_back(std::vector<Point*>{
+                                    &mesh.pointList[2 + 2*e],
+                                    &mesh.pointList[11 + e],
+                                    &mesh.pointList[17 + e]},
+                                  counter++);
+  }
+  for (uint r=0; r<rows-1; ++r)
+  {
+    for (uint e=0; e<5; ++e)
+    {
+      mesh.elementList.emplace_back(std::vector<Point*>{
+                                      &mesh.pointList[16 + 11*r + e],
+                                      &mesh.pointList[11 + 11*r + e],
+                                      &mesh.pointList[22 + 11*r + e]},
+                                    counter++);
+      mesh.elementList.emplace_back(std::vector<Point*>{
+                                      &mesh.pointList[17 + 11*r + e],
+                                      &mesh.pointList[11 + 11*r + e],
+                                      &mesh.pointList[22 + 11*r + e]},
+                                    counter++);
+    }
+    for (uint e=0; e<5; ++e)
+    {
+      mesh.elementList.emplace_back(std::vector<Point*>{
+                                      &mesh.pointList[16 + 11*r + e],
+                                      &mesh.pointList[22 + 11*r + e],
+                                      &mesh.pointList[27 + 11*r + e]},
+                                    counter++);
+      mesh.elementList.emplace_back(std::vector<Point*>{
+                                      &mesh.pointList[17 + 11*r + e],
+                                      &mesh.pointList[22 + 11*r + e],
+                                      &mesh.pointList[28 + 11*r + e]},
+                                    counter++);
+    }
+  }
+  for (uint e=0; e<5; ++e)
+  {
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[11 + 11*(rows-1) + e],
+      &mesh.pointList[16 + 11*(rows-1) + e],
+      &mesh.pointList[22 + 11*(rows-1) + e]},
+      counter++);
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[11 + 11*(rows-1) + e],
+      &mesh.pointList[17 + 11*(rows-1) + e],
+      &mesh.pointList[22 + 11*(rows-1) + e]},
+      counter++);
+  }
+  for (uint e=0; e<5; ++e)
+  {
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[16 + 11*(rows-1) + e],
+      &mesh.pointList[22 + 11*(rows-1) + e],
+      &mesh.pointList[27 + 11*(rows-1) + 2*e]},
+      counter++);
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[17 + 11*(rows-1) + e],
+      &mesh.pointList[22 + 11*(rows-1) + e],
+      &mesh.pointList[29 + 11*(rows-1) + 2*e]},
+      counter++);
+  }
+  for (uint e=0; e<5; ++e)
+  {
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[27 + 11*(rows-1) + 2*e],
+      &mesh.pointList[28 + 11*(rows-1) + 2*e],
+      &mesh.pointList[22 + 11*(rows-1) + e]},
+      counter++);
+    mesh.elementList.emplace_back(std::vector<Point*>{
+      &mesh.pointList[28 + 11*(rows-1) + 2*e],
+      &mesh.pointList[29 + 11*(rows-1) + 2*e],
+      &mesh.pointList[22 + 11*(rows-1) + e]},
+      counter++);
+  }
+  mesh.buildConnectivity();
+  buildFacets(mesh, keepInternalFacets);
+  markFacetsCube(mesh, {0., 0., 0.}, {1., (2+2*rows)*h*oneOnSr3, 0.});
+  buildNormals(mesh);
+}

@@ -87,7 +87,7 @@ struct GeoElem
   }
 
   // check if geoelem is on boundary
-  bool onBoundary()
+  bool onBoundary() const
   {
     // the facet is on the boundary iff there is an inside element and no outside element
     return facingElem[1].first == nullptr && facingElem[0].first != nullptr;

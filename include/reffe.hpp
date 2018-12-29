@@ -60,6 +60,7 @@ struct RefLineP0
   static uint constexpr numFuns = 1U;
   static uint constexpr numGeoFuns = 2U;
   static array<uint,4> constexpr dofPlace{{0,0,1,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
   using Vec_T = FVec<dim>;
@@ -606,6 +607,8 @@ struct FEDim<RefTetrahedronP1>{ static constexpr FEDimType value = FEDimType::SC
 template <typename RefFE>
 struct MappingIsSeparate{ static constexpr bool value = false; };
 
+template <>
+struct MappingIsSeparate<RefLineP0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefTriangleP0>{ static constexpr bool value = true; };
 template <>

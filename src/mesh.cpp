@@ -3,7 +3,8 @@
 void buildMesh1D(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 uint const numPts)
+                 uint const numPts,
+                 bool keepInternalFacets)
 {
   Vec3 const h = length / (numPts-1);
   mesh.pointList.reserve(numPts);
@@ -21,7 +22,7 @@ void buildMesh1D(Mesh<Line> & mesh,
   }
 
   mesh.buildConnectivity();
-  buildFacets(mesh);
+  buildFacets(mesh, keepInternalFacets);
   mesh.facetList[0].marker = side::LEFT;
   mesh.facetList[1].marker = side::RIGHT;
 }
@@ -64,7 +65,8 @@ void markFacetsCube(Mesh & mesh,
 void buildMesh2D(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts)
+                 array<uint, 2> const numPts,
+                 bool keepInternalFacets)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   mesh.pointList.reserve(numPts[0]*numPts[1]);
@@ -128,14 +130,15 @@ void buildMesh2D(Mesh<Triangle> & mesh,
                  counter++});
     }
   mesh.buildConnectivity();
-  buildFacets(mesh);
+  buildFacets(mesh, keepInternalFacets);
   markFacetsCube(mesh, origin, length);
 }
 
 void buildMesh2D(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts)
+                 array<uint, 2> const numPts,
+                 bool keepInternalFacets)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
   mesh.pointList.reserve(numPts[0]*numPts[1]);
@@ -174,7 +177,7 @@ void buildMesh2D(Mesh<Quad> & mesh,
              counter++});
     }
   mesh.buildConnectivity();
-  buildFacets(mesh);
+  buildFacets(mesh, keepInternalFacets);
   markFacetsCube(mesh, origin, length);
 }
 
@@ -332,7 +335,8 @@ void buildCircleMesh(Mesh<Quad> & mesh,
 void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 3> const numPts)
+                 array<uint, 3> const numPts,
+                 bool keepInternalFacets)
 {
   Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
   mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
@@ -429,6 +433,6 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
              counter++});
     }
   mesh.buildConnectivity();
-  buildFacets(mesh);
+  buildFacets(mesh, keepInternalFacets);
   markFacetsCube(mesh, origin, length);
 }

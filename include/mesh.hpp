@@ -175,17 +175,20 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
 void buildMesh1D(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 uint const numPts);
+                 uint const numPts,
+                 bool keepInternalFacets);
 
 void buildMesh2D(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts);
+                 array<uint, 2> const numPts,
+                 bool keepInternalFacets);
 
 void buildMesh2D(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts);
+                 array<uint, 2> const numPts,
+                 bool keepInternalFacets);
 
 void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
@@ -195,7 +198,8 @@ void buildCircleMesh(Mesh<Quad> & mesh,
 void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 3> const numPts);
+                 array<uint, 3> const numPts,
+                 bool keepInternalFacets);
 
 template <class Elem>
 struct MeshBuilder
@@ -203,7 +207,8 @@ struct MeshBuilder
   void build(Mesh<Elem> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
-             array<uint, 3> const numPts);
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false);
 };
 
 template <>
@@ -212,9 +217,10 @@ struct MeshBuilder<Line>
   void build(Mesh<Line> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
-             array<uint, 3> const numPts)
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false)
   {
-    buildMesh1D(mesh, origin, length, numPts[0]);
+    buildMesh1D(mesh, origin, length, numPts[0], keepInternalFacets);
   }
 };
 
@@ -224,9 +230,10 @@ struct MeshBuilder<Triangle>
   void build(Mesh<Triangle> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
-             array<uint, 3> const numPts)
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false)
   {
-    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}});
+    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}}, keepInternalFacets);
   }
 };
 
@@ -236,9 +243,10 @@ struct MeshBuilder<Quad>
   void build(Mesh<Quad> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
-             array<uint, 3> const numPts)
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false)
   {
-    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}});
+    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}}, keepInternalFacets);
   }
 };
 
@@ -248,9 +256,10 @@ struct MeshBuilder<Tetrahedron>
   void build(Mesh<Tetrahedron> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
-             array<uint, 3> const numPts)
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false)
   {
-    buildMesh3D(mesh, origin, length, numPts);
+    buildMesh3D(mesh, origin, length, numPts, keepInternalFacets);
   }
 };
 

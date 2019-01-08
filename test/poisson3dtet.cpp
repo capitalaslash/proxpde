@@ -8,7 +8,30 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <iostream>
+#include <yaml-cpp/yaml.h>
+
+template <typename Mesh>
+void readMesh(Mesh & mesh, YAML::Node const & config)
+{
+  auto const mesh_type = config["mesh_type"].as<std::string>();
+  if (mesh_type == "structured")
+  {
+    array<uint,3> numPts =
+    {
+      config["nx"].as<uint>() + 1,
+      config["ny"].as<uint>() + 1,
+      config["nz"].as<uint>() + 1
+    };
+    Vec3 const origin{0., 0., 0.};
+    Vec3 const length{1., 1., 1.};
+    MeshBuilder<typename Mesh::Elem_T> meshBuilder;
+    meshBuilder.build(mesh, origin, length, numPts);
+  }
+  else if (mesh_type == "msh")
+  {
+    readGMSH(mesh, config["mesh_file"].as<std::string>());
+  }
+}
 
 using Elem_T = Tetrahedron;
 using Mesh_T = Mesh<Elem_T>;
@@ -31,22 +54,12 @@ int main(int argc, char* argv[])
 {
   MilliTimer t;
 
+  auto const configFile = (argc > 1) ? argv[1] : "poisson3dtet.yaml";
+  auto const config = YAML::LoadFile(configFile);
+
   t.start();
-  array<uint,3> numPts = {{21, 21, 3}};
-  if (argc == 4)
-  {
-    numPts[0] = static_cast<uint>(std::stoi(argv[1]));
-    numPts[1] = static_cast<uint>(std::stoi(argv[2]));
-    numPts[2] = static_cast<uint>(std::stoi(argv[3]));
-  }
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 1.};
-
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, numPts);
-  // readGMSH(*mesh, "cube_uns.msh");
+  readMesh(*mesh, config);
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
@@ -56,8 +69,8 @@ int main(int argc, char* argv[])
   t.start();
   BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  bcs.addEssentialBC(side::LEFT /*5*/, [] (Vec3 const&) {return 0.;});
-  bcs.addEssentialBC(side::BOTTOM /*2*/, [] (Vec3 const&) {return 0.;});
+  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
+  bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();
@@ -104,8 +117,8 @@ int main(int argc, char* argv[])
   std::cout << "output: " << t << " ms" << std::endl;
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.369787) > 1.e-5)
+  std::cout << "the norm of the error is " << std::setprecision(12) << norm << std::endl;
+  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-10)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

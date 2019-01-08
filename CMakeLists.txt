@@ -138,6 +138,8 @@ export(EXPORT MiniFEMTargets
 
 export(PACKAGE MiniFEM)
 
+# include(CTest)
+enable_testing()
 add_subdirectory(test)
 
 feature_summary(WHAT ALL)

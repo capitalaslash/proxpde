@@ -145,6 +145,45 @@ template<> array<GaussQR<Hexahedron,8>::Vec_T,8> const GaussQR<Hexahedron,8>::no
    GaussQR<Hexahedron,8>::Vec_T( sqrt13rd,  sqrt13rd,  sqrt13rd),
 }};
 
+template<> FVec<27> const GaussQR<Hexahedron,27>::weight =
+    (FVec<27>() <<
+     125.L, 200.L, 125.L, 200.L, 320.L, 200.L, 125.L, 200.L, 125.L,
+     200.L, 320.L, 200.L, 320.L, 512.L, 320.L, 200.L, 320.L, 200.L,
+     125.L, 200.L, 125.L, 200.L, 320.L, 200.L, 125.L, 200.L, 125.L
+     ).finished() / 729.L;
+template<> array<GaussQR<Hexahedron,27>::Vec_T,27> const GaussQR<Hexahedron,27>::node =
+{{
+   Vec3(-sqrt35th, -sqrt35th, -sqrt35th),
+   Vec3(      0.L, -sqrt35th, -sqrt35th),
+   Vec3( sqrt35th, -sqrt35th, -sqrt35th),
+   Vec3(-sqrt35th,       0.L, -sqrt35th),
+   Vec3(      0.L,       0.L, -sqrt35th),
+   Vec3( sqrt35th,       0.L, -sqrt35th),
+   Vec3(-sqrt35th,  sqrt35th, -sqrt35th),
+   Vec3(      0.L,  sqrt35th, -sqrt35th),
+   Vec3( sqrt35th,  sqrt35th, -sqrt35th),
+   //
+   Vec3(-sqrt35th, -sqrt35th,       0.L),
+   Vec3(      0.L, -sqrt35th,       0.L),
+   Vec3( sqrt35th, -sqrt35th,       0.L),
+   Vec3(-sqrt35th,       0.L,       0.L),
+   Vec3(      0.L,       0.L,       0.L),
+   Vec3( sqrt35th,       0.L,       0.L),
+   Vec3(-sqrt35th,  sqrt35th,       0.L),
+   Vec3(      0.L,  sqrt35th,       0.L),
+   Vec3( sqrt35th,  sqrt35th,       0.L),
+   //
+   Vec3(-sqrt35th, -sqrt35th,  sqrt35th),
+   Vec3(      0.L, -sqrt35th,  sqrt35th),
+   Vec3( sqrt35th, -sqrt35th,  sqrt35th),
+   Vec3(-sqrt35th,       0.L,  sqrt35th),
+   Vec3(      0.L,       0.L,  sqrt35th),
+   Vec3( sqrt35th,       0.L,  sqrt35th),
+   Vec3(-sqrt35th,  sqrt35th,  sqrt35th),
+   Vec3(      0.L,  sqrt35th,  sqrt35th),
+   Vec3( sqrt35th,  sqrt35th,  sqrt35th),
+}};
+
 template <typename GeoElem>
 struct TrapQR
 {
@@ -241,8 +280,15 @@ struct SideQR<GaussQR<Tetrahedron,4>>
 {
   using type = GaussQR<Triangle,3>;
 };
+
 template <>
 struct SideQR<GaussQR<Hexahedron,8>>
 {
   using type = GaussQR<Quad,4>;
+};
+
+template <>
+struct SideQR<GaussQR<Hexahedron,27>>
+{
+  using type = GaussQR<Quad,9>;
 };

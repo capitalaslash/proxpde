@@ -90,6 +90,12 @@ template<> array<GaussQR<Triangle,7>::Vec_T,7> const GaussQR<Triangle,7>::node =
   GaussQR<Triangle,7>::Vec_T(0.79742698535309, 0.10128650732346),
 }};
 
+template<> FVec<1> const GaussQR<Quad,1>::weight = FVec<1>::Constant(4.L);
+template<> array<Vec2,1> const GaussQR<Quad,1>::node =
+{{
+   Vec2(0.L, 0.L)
+}};
+
 template<> FVec<4> const GaussQR<Quad,4>::weight = FVec<4>::Constant(1.L);
 template<> array<GaussQR<Quad,4>::Vec_T,4> const GaussQR<Quad,4>::node =
 {{

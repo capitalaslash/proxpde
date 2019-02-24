@@ -51,6 +51,7 @@ minifem_add_test(advection1d DATA advection1d.yaml)
 minifem_add_test(poisson2dtri)
 minifem_add_test(poisson2dtri_p2)
 minifem_add_test(advection2dtri)
+minifem_add_test(dual)
 
 minifem_add_test(poisson2dquad)
 minifem_add_test(poisson2dquad_q2)

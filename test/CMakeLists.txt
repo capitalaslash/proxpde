@@ -42,6 +42,7 @@ endmacro()
 
 minifem_add_test(blockmatrix)
 minifem_add_test(hdf5write)
+minifem_add_test(qr)
 
 minifem_add_test(poisson1d)
 minifem_add_test(poisson1d_p2)

@@ -75,3 +75,10 @@ struct XDMFTraits<RefTetrahedronP1>
   static constexpr char const * shapeName = "Tetrahedron";
   static constexpr char const * attributeType = "Node";
 };
+
+template <>
+struct XDMFTraits<RefHexahedronQ1>
+{
+  static constexpr char const * shapeName = "Hexahedron";
+  static constexpr char const * attributeType = "Node";
+};

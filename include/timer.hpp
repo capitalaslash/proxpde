@@ -30,7 +30,7 @@ public:
     return elapsed;
   }
 
-  void print(std::ostream & out) const
+  void print(std::ostream & out = std::cout) const
   {
     double totalTime = 0;
     size_t strLength = 9;

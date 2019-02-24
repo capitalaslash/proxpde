@@ -53,7 +53,7 @@ template <>
 struct FEType<Quad,1>
 {
   using RefFE_T = RefQuadQ1;
-  using RecommendedQR = GaussQR<Quad,9>;
+  using RecommendedQR = GaussQR<Quad,4>;
 };
 
 template <>

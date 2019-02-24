@@ -42,7 +42,7 @@ template<> array<GaussQR<Line,3>::Vec_T,3> const GaussQR<Line,3>::node =
 }};
 
 template<> FVec<1> const GaussQR<Triangle,1>::weight =
-    FVec<1>::Constant(1./2);
+    FVec<1>::Constant(0.5L);
 template<> array<GaussQR<Triangle,1>::Vec_T,1> const GaussQR<Triangle,1>::node =
 {{
    GaussQR<Triangle,1>::Vec_T(1./3, 1./3)
@@ -67,7 +67,7 @@ template<> array<GaussQR<Triangle,3>::Vec_T,3> const GaussQR<Triangle,3>::node =
 
 template<> FVec<4> const GaussQR<Triangle,4>::weight =
     (FVec<4>() <<
-     25.L/96, 25.L/96, 25.L/96, -27.L/96).finished();
+     25.L, 25.L, 25.L, -27.L).finished() / 96.L;
 template<> array<GaussQR<Triangle,4>::Vec_T,4> const GaussQR<Triangle,4>::node =
 {{
   GaussQR<Triangle,4>::Vec_T(0.2L, 0.2L),
@@ -90,11 +90,20 @@ template<> array<GaussQR<Triangle,7>::Vec_T,7> const GaussQR<Triangle,7>::node =
   GaussQR<Triangle,7>::Vec_T(0.79742698535309, 0.10128650732346),
 }};
 
+template<> FVec<4> const GaussQR<Quad,4>::weight = FVec<4>::Constant(1.L);
+template<> array<GaussQR<Quad,4>::Vec_T,4> const GaussQR<Quad,4>::node =
+{{
+   GaussQR<Quad,4>::Vec_T(-sqrt13rd, -sqrt13rd),
+   GaussQR<Quad,4>::Vec_T( sqrt13rd, -sqrt13rd),
+   GaussQR<Quad,4>::Vec_T(-sqrt13rd,  sqrt13rd),
+   GaussQR<Quad,4>::Vec_T( sqrt13rd,  sqrt13rd),
+}};
+
 template<> FVec<9> const GaussQR<Quad,9>::weight =
     (FVec<9>() <<
-     25.L/81, 40.L/81, 25.L/81,
-     40.L/81, 64.L/81, 40.L/81,
-     25.L/81, 40.L/81, 25.L/81).finished();
+     25.L, 40.L, 25.L,
+     40.L, 64.L, 40.L,
+     25.L, 40.L, 25.L).finished() / 81.L;
 template<> array<GaussQR<Quad,9>::Vec_T,9> const GaussQR<Quad,9>::node =
 {{
   GaussQR<Quad,9>::Vec_T(-sqrt35th, -sqrt35th),

@@ -201,6 +201,12 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
                  array<uint, 3> const numPts,
                  bool keepInternalFacets);
 
+void buildMesh3D(Mesh<Hexahedron> & mesh,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 array<uint, 3> const numPts,
+                 bool keepInternalFacets);
+
 template <class Elem>
 struct MeshBuilder
 {
@@ -254,6 +260,19 @@ template <>
 struct MeshBuilder<Tetrahedron>
 {
   void build(Mesh<Tetrahedron> & mesh,
+             Vec3 const& origin,
+             Vec3 const& length,
+             array<uint, 3> const numPts,
+             bool keepInternalFacets = false)
+  {
+    buildMesh3D(mesh, origin, length, numPts, keepInternalFacets);
+  }
+};
+
+template <>
+struct MeshBuilder<Hexahedron>
+{
+  void build(Mesh<Hexahedron> & mesh,
              Vec3 const& origin,
              Vec3 const& length,
              array<uint, 3> const numPts,

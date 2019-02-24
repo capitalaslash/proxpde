@@ -445,6 +445,82 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
   markFacetsCube(mesh, origin, length);
 }
 
+void buildMesh3D(Mesh<Hexahedron> & mesh,
+                 Vec3 const& origin,
+                 Vec3 const& length,
+                 array<uint, 3> const numPts,
+                 bool keepInternalFacets)
+{
+  assert(numPts[0] > 1 && numPts[1] > 1 && numPts[2] > 1);
+  assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
+  Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
+  mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
+  for(uint k=0; k<numPts[2]; ++k)
+  {
+    for(uint j=0; j<numPts[1]; ++j)
+    {
+      for(uint i=0; i<numPts[0]; ++i)
+      {
+        Vec3 p(i * h(0), j * h(1), k * h(2));
+        auto const id = i + numPts[0]*j + numPts[0]*numPts[1]*k;
+        mesh.pointList.emplace_back(origin + p, id);
+      }
+    }
+  }
+
+  for(uint si=0; si<numPts[0]; si++)
+    for(uint sj=0; sj<numPts[1]; sj++)
+    {
+      auto const sb = si + numPts[0]*sj;
+      mesh.pointList[sb].marker = side::BACK;
+      auto const sf = si + numPts[0]*sj + numPts[1]*numPts[0]*(numPts[2]-1);
+      mesh.pointList[sf].marker = side::FRONT;
+    }
+  for(uint si=0; si<numPts[0]; si++)
+    for(uint sk=0; sk<numPts[2]; sk++)
+    {
+      auto const sb = si + numPts[1]*numPts[0]*sk;
+      mesh.pointList[sb].marker = side::BOTTOM;
+      auto const st = si + numPts[0]*(numPts[1]-1) + numPts[1]*numPts[0]*sk;
+      mesh.pointList[st].marker = side::TOP;
+    }
+  for(uint sj=0; sj<numPts[1]; sj++)
+    for(uint sk=0; sk<numPts[2]; sk++)
+    {
+      auto const sl = numPts[0]*sj + numPts[1]*numPts[0]*sk;
+      mesh.pointList[sl].marker = side::LEFT;
+      auto const sr = numPts[0]-1 + numPts[0]*sj + numPts[1]*numPts[0]*sk;
+      mesh.pointList[sr].marker = side::RIGHT;
+    }
+
+  uint const numElems = (numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
+  mesh.elementList.reserve(numElems);
+  id_T counter = 0;
+  auto const dx = 1;
+  auto const dy = numPts[0];
+  auto const dz = numPts[1]*numPts[0];
+  for(uint k=0; k<numPts[2]-1; ++k)
+    for(uint j=0; j<numPts[1]-1; ++j)
+      for(uint i=0; i<numPts[0]-1; ++i)
+      {
+        id_T const base = i + j*numPts[0] + k*numPts[1]*numPts[0];
+        mesh.elementList.emplace_back(
+              Hexahedron{{
+                           &mesh.pointList[base], // 0
+                           &mesh.pointList[base + dx], // 1
+                           &mesh.pointList[base + dx + dy], // 2
+                           &mesh.pointList[base + dy], // 3
+                           &mesh.pointList[base + dz], // 4
+                           &mesh.pointList[base + dx + dz], // 5
+                           &mesh.pointList[base + dx + dy + dz], // 6
+                           &mesh.pointList[base + dy + dz]}, // 7
+                         counter++});
+      }
+  mesh.buildConnectivity();
+  buildFacets(mesh, keepInternalFacets);
+  markFacetsCube(mesh, origin, length);
+}
+
 void refTriangleMesh(Mesh<Triangle> & mesh)
 {
   mesh.pointList = {

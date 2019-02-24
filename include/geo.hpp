@@ -41,10 +41,10 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 
 struct GeoElem
 {
-  using PointList_T = std::vector<Point*>;
-  using FacingElem_T = std::pair<GeoElem const*, uint>;
+  using PointList_T = std::vector<Point *>;
+  using FacingElem_T = std::pair<GeoElem const *, uint>;
 
-  explicit GeoElem(std::initializer_list<Point*> const & list = {nullptr},
+  explicit GeoElem(std::initializer_list<Point *> const & list = {nullptr},
                    id_T const i = DOFidNotSet,
                    marker_T const m = MarkerNotSet):
     pointList(list),
@@ -54,7 +54,7 @@ struct GeoElem
   {}
 
   // TODO: use array instead of vector, the number of points is fixed by the elem type
-  explicit GeoElem(std::vector<Point*> const & list,
+  explicit GeoElem(PointList_T const & list,
                    id_T const i = DOFidNotSet,
                    marker_T const m = MarkerNotSet):
     pointList(list),
@@ -148,13 +148,13 @@ struct PointElem: public GeoElem
   static uint constexpr numFaces = 0U;
   static uint constexpr numFacets = 0U;
 
-  explicit PointElem(std::initializer_list<Point*> const & list = {nullptr},
+  explicit PointElem(std::initializer_list<Point *> const & list = {nullptr},
                  id_T const i = DOFidNotSet,
                  marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
-  explicit PointElem(std::vector<Point*> const & list,
+  explicit PointElem(PointList_T const & list,
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -195,13 +195,13 @@ public:
     {{0,1}}
   }};
 
-  explicit Line(std::initializer_list<Point*> const & list = {nullptr},
+  explicit Line(std::initializer_list<Point *> const & list = {nullptr},
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
-  explicit Line(std::vector<Point*> const & list,
+  explicit Line(PointList_T const & list,
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -263,13 +263,13 @@ public:
     {{0,1,2}}
   }};
 
-  explicit Triangle(std::initializer_list<Point*> const & list = {nullptr},
+  explicit Triangle(std::initializer_list<Point *> const & list = {nullptr},
                     id_T const i = DOFidNotSet,
                     marker_T const m = MarkerNotSet):
         GeoElem(list, i, m)
   {}
 
-  explicit Triangle(std::vector<Point*> const & list,
+  explicit Triangle(PointList_T const & list,
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -340,13 +340,13 @@ public:
     {{0,1,2,3}}
   }};
 
-  explicit Quad(std::initializer_list<Point*> const & list = {nullptr},
+  explicit Quad(std::initializer_list<Point *> const & list = {nullptr},
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
-  explicit Quad(std::vector<Point*> const & list,
+  explicit Quad(PointList_T const & list,
                 id_T const i = DOFidNotSet,
                 marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -414,13 +414,13 @@ public:
   }};
   static array<array<id_T,3>,4> constexpr elemToFace = elemToFacet;
 
-  explicit Tetrahedron(std::initializer_list<Point*> const & list = {nullptr},
+  explicit Tetrahedron(std::initializer_list<Point *> const & list = {nullptr},
                        id_T const i = DOFidNotSet,
                        marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
-  explicit Tetrahedron(std::vector<Point*> const & list,
+  explicit Tetrahedron(PointList_T const & list,
                        id_T const i = DOFidNotSet,
                        marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -479,13 +479,13 @@ public:
   }};
   static array<array<id_T,4>,6> constexpr elemToFace = elemToFacet;
 
-  explicit Hexahedron(std::initializer_list<Point*> const & list = {nullptr},
+  explicit Hexahedron(std::initializer_list<Point *> const & list = {nullptr},
                       id_T const i = DOFidNotSet,
                       marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
   {}
 
-  explicit Hexahedron(std::vector<Point*> const & list,
+  explicit Hexahedron(PointList_T const & list,
                       id_T const i = DOFidNotSet,
                       marker_T const m = MarkerNotSet):
     GeoElem(list, i, m)
@@ -536,12 +536,12 @@ bool geoEqual(Elem const & e1, Elem const & e2)
 {
   array<id_T, Elem::numPts> ids1, ids2;
   uint counter= 0;
-  std::for_each(e1.pointList.begin(), e1.pointList.end(), [&ids1, &counter](Point* const p)
+  std::for_each(e1.pointList.begin(), e1.pointList.end(), [&ids1, &counter](Point const * p)
   {
     ids1[counter++] = p->id;
   });
   counter = 0;
-  std::for_each(e2.pointList.begin(), e2.pointList.end(), [&ids2, &counter](Point* const p)
+  std::for_each(e2.pointList.begin(), e2.pointList.end(), [&ids2, &counter](Point const * p)
   {
     ids2[counter++] = p->id;
   });

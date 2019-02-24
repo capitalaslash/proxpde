@@ -323,7 +323,7 @@ struct Builder
 
     auto const & mesh = assembly.feSpace.mesh;
 
-    for(auto &e: mesh.elementList)
+    for(auto & e: mesh.elementList)
     {
       LVec_T Fe = LVec_T::Zero();
 

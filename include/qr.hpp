@@ -132,6 +132,19 @@ template<> array<GaussQR<Tetrahedron,4>::Vec_T,4> const GaussQR<Tetrahedron,4>::
    GaussQR<Tetrahedron,4>::Vec_T(0.1381966011250105, 0.1381966011250105, 0.5854101966249685)
 }};
 
+template<> FVec<8> const GaussQR<Hexahedron,8>::weight = FVec<8>::Constant(1.L);
+template<> array<GaussQR<Hexahedron,8>::Vec_T,8> const GaussQR<Hexahedron,8>::node =
+{{
+   GaussQR<Hexahedron,8>::Vec_T(-sqrt13rd, -sqrt13rd, -sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T( sqrt13rd, -sqrt13rd, -sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T(-sqrt13rd,  sqrt13rd, -sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T( sqrt13rd,  sqrt13rd, -sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T(-sqrt13rd, -sqrt13rd,  sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T( sqrt13rd, -sqrt13rd,  sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T(-sqrt13rd,  sqrt13rd,  sqrt13rd),
+   GaussQR<Hexahedron,8>::Vec_T( sqrt13rd,  sqrt13rd,  sqrt13rd),
+}};
+
 template <typename GeoElem>
 struct TrapQR
 {
@@ -227,4 +240,9 @@ template <>
 struct SideQR<GaussQR<Tetrahedron,4>>
 {
   using type = GaussQR<Triangle,3>;
+};
+template <>
+struct SideQR<GaussQR<Hexahedron,8>>
+{
+  using type = GaussQR<Quad,4>;
 };

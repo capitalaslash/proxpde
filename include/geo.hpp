@@ -460,6 +460,75 @@ public:
   }
 };
 
+class Hexahedron: public GeoElem
+{
+public:
+  using Facet_T = Quad;
+  using Face_T = Quad;
+  using Edge_T = Line;
+  static int constexpr dim = 3;
+  static uint constexpr numPts = 8U;
+  static uint constexpr numEdges = 12U;
+  static uint constexpr numFaces = 6U;
+  static uint constexpr numFacets = 6U;
+  static array<array<id_T,4>,6> constexpr elemToFacet = {{
+    {{0,3,2,1}}, {{0,1,5,4}}, {{1,2,6,5}}, {{2,3,7,6}}, {{3,0,4,7}}, {{4,5,6,7}}
+  }};
+  static array<array<id_T,2>,12> constexpr elemToEdge = {{
+    {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}, {{0,4}}, {{1,5}}, {{2,6}}, {{3,7}}, {{4,5}}, {{5,6}}, {{6,7}}, {{7,0}}
+  }};
+  static array<array<id_T,4>,6> constexpr elemToFace = elemToFacet;
+
+  explicit Hexahedron(std::initializer_list<Point*> const & list = {nullptr},
+                      id_T const i = DOFidNotSet,
+                      marker_T const m = MarkerNotSet):
+    GeoElem(list, i, m)
+  {}
+
+  explicit Hexahedron(std::vector<Point*> const & list,
+                      id_T const i = DOFidNotSet,
+                      marker_T const m = MarkerNotSet):
+    GeoElem(list, i, m)
+  {}
+
+  virtual ~Hexahedron() {}
+
+  Vec3 midpoint() const final
+  {
+    return Vec3{.125*(
+      pointList[0]->coord + pointList[1]->coord +
+      pointList[2]->coord + pointList[3]->coord +
+      pointList[4]->coord + pointList[5]->coord +
+      pointList[6]->coord + pointList[7]->coord)
+    };
+  }
+
+  Vec3 origin() const final
+  {
+    return this->midpoint();
+  }
+
+  double volume() const final
+  {
+    // TODO: this is not correct for general hexahedrons, just for parallelepids
+    auto const v1 = pointList[1]->coord-pointList[0]->coord;
+    auto const v2 = pointList[3]->coord-pointList[0]->coord;
+    auto const v3 = pointList[4]->coord-pointList[0]->coord;
+    return (v1.cross(v2)).dot(v3);
+  }
+
+  virtual void buildNormal() final
+  {
+    std::abort();
+  }
+
+  virtual Vec3 normal() const final
+  {
+    std::abort();
+  }
+};
+
+
 // this method checks only to see if the 2 elems are equivalent from the geometric pov, i.e. they
 // have the same point ids (or a permutation of it)
 template <typename Elem>

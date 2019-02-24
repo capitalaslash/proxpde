@@ -512,6 +512,52 @@ struct RefTetrahedronP1
   }
 };
 
+struct RefHexahedronQ1
+{
+  using GeoElem_T = Hexahedron;
+  using RefFacet_T = RefQuadQ1;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 3;
+  static uint constexpr numFuns = 8U;
+  static uint constexpr numGeoFuns = 8U;
+  static array<uint,4> constexpr dofPlace{{0,0,0,1}};
+  static uint constexpr dofPerFacet = 4U;
+  static array<array<uint,4>,6> constexpr dofOnFacet =
+  {{
+     {{0,3,2,1}}, {{0,1,5,4}}, {{1,2,6,5}}, {{2,3,7,6}}, {{3,0,4,7}}, {{4,5,6,7}}
+  }};
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<scalarThreedFun_T,numFuns> const phiFun;
+  static array<threedFun_T,numFuns> const phiVectFun;
+  static array<threedFun_T,numFuns> const dphiFun;
+  static array<threedFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 4.;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     array<Vec3,numFuns> dofPts =
+     {{
+        e.pointList[0]->coord,
+        e.pointList[1]->coord,
+        e.pointList[2]->coord,
+        e.pointList[3]->coord,
+        e.pointList[4]->coord,
+        e.pointList[5]->coord,
+        e.pointList[6]->coord,
+        e.pointList[7]->coord,
+     }};
+     return dofPts;
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+     return dofPts(e);
+  }
+};
+
 template <typename RefFE>
 struct Order{ static constexpr uint value = 0; };
 
@@ -533,6 +579,10 @@ template <>
 struct Order<RefQuadP2>{ static constexpr uint value = 2; };
 template <>
 struct Order<RefQuadQ2>{ static constexpr uint value = 2; };
+template <>
+struct Order<RefTetrahedronP1>{ static constexpr uint value = 1; };
+template <>
+struct Order<RefHexahedronQ1>{ static constexpr uint value = 1; };
 
 enum class FamilyType : int8_t
 {
@@ -568,6 +618,8 @@ template <>
 struct Family<RefQuadQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefTetrahedronP1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefHexahedronQ1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 
 enum class FEDimType : int8_t
 {
@@ -603,6 +655,8 @@ template <>
 struct FEDim<RefQuadQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefTetrahedronP1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefHexahedronQ1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 
 template <typename RefFE>
 struct MappingIsSeparate{ static constexpr bool value = false; };

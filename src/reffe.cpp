@@ -445,3 +445,46 @@ array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::dphiFun =
 }};
 
 array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::mapping = RefTetrahedronP1::dphiFun;
+
+// ----------------------------------------------------------------------------
+uint constexpr RefHexahedronQ1::numFuns;
+array<uint,4> constexpr RefHexahedronQ1::dofPlace;
+array<array<uint,4>,6> constexpr RefHexahedronQ1::dofOnFacet;
+
+array<scalarThreedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::phiFun =
+{{
+   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1-p(1))*(1-p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1-p(1))*(1-p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1+p(1))*(1-p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1+p(1))*(1-p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1-p(1))*(1+p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1-p(1))*(1+p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1+p(1))*(1+p(2)); },
+   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1+p(1))*(1+p(2)); },
+}};
+
+array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::phiVectFun =
+{{
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.-p(0))*(1.-p(1))*(1.-p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.+p(0))*(1.-p(1))*(1.-p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.+p(0))*(1.+p(1))*(1.-p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.-p(0))*(1.+p(1))*(1.-p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.-p(0))*(1.-p(1))*(1.+p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.+p(0))*(1.-p(1))*(1.+p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.+p(0))*(1.+p(1))*(1.+p(2))); },
+   [] (Vec_T const & p) { return Vec_T::Constant(0.125*(1.-p(0))*(1.+p(1))*(1.+p(2))); },
+}};
+
+array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::dphiFun =
+{{
+   [] (Vec_T const & p) { return Vec_T(-0.125*(1.-p(1))*(1.-p(2)), -0.125*(1.-p(0))*(1.-p(2)), -0.125*(1.-p(0))*(1.-p(1))); },
+   [] (Vec_T const & p) { return Vec_T( 0.125*(1.-p(1))*(1.-p(2)), -0.125*(1.+p(0))*(1.-p(2)), -0.125*(1.+p(0))*(1.-p(1))); },
+   [] (Vec_T const & p) { return Vec_T( 0.125*(1.+p(1))*(1.-p(2)),  0.125*(1.+p(0))*(1.-p(2)), -0.125*(1.+p(0))*(1.+p(1))); },
+   [] (Vec_T const & p) { return Vec_T(-0.125*(1.+p(1))*(1.-p(2)),  0.125*(1.-p(0))*(1.-p(2)), -0.125*(1.-p(0))*(1.+p(1))); },
+   [] (Vec_T const & p) { return Vec_T(-0.125*(1.-p(1))*(1.+p(2)), -0.125*(1.-p(0))*(1.+p(2)),  0.125*(1.-p(0))*(1.-p(1))); },
+   [] (Vec_T const & p) { return Vec_T( 0.125*(1.-p(1))*(1.+p(2)), -0.125*(1.+p(0))*(1.+p(2)),  0.125*(1.+p(0))*(1.-p(1))); },
+   [] (Vec_T const & p) { return Vec_T( 0.125*(1.+p(1))*(1.+p(2)),  0.125*(1.+p(0))*(1.+p(2)),  0.125*(1.+p(0))*(1.+p(1))); },
+   [] (Vec_T const & p) { return Vec_T(-0.125*(1.+p(1))*(1.+p(2)),  0.125*(1.-p(0))*(1.+p(2)),  0.125*(1.-p(0))*(1.+p(1))); },
+}};
+
+array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::mapping = RefHexahedronQ1::dphiFun;

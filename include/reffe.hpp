@@ -144,7 +144,6 @@ struct RefLineP2
   static uint constexpr numFuns = 3U;
   static uint constexpr numGeoFuns = 3U;
   static array<uint,4> constexpr dofPlace{{0,0,1,1}};
-  static uint constexpr numFacets = 2U;
   static uint constexpr dofPerFacet = 1U;
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
     {{0}}, {{1}}
@@ -267,7 +266,6 @@ struct RefTriangleP2
   static uint constexpr numFuns = 6U;
   static uint constexpr numGeoFuns = 6U;
   static array<uint,4> constexpr dofPlace{{0,0,1,1}};
-  static uint constexpr numFacets = 3U;
   static uint constexpr dofPerFacet = 3U;
   static uint constexpr numEdges = 3U;
   static uint constexpr dofPerEdge = 3U;

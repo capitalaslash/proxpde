@@ -1,5 +1,7 @@
 #pragma once
 
+#include "def.hpp"
+
 namespace detail
 {
 static constexpr auto sum()

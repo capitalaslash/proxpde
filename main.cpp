@@ -13,7 +13,7 @@ scalarFun_T rhs = [] (Vec3 const& p)
 {
   return M_PI*std::sin(M_PI*p(0));
 };
-scalarFun_T exact_sol = [] (Vec3 const& p)
+scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(M_PI*p(0))/M_PI + p(0);
 };
@@ -56,10 +56,10 @@ int main()
   FESpace_T feSpace{*mesh};
 
   // right bc not used here
-  BCList<FESpace_T> bcs{feSpace};
+  BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
 
-  AssemblyStiffness<FESpace_T> assembly(1.0, feSpace);
+  AssemblyStiffness assembly(1.0, feSpace);
 
   Builder builder{feSpace.dof.size};
   builder.buildProblem(assembly, bcs);
@@ -109,13 +109,13 @@ int main()
   // std::cout<< "sol:\n" << sol << std::endl;
 
   Var exact{"exact"};
-  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
 
   Var error{"error"};
   error.data = sol.data - exact.data;
   std::cout << "error: " << error.data.norm() << std::endl;
 
-  IOManager<FESpace_T> io{feSpace, "sol"};
+  IOManager io{feSpace, "sol"};
   io.print({sol, exact, error});
 
   return 0;

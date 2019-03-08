@@ -80,10 +80,9 @@ struct CurFE
   array<FMat<RefFE::numGeoFuns,RefFE::dim>,QR::numPts> mapping;
   // vectorFun_T inverseMapping;
   array<FVec<RefFE::numFuns>,QR::numPts> phi;
+  // TODO: box phiVect in external data struct that is specialized on the FEDimType
   array<FMat<RefFE::numFuns,3>,QR::numPts> phiVect;
   array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
-  // LocalMat_T massMat;
-  // LocalMat_T stiffMat;
 };
 
 template <typename QR>

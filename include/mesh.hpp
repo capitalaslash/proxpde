@@ -317,7 +317,7 @@ enum  GMSHElemType: int8_t
   GMSHTriangle = 2,
   GMSHQuad = 3,
   GMSHTet = 4,
-//  GMSHHexa = 5,
+  GMSHHexa = 5,
 //  GMSHQuadraticLine = 8,
 //  GMSHQuadraticTriangle = 9,
 //  GMSHQuadraticQuad = 10,
@@ -333,20 +333,29 @@ struct ElemToGmsh<Line>
 {
   static GMSHElemType constexpr value = GMSHLine;
 };
+
 template <>
 struct ElemToGmsh<Triangle>
 {
   static GMSHElemType constexpr value = GMSHTriangle;
 };
+
 template <>
 struct ElemToGmsh<Quad>
 {
   static GMSHElemType constexpr value = GMSHQuad;
 };
+
 template <>
 struct ElemToGmsh<Tetrahedron>
 {
   static GMSHElemType constexpr value = GMSHTet;
+};
+
+template <>
+struct ElemToGmsh<Hexahedron>
+{
+  static GMSHElemType constexpr value = GMSHHexa;
 };
 
 template <typename Elem>

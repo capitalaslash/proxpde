@@ -6,7 +6,9 @@
 template <uint N>
 struct Monomial
 {
-  static double value(double const x)
+  using T = double;
+
+  static T value(T const x)
   {
     return x * Monomial<N-1>::value(x);
   }
@@ -15,42 +17,51 @@ struct Monomial
 template <>
 struct Monomial<0>
 {
-  static double value(double const)
+  using T = double;
+
+  static T value(T const)
   {
-    return 1.;
+    return 1.L;
   }
 };
 
 struct PolyVec
 {
-  explicit PolyVec(double const x, double const y=0., double const z=0.):
+  using T = Monomial<0>::T;
+  using Vec1_T = Eigen::Matrix<T, 1, 1>;
+  using Vec2_T = Eigen::Matrix<T, 2, 1>;
+  using Vec3_T = Eigen::Matrix<T, 3, 1>;
+
+  explicit PolyVec(T const x, T const y=0.L, T const z=0.L):
     data{{x, y, z}}
   {}
 
-  explicit PolyVec(Vec1 const & v):
-    data{{v[0], 0., 0.}}
+  explicit PolyVec(Vec1_T const & v):
+    data{{static_cast<T>(v[0]), 0.L, 0.L}}
   {}
 
-  explicit PolyVec(Vec2 const & v):
-    data{{v[0], v[1], 0.}}
+  explicit PolyVec(Vec2_T const & v):
+    data{{static_cast<T>(v[0]), static_cast<T>(v[1]), 0.L}}
   {}
 
-  explicit PolyVec(Vec3 const & v):
-    data{{v[0], v[1], v[2]}}
+  explicit PolyVec(Vec3_T const & v):
+    data{{static_cast<T>(v[0]), static_cast<T>(v[1]), static_cast<T>(v[2])}}
   {}
 
-  double operator() (uint const i) const
+  T operator() (uint const i) const
   {
     return data[i];
   }
 
-  array<double,3> data;
+  array<T, 3> data;
 };
 
 template <uint I, uint J = 0, uint K = 0>
 struct Polynomial
 {
-  static double value(PolyVec const & p)
+  using T = PolyVec::T;
+
+  static T value(PolyVec const & p)
   {
     return
         Monomial<I>::value(p(0)) *
@@ -63,10 +74,10 @@ template <typename QR, typename Poly>
 int test(
     QR const & qr,
     Poly const &,
-    double const expectedValue,
-    double const relativeError)
+    long double const expectedValue,
+    long double const relativeError)
 {
-  double value = 0.;
+  auto value = 0.L;
   for (uint n=0; n<qr.numPts; ++n)
   {
     auto const w = qr.weight[n];
@@ -83,27 +94,28 @@ int test(
 
 int main()
 {
+
   std::bitset<12> lineTests;
-  lineTests[ 0] = test(GaussQR<Line,1>{}, Polynomial<0>{},   2., 1e-15);
-  lineTests[ 1] = test(GaussQR<Line,1>{}, Polynomial<1>{},   0., 1e-15);
-  lineTests[ 2] = test(GaussQR<Line,2>{}, Polynomial<0>{},   2., 1e-15);
-  lineTests[ 3] = test(GaussQR<Line,2>{}, Polynomial<1>{},   0., 1e-15);
-  lineTests[ 4] = test(GaussQR<Line,2>{}, Polynomial<2>{}, 2./3, 1e-15);
-  lineTests[ 5] = test(GaussQR<Line,2>{}, Polynomial<3>{},   0., 1e-15);
-  lineTests[ 6] = test(GaussQR<Line,3>{}, Polynomial<0>{},   2., 1e-15);
-  lineTests[ 7] = test(GaussQR<Line,3>{}, Polynomial<1>{},   0., 1e-15);
-  lineTests[ 8] = test(GaussQR<Line,3>{}, Polynomial<2>{}, 2./3, 1e-15);
-  lineTests[ 9] = test(GaussQR<Line,3>{}, Polynomial<3>{},   0., 1e-15);
-  lineTests[10] = test(GaussQR<Line,3>{}, Polynomial<4>{}, 2./5, 1e-15);
-  lineTests[11] = test(GaussQR<Line,3>{}, Polynomial<5>{},   0., 1e-15);
-  // lineTests[.] = test(GaussQR<Line,4>{}, Polynomial<0>{}, 2., 1e-15);
+  lineTests[ 0] = test(GaussQR<Line,1>{}, Polynomial<0>{},   2.L, 1e-15L);
+  lineTests[ 1] = test(GaussQR<Line,1>{}, Polynomial<1>{},   0.L, 1e-15L);
+  lineTests[ 2] = test(GaussQR<Line,2>{}, Polynomial<0>{},   2.L, 1e-15L);
+  lineTests[ 3] = test(GaussQR<Line,2>{}, Polynomial<1>{},   0.L, 1e-15L);
+  lineTests[ 4] = test(GaussQR<Line,2>{}, Polynomial<2>{}, 2.L/3, 1e-15L);
+  lineTests[ 5] = test(GaussQR<Line,2>{}, Polynomial<3>{},   0.L, 1e-15L);
+  lineTests[ 6] = test(GaussQR<Line,3>{}, Polynomial<0>{},   2.L, 1e-15L);
+  lineTests[ 7] = test(GaussQR<Line,3>{}, Polynomial<1>{},   0.L, 1e-15L);
+  lineTests[ 8] = test(GaussQR<Line,3>{}, Polynomial<2>{}, 2.L/3, 1e-15L);
+  lineTests[ 9] = test(GaussQR<Line,3>{}, Polynomial<3>{},   0.L, 1e-15L);
+  lineTests[10] = test(GaussQR<Line,3>{}, Polynomial<4>{}, 2.L/5, 1e-15L);
+  lineTests[11] = test(GaussQR<Line,3>{}, Polynomial<5>{},   0.L, 1e-15L);
+  // lineTests[.] = test(GaussQR<Line,4>{}, Polynomial<0>{}, 2.L, 1e-15L);
   std::cout << "line: " << lineTests << std::endl;
 
   std::bitset<4> triangleTests;
-  triangleTests[0] = test(GaussQR<Triangle,1>{}, Polynomial<0,0>{}, 1./2, 1e-15);
-  triangleTests[1] = test(GaussQR<Triangle,3>{}, Polynomial<0,0>{}, 1./2, 1e-15);
-  triangleTests[2] = test(GaussQR<Triangle,4>{}, Polynomial<0,0>{}, 1./2, 1e-15);
-  triangleTests[3] = test(GaussQR<Triangle,7>{}, Polynomial<0,0>{}, 1./2, 1e-14);
+  triangleTests[0] = test(GaussQR<Triangle,1>{}, Polynomial<0,0>{}, 1.L/2, 1e-15L);
+  triangleTests[1] = test(GaussQR<Triangle,3>{}, Polynomial<0,0>{}, 1.L/2, 1e-15L);
+  triangleTests[2] = test(GaussQR<Triangle,4>{}, Polynomial<0,0>{}, 1.L/2, 1e-15L);
+  triangleTests[3] = test(GaussQR<Triangle,7>{}, Polynomial<0,0>{}, 1.L/2, 1e-14L);
   std::cout << "triangle: " << triangleTests << std::endl;
 
   std::bitset<34> quadTests;

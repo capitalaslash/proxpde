@@ -440,6 +440,7 @@ void readGMSH(Mesh<Elem> & mesh,
       {
         uint id, elType, numTags;
         in >> id >> elType >> numTags;
+        assert(numTags > 0);
         std::vector<uint> tags(numTags);
         for (uint t=0; t<numTags; t++)
         {
@@ -457,6 +458,7 @@ void readGMSH(Mesh<Elem> & mesh,
           }
 
           // get points pointers from connectivity
+          // TODO: use array or pre-fix size
           std::vector<Point*> connPts;
           std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
             connPts.push_back(&mesh.pointList[c-1]);
@@ -476,6 +478,7 @@ void readGMSH(Mesh<Elem> & mesh,
           }
 
           // get points pointers from connectivity
+          // TODO: use array or pre-fix size
           std::vector<Point*> connPts;
           std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
             connPts.push_back(&mesh.pointList[c-1]);
@@ -500,8 +503,14 @@ void readGMSH(Mesh<Elem> & mesh,
     }
     else
     {
-      std::cerr << "file section not recognized" << std::endl;
-      std::exit(ERROR_GMSH);
+      std::cerr << "file section not recognized: " << buf << std::endl;
+      // discard the whole unrecognized section
+      auto sectionEnd = "$End" + buf.substr(1, buf.length()-1);
+      while (buf != sectionEnd)
+      {
+        in >> buf;
+      }
+      // std::exit(ERROR_GMSH);
     }
     // get next section
     in >> buf;

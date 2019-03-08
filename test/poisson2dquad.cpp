@@ -36,51 +36,53 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh build");
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
 
-  t.start();
+  t.start("fe space");
   AssemblyStiffness stiffness(1.0, feSpace);
   Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   builder.closeMatrix();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("solve");
   Var sol{"u"};
   Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
   Var exact{"exact"};
   interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  t.start();
+  t.start("output");
   IOManager io{feSpace, "output_poisson2dquad/sol"};
   io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
+
+  t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.020304) > 1.e-5)
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  if(std::fabs(norm - 0.02049777877937642) > 1.e-15)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

@@ -122,8 +122,8 @@ int main(int argc, char* argv[])
   io.print({sol, exact, error});
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 0.0432474) > 1.e-5)
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  if(std::fabs(norm - 0.04331597477422448) > 1.e-15)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

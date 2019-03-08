@@ -36,10 +36,9 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh build");
   MeshBuilder<Elem_T> meshBuilder;
   meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
 
   // rotation matrix
   double theta = M_PI / 3.;
@@ -54,38 +53,42 @@ int main(int argc, char* argv[])
   {
     p.coord = R * p.coord;
   }
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   BCList bcs{feSpace};
   bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
+  t.start("fe build");
   AssemblyStiffness stiffness(1.0, feSpace);
-
   auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
   AssemblyAnalyticRhs f(rotatedRhs, feSpace);
+  // // using an interpolated rhs makes its quality independent of the chosen qr
+  // Vec rhsProj;
+  // interpolateAnalyticFunction(rotatedRhs, feSpace, rhsProj);
+  // AssemblyProjection f(1.0, rhsProj, feSpace);
 
-  t.start();
   Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
   builder.closeMatrix();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  t.stop();
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
 
-  t.start();
+  t.start("solve");
   Var sol{"u"};
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
   Var exact{"exact"};
   auto rotatedESol = [&Rt] (Vec3 const& p) {return exactSol(Rt * p);};
@@ -93,14 +96,16 @@ int main(int argc, char* argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  t.start();
+  t.start("output");
   IOManager io{feSpace, "output/sol_poisson1d"};
   io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
+
+  t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-  if(std::fabs(norm - 2.61664e-11) > 1.e-10)
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  if(std::fabs(norm - 2.877854239591332e-07) > 1.e-15)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

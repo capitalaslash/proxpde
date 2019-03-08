@@ -18,7 +18,7 @@ template <>
 struct FEType<Line,1>
 {
   using RefFE_T = RefLineP1;
-  using RecommendedQR = GaussQR<Line,3>;
+  using RecommendedQR = GaussQR<Line,2>;
 };
 
 template <>

@@ -116,7 +116,7 @@ int main()
 
     auto const error = test(config);
     std::cout << "test1: the norm of the error is "<< std::setprecision(16) << error << std::endl;
-    if(std::fabs(error - 3.071207174712583e-11) > 1.e-15)
+    if(std::fabs(error - 3.106760564918841e-07) > 1.e-15)
     {
       std::cerr << "the norm of the error is not the prescribed value" << std::endl;
       return 1;
@@ -133,7 +133,7 @@ int main()
 
     auto const error = test(config);
     std::cout << "test2: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 2.607139656824781e-11) > 1.e-15)
+    if(std::fabs(error - 2.877853984916303e-07) > 1.e-15)
     {
       std::cerr << "the norm of the error is not the prescribed value" << std::endl;
       return 2;
@@ -150,7 +150,7 @@ int main()
 
     auto const error = test(config);
     std::cout << "test3: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 3.753004639986381e-11) > 1.e-15)
+    if(std::fabs(error - 4.261223198617544e-07) > 1.e-15)
     {
       std::cerr << "the norm of the error is not the prescribed value" << std::endl;
       return 3;
@@ -167,7 +167,7 @@ int main()
 
     auto const error = test(config);
     std::cout << "test3: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 3.074036919958064e-11) > 1.e-15)
+    if(std::fabs(error - 3.106760372971875e-07) > 1.e-15)
     {
       std::cerr << "the norm of the error is not the prescribed value" << std::endl;
       return 4;

@@ -23,7 +23,10 @@ struct CurFE
       for(uint i=0; i<RefFE::numFuns; ++i)
       {
         phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
-        phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
+        if constexpr (FEDim<RefFE>::value == FEDimType::VECTOR)
+        {
+          phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
+        }
         dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
       }
       for(uint i=0; i<RefFE::numGeoFuns; ++i)

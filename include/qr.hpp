@@ -319,6 +319,12 @@ struct SideQR<GaussQR<Tetrahedron,4>>
 };
 
 template <>
+struct SideQR<GaussQR<Hexahedron,1>>
+{
+  using type = GaussQR<Quad,1>;
+};
+
+template <>
 struct SideQR<GaussQR<Hexahedron,8>>
 {
   using type = GaussQR<Quad,4>;

@@ -60,6 +60,7 @@ minifem_add_test(advection2dquad)
 
 minifem_add_test(poisson3dtet DATA poisson3dtet.yaml cube_uns.msh)
 minifem_add_test(poisson3dhex)
+minifem_add_test(poisson3dhex_q2)
 
 minifem_add_test(poisson2dproj)
 
@@ -80,3 +81,4 @@ minifem_add_test(projection_p1top2)
 minifem_add_test(projection_p2top1)
 minifem_add_test(projection_p1tort0)
 
+minifem_add_test(io)

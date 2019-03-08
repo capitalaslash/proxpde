@@ -11,6 +11,7 @@ struct XDMFTraits<RefLineP0>
 {
   static constexpr char const * shapeName = "Polyline";
   static constexpr char const * attributeType = "Cell";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -18,6 +19,7 @@ struct XDMFTraits<RefLineP1>
 {
   static constexpr char const * shapeName = "Polyline";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -25,6 +27,7 @@ struct XDMFTraits<RefLineP2>
 {
   static constexpr char const * shapeName = "Polyline";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -32,6 +35,7 @@ struct XDMFTraits<RefTriangleP0>
 {
   static constexpr char const * shapeName = "Triangle";
   static constexpr char const * attributeType = "Cell";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -39,6 +43,7 @@ struct XDMFTraits<RefTriangleP1>
 {
   static constexpr char const * shapeName = "Triangle";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -46,6 +51,7 @@ struct XDMFTraits<RefTriangleP2>
 {
   static constexpr char const * shapeName = "Triangle_6";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -53,6 +59,7 @@ struct XDMFTraits<RefQuadQ1>
 {
   static constexpr char const * shapeName = "Quadrilateral";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -60,6 +67,7 @@ struct XDMFTraits<RefQuadP2>
 {
   static constexpr char const * shapeName = "Quadrilateral_8";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -67,6 +75,7 @@ struct XDMFTraits<RefQuadQ2>
 {
   static constexpr char const * shapeName = "Quadrilateral_9";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -74,6 +83,7 @@ struct XDMFTraits<RefTetrahedronP1>
 {
   static constexpr char const * shapeName = "Tetrahedron";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
 };
 
 template <>
@@ -81,4 +91,41 @@ struct XDMFTraits<RefHexahedronQ1>
 {
   static constexpr char const * shapeName = "Hexahedron";
   static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = false;
+};
+
+template <>
+struct XDMFTraits<RefHexahedronQ2>
+{
+  static constexpr char const * shapeName = "Hexahedron_27";
+  static constexpr char const * attributeType = "Node";
+  static constexpr bool needsMapping = true;
+  // from VTK_TRIQUADRATIC_HEXAHEDRON documentation
+  // top
+  //  7--14--6
+  //  |      |
+  // 15  25  13
+  //  |      |
+  //  4--12--5
+  //
+  //  middle
+  // 19--23--18
+  //  |      |
+  // 20  26  21
+  //  |      |
+  // 16--22--17
+  //
+  // bottom
+  //  3--10--2
+  //  |      |
+  // 11  24  9
+  //  |      |
+  //  0-- 8--1
+  static constexpr array<char,27> mapping = {
+    0, 1, 2, 3, 4, 5, 6, 7,
+    8, 9, 10, 11,
+    16, 17, 18, 19,
+    12, 13, 14, 15,
+    24, 22, 21, 23, 20, 25,
+    26};
 };

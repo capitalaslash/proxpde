@@ -76,3 +76,10 @@ struct FEType<Hexahedron,1>
   using RefFE_T = RefHexahedronQ1;
   using RecommendedQR = GaussQR<Hexahedron,8>;
 };
+
+template <>
+struct FEType<Hexahedron,2>
+{
+  using RefFE_T = RefHexahedronQ2;
+  using RecommendedQR = GaussQR<Hexahedron,27>;
+};

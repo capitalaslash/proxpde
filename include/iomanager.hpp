@@ -290,7 +290,22 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
 
-    h5Mesh.print<id_T, FE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
+    if constexpr (Traits_T::needsMapping == true)
+    {
+      Table<DOFid_T, FE_T::numGeoFuns> mappedConn(feSpace.mesh.elementList.size(), FE_T::numGeoFuns);
+      for (uint i=0; i<feSpace.mesh.elementList.size(); ++i)
+      {
+        for (uint j=0; j<FE_T::numGeoFuns; ++j)
+        {
+          mappedConn(i, j) = feSpace.dof.geoMap(i, Traits_T::mapping[j]);
+        }
+      }
+      h5Mesh.print<id_T, FE_T::numGeoFuns>(mappedConn, "connectivity");
+    }
+    else
+    {
+      h5Mesh.print<id_T, FE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
+    }
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: mesh.elementList)

@@ -128,13 +128,13 @@ struct DOF
         if(elemDOFs[e.id] == DOFidNotSet)
         {
           elemDOFs[e.id] = size;
-          elemMap[e.id][localDofCount] = size;
+          elemMap(e.id, localDofCount) = size;
           size++;
           localDofCount++;
         }
         else
         {
-          elemMap[e.id][localDofCount] = elemDOFs[e.id];
+          elemMap(e.id, localDofCount) = elemDOFs[e.id];
           localDofCount++;
         }
       }

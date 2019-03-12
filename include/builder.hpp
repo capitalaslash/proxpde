@@ -6,12 +6,6 @@
 #include "assembly.hpp"
 #include "bc.hpp"
 
-template<class T>
-inline constexpr T pow(const T base, unsigned const exponent)
-{
-    return exponent == 0 ? 1 : base * pow(base, exponent-1);
-}
-
 struct Builder
 {
   explicit Builder(uint const size):

@@ -123,7 +123,7 @@ using Vec2 = FVec<2>;
 using Vec3 = FVec<3>;
 // using Vec3 = Eigen::Vector4d // this one is vectorizable
 
-template<int dim1, int dim2>
+template <int dim1, int dim2>
 FVec<dim2> promote(FVec<dim1> const & v1)
 {
   static_assert (dim2 >= dim1, "promoting to shorter vector");
@@ -137,6 +137,24 @@ FVec<dim2> promote(FVec<dim1> const & v1)
 
 template<int dim>
 FVec<dim> promote(FVec<dim> const & v)
+{
+  return v;
+}
+
+template <int dim1, int dim2>
+FVec<dim2> narrow(FVec<dim1> const & v1)
+{
+  static_assert (dim2 <= dim1, "narrowing to longer vector");
+  FVec<dim2> v2;
+  for (uint i=0; i<dim2; ++i)
+  {
+    v2[i] = v1[i];
+  }
+  return v2;
+}
+
+template<int dim>
+FVec<dim> narrow(FVec<dim> const & v)
 {
   return v;
 }
@@ -156,3 +174,9 @@ using scalarThreedFun_T = ScalarFun<3>;
 template<class T> struct dependent_false : std::false_type {};
 
 static constexpr int ERROR_GMSH = 1;
+
+template<class T>
+inline constexpr T pow(const T base, unsigned const exponent)
+{
+    return exponent == 0 ? 1 : base * pow(base, exponent-1);
+}

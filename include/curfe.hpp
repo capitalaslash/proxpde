@@ -44,12 +44,14 @@ struct CurFE
     e = &elem;
     dofPts = RefFE::dofPts(elem);
 
+    auto const mappingPts = RefFE::mappingPts(elem);
+
     for(uint q=0; q<QR::numPts; ++q)
     {
       jac[q] = JacMat_T::Zero();
       for(uint n=0; n<RefFE::numGeoFuns; ++n)
       {
-        jac[q] += RefFE::mappingPts(elem)[n] * mapping[q].row(n);
+        jac[q] += mappingPts[n] * mapping[q].row(n);
       }
 
       // J^+ = (J^T J)^-1 J^T

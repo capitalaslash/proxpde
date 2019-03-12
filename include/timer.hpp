@@ -5,6 +5,15 @@
 #include <chrono>
 
 template <typename TimeUnit>
+struct TimerTraits {};
+
+template <>
+struct TimerTraits<std::chrono::milliseconds>
+{
+  static constexpr char const * uom = "ms";
+};
+
+template <typename TimeUnit>
 class Timer
 {
 public:
@@ -42,11 +51,11 @@ public:
 
     auto const curSettings = out.flags();
     auto const curPrecision = out.precision();
-    out << separator << "| "  << std::string(strLength-8, ' ') << " section |   time |     % |\n" << separator;
+    out << separator << "| "  << std::string(strLength-8, ' ') << " section | time (" << TimerTraits<TimeUnit>::uom << ") |     % |\n" << separator;
     for (auto const [name, time]: _times)
     {
       out << "| " << std::setw(strLength) << name
-          << " | " << std::setw(6) << time
+          << " | " << std::setw(9) << time
           << " | " << std::fixed << std::setprecision(2) << std::setw(5) << 100. * time / totalTime << " |" << std::endl;
     }
     out << separator;

@@ -728,3 +728,22 @@ void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets)
   markFacetsCube(mesh, {0., 0., 0.}, {1., (2+2*rows)*h*oneOnSr3, 0.});
   buildNormals(mesh);
 }
+
+void refTetrahedronMesh(Mesh<Tetrahedron> & mesh)
+{
+  mesh.pointList = {
+    Point(Vec3(0., 0., 0.), 0),
+    Point(Vec3(1., 0., 0.), 1),
+    Point(Vec3(0., 1., 0.), 2),
+    Point(Vec3(0., 0., 1.), 3),
+  };
+  mesh.elementList = {
+    Tetrahedron {
+      {&mesh.pointList[0],
+       &mesh.pointList[1],
+       &mesh.pointList[2],
+       &mesh.pointList[3]},
+      0},
+  };
+  mesh.buildConnectivity();
+}

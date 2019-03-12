@@ -285,6 +285,7 @@ struct MeshBuilder<Hexahedron>
 void refTriangleMesh(Mesh<Triangle> & mesh);
 void hexagonMesh(Mesh<Triangle> & mesh);
 void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets = false);
+void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
 
 template <typename Mesh>
 void buildNormals(Mesh & mesh)

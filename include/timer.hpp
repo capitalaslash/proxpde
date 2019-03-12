@@ -41,12 +41,12 @@ public:
     }
 
     auto const curSettings = out.flags();
-    int const curPrecision = out.precision();
-    out << separator << "| "  << std::string(strLength-8, ' ') << " section | time |     % |\n" << separator;
+    auto const curPrecision = out.precision();
+    out << separator << "| "  << std::string(strLength-8, ' ') << " section |   time |     % |\n" << separator;
     for (auto const [name, time]: _times)
     {
       out << "| " << std::setw(strLength) << name
-          << " | " << std::setw(4) << time
+          << " | " << std::setw(6) << time
           << " | " << std::fixed << std::setprecision(2) << std::setw(5) << 100. * time / totalTime << " |" << std::endl;
     }
     out << separator;

@@ -86,9 +86,9 @@ uint constexpr RefLineP2::numFuns;
 array<uint,4> constexpr RefLineP2::dofPlace;
 array<array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
 
-static Point line_p0{-1., 0., 0.};
-static Point line_p1{ 1., 0., 0.};
-Line const RefLineP2::geoElem = Line{{&line_p0, &line_p1}};
+// static Point line_p0{-1., 0., 0.};
+// static Point line_p1{ 1., 0., 0.};
+// Line const RefLineP2::geoElem = Line{{&line_p0, &line_p1}};
 
 array<RefLineP2::Vec_T,RefLineP2::numFuns> const RefLineP2::points =
 {{
@@ -234,24 +234,34 @@ array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::mapping =
 }};
 
 // ----------------------------------------------------------------------------
+using feFun_T = std::function<double (double const)>;
+static array<feFun_T, 2> const funQ1 = {
+  [](const double x) { return 0.5 * (1. - x); },
+  [](const double x) { return 0.5 * (1. + x); },
+};
+static array<feFun_T, 2> const dfunQ1 = {
+  [](const double ) { return -0.5; },
+  [](const double ) { return +0.5; },
+};
+
 uint constexpr RefQuadQ1::numFuns;
 array<uint,4> constexpr RefQuadQ1::dofPlace;
 array<array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
 
 array<scalarTwodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::phiFun =
 {{
-  [] (Vec_T const & p) { return 0.25*(1.-p(0))*(1.-p(1)); },
-  [] (Vec_T const & p) { return 0.25*(1.+p(0))*(1.-p(1)); },
-  [] (Vec_T const & p) { return 0.25*(1.+p(0))*(1.+p(1)); },
-  [] (Vec_T const & p) { return 0.25*(1.-p(0))*(1.+p(1)); }
+  [] (Vec_T const & p) { return funQ1[0](p(0)) * funQ1[0](p(1)); },
+  [] (Vec_T const & p) { return funQ1[1](p(0)) * funQ1[0](p(1)); },
+  [] (Vec_T const & p) { return funQ1[1](p(0)) * funQ1[1](p(1)); },
+  [] (Vec_T const & p) { return funQ1[0](p(0)) * funQ1[1](p(1)); }
 }};
 
 array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
 {{
-  [] (Vec_T const & p) { return Vec_T(-0.25*(1.-p(1)), -0.25*(1.-p(0))); },
-  [] (Vec_T const & p) { return Vec_T( 0.25*(1.-p(1)), -0.25*(1.+p(0))); },
-  [] (Vec_T const & p) { return Vec_T( 0.25*(1.+p(1)),  0.25*(1.+p(0))); },
-  [] (Vec_T const & p) { return Vec_T(-0.25*(1.+p(1)),  0.25*(1.-p(0))); }
+  [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p(0)) * funQ1[0](p(1)), funQ1[0](p(0)) * dfunQ1[0](p(1))); },
+  [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p(0)) * funQ1[0](p(1)), funQ1[1](p(0)) * dfunQ1[0](p(1))); },
+  [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p(0)) * funQ1[1](p(1)), funQ1[1](p(0)) * dfunQ1[1](p(1))); },
+  [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p(0)) * funQ1[1](p(1)), funQ1[0](p(0)) * dfunQ1[1](p(1))); }
 }};
 
 array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::mapping = RefQuadQ1::dphiFun;
@@ -296,43 +306,46 @@ array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::dphiFun =
 array<twodFun_T,RefQuadP2::numFuns> const RefQuadP2::mapping = RefQuadP2::dphiFun;
 
 // ----------------------------------------------------------------------------
+using feFun_T = std::function<double (double const)>;
+static array<feFun_T, 3> const funQ2 = {
+  [](const double x) { return 0.5 * x * (x - 1.); },
+  [](const double x) { return 0.5 * x * (x + 1.); },
+  [](const double x) { return 1. - x * x; },
+};
+static array<feFun_T, 3> const dfunQ2 = {
+  [](const double x) { return x - 0.5; },
+  [](const double x) { return x + 0.5; },
+  [](const double x) { return -2. * x; },
+};
+
 uint constexpr RefQuadQ2::numFuns;
 array<uint,4> constexpr RefQuadQ2::dofPlace;
 array<array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
 
 array<scalarTwodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::phiFun =
 {{
-  [] (Vec_T const & p) { return 0.25*p(0)*(p(0)-1.)*p(1)*(p(1)-1.); },
-  [] (Vec_T const & p) { return 0.25*p(0)*(p(0)+1.)*p(1)*(p(1)-1.); },
-  [] (Vec_T const & p) { return 0.25*p(0)*(p(0)+1.)*p(1)*(p(1)+1.); },
-  [] (Vec_T const & p) { return 0.25*p(0)*(p(0)-1.)*p(1)*(p(1)+1.); },
-  [] (Vec_T const & p) { return  0.5*(1.-p(0)*p(0))*p(1)*(p(1)-1.); },
-  [] (Vec_T const & p) { return  0.5*p(0)*(p(0)+1.)*(1.-p(1)*p(1)); },
-  [] (Vec_T const & p) { return  0.5*(1.-p(0)*p(0))*p(1)*(p(1)+1.); },
-  [] (Vec_T const & p) { return  0.5*p(0)*(p(0)-1.)*(1.-p(1)*p(1)); },
-  [] (Vec_T const & p) { return      (1.-p(0)*p(0))*(1.-p(1)*p(1)); }
+  [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]); },
+  [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]); },
+  [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]); },
+  [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]); },
+  [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]); },
+  [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]); },
+  [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]); },
+  [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]); },
+  [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]); }
 }};
 
 array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
 {{
-  [] (Vec_T const & p) { return Vec_T(0.5*(p(0)-0.5)*p(1)*(p(1)-1.),
-                                     0.5*p(0)*(p(0)-1.)*(p(1)-0.5)); },
-  [] (Vec_T const & p) { return Vec_T(0.5*(p(0)+0.5)*p(1)*(p(1)-1.),
-                                     0.5*p(0)*(p(0)+1.)*(p(1)-0.5)); },
-  [] (Vec_T const & p) { return Vec_T(0.5*(p(0)+0.5)*p(1)*(p(1)+1.),
-                                     0.5*p(0)*(p(0)+1.)*(p(1)+0.5)); },
-  [] (Vec_T const & p) { return Vec_T(0.5*(p(0)-0.5)*p(1)*(p(1)+1.),
-                                     0.5*p(0)*(p(0)-1.)*(p(1)+0.5)); },
-  [] (Vec_T const & p) { return Vec_T(-p(0)*p(1)*(p(1)-1.),
-                                     (1.-p(0)*p(0))*(p(1)-0.5)); },
-  [] (Vec_T const & p) { return Vec_T((p(0)+0.5)*(1.-p(1)*p(1)),
-                                     -p(0)*(p(0)+1.)*p(1)); },
-  [] (Vec_T const & p) { return Vec_T(-p(0)*p(1)*(p(1)+1.),
-                                     (1.-p(0)*p(0))*(p(1)+0.5)); },
-  [] (Vec_T const & p) { return Vec_T((p(0)-0.5)*(1.-p(1)*p(1)),
-                                     -p(0)*(p(0)-1.)*p(1)); },
-  [] (Vec_T const & p) { return Vec_T(-2.*p(0)*(1.-p(1)*p(1)),
-                                    -2.*(1.-p(0)*p(0))*p(1)); }
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) * funQ2[0](p[1]), funQ2[0](p[0]) * dfunQ2[0](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) * funQ2[0](p[1]), funQ2[1](p[0]) * dfunQ2[0](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) * funQ2[1](p[1]), funQ2[1](p[0]) * dfunQ2[1](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) * funQ2[1](p[1]), funQ2[0](p[0]) * dfunQ2[1](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) * funQ2[0](p[1]), funQ2[2](p[0]) * dfunQ2[0](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) * funQ2[2](p[1]), funQ2[1](p[0]) * dfunQ2[2](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) * funQ2[1](p[1]), funQ2[2](p[0]) * dfunQ2[1](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) * funQ2[2](p[1]), funQ2[0](p[0]) * dfunQ2[2](p[1])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) * funQ2[2](p[1]), funQ2[2](p[0]) * dfunQ2[2](p[1])); },
 }};
 
 array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::mapping = RefQuadQ2::dphiFun;
@@ -367,26 +380,42 @@ array<array<uint,4>,6> constexpr RefHexahedronQ1::dofOnFacet;
 
 array<scalarThreedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::phiFun =
 {{
-   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1-p(1))*(1-p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1-p(1))*(1-p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1+p(1))*(1-p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1+p(1))*(1-p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1-p(1))*(1+p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1-p(1))*(1+p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1+p(0))*(1+p(1))*(1+p(2)); },
-   [] (Vec_T const & p) { return 0.125*(1-p(0))*(1+p(1))*(1+p(2)); },
+   [] (Vec_T const & p) { return funQ1[0](p[0]) * funQ1[0](p[1]) * funQ1[0](p[2]); },
+   [] (Vec_T const & p) { return funQ1[1](p[0]) * funQ1[0](p[1]) * funQ1[0](p[2]); },
+   [] (Vec_T const & p) { return funQ1[1](p[0]) * funQ1[1](p[1]) * funQ1[0](p[2]); },
+   [] (Vec_T const & p) { return funQ1[0](p[0]) * funQ1[1](p[1]) * funQ1[0](p[2]); },
+   [] (Vec_T const & p) { return funQ1[0](p[0]) * funQ1[0](p[1]) * funQ1[1](p[2]); },
+   [] (Vec_T const & p) { return funQ1[1](p[0]) * funQ1[0](p[1]) * funQ1[1](p[2]); },
+   [] (Vec_T const & p) { return funQ1[1](p[0]) * funQ1[1](p[1]) * funQ1[1](p[2]); },
+   [] (Vec_T const & p) { return funQ1[0](p[0]) * funQ1[1](p[1]) * funQ1[1](p[2]); },
 }};
 
 array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::dphiFun =
 {{
-   [] (Vec_T const & p) { return Vec_T(-0.125*(1.-p(1))*(1.-p(2)), -0.125*(1.-p(0))*(1.-p(2)), -0.125*(1.-p(0))*(1.-p(1))); },
-   [] (Vec_T const & p) { return Vec_T( 0.125*(1.-p(1))*(1.-p(2)), -0.125*(1.+p(0))*(1.-p(2)), -0.125*(1.+p(0))*(1.-p(1))); },
-   [] (Vec_T const & p) { return Vec_T( 0.125*(1.+p(1))*(1.-p(2)),  0.125*(1.+p(0))*(1.-p(2)), -0.125*(1.+p(0))*(1.+p(1))); },
-   [] (Vec_T const & p) { return Vec_T(-0.125*(1.+p(1))*(1.-p(2)),  0.125*(1.-p(0))*(1.-p(2)), -0.125*(1.-p(0))*(1.+p(1))); },
-   [] (Vec_T const & p) { return Vec_T(-0.125*(1.-p(1))*(1.+p(2)), -0.125*(1.-p(0))*(1.+p(2)),  0.125*(1.-p(0))*(1.-p(1))); },
-   [] (Vec_T const & p) { return Vec_T( 0.125*(1.-p(1))*(1.+p(2)), -0.125*(1.+p(0))*(1.+p(2)),  0.125*(1.+p(0))*(1.-p(1))); },
-   [] (Vec_T const & p) { return Vec_T( 0.125*(1.+p(1))*(1.+p(2)),  0.125*(1.+p(0))*(1.+p(2)),  0.125*(1.+p(0))*(1.+p(1))); },
-   [] (Vec_T const & p) { return Vec_T(-0.125*(1.+p(1))*(1.+p(2)),  0.125*(1.-p(0))*(1.+p(2)),  0.125*(1.-p(0))*(1.+p(1))); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p[0]) *  funQ1[0](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[0](p[0]) * dfunQ1[0](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[0](p[0]) *  funQ1[0](p[1]) * dfunQ1[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p[0]) *  funQ1[0](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[1](p[0]) * dfunQ1[0](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[1](p[0]) *  funQ1[0](p[1]) * dfunQ1[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p[0]) *  funQ1[1](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[1](p[0]) * dfunQ1[1](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[1](p[0]) *  funQ1[1](p[1]) * dfunQ1[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p[0]) *  funQ1[1](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[0](p[0]) * dfunQ1[1](p[1]) *  funQ1[0](p[2]),
+                                        funQ1[0](p[0]) *  funQ1[1](p[1]) * dfunQ1[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p[0]) *  funQ1[0](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[0](p[0]) * dfunQ1[0](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[0](p[0]) *  funQ1[0](p[1]) * dfunQ1[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p[0]) *  funQ1[0](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[1](p[0]) * dfunQ1[0](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[1](p[0]) *  funQ1[0](p[1]) * dfunQ1[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[1](p[0]) *  funQ1[1](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[1](p[0]) * dfunQ1[1](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[1](p[0]) *  funQ1[1](p[1]) * dfunQ1[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ1[0](p[0]) *  funQ1[1](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[0](p[0]) * dfunQ1[1](p[1]) *  funQ1[1](p[2]),
+                                        funQ1[0](p[0]) *  funQ1[1](p[1]) * dfunQ1[1](p[2])); },
 }};
 
 array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::mapping = RefHexahedronQ1::dphiFun;
@@ -398,118 +427,130 @@ array<array<uint,9>,6> constexpr RefHexahedronQ2::dofOnFacet;
 
 array<scalarThreedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::phiFun =
 {{
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return 0.125*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*p(2)*(p(2)+1.); }, // 7
-   [] (Vec_T const & p) { return  0.25*(1.-p(0)*p(0))*p(1)*(p(1)-1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)+1.)*(1.-p(1)*p(1))*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return  0.25*(1.-p(0)*p(0))*p(1)*(p(1)+1.)*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)-1.)*(1.-p(1)*p(1))*p(2)*(p(2)-1.); }, // 11
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*(1.-p(2)*p(2)); }, // 15
-   [] (Vec_T const & p) { return  0.25*(1.-p(0)*p(0))*p(1)*(p(1)-1.)*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)+1.)*(1.-p(1)*p(1))*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return  0.25*(1.-p(0)*p(0))*p(1)*(p(1)+1.)*p(2)*(p(2)+1.); },
-   [] (Vec_T const & p) { return  0.25*p(0)*(p(0)-1.)*(1.-p(1)*p(1))*p(2)*(p(2)+1.); }, // 19
-   [] (Vec_T const & p) { return   0.5*(1.-p(0)*p(0))*(1.-p(1)*p(1))*p(2)*(p(2)-1.); },
-   [] (Vec_T const & p) { return   0.5*(1.-p(0)*p(0))*p(1)*(p(1)-1.)*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return   0.5*p(0)*(p(0)+1.)*(1.-p(1)*p(1))*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return   0.5*(1.-p(0)*p(0))*p(1)*(p(1)+1.)*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return   0.5*p(0)*(p(0)-1.)*(1.-p(1)*p(1))*(1.-p(2)*p(2)); },
-   [] (Vec_T const & p) { return   0.5*(1.-p(0)*p(0))*(1.-p(1)*p(1))*p(2)*(p(2)+1.); }, // 25
-   [] (Vec_T const & p) { return       (1.-p(0)*p(0))*(1.-p(1)*p(1))*(1.-p(2)*p(2)); }, // 26
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
+
+   [] (Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
 }};
 
 array<threedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::dphiFun =
 {{
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)-1.)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)-0.5)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)-1.)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)-0.5)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)+1.)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)+0.5)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)+1.)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)+0.5)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)-1.)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)-0.5)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)-1.)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)-0.5)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)+1.)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)+0.5)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)+1.)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)+0.5)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*(p(2)+0.5)); }, // 7
-   [] (Vec_T const & p) { return Vec_T(-0.5*p(0)*p(1)*(p(1)-1.)*p(2)*(p(2)-1.),
-                                       0.25*(1.-p(0)*p(0))*(p(1)-0.5)*p(2)*(p(2)-1.),
-                                       0.25*(1.-p(0)*p(0))*p(1)*(p(1)-1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*(1.-p(1)*p(1))*p(2)*(p(2)-1.),
-                                       -0.5*p(0)*(p(0)+1.)*p(1)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)+1.)*(1.-p(1)*p(1))*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(-0.5*p(0)*p(1)*(p(1)+1.)*p(2)*(p(2)-1.),
-                                       0.25*(1.-p(0)*p(0))*(p(1)+0.5)*p(2)*(p(2)-1.),
-                                       0.25*(1.-p(0)*p(0))*p(1)*(p(1)+1.)*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*(1.-p(1)*p(1))*p(2)*(p(2)-1.),
-                                       -0.5*p(0)*(p(0)-1.)*p(1)*p(2)*(p(2)-1.),
-                                       0.25*p(0)*(p(0)-1.)*(1.-p(1)*p(1))*(p(2)-0.5)); }, // 11
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)-1.)*(1.-p(2)*p(2)),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)-0.5)*(1.-p(2)*p(2)),
-                                       -0.5*p(0)*(p(0)-1.)*p(1)*(p(1)-1.)*p(2)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)-1.)*(1.-p(2)*p(2)),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)-0.5)*(1.-p(2)*p(2)),
-                                       -0.5*p(0)*(p(0)+1.)*p(1)*(p(1)-1.)*p(2)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*p(1)*(p(1)+1.)*(1.-p(2)*p(2)),
-                                       0.25*p(0)*(p(0)+1.)*(p(1)+0.5)*(1.-p(2)*p(2)),
-                                       -0.5*p(0)*(p(0)+1.)*p(1)*(p(1)+1.)*p(2)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*p(1)*(p(1)+1.)*(1.-p(2)*p(2)),
-                                       0.25*p(0)*(p(0)-1.)*(p(1)+0.5)*(1.-p(2)*p(2)),
-                                       -0.5*p(0)*(p(0)-1.)*p(1)*(p(1)+1.)*p(2)); }, // 15
-   [] (Vec_T const & p) { return Vec_T(-0.5*p(0)*p(1)*(p(1)-1.)*p(2)*(p(2)+1.),
-                                       0.25*(1.-p(0)*p(0))*(p(1)-0.5)*p(2)*(p(2)+1.),
-                                       0.25*(1.-p(0)*p(0))*p(1)*(p(1)-1.)*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)+0.5)*(1.-p(1)*p(1))*p(2)*(p(2)+1.),
-                                       -0.5*p(0)*(p(0)+1.)*p(1)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)+1.)*(1.-p(1)*p(1))*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(-0.5*p(0)*p(1)*(p(1)+1.)*p(2)*(p(2)+1.),
-                                       0.25*(1.-p(0)*p(0))*(p(1)+0.5)*p(2)*(p(2)+1.),
-                                       0.25*(1.-p(0)*p(0))*p(1)*(p(1)+1.)*(p(2)+0.5)); },
-   [] (Vec_T const & p) { return Vec_T(0.25*(p(0)-0.5)*(1.-p(1)*p(1))*p(2)*(p(2)+1.),
-                                       -0.5*p(0)*(p(0)-1.)*p(1)*p(2)*(p(2)+1.),
-                                       0.25*p(0)*(p(0)-1.)*(1.-p(1)*p(1))*(p(2)+0.5)); }, // 19
-   [] (Vec_T const & p) { return Vec_T(-p(0)*(1.-p(1)*p(1))*p(2)*(1.-p(2)),
-                                       -(1.-p(0)*p(0))*p(1)*p(2)*(1.-p(2)),
-                                       (1.-p(0)*p(0))*(1.-p(1)*p(1))*(p(2)-0.5)); },
-   [] (Vec_T const & p) { return Vec_T(-p(0)*p(1)*(p(1)-1.)*(1.-p(2)*p(2)),
-                                       (1.-p(0)*p(0))*(p(1)-0.5)*(1.-p(2)*p(2)),
-                                       -(1.-p(0)*p(0))*p(1)*(p(1)-1.)*p(2)); },
-   [] (Vec_T const & p) { return Vec_T((p(0)+0.5)*(1.-p(1)*p(1))*(1.-p(2)*p(2)),
-                                       -p(0)*(p(0)+1.)*p(1)*(1.-p(2)*p(2)),
-                                       -p(0)*(p(0)+1.)*(1.-p(1)*p(1))*p(2)); },
-   [] (Vec_T const & p) { return Vec_T(-p(0)*p(1)*(p(1)+1.)*(1.-p(2)*p(2)),
-                                       (1.-p(0)*p(0))*(p(1)+0.5)*(1.-p(2)*p(2)),
-                                       -(1.-p(0)*p(0))*p(1)*(p(1)+1.)*p(2)); },
-   [] (Vec_T const & p) { return Vec_T((p(0)-0.5)*(1.-p(1)*p(1))*(1.-p(2)*p(2)),
-                                       -p(0)*(p(0)-1.)*p(1)*(1.-p(2)*p(2)),
-                                       -p(0)*(p(0)-1.)*(1.-p(1)*p(1))*p(2)); },
-   [] (Vec_T const & p) { return Vec_T(-p(0)*(1.-p(1)*p(1))*p(2)*(1.+p(2)),
-                                       -(1.-p(0)*p(0))*p(1)*p(2)*(1.+p(2)),
-                                       (1.-p(0)*p(0))*(1.-p(1)*p(1))*(p(2)+0.5)); }, // 25
-   [] (Vec_T const & p) { return Vec_T(-2.*p(0)*(1.-p(1)*p(1))*(1.-p(2)*p(2)),
-                                       -2.*(1.-p(0)*p(0))*p(1)*(1.-p(2)*p(2)),
-                                       -2.*(1.-p(0)*p(0))*(1.-p(1)*p(1))*p(2)); }, // 26
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[0](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[0](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[1](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[1](p[1]) * dfunQ2[0](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[0](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[0](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[1](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[1](p[1]) * dfunQ2[1](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[0](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[0](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[2](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[1](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[1](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[2](p[1]) * dfunQ2[0](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[0](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[0](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[1](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[1](p[1]) * dfunQ2[2](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[0](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[0](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[2](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[1](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[1](p[1]) * dfunQ2[1](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[2](p[1]) * dfunQ2[1](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[2](p[1]) *  funQ2[0](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[2](p[1]) * dfunQ2[0](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[0](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[0](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[1](p[0]) *  funQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) * dfunQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[1](p[0]) *  funQ2[2](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[1](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[1](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[0](p[0]) *  funQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) * dfunQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[0](p[0]) *  funQ2[2](p[1]) * dfunQ2[2](p[2])); },
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[2](p[1]) *  funQ2[1](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[2](p[1]) * dfunQ2[1](p[2])); },
+
+   [] (Vec_T const & p) { return Vec_T(dfunQ2[2](p[0]) *  funQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) * dfunQ2[2](p[1]) *  funQ2[2](p[2]),
+                                        funQ2[2](p[0]) *  funQ2[2](p[1]) * dfunQ2[2](p[2])); },
 }};
 
-array<threedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::mapping = RefHexahedronQ2::dphiFun;
+array<threedFun_T,RefHexahedronQ2::numGeoFuns> const RefHexahedronQ2::mapping = RefHexahedronQ2::dphiFun;

@@ -587,37 +587,37 @@ struct RefHexahedronQ2
 
   static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {
-     array<Vec3,numFuns> dofPts =
-     {{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
-        e.pointList[4]->coord,
-        e.pointList[5]->coord,
-        e.pointList[6]->coord,
-        e.pointList[7]->coord,
-        0.5*(e.pointList[0]->coord+e.pointList[1]->coord),
-        0.5*(e.pointList[1]->coord+e.pointList[2]->coord),
-        0.5*(e.pointList[2]->coord+e.pointList[3]->coord),
-        0.5*(e.pointList[3]->coord+e.pointList[0]->coord),
-        0.5*(e.pointList[0]->coord+e.pointList[4]->coord),
-        0.5*(e.pointList[1]->coord+e.pointList[5]->coord),
-        0.5*(e.pointList[2]->coord+e.pointList[6]->coord),
-        0.5*(e.pointList[3]->coord+e.pointList[7]->coord),
-        0.5*(e.pointList[4]->coord+e.pointList[5]->coord),
-        0.5*(e.pointList[5]->coord+e.pointList[6]->coord),
-        0.5*(e.pointList[6]->coord+e.pointList[7]->coord),
-        0.5*(e.pointList[7]->coord+e.pointList[4]->coord),
-        0.25*(e.pointList[0]->coord+e.pointList[1]->coord+e.pointList[2]->coord+e.pointList[3]->coord),
-        0.25*(e.pointList[0]->coord+e.pointList[1]->coord+e.pointList[5]->coord+e.pointList[4]->coord),
-        0.25*(e.pointList[1]->coord+e.pointList[2]->coord+e.pointList[6]->coord+e.pointList[5]->coord),
-        0.25*(e.pointList[2]->coord+e.pointList[3]->coord+e.pointList[7]->coord+e.pointList[6]->coord),
-        0.25*(e.pointList[3]->coord+e.pointList[0]->coord+e.pointList[4]->coord+e.pointList[7]->coord),
-        0.25*(e.pointList[4]->coord+e.pointList[5]->coord+e.pointList[6]->coord+e.pointList[7]->coord),
-        e.midpoint()
+    array<Vec3,numFuns> dofPts =
+    {{
+       e.pointList[0]->coord,
+       e.pointList[1]->coord,
+       e.pointList[2]->coord,
+       e.pointList[3]->coord,
+       e.pointList[4]->coord,
+       e.pointList[5]->coord,
+       e.pointList[6]->coord,
+       e.pointList[7]->coord,
+       0.5*(e.pointList[0]->coord+e.pointList[1]->coord),
+       0.5*(e.pointList[1]->coord+e.pointList[2]->coord),
+       0.5*(e.pointList[2]->coord+e.pointList[3]->coord),
+       0.5*(e.pointList[3]->coord+e.pointList[0]->coord),
+       0.5*(e.pointList[0]->coord+e.pointList[4]->coord),
+       0.5*(e.pointList[1]->coord+e.pointList[5]->coord),
+       0.5*(e.pointList[2]->coord+e.pointList[6]->coord),
+       0.5*(e.pointList[3]->coord+e.pointList[7]->coord),
+       0.5*(e.pointList[4]->coord+e.pointList[5]->coord),
+       0.5*(e.pointList[5]->coord+e.pointList[6]->coord),
+       0.5*(e.pointList[6]->coord+e.pointList[7]->coord),
+       0.5*(e.pointList[7]->coord+e.pointList[4]->coord),
+       0.25*(e.pointList[0]->coord+e.pointList[1]->coord+e.pointList[2]->coord+e.pointList[3]->coord),
+       0.25*(e.pointList[0]->coord+e.pointList[1]->coord+e.pointList[5]->coord+e.pointList[4]->coord),
+       0.25*(e.pointList[1]->coord+e.pointList[2]->coord+e.pointList[6]->coord+e.pointList[5]->coord),
+       0.25*(e.pointList[2]->coord+e.pointList[3]->coord+e.pointList[7]->coord+e.pointList[6]->coord),
+       0.25*(e.pointList[3]->coord+e.pointList[0]->coord+e.pointList[4]->coord+e.pointList[7]->coord),
+       0.25*(e.pointList[4]->coord+e.pointList[5]->coord+e.pointList[6]->coord+e.pointList[7]->coord),
+       e.midpoint()
      }};
-     return dofPts;
+    return dofPts;
   }
 
   static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)

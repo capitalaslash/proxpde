@@ -48,8 +48,8 @@ template<> array<GaussQR<Line,3>::Vec_T, 3> const GaussQR<Line, 3>::node =
    GaussQR<Line, 3>::Vec_T::Constant( sqrt35th)
 }};
 
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thm = sqrt((3.L - 2.L * sqrt(1.2L)) / 7);
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thp = sqrt((3.L + 2.L * sqrt(1.2L)) / 7);
+static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thm = 0.3399810435848563L; // sqrt((3.L - 2.L * sqrt(1.2L)) / 7);
+static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thp = 0.8611363115940526L; // sqrt((3.L + 2.L * sqrt(1.2L)) / 7);
 template<> GaussQR<Line, 4>::Weights_T const GaussQR<Line, 4>::weight = {
   (18.L - sqrt(30.L))/36, (18.L + sqrt(30.L))/36, (18.L + sqrt(30.L))/36, (18.L - sqrt(30.L))/36
 };

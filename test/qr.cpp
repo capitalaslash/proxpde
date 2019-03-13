@@ -1,8 +1,6 @@
 #include <def.hpp>
 #include <qr.hpp>
 
-#include "bitset"
-
 template <uint N>
 struct Monomial
 {

@@ -355,23 +355,66 @@ uint constexpr RefTetrahedronP1::numFuns;
 array<uint,4> constexpr RefTetrahedronP1::dofPlace;
 array<array<uint,3>,4> constexpr RefTetrahedronP1::dofOnFacet;
 
+static double constexpr z0(double const x, double const y, double const z) { return 1. - x - y - z; }
+static array<double,3> constexpr dz0() { return {-1., -1., -1.}; }
+static double constexpr z1(double const x, double const, double const) { return x; }
+static array<double,3> constexpr dz1() { return {1., 0., 0.}; }
+static double constexpr z2(double const, double const y, double const) { return y; }
+static array<double,3> constexpr dz2() { return {0., 1., 0.}; }
+static double constexpr z3(double const, double const, double const z) { return z; }
+static array<double,3> constexpr dz3() { return {0., 0., 1.}; }
 array<scalarThreedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::phiFun =
 {{
-  [] (Vec_T const & p) { return 1. - p(0) - p(1) - p(2); },
-  [] (Vec_T const & p) { return p(0); },
-  [] (Vec_T const & p) { return p(1); },
-  [] (Vec_T const & p) { return p(2); }
-}};
+   [] (Vec_T const & p) { return z0(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return z1(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return z2(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return z3(p(0), p(1), p(2)); },
+ }};
 
 array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::dphiFun =
 {{
-  [] (Vec_T const & ) { return Vec_T(-1.L, -1.L, -1.L); },
-  [] (Vec_T const & ) { return Vec_T( 1.L,  0.L,  0.L); },
-  [] (Vec_T const & ) { return Vec_T( 0.L,  1.L,  0.L); },
-  [] (Vec_T const & ) { return Vec_T( 0.L,  0.L,  1.L); }
-}};
+   [] (Vec_T const &) { return Vec_T(dz0()[0], dz0()[1], dz0()[2]); },
+   [] (Vec_T const &) { return Vec_T(dz1()[0], dz1()[1], dz1()[2]); },
+   [] (Vec_T const &) { return Vec_T(dz2()[0], dz2()[1], dz2()[2]); },
+   [] (Vec_T const &) { return Vec_T(dz3()[0], dz3()[1], dz3()[2]); },
+ }};
 
 array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::mapping = RefTetrahedronP1::dphiFun;
+
+// ----------------------------------------------------------------------------
+uint constexpr RefTetrahedronP2::numFuns;
+array<uint,4> constexpr RefTetrahedronP2::dofPlace;
+array<array<uint,6>,4> constexpr RefTetrahedronP2::dofOnFacet;
+
+array<scalarThreedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::phiFun =
+{{
+   [] (Vec_T const & p) { return z0(p(0), p(1), p(2)) * (2. * z0(p(0), p(1), p(2)) - 1.); },
+   [] (Vec_T const & p) { return z1(p(0), p(1), p(2)) * (2. * z1(p(0), p(1), p(2)) - 1.); },
+   [] (Vec_T const & p) { return z2(p(0), p(1), p(2)) * (2. * z2(p(0), p(1), p(2)) - 1.); },
+   [] (Vec_T const & p) { return z3(p(0), p(1), p(2)) * (2. * z3(p(0), p(1), p(2)) - 1.); },
+   [] (Vec_T const & p) { return 4. * z0(p(0), p(1), p(2)) * z1(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return 4. * z1(p(0), p(1), p(2)) * z2(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return 4. * z2(p(0), p(1), p(2)) * z0(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return 4. * z0(p(0), p(1), p(2)) * z3(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return 4. * z1(p(0), p(1), p(2)) * z3(p(0), p(1), p(2)); },
+   [] (Vec_T const & p) { return 4. * z2(p(0), p(1), p(2)) * z3(p(0), p(1), p(2)); },
+}};
+
+array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::dphiFun =
+{{
+   [] (Vec_T const & p) { return Vec_T((4.*z0(p(0), p(1), p(2))-1.)*dz0()[0], (4.*z0(p(0), p(1), p(2))-1.)*dz0()[1], (4.*z0(p(0), p(1), p(2))-1.)*dz0()[2]); },
+   [] (Vec_T const & p) { return Vec_T((4.*z1(p(0), p(1), p(2))-1.)*dz1()[0], (4.*z1(p(0), p(1), p(2))-1.)*dz1()[1], (4.*z1(p(0), p(1), p(2))-1.)*dz1()[2]); },
+   [] (Vec_T const & p) { return Vec_T((4.*z2(p(0), p(1), p(2))-1.)*dz2()[0], (4.*z2(p(0), p(1), p(2))-1.)*dz2()[1], (4.*z2(p(0), p(1), p(2))-1.)*dz2()[2]); },
+   [] (Vec_T const & p) { return Vec_T((4.*z3(p(0), p(1), p(2))-1.)*dz3()[0], (4.*z3(p(0), p(1), p(2))-1.)*dz3()[1], (4.*z3(p(0), p(1), p(2))-1.)*dz3()[2]); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z0(p(0), p(1), p(2))*dz1()[0]+dz0()[0]*z1(p(0), p(1), p(2))), 4.*(z0(p(0), p(1), p(2))*dz1()[1]+dz0()[1]*z1(p(0), p(1), p(2))), 4.*(z0(p(0), p(1), p(2))*dz1()[2]+dz0()[2]*z1(p(0), p(1), p(2)))); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z1(p(0), p(1), p(2))*dz2()[0]+dz1()[0]*z2(p(0), p(1), p(2))), 4.*(z1(p(0), p(1), p(2))*dz2()[1]+dz1()[1]*z2(p(0), p(1), p(2))), 4.*(z1(p(0), p(1), p(2))*dz2()[2]+dz1()[2]*z2(p(0), p(1), p(2)))); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z2(p(0), p(1), p(2))*dz0()[0]+dz2()[0]*z0(p(0), p(1), p(2))), 4.*(z2(p(0), p(1), p(2))*dz0()[1]+dz2()[1]*z0(p(0), p(1), p(2))), 4.*(z2(p(0), p(1), p(2))*dz0()[2]+dz2()[2]*z0(p(0), p(1), p(2)))); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z0(p(0), p(1), p(2))*dz3()[0]+dz0()[0]*z3(p(0), p(1), p(2))), 4.*(z0(p(0), p(1), p(2))*dz3()[1]+dz0()[1]*z3(p(0), p(1), p(2))), 4.*(z0(p(0), p(1), p(2))*dz3()[2]+dz0()[2]*z3(p(0), p(1), p(2)))); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z1(p(0), p(1), p(2))*dz3()[0]+dz1()[0]*z3(p(0), p(1), p(2))), 4.*(z1(p(0), p(1), p(2))*dz3()[1]+dz1()[1]*z3(p(0), p(1), p(2))), 4.*(z1(p(0), p(1), p(2))*dz3()[2]+dz1()[2]*z3(p(0), p(1), p(2)))); },
+   [] (Vec_T const & p) { return Vec_T(4.*(z2(p(0), p(1), p(2))*dz3()[0]+dz2()[0]*z3(p(0), p(1), p(2))), 4.*(z2(p(0), p(1), p(2))*dz3()[1]+dz2()[1]*z3(p(0), p(1), p(2))), 4.*(z2(p(0), p(1), p(2))*dz3()[2]+dz2()[2]*z3(p(0), p(1), p(2)))); },
+ }};
+
+array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::mapping = RefTetrahedronP2::dphiFun;
 
 // ----------------------------------------------------------------------------
 uint constexpr RefHexahedronQ1::numFuns;

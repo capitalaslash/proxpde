@@ -9,7 +9,6 @@
 #include "timer.hpp"
 
 #include <yaml-cpp/yaml.h>
-#include <bitset>
 
 template <typename Elem>
 void referenceMesh(Mesh<Elem> & mesh)

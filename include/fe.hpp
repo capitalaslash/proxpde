@@ -71,6 +71,13 @@ struct FEType<Tetrahedron,1>
 };
 
 template <>
+struct FEType<Tetrahedron,2>
+{
+  using RefFE_T = RefTetrahedronP2;
+  using RecommendedQR = GaussQR<Tetrahedron,11>;
+};
+
+template <>
 struct FEType<Hexahedron,1>
 {
   using RefFE_T = RefHexahedronQ1;

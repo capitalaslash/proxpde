@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cassert>
+#include <bitset>
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>

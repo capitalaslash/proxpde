@@ -8,6 +8,8 @@
 #include <map>
 #include <fstream>
 
+#include <yaml-cpp/yaml.h>
+
 template <typename Elem>
 class Mesh
 {
@@ -539,4 +541,27 @@ void readGMSH(Mesh<Elem> & mesh,
   assert(facets.size() == 0);
 
   std::cout << "mesh file " << filename << " successfully read" << std::endl;
+}
+
+template <typename Mesh>
+void readMesh(Mesh & mesh, YAML::Node const & config)
+{
+  auto const mesh_type = config["mesh_type"].as<std::string>();
+  if (mesh_type == "structured")
+  {
+    array<uint,3> numPts =
+    {
+      config["nx"].as<uint>() + 1,
+      config["ny"].as<uint>() + 1,
+      config["nz"].as<uint>() + 1
+    };
+    Vec3 const origin{0., 0., 0.};
+    Vec3 const length{1., 1., 1.};
+    MeshBuilder<typename Mesh::Elem_T> meshBuilder;
+    meshBuilder.build(mesh, origin, length, numPts);
+  }
+  else if (mesh_type == "msh")
+  {
+    readGMSH(mesh, config["mesh_file"].as<std::string>());
+  }
 }

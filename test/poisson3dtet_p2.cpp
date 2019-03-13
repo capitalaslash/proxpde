@@ -13,8 +13,8 @@
 using Elem_T = Tetrahedron;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          FEType<Elem_T,1>::RecommendedQR>;
+                          FEType<Elem_T, 2>::RefFE_T,
+                          FEType<Elem_T, 2>::RecommendedQR>;
 
 static scalarFun_T rhs = [] (Vec3 const& p)
 {
@@ -27,79 +27,108 @@ static scalarFun_T exactSol = [] (Vec3 const& p)
   // return 1.;
 };
 
-int main(int argc, char* argv[])
+int test(YAML::Node const & config)
 {
   MilliTimer t;
 
-  auto const configFile = (argc > 1) ? argv[1] : "poisson3dtet.yaml";
-  auto const config = YAML::LoadFile(configFile);
-
-  t.start();
+  t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   readMesh(*mesh, config);
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fe space");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
   bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
   bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
-  MilliTimer tBuild;
-  tBuild.start();
+  // std::cout << bcs << std::endl;
+  // for (auto const & bc: bcs.bcEssList)
+  // {
+  //   std::cout << "bc on " << bc.marker << std::endl;
+  //   for (auto const & id: bc.constrainedDOFSet)
+  //   {
+  //     std::cout << id << ": " << feSpace.findCoords(id).transpose() << std::endl;
+  //   }
+  // }
+
+  t.start("fe build");
   Builder builder{feSpace.dof.size};
-  std::cout << tBuild << std::endl;
-  tBuild.start();
   builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
-  std::cout << tBuild << std::endl;
-  tBuild.start();
   // builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
-  std::cout << tBuild << std::endl;
-  tBuild.start();
   Vec rhsProj;
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);
-  std::cout << tBuild << std::endl;
-  tBuild.start();
   builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
-  std::cout << tBuild << std::endl;
-  tBuild.start();
   builder.closeMatrix();
-  std::cout << tBuild << std::endl;
-  tBuild.start();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("solve");
   Var sol{"u"};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
   Var exact{"exact"};
   interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  IOManager io{feSpace, "output_poisson3dtet/sol"};
+  t.start("output");
+  IOManager io{feSpace, "output_poisson3dtet_p2/sol"};
   io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
+
+  t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(12) << norm << std::endl;
-  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-10)
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-16)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;
   }
 
   return 0;
+}
+
+int main(int argc, char * argv[])
+{
+  std::bitset<2> tests;
+  if (argc > 1)
+  {
+    auto const config = YAML::LoadFile(argv[1]);
+    tests[0] = test(config);
+  }
+  else
+  {
+    {
+      YAML::Node config;
+      config["mesh_type"] = "structured";
+      auto const n = 4;
+      config["nx"] = n;
+      config["ny"] = n;
+      config["nz"] = n;
+      config["expected_error"] = 0.08097818482375654;
+      tests[0] = test(config);
+    }
+    {
+      YAML::Node config;
+      config["mesh_type"] = "structured";
+      auto const n = 8;
+      config["nx"] = n;
+      config["ny"] = n;
+      config["nz"] = n;
+      config["expected_error"] = 0.02265721054353409;
+      tests[0] = test(config);
+    }
+  }
+  return tests.any();
 }

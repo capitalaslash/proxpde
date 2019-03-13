@@ -9,7 +9,6 @@
 #include "timer.hpp"
 
 #include <yaml-cpp/yaml.h>
-#include <bitset>
 
 using Elem_T = Hexahedron;
 using Mesh_T = Mesh<Elem_T>;

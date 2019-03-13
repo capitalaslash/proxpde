@@ -395,7 +395,7 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  uint const numElems = 6*(numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
+  uint const numElems = 5*(numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
   mesh.elementList.reserve(numElems);
   id_T counter = 0;
   auto const dx = 1;
@@ -406,49 +406,34 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
       for(uint i=0; i<numPts[0]-1; ++i)
       {
         id_T const base = i + j*numPts[0] + k*numPts[1]*numPts[0];
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base], // 0
-                            &mesh.pointList[base + dx], // 1
-                            &mesh.pointList[base + dy], // 3
-                            &mesh.pointList[base + dz]}, // 4
-             counter++});
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base + dx], // 1
-                            &mesh.pointList[base + dx + dy], // 2
-                            &mesh.pointList[base + dz], // 4
-                            &mesh.pointList[base + dx + dz]}, // 5
-             counter++});
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base + dx], // 1
-                            &mesh.pointList[base + dx + dy], // 2
-                            &mesh.pointList[base + dy], // 3
-                            &mesh.pointList[base + dz]}, // 4
-             counter++});
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base + dx + dy], // 2
-                            &mesh.pointList[base + dx + dz], // 5
-                            &mesh.pointList[base + dx + dy + dz], // 6
-                            &mesh.pointList[base + dy + dz]}, // 7
-             counter++});
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base + dx + dy], // 2
-                            &mesh.pointList[base + dz], // 4
-                            &mesh.pointList[base + dx + dz], // 5
-                            &mesh.pointList[base + dy + dz]}, // 7
-             counter++});
-        mesh.elementList.emplace_back(
-              Tetrahedron{{
-                            &mesh.pointList[base + dx + dy], // 2
-                            &mesh.pointList[base + dy], // 3
-                            &mesh.pointList[base + dz], // 4
-                            &mesh.pointList[base + dy + dz]}, // 7
-             counter++});
-    }
+        Eigen::Matrix<id_T, 5, 4> idTable;
+        if ((i + j + k) % 2 )
+        {
+          idTable << base + dx, base + dy, base + dz, base + dx + dy + dz, // 1, 3, 4, 6
+              base, base + dx, base + dy, base + dz, // 0, 1, 3, 4
+              base + dx, base + dx + dy, base + dy, base + dx + dy + dz, // 1, 2, 3, 6
+              base + dx, base + dz, base + dx + dz, base + dx + dy + dz, // 1, 4, 5, 6
+              base + dy, base + dz, base + dx + dy + dz, base + dy + dz; // 3, 4, 6, 7
+        }
+        else
+        {
+          idTable << base, base + dx + dy, base + dx + dz, base + dy + dz, // 0, 2, 5, 7
+              base, base + dx, base + dx + dy, base + dx + dz, // 0, 1, 2, 5
+              base, base + dx + dy, base + dy, base + dy + dz, // 0, 2, 3, 7
+              base, base + dz, base + dx + dz, base + dy + dz, // 0, 4, 5, 7
+              base + dx + dy, base + dx + dz, base + dx + dy + dz, base + dy + dz; // 2, 5, 6, 7
+        }
+        for (uint r=0; r<5; ++r)
+        {
+          mesh.elementList.emplace_back(
+                Tetrahedron{{
+                              &mesh.pointList[idTable(r, 0)],
+                              &mesh.pointList[idTable(r, 1)],
+                              &mesh.pointList[idTable(r, 2)],
+                              &mesh.pointList[idTable(r, 3)]},
+                            counter++});
+        }
+      }
   mesh.buildConnectivity();
   buildFacets(mesh, keepInternalFacets);
   markFacetsCube(mesh, origin, length);

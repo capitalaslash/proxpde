@@ -42,6 +42,12 @@ DofSet_T fillDofSet(
           }
         }
       }
+      // std::cout << "current dof set: ";
+      // for (auto const & id: constrainedDOFset)
+      // {
+      //     std::cout << id << " ";
+      // }
+      // std::cout << std::endl;
     }
   }
   return constrainedDOFset;
@@ -120,13 +126,13 @@ public:
 
   friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T, Value> const & bc)
   {
-    out << "bc constrainedDOFVector: " << bc.constrainedDOFVector << "\n";
+    out << "bc constrainedDOFVector: " << bc.constrainedDOFVector.transpose() << std::endl;
     out << "constrainedDOFset: ";
     for(auto const i: bc.constrainedDOFSet)
     {
       out << i << " ";
     }
-    out << "\n";
+    out << std::endl;
     return out;
   }
 

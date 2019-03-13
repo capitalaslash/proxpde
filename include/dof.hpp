@@ -200,6 +200,15 @@ struct DOF
 
   friend std::ostream & operator<< <>(std::ostream & out, DOF const & dof);
 
+  std::tuple<id_T, id_T> findPos(DOFid_T const id) const
+  {
+    typename ElemMap_T::Index minRow, minCol;
+    auto const min =
+        (elemMap - ElemMap_T::Constant(rows, clms*dim, id)).abs().minCoeff(&minRow, &minCol);
+    assert (min == 0);
+    return std::tie(minRow, minCol);
+  }
+
 private:
   std::size_t rows;
   ElemMap_T elemMap;

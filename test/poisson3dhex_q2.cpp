@@ -19,14 +19,12 @@ using FESpace_T = FESpace<Mesh_T,
 static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  // return 2.0;
-  // return 0.;
+  // return 2.;
 };
 static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   // return 2.*p(0) - p(0)*p(0);
-  // return 1.;
 };
 
 int test(YAML::Node const & config)
@@ -59,11 +57,14 @@ int test(YAML::Node const & config)
   builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
   builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
-  // `Vec rhsProj;
-  // `interpolateAnalyticFunction(rhs, feSpace, rhsProj);
-  // `builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
+  // Vec rhsProj;
+  // interpolateAnalyticFunction(rhs, feSpace, rhsProj);
+  // builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
   builder.closeMatrix();
   t.stop();
+
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   t.start("solve");
   Var sol{"u"};
@@ -73,9 +74,7 @@ int test(YAML::Node const & config)
   sol.data = solver.solve(builder.b);
   t.stop();
 
-  // std::cout << "A:\n" << builder.A << std::endl;
-  // std::cout << "b:\n" << builder.b << std::endl;
-  std::cout << "sol:\n" << sol.data << std::endl;
+  // std::cout << "sol:\n" << sol.data << std::endl;
 
   Var exact{"exact"};
   interpolateAnalyticFunction(exactSol, feSpace, exact.data);
@@ -100,38 +99,28 @@ int test(YAML::Node const & config)
   return 0;
 }
 
-int main()
+int main(int argc, char * argv[])
 {
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 2;
-  //   config["expected_error"] = 0.0;
-  //   test(config);
-  // }
-  std::bitset<3> tests;
+  std::bitset<2> tests;
+  if (argc > 1)
   {
-    YAML::Node config;
-    config["n"] = 1;
-    config["expected_error"] = 0.1352139631934435;
+    auto const config = YAML::LoadFile(argv[1]);
     tests[0] = test(config);
   }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 8;
-  //   config["expected_error"] = 0.0789237040676312;
-  //   tests[1] = test(config);
-  // }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 16;
-  //   config["expected_error"] = 0.05080511744764222;
-  //   tests[2] = test(config);
-  // }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 32;
-  //   config["expected_error"] = 0.0;
-  //   test(config);
-  // }
+  else
+  {
+    {
+      YAML::Node config;
+      config["n"] = 4;
+      config["expected_error"] = 0.007004283628801087;
+      tests[0] = test(config);
+    }
+    {
+      YAML::Node config;
+      config["n"] = 8;
+      config["expected_error"] = 0.001164556821287966;
+      tests[1] = test(config);
+    }
+  }
   return tests.any();
 }

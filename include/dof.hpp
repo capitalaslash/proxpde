@@ -226,7 +226,7 @@ inline std::ostream & operator<<(std::ostream & out, DOF<Mesh, RefFE, dim> const
 {
   out << "DOF map\n";
   out << "elemMap: " << dof.rows << "x" << dof.clms << "\n";
-  out << dof.elemMap;
+  out << dof.elemMap << "\n";
   out << "geoMap: " << dof.rows << "x" << RefFE::numGeoFuns << "\n";
   out << dof.geoMap;
   return out;

@@ -54,6 +54,24 @@ struct FESpace
     return localValue.transpose() * phi;
   }
 
+  Vec3 findCoords(DOFid_T const id)
+  {
+    for (auto const & elem: mesh.elementList)
+    {
+      for (uint d=0; d<DOF_T::clms; ++d)
+      {
+        if (dof.getId(elem.id, d) == id)
+        {
+          curFE.reinit(elem);
+          return curFE.dofPts[d];
+        }
+      }
+    }
+    // we should never reach this point
+    abort();
+    return Vec3(0., 0., 0.);
+  }
+
   Mesh const & mesh;
   CurFE_T curFE;
   DOF_T const dof;

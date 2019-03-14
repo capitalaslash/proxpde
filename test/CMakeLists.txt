@@ -77,6 +77,8 @@ minifem_add_test(ipcs)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
 
+minifem_add_test(stokes3dtet)
+
 minifem_add_test(robin_bc)
 minifem_add_test(projection_p1top2)
 minifem_add_test(projection_p2top1)

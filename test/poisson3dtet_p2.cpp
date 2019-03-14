@@ -116,7 +116,7 @@ int main(int argc, char * argv[])
       config["nx"] = n;
       config["ny"] = n;
       config["nz"] = n;
-      config["expected_error"] = 0.08097818482375654;
+      config["expected_error"] = 0.08097818482375403;
       tests[0] = test(config);
     }
     {
@@ -126,7 +126,7 @@ int main(int argc, char * argv[])
       config["nx"] = n;
       config["ny"] = n;
       config["nz"] = n;
-      config["expected_error"] = 0.02265721054353409;
+      config["expected_error"] = 0.02265721054353444;
       tests[0] = test(config);
     }
   }

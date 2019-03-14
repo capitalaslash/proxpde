@@ -45,8 +45,8 @@ std::vector<uint> allComp()
 // using array = std::array<T,N>;
 #include "array.hpp"
 
-using Mat = Eigen::SparseMatrix<double, Eigen::ColMajor>; // ColMajor is default
-// using Mat = Eigen::SparseMatrix<double, Eigen::RowMajor>;
+// using Mat = Eigen::SparseMatrix<double, Eigen::ColMajor>; // ColMajor is default
+using Mat = Eigen::SparseMatrix<double, Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
 using Field3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
@@ -100,7 +100,8 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
   }
 };
 
-using LUSolver = Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>>;
+// using LUSolver = Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>>;
+using LUSolver = Eigen::UmfPackLU<Mat>;
 // using IterSolver = Eigen::GMRES<Mat, Eigen::IncompleteLUT<double>>;
 using IterSolver = Eigen::BiCGSTAB<Mat, Eigen::DiagonalPreconditioner<double>>;
 

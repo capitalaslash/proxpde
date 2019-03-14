@@ -16,7 +16,7 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
 
-double test(YAML::Node const & config)
+int test(YAML::Node const & config)
 {
   MilliTimer t;
 
@@ -101,26 +101,29 @@ double test(YAML::Node const & config)
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 
-  return error.data.norm();
+  auto const errorNorm = error.data.norm();
+  std::cout << "the norm of the error is "<< std::setprecision(16) << errorNorm << std::endl;
+  if(std::fabs(errorNorm - config["expected_error"].as<double>()) > 1.e-15)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
+  return 0;
 }
 
 int main()
 {
+  std::bitset<4> tests;
   {
     YAML::Node config;
     config["n"] = 20;
     config["hConv"] = 1.0;
     config["temp0"] = 2.0;
     config["tempA"] = 1.0;
-    config["filename"] = "sol_robin_test1";
+    config["filename"] = "sol_robin_test0";
+    config["expected_error"] = 3.106760735256447e-07;
 
-    auto const error = test(config);
-    std::cout << "test1: the norm of the error is "<< std::setprecision(16) << error << std::endl;
-    if(std::fabs(error - 3.106760564918841e-07) > 1.e-15)
-    {
-      std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-      return 1;
-    }
+    tests[0] = test(config);
   }
 
   {
@@ -129,15 +132,10 @@ int main()
     config["hConv"] = 0.0;
     config["temp0"] = 2.0;
     config["tempA"] = 1.0;
-    config["filename"] = "sol_robin_test2";
+    config["filename"] = "sol_robin_test1";
+    config["expected_error"] = 2.877854011280693e-07;
 
-    auto const error = test(config);
-    std::cout << "test2: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 2.877853984916303e-07) > 1.e-15)
-    {
-      std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-      return 2;
-    }
+    tests[1] = test(config);
   }
 
   {
@@ -146,15 +144,10 @@ int main()
     config["hConv"] = 1e20;
     config["temp0"] = 2.0;
     config["tempA"] = 1.0;
-    config["filename"] = "sol_robin_test3";
+    config["filename"] = "sol_robin_test2";
+    config["expected_error"] = 4.261223260744055e-07;
 
-    auto const error = test(config);
-    std::cout << "test3: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 4.261223198617544e-07) > 1.e-15)
-    {
-      std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-      return 3;
-    }
+    tests[2] = test(config);
   }
 
   {
@@ -163,16 +156,11 @@ int main()
     config["hConv"] = 1.0;
     config["temp0"] = 1.0;
     config["tempA"] = 0.0;
-    config["filename"] = "sol_robin_test4";
+    config["filename"] = "sol_robin_test3";
+    config["expected_error"] = 3.106760453810386e-07;
 
-    auto const error = test(config);
-    std::cout << "test3: the norm of the error is " << error << std::endl;
-    if(std::fabs(error - 3.106760372971875e-07) > 1.e-15)
-    {
-      std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-      return 4;
-    }
+    tests[2] = test(config);
   }
 
-  return 0;
+  return tests.any();
 }

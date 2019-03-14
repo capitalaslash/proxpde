@@ -112,13 +112,13 @@ int main(int argc, char * argv[])
     {
       YAML::Node config;
       config["n"] = 4;
-      config["expected_error"] = 0.007004283628801087;
+      config["expected_error"] = 0.0070042836287997;
       tests[0] = test(config);
     }
     {
       YAML::Node config;
       config["n"] = 8;
-      config["expected_error"] = 0.001164556821287966;
+      config["expected_error"] = 0.001164556821288369;
       tests[1] = test(config);
     }
   }

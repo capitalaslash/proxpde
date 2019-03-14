@@ -11,7 +11,9 @@ struct Builder
   explicit Builder(uint const size):
     A(size, size),
     b{Vec::Zero(size)}
-  {}
+  {
+    std::cout << "new builder with " << size << " dofs" << std::endl;
+  }
 
   template <typename FESpace>
   void buildProblem(Diagonal<FESpace> const & assembly,

@@ -44,6 +44,7 @@ minifem_add_test(blockmatrix)
 minifem_add_test(hdf5write)
 minifem_add_test(qr)
 minifem_add_test(reffe_test)
+minifem_add_test(solver_test)
 
 minifem_add_test(poisson1d)
 minifem_add_test(poisson1d_p2)
@@ -75,8 +76,6 @@ minifem_add_test(stokes2dcircle)
 minifem_add_test(ipcs)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
-
-minifem_add_test(gmres)
 
 minifem_add_test(robin_bc)
 minifem_add_test(projection_p1top2)

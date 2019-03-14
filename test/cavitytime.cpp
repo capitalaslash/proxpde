@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
   Vec const fixedRhs = fixedBuilder.b;
 
   // Eigen::UmfPackLU<Mat> solver;
-  GMRESSolver solver;
-  GMRESSolver fixedSolver;
+  IterSolver solver;
+  IterSolver fixedSolver;
   uint const ntime = config["numsteps"].as<uint>();
   double time = 0.0;
   for (uint itime=0; itime<ntime; itime++)
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     std::cout << "residual norm: " << res.norm() << std::endl;
     auto const solDiffNorm = (sol.data - fixedSol.data).norm();
     std::cout << "solution difference norm: " << solDiffNorm << std::endl;
-    if (solDiffNorm > 1.e-12)
+    if (solDiffNorm > 1.e-11)
     {
       std::cerr << "the 2 solutions differ" << std::endl;
       return 2;

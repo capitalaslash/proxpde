@@ -101,7 +101,8 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
 };
 
 using LUSolver = Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>>;
-using GMRESSolver = Eigen::GMRES<Mat, Eigen::IncompleteLUT<double>>;
+// using IterSolver = Eigen::GMRES<Mat, Eigen::IncompleteLUT<double>>;
+using IterSolver = Eigen::BiCGSTAB<Mat, Eigen::DiagonalPreconditioner<double>>;
 
 template <int Size>
 using FVec = Eigen::Matrix<double,Size,1>;

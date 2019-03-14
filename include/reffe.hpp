@@ -521,7 +521,7 @@ struct RefTetrahedronP2
   static array<uint,4> constexpr dofPlace{{0,0,1,1}};
   static uint constexpr dofPerFacet = 6U;
   static array<array<uint,6>,4> constexpr dofOnFacet = {{
-    {{0,2,1,6,5,4}}, {{0,1,3,4,8,7}}, {{0,3,2,7,9,6}}, {{1,2,3,5,9,6}}
+    {{0,2,1,6,5,4}}, {{0,1,3,4,8,7}}, {{0,3,2,7,9,6}}, {{1,2,3,5,9,8}}
   }};
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;

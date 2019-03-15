@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     // std::cout << "sol:\n" << c.data << std::endl;
 
     // explicit upwind
-    fv.uOld = concP0.data;
+    fv.update(concP0.data);
     fv.computeFluxes(vel, feSpaceP1);
     fv.advance(concP0.data, dt);
 

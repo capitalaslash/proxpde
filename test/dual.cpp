@@ -29,17 +29,6 @@ static scalarFun_T ic = [] (Vec3 const& p)
   return 0.;
 };
 
-template <typename Mesh>
-double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
-{
-  double cfl = 0.;
-  for (auto const & e: mesh.elementList)
-  {
-    cfl = std::max(cfl, vel.norm() * dt / e.h_min());
-  }
-  return cfl;
-}
-
 double areaTriangle(Vec3 p0, Vec3 p1, Vec3 p2)
 {
   return 0.5 * ((p1 - p0).cross(p2 - p0)).norm();

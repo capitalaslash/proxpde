@@ -29,17 +29,6 @@ static scalarFun_T ic = [] (Vec3 const& p)
   return 0.;
 };
 
-template <typename Mesh>
-double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
-{
-  double cfl = 0.;
-  for (auto const & e: mesh.elementList)
-  {
-    cfl = std::max(cfl, vel.norm() * dt / e.h_min());
-  }
-  return cfl;
-}
-
 int main(int argc, char* argv[])
 {
   MilliTimer t;
@@ -58,6 +47,7 @@ int main(int argc, char* argv[])
   //       {{numPtsX, numPtsY, 0}},
   //       true);
   // readGMSH(*mesh, "square_uns.msh");
+  // buildFacets(*mesh, true);
   buildNormals(*mesh);
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
@@ -130,7 +120,7 @@ int main(int argc, char* argv[])
     // std::cout << "sol:\n" << c.data << std::endl;
 
     // explicit upwind
-    fv.uOld = concP0.data;
+    fv.update(concP0.data);
     fv.computeFluxes(vel, feSpaceP1);
     fv.advance(concP0.data, dt);
 

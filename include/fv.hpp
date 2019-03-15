@@ -9,21 +9,66 @@ template <typename T> int sgn(T val)
   return (T(0) < val) - (val < T(0));
 }
 
-template <typename FESpace>
+template <typename Mesh>
+double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
+{
+  double cfl = 0.;
+  for (auto const & e: mesh.elementList)
+  {
+    cfl = std::max(cfl, vel.norm() * dt / e.h_min());
+  }
+  return cfl;
+}
+
+double minmod(double const r)
+{
+  return std::max(0., std::min(1., r));
+}
+
+double pureUpwind(double const)
+{
+  return 0.;
+}
+
+double limiter(double const r)
+{
+  return minmod(r);
+}
+
+// template <typename ElemRefFE>
+// struct FacetRefFE {};
+//
+// template <>
+// struct FacetRefFE<RefLineP0> { using type = RefLineP1; };
+// template <>
+// struct FacetRefFE<RefTriangleP0> { using type = RefTriangleE1; };
+
+template <typename FESpaceT>
 struct FVSolver
 {
-  using Mesh_T = typename FESpace::Mesh_T;
+  using Mesh_T = typename FESpaceT::Mesh_T;
   using Elem_T = typename Mesh_T::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
+  using ElemRefFE_T = typename FESpaceT::RefFE_T;
+  // using FacetFESpace_T = FESpace<Mesh_T,
+  //                                typename FEType<Facet_T, 0>::RefFE_T,
+  //                                typename FEType<Facet_T, 0>::RecommendedQR>;
+  // using FacetFESpace_T = FESpace<Mesh_T,
+  //                                typename FacetRefFE<ElemRefFE_T>::type,
+  //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpace const & fe, BCList<FESpace> bcList):
+  FVSolver(FESpaceT const & fe, BCList<FESpaceT> bcList):
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),
+    uJump{fe.mesh.facetList.size()},
     fluxes(Vec::Zero(fe.mesh.facetList.size())),
     normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
   {
+    static_assert (Order<ElemRefFE_T>::value == 0,
+                   "finite volume solver works only on order 0.");
+
     for (auto const & elem: feSpace.mesh.elementList)
     {
       auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];
@@ -32,6 +77,22 @@ struct FVSolver
         auto const & facet = feSpace.mesh.facetList[facetIds[f]];
         normalSgn(elem.id, f) =
             sgn(facet._normal.dot(elem.midpoint() - facet.midpoint()));
+      }
+    }
+  }
+
+  void update(Vec const & u)
+  {
+    uOld = u;
+    for (auto const & facet: feSpace.mesh.facetList)
+    {
+      auto const * insideElem = facet.facingElem[0].first;
+      auto const * outsideElem = facet.facingElem[1].first;
+      if (outsideElem)
+      {
+        uJump[facet.id] =
+            u[feSpace.dof.getId(insideElem->id, 0)] -
+            u[feSpace.dof.getId(outsideElem->id, 0)];
       }
     }
   }
@@ -50,31 +111,57 @@ struct FVSolver
       v /= Facet_T::numPts;
       Vec3 v3 = promote<dim, 3>(v);
       double const vNorm = v3.dot(facet._normal);
-      uint const upwindDir = (vNorm > 0.) ? 0 : 1;
-      auto const * upwindElem = facet.facingElem[upwindDir].first;
-      if (upwindElem)
+      if (std::fabs(vNorm) > 1.e-16)
       {
-        double const upwindU = uOld[feSpace.dof.getId(upwindElem->id, 0)];
-        fluxes[facet.id] =
-            vNorm *
-            facet.volume() *
-            upwindU;
-      }
-      // no upwind element means that we are on a boundary and the flux is
-      // coming from outside
-      else
-      {
-        // TODO: compute from bc
-        for (auto const & bc: bcs.bcEssList)
+        uint const upwindDir = (vNorm > 0.) ? 0 : 1;
+        auto const * upwindElem = facet.facingElem[upwindDir].first;
+        if (upwindElem)
         {
-          if (bc.marker == facet.marker)
+          double const uUpwind = uOld[feSpace.dof.getId(upwindElem->id, 0)];
+          // by default use pure upwind
+          double uLimited = uUpwind;
+          // if there is a downwind element, compute a slope limited flux.
+          // if there is none, it means we are on a downwind boundary and pure upwind is the best we can do
+          auto const * downwindElem = facet.facingElem[1-upwindDir].first;
+          if (downwindElem)
           {
-            fluxes[facet.id] =
-                vNorm *
-                facet.volume() *
-                bc.evaluate(0)[0];
+            double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id, 0)];
+            // check uJump on all other facets of the upwind element
+            auto const elemFacetIds = feSpace.mesh.elemToFacet[upwindElem->id];
+            array<double, Elem_T::numFacets> rFacets;
+            for (uint f=0; f<Elem_T::numFacets; ++f)
+            {
+              rFacets[f] = uJump[elemFacetIds[f]] / uJump[facet.id];
+            }
+            double const r = *std::min_element(rFacets.begin(), rFacets.end());
+            uLimited = uUpwind + limiter(r) * .5 * (uDownwind - uUpwind);
+          }
+          fluxes[facet.id] =
+              vNorm *
+              facet.volume() *
+              uLimited;
+        }
+        // no upwind element means that we are on a boundary and the flux is
+        // coming from outside
+        else
+        {
+          // TODO: compute from bc
+          for (auto const & bc: bcs.bcEssList)
+          {
+            if (bc.marker == facet.marker)
+            {
+              fluxes[facet.id] =
+                  vNorm *
+                  facet.volume() *
+                  bc.evaluate(0)[0];
+            }
           }
         }
+      }
+      // the velocity normal to the facet is so small that the flux can be considered 0.
+      else
+      {
+        fluxes[facet.id] = 0.;
       }
       // std::cout << facet.pointList[0]->id << ", " << facet.pointList[1]->id << " | "
       //           << facet._normal[0] << ", " << facet._normal[1] << " -> "
@@ -123,9 +210,10 @@ struct FVSolver
     }
   }
 
-  FESpace const & feSpace;
-  BCList<FESpace> bcs;
+  FESpaceT const & feSpace;
+  BCList<FESpaceT> bcs;
   Vec uOld;
+  Vec uJump;
   Vec fluxes;
   Table<int, Elem_T::numFacets> normalSgn;
 };

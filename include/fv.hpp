@@ -86,8 +86,8 @@ struct FVSolver
     uOld = u;
     for (auto const & facet: feSpace.mesh.facetList)
     {
-      auto const * insideElem = facet.facingElem[0].first;
-      auto const * outsideElem = facet.facingElem[1].first;
+      auto const * insideElem = facet.facingElem[0].ptr;
+      auto const * outsideElem = facet.facingElem[1].ptr;
       if (outsideElem)
       {
         uJump[facet.id] =
@@ -114,7 +114,7 @@ struct FVSolver
       if (std::fabs(vNorm) > 1.e-16)
       {
         uint const upwindDir = (vNorm > 0.) ? 0 : 1;
-        auto const * upwindElem = facet.facingElem[upwindDir].first;
+        auto const * upwindElem = facet.facingElem[upwindDir].ptr;
         if (upwindElem)
         {
           double const uUpwind = uOld[feSpace.dof.getId(upwindElem->id)];
@@ -122,7 +122,7 @@ struct FVSolver
           double uLimited = uUpwind;
           // if there is a downwind element, compute a slope limited flux.
           // if there is none, it means we are on a downwind boundary and pure upwind is the best we can do
-          auto const * downwindElem = facet.facingElem[1-upwindDir].first;
+          auto const * downwindElem = facet.facingElem[1-upwindDir].ptr;
           if (downwindElem)
           {
             double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id)];

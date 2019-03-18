@@ -49,7 +49,7 @@ struct Builder
         uint facetCounter = 0;
         for(auto const facetId: mesh.elemToFacet[e.id])
         {
-          if(facetId != DOFidNotSet &&
+          if(facetId != dofIdNotSet &&
              mesh.facetList[facetId].marker == bc.marker)
           {
             auto const & facet = mesh.facetList[facetId];
@@ -84,7 +84,7 @@ struct Builder
         for(auto const facetId: mesh.elemToFacet[e.id])
         {
           // facet exists && has the marker set in the bc
-          if(facetId != DOFidNotSet &&
+          if(facetId != dofIdNotSet &&
              mesh.facetList[facetId].marker == bc.marker)
           {
             auto const & facet = mesh.facetList[facetId];

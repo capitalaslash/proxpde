@@ -1160,7 +1160,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
     uint facetCounter = 0;
     for(auto const facetId: mesh.elemToFacet[e.id])
     {
-      if(facetId != DOFidNotSet &&
+      if(facetId != dofIdNotSet &&
          mesh.facetList[facetId].marker == marker)
       {
         auto const & facet = mesh.facetList[facetId];

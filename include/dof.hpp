@@ -30,11 +30,11 @@ struct DOF
   explicit DOF(Mesh const & mesh):
     rows{mesh.elementList.size()},
     elemMap(rows, clms*dim),
-    ptMap(mesh.pointList.size(), DOFidNotSet),
+    ptMap(mesh.pointList.size(), dofIdNotSet),
     geoMap(rows, RefFE::numGeoFuns)
   {
-    PtMap_T geoPtMap(mesh.pointList.size(), DOFidNotSet);
-    std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), DOFidNotSet);
+    PtMap_T geoPtMap(mesh.pointList.size(), dofIdNotSet);
+    std::vector<DOFid_T> elemDOFs(mesh.elementList.size(), dofIdNotSet);
     // mappings from a list of ids that identifies uniquely a face/edge and the dof associated to it
     std::map<edgeIdList_T,DOFid_T> edgeDOFs;
     std::map<faceIdList_T,DOFid_T> faceDOFs;
@@ -51,7 +51,7 @@ struct DOF
         for(auto & p: e.pointList)
         {
           // check if dofs have already been assigned to this point
-          if (ptMap[p->id] == DOFidNotSet)
+          if (ptMap[p->id] == dofIdNotSet)
           {
             elemMap(e.id, localDofCount) = size;
             ptMap[p->id] = size;
@@ -125,7 +125,7 @@ struct DOF
       if constexpr (RefFE::dofPlace[0])
       {
         // check if dofs have already been assigned to this element
-        if(elemDOFs[e.id] == DOFidNotSet)
+        if(elemDOFs[e.id] == idNotSet)
         {
           elemDOFs[e.id] = size;
           elemMap(e.id, localDofCount) = size;
@@ -149,7 +149,7 @@ struct DOF
           for(auto & p: e.pointList)
           {
             // check if dofs have already been assigned to this point
-            if(geoPtMap[p->id] == DOFidNotSet)
+            if(geoPtMap[p->id] == dofIdNotSet)
             {
               geoMap(e.id, localMapCount) = mapSize;
               geoPtMap[p->id] = mapSize;

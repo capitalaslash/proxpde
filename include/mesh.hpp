@@ -89,10 +89,10 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
 
   uint facetCount = 0;
   uint iFacetCount = 0;
-  for(auto const & e: mesh.elementList)
+  for (auto const & e: mesh.elementList)
   {
     uint side = 0;
-    for(auto const & row: Mesh::Elem_T::elemToFacet)
+    for (auto const & row: Mesh::Elem_T::elemToFacet)
     {
       std::vector<Point*> facetPts(Mesh::Facet_T::numPts);
       std::set<id_T> facetIds;
@@ -103,20 +103,20 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
         facetIds.insert(e.pointList[clm]->id);
         i++;
       }
-      Facet_T facet(facetPts);
+      Facet_T facet{facetPts, facetCount};
       auto && [it, inserted] = facetMap.insert(std::pair(facetIds, facet));
-      if(inserted)
+      if (inserted)
       {
         // we are the first element to cross this facet
-        it->second.facingElem[0].first = &e;
-        it->second.facingElem[0].second = side;
+        it->second.facingElem[0].ptr = &e;
+        it->second.facingElem[0].side = side;
         facetCount++;
       }
       else
       {
         // we are the second element crossing this facet, this is an internal facet
-        it->second.facingElem[1].first = &e;
-        it->second.facingElem[1].second = side;
+        it->second.facingElem[1].ptr = &e;
+        it->second.facingElem[1].side = side;
         iFacetCount++;
       }
       side++;
@@ -135,22 +135,23 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
   mesh.elemToFacet.resize(mesh.elementList.size());
   for(auto & row: mesh.elemToFacet)
   {
-    row.fill(DOFidNotSet);
+    row.fill(dofIdNotSet);
   }
 
+  // store facets in mesh ordering boundary facets first
   iFacetCount = bFacetSize;
   uint bFacetCount = 0;
   // check https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
   for([[maybe_unused]] auto const & [idSet, facet]: facetMap)
   {
-    if(facet.facingElem[1].first == nullptr)
+    if(facet.facingElem[1].ptr == nullptr)
     {
       // this is a boundary facet
       mesh.facetList[bFacetCount] = facet;
       mesh.facetList[bFacetCount].id = bFacetCount;
       mesh.elemToFacet
-        [facet.facingElem[0].first->id]
-        [facet.facingElem[0].second] = bFacetCount;
+        [facet.facingElem[0].ptr->id]
+        [facet.facingElem[0].side] = bFacetCount;
       bFacetCount++;
     }
     else
@@ -161,11 +162,11 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
         mesh.facetList[iFacetCount] = facet;
         mesh.facetList[iFacetCount].id = iFacetCount;
         mesh.elemToFacet
-          [facet.facingElem[0].first->id]
-          [facet.facingElem[0].second] = iFacetCount;
+          [facet.facingElem[0].ptr->id]
+          [facet.facingElem[0].side] = iFacetCount;
         mesh.elemToFacet
-          [facet.facingElem[1].first->id]
-          [facet.facingElem[1].second] = iFacetCount;
+          [facet.facingElem[1].ptr->id]
+          [facet.facingElem[1].side] = iFacetCount;
       }
       iFacetCount++;
     }
@@ -299,14 +300,15 @@ void buildNormals(Mesh & mesh)
     // normals on boundary facets should all point outside
     if (facet.onBoundary())
     {
-      if ((facet.midpoint() - facet.facingElem[0].first->midpoint()).dot(facet._normal) < 0.)
+      if ((facet.midpoint() - facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
       {
         facet._normal *= -1.0;
       }
     }
     // all internal normals should point from facing elem 0 towards facing elem 1
     else
-      if ((facet.facingElem[1].first->midpoint() - facet.facingElem[0].first->midpoint()).dot(facet._normal) < 0.)
+      if ((facet.facingElem[1].ptr->midpoint() -
+           facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
       {
         facet._normal *= -1.0;
       }

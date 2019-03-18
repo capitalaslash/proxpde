@@ -7,34 +7,29 @@
 class Point
 {
 public:
-  explicit Point(Vec3 const & c = Vec3::Zero(),
-                 id_T const i = DOFidNotSet,
-                 marker_T const m = MarkerNotSet):
+  Point(Vec3 const & c,
+        id_T const i,
+        marker_T const m = markerNotSet):
     coord(c),
     id(i),
     marker(m)
   {}
-  explicit Point(double const x,
-                 double const y,
-                 double const z,
-                 id_T const i = DOFidNotSet,
-                 marker_T const m = MarkerNotSet):
-    Point(Vec3(x, y, z), i, m)
-  {}
 
-  double operator()(uint const i) const
+  Point() = default;
+
+  double operator[](uint const i) const
   {
-    return this->coord(i);
+    return this->coord[i];
   }
 
-  Vec3 coord;
-  id_T id;
-  marker_T marker;
+  Vec3 coord  = Vec3::Zero();
+  id_T id = dofIdNotSet;
+  marker_T marker = markerNotSet;
 };
 
 inline std::ostream& operator<<(std::ostream& out, Point const & p)
 {
-  out << "(" << p.coord[0] << "," << p.coord[1] << "," << p.coord[2] << "), id: "
+  out << "(" << p[0] << "," << p[1] << "," << p[2] << "), id: "
       << p.id << ", m: " << p.marker;
   return out;
 }
@@ -42,28 +37,31 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 struct GeoElem
 {
   using PointList_T = std::vector<Point *>;
-  using FacingElem_T = std::pair<GeoElem const *, uint>;
+  struct FacingElem
+  {
+    GeoElem const * ptr;
+    id_T side;
+  };
 
-  explicit GeoElem(std::initializer_list<Point *> const & list = {nullptr},
-                   id_T const i = DOFidNotSet,
-                   marker_T const m = MarkerNotSet):
-    pointList(list),
-    id(i),
-    marker(m),
-    facingElem{{std::pair(nullptr, -1), std::pair(nullptr, -1)}}
+  GeoElem(std::initializer_list<Point *> const & pList,
+          id_T const i,
+          marker_T const m):
+    pointList{pList},
+    id{i},
+    marker{m}
   {}
 
-  // TODO: use array instead of vector, the number of points is fixed by the elem type
-  explicit GeoElem(PointList_T const & list,
-                   id_T const i = DOFidNotSet,
-                   marker_T const m = MarkerNotSet):
-    pointList(list),
-    id(i),
-    marker(m),
-    facingElem{{std::pair(nullptr, -1), std::pair(nullptr, -1)}}
+  GeoElem(PointList_T const & pList,
+          id_T const i,
+          marker_T const m):
+    pointList{pList},
+    id{i},
+    marker{m}
   {}
 
-  virtual ~GeoElem() {}
+  GeoElem() = default;
+
+  virtual ~GeoElem();
 
   virtual Vec3 midpoint() const = 0;
   virtual Vec3 origin() const = 0;
@@ -90,14 +88,14 @@ struct GeoElem
   bool onBoundary() const
   {
     // the facet is on the boundary iff there is an inside element and no outside element
-    return facingElem[1].first == nullptr && facingElem[0].first != nullptr;
+    return facingElem[1].ptr == nullptr && facingElem[0].ptr != nullptr;
   }
 
-  PointList_T pointList;
-  id_T id;
-  marker_T marker;
+  PointList_T pointList = {};
+  id_T id = idNotSet;
+  marker_T marker = markerNotSet;
   // stores internal and external (element, facet side) pairs
-  array<FacingElem_T, 2> facingElem;
+  array<FacingElem, 2> facingElem = {FacingElem{nullptr, idNotSet}, FacingElem{nullptr, idNotSet}};
   Vec3 _normal;
 };
 
@@ -106,7 +104,7 @@ inline bool operator< (GeoElem const & e1, GeoElem const & e2)
   return e1.id < e2.id;
 }
 
-inline std::ostream& operator<<(std::ostream& out, GeoElem const & e)
+inline std::ostream & operator<<(std::ostream & out, GeoElem const & e)
 {
   out << "pts: ";
   for(auto & p: e.pointList)
@@ -148,17 +146,19 @@ struct PointElem: public GeoElem
   static uint constexpr numFaces = 0U;
   static uint constexpr numFacets = 0U;
 
-  explicit PointElem(std::initializer_list<Point *> const & list = {nullptr},
-                 id_T const i = DOFidNotSet,
-                 marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  PointElem(std::initializer_list<Point *> const & pList,
+            id_T const i,
+            marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit PointElem(PointList_T const & list,
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  PointElem(PointList_T const & pList,
+            id_T const i,
+            marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  PointElem() = default;
 
   virtual ~PointElem() {}
 
@@ -195,23 +195,25 @@ public:
     {{0,1}}
   }};
 
-  explicit Line(std::initializer_list<Point *> const & list = {nullptr},
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  explicit Line(std::initializer_list<Point *> const & pList,
+                id_T const i,
+                marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit Line(PointList_T const & list,
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Line(PointList_T const & pList,
+       id_T const i,
+       marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  Line() = default;
 
   virtual ~Line() {}
 
   Vec3 midpoint() const final
   {
-    return Vec3(0.5*(pointList[1]->coord+pointList[0]->coord));
+    return Vec3(0.5*(pointList[1]->coord + pointList[0]->coord));
   }
 
   Vec3 origin() const final
@@ -221,24 +223,20 @@ public:
 
   double volume() const final
   {
-    return (pointList[1]->coord-pointList[0]->coord).norm();
+    return (pointList[1]->coord - pointList[0]->coord).norm();
   }
 
   virtual void buildNormal() final
   {
-    _normal = Vec3{
-        pointList[1]->coord[1]-pointList[0]->coord[1],
-        pointList[0]->coord[0]-pointList[1]->coord[0],
-        0.0};
+    Vec3 const length =  pointList[1]->coord - pointList[0]->coord;
+    _normal = Vec3{length[1], -length[0], 0.0};
     _normal.normalize();
   }
 
   virtual Vec3 normal() const final
   {
-    auto n = Vec3{
-        pointList[1]->coord[1]-pointList[0]->coord[1],
-        pointList[0]->coord[0]-pointList[1]->coord[0],
-        0.0};
+    Vec3 const length =  pointList[1]->coord - pointList[0]->coord;
+    auto n = Vec3{length[1], -length[0], 0.0};
     n.normalize();
     return n;
   }
@@ -263,17 +261,19 @@ public:
     {{0,1,2}}
   }};
 
-  explicit Triangle(std::initializer_list<Point *> const & list = {nullptr},
-                    id_T const i = DOFidNotSet,
-                    marker_T const m = MarkerNotSet):
-        GeoElem(list, i, m)
+  Triangle(std::initializer_list<Point *> const & pList,
+           id_T const i,
+           marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit Triangle(PointList_T const & list,
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Triangle(PointList_T const & pList,
+           id_T const i,
+           marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  Triangle() = default;
 
   virtual ~Triangle() {}
 
@@ -291,33 +291,36 @@ public:
 
   double volume() const final
   {
-    auto const v1 = pointList[1]->coord-pointList[0]->coord;
-    auto const v2 = pointList[2]->coord-pointList[0]->coord;
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[0]->coord;
     return .5 * v1.cross(v2).norm();
   }
 
   virtual void buildNormal() final
   {
-    _normal = (pointList[1]->coord-pointList[0]->coord).cross(
-          pointList[2]->coord-pointList[0]->coord);
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    _normal = v1.cross(v2);
     _normal.normalize();
   }
 
   virtual Vec3 normal() const final
   {
-    auto n = (pointList[1]->coord-pointList[0]->coord).cross(
-          pointList[2]->coord-pointList[0]->coord);
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto n = v1.cross(v2);
     n.normalize();
     return n;
   }
 
   double h_min() const
   {
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[1]->coord;
+    auto const v3 = pointList[0]->coord - pointList[2]->coord;
+
     // triangle size based on diameter of the inscribed circle
-    return 4 * volume() / (
-          (pointList[1]->coord-pointList[0]->coord).norm() +
-          (pointList[2]->coord-pointList[1]->coord).norm() +
-          (pointList[0]->coord-pointList[2]->coord).norm());
+    return 4 * volume() / (v1.norm() + v2.norm() + v3.norm());
   }
 };
 
@@ -340,17 +343,19 @@ public:
     {{0,1,2,3}}
   }};
 
-  explicit Quad(std::initializer_list<Point *> const & list = {nullptr},
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Quad(std::initializer_list<Point *> const & pList,
+       id_T const i,
+       marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit Quad(PointList_T const & list,
-                id_T const i = DOFidNotSet,
-                marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Quad(PointList_T const & pList,
+       id_T const i,
+       marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  Quad() = default;
 
   virtual ~Quad() {}
 
@@ -414,17 +419,19 @@ public:
   }};
   static array<array<id_T,3>,4> constexpr elemToFace = elemToFacet;
 
-  explicit Tetrahedron(std::initializer_list<Point *> const & list = {nullptr},
-                       id_T const i = DOFidNotSet,
-                       marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Tetrahedron(std::initializer_list<Point *> const & pList,
+              id_T const i,
+              marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit Tetrahedron(PointList_T const & list,
-                       id_T const i = DOFidNotSet,
-                       marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Tetrahedron(PointList_T const & pList,
+              id_T const i,
+              marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  Tetrahedron() = default;
 
   virtual ~Tetrahedron() {}
 
@@ -443,9 +450,9 @@ public:
 
   double volume() const final
   {
-    auto const v1 = pointList[1]->coord-pointList[0]->coord;
-    auto const v2 = pointList[2]->coord-pointList[0]->coord;
-    auto const v3 = pointList[3]->coord-pointList[0]->coord;
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v3 = pointList[3]->coord - pointList[0]->coord;
     return (v1.cross(v2)).dot(v3) / 6.;
   }
 
@@ -479,17 +486,19 @@ public:
   }};
   static array<array<id_T,4>,6> constexpr elemToFace = elemToFacet;
 
-  explicit Hexahedron(std::initializer_list<Point *> const & list = {nullptr},
-                      id_T const i = DOFidNotSet,
-                      marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Hexahedron(std::initializer_list<Point *> const & pList,
+             id_T const i,
+             marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
 
-  explicit Hexahedron(PointList_T const & list,
-                      id_T const i = DOFidNotSet,
-                      marker_T const m = MarkerNotSet):
-    GeoElem(list, i, m)
+  Hexahedron(PointList_T const & pList,
+             id_T const i,
+             marker_T const m = markerNotSet):
+    GeoElem{pList, i, m}
   {}
+
+  Hexahedron() = default;
 
   virtual ~Hexahedron() {}
 
@@ -511,9 +520,10 @@ public:
   double volume() const final
   {
     // TODO: this is not correct for general hexahedrons, just for parallelepids
-    auto const v1 = pointList[1]->coord-pointList[0]->coord;
-    auto const v2 = pointList[3]->coord-pointList[0]->coord;
-    auto const v3 = pointList[4]->coord-pointList[0]->coord;
+    // a betetr way is to split the hexahedron in ettrahedra and sum their volumes
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[3]->coord - pointList[0]->coord;
+    auto const v3 = pointList[4]->coord - pointList[0]->coord;
     return (v1.cross(v2)).dot(v3);
   }
 

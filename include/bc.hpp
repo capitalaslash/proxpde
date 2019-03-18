@@ -152,7 +152,7 @@ protected:
   Value_T const value;
 
 public:
-  marker_T marker = MarkerNotSet;
+  marker_T marker = markerNotSet;
   double diag = 1.0;
 };
 

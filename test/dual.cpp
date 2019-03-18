@@ -47,10 +47,10 @@ struct DualCell //: public GeoElem
     {
       auto const & edge = *edgeNeighbors[n];
       // points.row(n) = edge.midpoint();
-      volumes[n] = areaTriangle(center->coord, edge.midpoint(), edge.facingElem[0].first->midpoint());
-      if (edge.facingElem[1].first != nullptr)
+      volumes[n] = areaTriangle(center->coord, edge.midpoint(), edge.facingElem[0].ptr->midpoint());
+      if (edge.facingElem[1].ptr != nullptr)
       {
-        volumes[n] += areaTriangle(center->coord, edge.midpoint(), edge.facingElem[1].first->midpoint());
+        volumes[n] += areaTriangle(center->coord, edge.midpoint(), edge.facingElem[1].ptr->midpoint());
       }
     }
   }

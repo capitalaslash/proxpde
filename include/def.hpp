@@ -29,8 +29,9 @@ static const std::string separator = std::string(80, '=') + "\n";
 using id_T = uint;
 using marker_T = short unsigned;
 using DOFid_T = uint;
-DOFid_T constexpr DOFidNotSet = static_cast<DOFid_T>(-1);
-marker_T constexpr MarkerNotSet = static_cast<marker_T>(-1);
+id_T constexpr idNotSet = static_cast<id_T>(-1);
+DOFid_T constexpr dofIdNotSet = static_cast<DOFid_T>(-1);
+marker_T constexpr markerNotSet = static_cast<marker_T>(-1);
 
 // TODO: maybe use an std::integer_sequence
 template <typename FESpace>

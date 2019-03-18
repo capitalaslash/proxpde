@@ -43,6 +43,7 @@ endmacro()
 minifem_add_test(blockmatrix)
 minifem_add_test(hdf5write)
 minifem_add_test(qr)
+minifem_add_test(normal)
 minifem_add_test(reffe_test)
 minifem_add_test(solver_test)
 

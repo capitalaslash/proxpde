@@ -21,6 +21,7 @@ using FESpaceP1_T = FESpace<Mesh_T,
 using FESpaceP0_T = FESpace<Mesh_T,
                             FEType<Elem_T,0>::RefFE_T,
                             FEType<Elem_T,0>::RecommendedQR>;
+using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::MINMOD>;
 // flux feSpace
 using FacetMesh_T = Mesh<Elem_T::Facet_T>;
 using FacetFESpace_T = FESpace<FacetMesh_T,
@@ -104,7 +105,7 @@ int main(int argc, char* argv[])
   Var flux{"flux"};
   flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);
 
-  FVSolver fv{feSpaceP0, bcsP0};
+  FVSolver_T fv{feSpaceP0, bcsP0};
   Table<double, 2> vel(sizeP1, 2);
   vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
   vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);

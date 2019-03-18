@@ -30,10 +30,23 @@ double pureUpwind(double const)
   return 0.;
 }
 
-double limiter(double const r)
+enum class LimiterType
 {
-  return minmod(r);
-}
+  UPWIND,
+  MINMOD
+};
+
+static const std::map<LimiterType, std::function<double(double const)>> limiterMap =
+{
+  {LimiterType::UPWIND, pureUpwind},
+  {LimiterType::MINMOD, minmod},
+};
+
+static const std::map<std::string, LimiterType> stringToLimiter =
+{
+  {"upwind", LimiterType::UPWIND},
+  {"minmod", LimiterType::MINMOD},
+};
 
 // template <typename ElemRefFE>
 // struct FacetRefFE {};
@@ -43,7 +56,7 @@ double limiter(double const r)
 // template <>
 // struct FacetRefFE<RefTriangleP0> { using type = RefTriangleE1; };
 
-template <typename FESpaceT>
+template <typename FESpaceT, LimiterType L>
 struct FVSolver
 {
   using Mesh_T = typename FESpaceT::Mesh_T;
@@ -134,7 +147,7 @@ struct FVSolver
               rFacets[f] = uJump[elemFacetIds[f]] / uJump[facet.id];
             }
             double const r = *std::min_element(rFacets.begin(), rFacets.end());
-            uLimited = uUpwind + limiter(r) * .5 * (uDownwind - uUpwind);
+            uLimited = uUpwind + limiterFun(r) * .5 * (uDownwind - uUpwind);
           }
           fluxes[facet.id] =
               vNorm *
@@ -215,5 +228,6 @@ struct FVSolver
   Vec uOld;
   Vec uJump;
   Vec fluxes;
+  std::function<double(double const)> const & limiterFun = limiterMap.at(L);
   Table<int, Elem_T::numFacets> normalSgn;
 };

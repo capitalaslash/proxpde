@@ -23,6 +23,7 @@ using FESpaceP1_T = FESpace<Mesh_T,
 using FESpaceP0_T = FESpace<Mesh_T,
                             FEType<Elem_T, 0>::RefFE_T,
                             FEType<Elem_T, 0>::RecommendedQR>;
+using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
 
 int main(int argc, char* argv[])
 {
@@ -82,7 +83,7 @@ int main(int argc, char* argv[])
   Var concP0{"concP0"};
   interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
 
-  FVSolver fv{feSpaceP0, bcsP0};
+  FVSolver_T fv{feSpaceP0, bcsP0};
 
   uint const ntime = config["final_time"].as<double>() / dt;
   double time = 0.0;

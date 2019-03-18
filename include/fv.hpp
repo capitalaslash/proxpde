@@ -88,8 +88,8 @@ struct FVSolver
       for (uint f=0; f<Elem_T::numFacets; ++f)
       {
         auto const & facet = feSpace.mesh.facetList[facetIds[f]];
-        normalSgn(elem.id, f) =
-            sgn(facet._normal.dot(elem.midpoint() - facet.midpoint()));
+        // normals are always oriented from facingElem[0] to facingElem[1]
+        normalSgn(elem.id, f) = (facet.facingElem[0].ptr->id == elem.id) ? -1. : 1.;
       }
     }
   }

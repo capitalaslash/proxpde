@@ -15,12 +15,25 @@ using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
 // implicit finite element central
 using FESpaceP1_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          FEType<Elem_T,1>::RecommendedQR>;
+                            FEType<Elem_T,1>::RefFE_T,
+                            FEType<Elem_T,1>::RecommendedQR>;
 // explicit finite volume upwind
 using FESpaceP0_T = FESpace<Mesh_T,
-                          FEType<Elem_T,0>::RefFE_T,
-                          FEType<Elem_T,0>::RecommendedQR>;
+                            FEType<Elem_T,0>::RefFE_T,
+                            FEType<Elem_T,0>::RecommendedQR>;
+// flux feSpace
+using FacetMesh_T = Mesh<Elem_T::Facet_T>;
+using FacetFESpace_T = FESpace<FacetMesh_T,
+                               FEType<Elem_T::Facet_T,0>::RefFE_T,
+                               FEType<Elem_T::Facet_T,0>::RecommendedQR>;
+
+template <typename Elem>
+void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
+{
+  facetMesh.pointList = mesh.pointList;
+  facetMesh.elementList = mesh.facetList;
+  facetMesh.buildConnectivity();
+}
 
 static scalarFun_T ic = [] (Vec3 const& p)
 {
@@ -49,11 +62,15 @@ int main(int argc, char* argv[])
   // readGMSH(*mesh, "square_uns.msh");
   // buildFacets(*mesh, true);
   buildNormals(*mesh);
+
+  std::unique_ptr<FacetMesh_T> facetMesh{new FacetMesh_T};
+  buildFacetMesh(*facetMesh, *mesh);
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
   FESpaceP1_T feSpaceP1{*mesh};
   FESpaceP0_T feSpaceP0{*mesh};
+  FacetFESpace_T facetFESpace{*facetMesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
@@ -84,6 +101,8 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
   Var concP0{"concP0"};
   interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
+  Var flux{"flux"};
+  flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);
 
   FVSolver fv{feSpaceP0, bcsP0};
   Table<double, 2> vel(sizeP1, 2);
@@ -96,6 +115,8 @@ int main(int argc, char* argv[])
   ioP1.print({concP1});
   IOManager ioP0{feSpaceP0, "output_advection2dtri/solP0"};
   ioP0.print({concP0});
+  IOManager ioFlux{facetFESpace, "output_advection2dtri/flux"};
+  ioFlux.print({flux});
 
   for(uint itime=0; itime<ntime; itime++)
   {
@@ -131,6 +152,10 @@ int main(int argc, char* argv[])
     ioP0.time = time;
     ioP0.iter += 1;
     ioP0.print({concP0});
+    flux.data = fv.fluxes;
+    ioFlux.time = time;
+    ioFlux.iter += 1;
+    ioFlux.print({flux});
   }
 
   double normP1 = concP1.data.norm();

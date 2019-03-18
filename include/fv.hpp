@@ -91,8 +91,8 @@ struct FVSolver
       if (outsideElem)
       {
         uJump[facet.id] =
-            u[feSpace.dof.getId(insideElem->id, 0)] -
-            u[feSpace.dof.getId(outsideElem->id, 0)];
+            u[feSpace.dof.getId(insideElem->id)] -
+            u[feSpace.dof.getId(outsideElem->id)];
       }
     }
   }
@@ -117,7 +117,7 @@ struct FVSolver
         auto const * upwindElem = facet.facingElem[upwindDir].first;
         if (upwindElem)
         {
-          double const uUpwind = uOld[feSpace.dof.getId(upwindElem->id, 0)];
+          double const uUpwind = uOld[feSpace.dof.getId(upwindElem->id)];
           // by default use pure upwind
           double uLimited = uUpwind;
           // if there is a downwind element, compute a slope limited flux.
@@ -125,7 +125,7 @@ struct FVSolver
           auto const * downwindElem = facet.facingElem[1-upwindDir].first;
           if (downwindElem)
           {
-            double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id, 0)];
+            double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id)];
             // check uJump on all other facets of the upwind element
             auto const elemFacetIds = feSpace.mesh.elemToFacet[upwindElem->id];
             array<double, Elem_T::numFacets> rFacets;
@@ -193,7 +193,7 @@ struct FVSolver
     assert(static_cast<size_t>(u.size()) == feSpace.mesh.elementList.size());
     for (auto const & elem: feSpace.mesh.elementList)
     {
-      auto const id = feSpace.dof.getId(elem.id, 0);
+      auto const id = feSpace.dof.getId(elem.id);
       // std::cout << "elem " << id << std::endl;
       double const hinv = 1. / elem.volume();
       auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];

@@ -193,7 +193,7 @@ struct DOF
     }
   }
 
-  DOFid_T getId(id_T elemId, id_T pos) const
+  DOFid_T getId(id_T elemId, id_T pos = 0) const
   {
     return elemMap(elemId, pos);
   }

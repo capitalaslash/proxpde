@@ -9,13 +9,23 @@ template <typename T> int sgn(T val)
   return (T(0) < val) - (val < T(0));
 }
 
-template <typename Mesh>
-double computeMaxCFL(Mesh const & mesh, Vec2 const & vel, double const dt)
+template <typename FESpace>
+double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
 {
   double cfl = 0.;
-  for (auto const & e: mesh.elementList)
+  for (auto const & elem: feSpace.mesh.elementList)
   {
-    cfl = std::max(cfl, vel.norm() * dt / e.h_min());
+      // feSpace.curFE.reinit(elem);
+      FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
+      for(uint n=0; n<FESpace::CurFE_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpace.dof.getId(elem.id, n);
+        for (uint d=0; d<FESpace::RefFE_T::dim; ++d)
+          localVel[d] += vel[dofId + d*feSpace.dof.size];
+      }
+      localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
+
+    cfl = std::max(cfl, localVel.norm() * dt / elem.h_min());
   }
   return cfl;
 }

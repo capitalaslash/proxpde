@@ -27,6 +27,10 @@ using FacetMesh_T = Mesh<Elem_T::Facet_T>;
 using FacetFESpace_T = FESpace<FacetMesh_T,
                                FEType<Elem_T::Facet_T,0>::RefFE_T,
                                FEType<Elem_T::Facet_T,0>::RecommendedQR>;
+using VelFESpace_T = FESpace<Mesh_T,
+                            FEType<Elem_T,1>::RefFE_T,
+                            FEType<Elem_T,1>::RecommendedQR, 2>;
+
 
 template <typename Elem>
 void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
@@ -38,9 +42,15 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
 
 static scalarFun_T ic = [] (Vec3 const& p)
 {
-  // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-  if (p(0) < .4) return 1.;
-  return 0.;
+   return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50-(p(1)-0.7)*(p(1)-0.7)*50);
+//  if (p(0) < .4) return 1.;
+//  return 0.;
+};
+
+static Fun<2, 3> velFun = [] (Vec3 const& p)
+{
+  // double const r = std::sqrt((p(0)-0.5)*(p(0)-0.5) + (p(1)-0.5)*(p(1)-0.5));
+  return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
 };
 
 int main(int argc, char* argv[])
@@ -50,18 +60,18 @@ int main(int argc, char* argv[])
   t.start();
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  hexagonSquare(*mesh, true);
-  // MeshBuilder<Elem_T> meshBuilder;
-  // uint const numPtsX = (argc < 3)? 17 : std::stoul(argv[1]);
-  // uint const numPtsY = (argc < 3)? 17 : std::stoul(argv[2]);
-  // meshBuilder.build(
-  //       *mesh,
-  //       {0., 0., 0.},
-  //       {1., 1., 0.},
-  //       {{numPtsX, numPtsY, 0}},
-  //       true);
+  // hexagonSquare(*mesh, true);
+  MeshBuilder<Elem_T> meshBuilder;
+  uint const numPtsX = (argc < 3)? 21 : std::stoul(argv[1]);
+  uint const numPtsY = (argc < 3)? 21 : std::stoul(argv[2]);
+  meshBuilder.build(
+        *mesh,
+        {0., 0., 0.},
+        {1., 1., 0.},
+        {{numPtsX, numPtsY, 0}},
+        true);
   // readGMSH(*mesh, "square_uns.msh");
-  // buildFacets(*mesh, true);
+  buildFacets(*mesh, true);
   buildNormals(*mesh);
 
   std::unique_ptr<FacetMesh_T> facetMesh{new FacetMesh_T};
@@ -75,25 +85,42 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  auto const leftBC = [](Vec3 const &){return 1.;};
+  auto const zero = [](Vec3 const & p){return 0.;};
   BCList bcsP1{feSpaceP1};
-  bcsP1.addEssentialBC(side::LEFT, leftBC);
+  bcsP1.addEssentialBC(side::LEFT, zero);
+  bcsP1.addEssentialBC(side::BOTTOM, zero);
+  bcsP1.addEssentialBC(side::RIGHT, zero);
+  bcsP1.addEssentialBC(side::TOP, zero);
   BCList bcsP0{feSpaceP0};
-  bcsP0.addEssentialBC(side::LEFT, leftBC);
+  bcsP0.addEssentialBC(side::LEFT, zero);
+  bcsP0.addEssentialBC(side::BOTTOM, zero);
+  bcsP0.addEssentialBC(side::RIGHT, zero);
+  bcsP0.addEssentialBC(side::TOP, zero);
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  auto const velocity = Vec2(0.2, 0.0);
+  // auto const velocity = Vec2(0.2, 0.0);
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(*mesh, velocity, dt);
-  std::cout << "max cfl = " << cfl << std::endl;
 
   auto const & sizeP1 = feSpaceP1.dof.size;
+  VelFESpace_T velFESpace{*mesh};
+  Var velFE("vel", velFESpace.dof.size*2);
+  for (uint d=0; d<2; d++)
+  {
+    for (uint i =0; i< sizeP1; i++)
+    {
+      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1)=velFun(mesh->pointList[i].coord)[d];
+    }
+  }
+
+  auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
+  std::cout << "max cfl = " << cfl << std::endl;
+
   Builder builder{sizeP1};
   LUSolver solver;
-  Vec velOldStyle = Vec::Zero(2*sizeP1);
-  velOldStyle.block(   0, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[0]);
-  velOldStyle.block(sizeP1, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[1]);
-  AssemblyAdvection advection(1.0, velOldStyle, feSpaceP1);
+  // Vec velOldStyle = Vec::Zero(2*sizeP1);
+  // velOldStyle.block(     0, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[0]);
+  // velOldStyle.block(sizeP1, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[1]);
+  AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
   AssemblyMass timeder(1./dt, feSpaceP1);
   Vec concP1Old(sizeP1);
   AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
@@ -107,8 +134,10 @@ int main(int argc, char* argv[])
 
   FVSolver_T fv{feSpaceP0, bcsP0};
   Table<double, 2> vel(sizeP1, 2);
-  vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
-  vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);
+  //vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
+  //vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);
+  vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);
+  vel.block(0, 1, sizeP1, 1) = velFE.data.block(sizeP1, 0, sizeP1, 1);
 
   uint const ntime = 50;
   double time = 0.0;
@@ -118,6 +147,8 @@ int main(int argc, char* argv[])
   ioP0.print({concP0});
   IOManager ioFlux{facetFESpace, "output_advection2dtri/flux"};
   ioFlux.print({flux});
+  IOManager ioVel{velFESpace, "output_advection2dtri/vel"};
+  ioVel.print({velFE});
 
   for(uint itime=0; itime<ntime; itime++)
   {

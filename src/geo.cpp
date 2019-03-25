@@ -1,3 +1,3 @@
 #include "geo.hpp"
 
-GeoElem::~GeoElem() {}
+GeoElem::~GeoElem() = default;

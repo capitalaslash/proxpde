@@ -81,7 +81,7 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpaceT const & fe, BCList<FESpaceT> bcList):
+  FVSolver(FESpaceT const & fe, BCList<FESpaceT> const & bcList):
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),
@@ -234,7 +234,7 @@ struct FVSolver
   }
 
   FESpaceT const & feSpace;
-  BCList<FESpaceT> bcs;
+  BCList<FESpaceT> const & bcs;
   Vec uOld;
   Vec uJump;
   Vec fluxes;

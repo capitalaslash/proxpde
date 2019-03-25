@@ -7,10 +7,10 @@
 class Point
 {
 public:
-  Point(Vec3 const & c,
+  Point(Vec3 const c,
         id_T const i,
         marker_T const m = markerNotSet):
-    coord(c),
+    coord(std::move(c)),
     id(i),
     marker(m)
   {}
@@ -51,10 +51,10 @@ struct GeoElem
     marker{m}
   {}
 
-  GeoElem(PointList_T const & pList,
+  GeoElem(PointList_T const pList,
           id_T const i,
           marker_T const m):
-    pointList{pList},
+    pointList{std::move(pList)},
     id{i},
     marker{m}
   {}
@@ -87,8 +87,10 @@ struct GeoElem
   // check if geoelem is on boundary
   bool onBoundary() const
   {
-    // the facet is on the boundary iff there is an inside element and no outside element
-    return facingElem[1].ptr == nullptr && facingElem[0].ptr != nullptr;
+    // check that facingElems have been initialized
+    assert(facingElem[0].ptr != nullptr);
+    // the facet is on the boundary iff there is no outside element
+    return facingElem[1].ptr == nullptr;
   }
 
   PointList_T pointList = {};
@@ -160,17 +162,17 @@ struct PointElem: public GeoElem
 
   PointElem() = default;
 
-  virtual ~PointElem() {}
+  ~PointElem() override = default;
 
-  virtual Vec3 midpoint() const final {return pointList[0]->coord;}
-  virtual Vec3 origin() const final {return pointList[0]->coord;}
-  virtual double volume() const final {return 1.;}
-  virtual void buildNormal() final
+  Vec3 midpoint() const final {return pointList[0]->coord;}
+  Vec3 origin() const final {return pointList[0]->coord;}
+  double volume() const final {return 1.;}
+  void buildNormal() final
   {
     _normal = Vec3{1.0, 0.0, 0.0};
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     return Vec3{1.0, 0.0, 0.0};
   }
@@ -209,7 +211,7 @@ public:
 
   Line() = default;
 
-  virtual ~Line() {}
+  ~Line() override = default;
 
   Vec3 midpoint() const final
   {
@@ -226,14 +228,14 @@ public:
     return (pointList[1]->coord - pointList[0]->coord).norm();
   }
 
-  virtual void buildNormal() final
+  void buildNormal() final
   {
     Vec3 const length =  pointList[1]->coord - pointList[0]->coord;
     _normal = Vec3{length[1], -length[0], 0.0};
     _normal.normalize();
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     Vec3 const length =  pointList[1]->coord - pointList[0]->coord;
     auto n = Vec3{length[1], -length[0], 0.0};
@@ -275,7 +277,7 @@ public:
 
   Triangle() = default;
 
-  virtual ~Triangle() {}
+  ~Triangle() override = default;
 
   Vec3 midpoint() const final
   {
@@ -296,7 +298,7 @@ public:
     return .5 * v1.cross(v2).norm();
   }
 
-  virtual void buildNormal() final
+  void buildNormal() final
   {
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[2]->coord - pointList[0]->coord;
@@ -304,7 +306,7 @@ public:
     _normal.normalize();
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[2]->coord - pointList[0]->coord;
@@ -357,7 +359,7 @@ public:
 
   Quad() = default;
 
-  virtual ~Quad() {}
+  ~Quad() override = default;
 
   Vec3 midpoint() const final
   {
@@ -380,7 +382,7 @@ public:
     return .5*(v2.cross(v1).norm() + v2.cross(v3).norm());
   }
 
-  virtual void buildNormal() final
+  void buildNormal() final
   {
     // TODO: we consider only planar quads
     auto const v1 = pointList[1]->coord-pointList[0]->coord;
@@ -389,7 +391,7 @@ public:
     _normal.normalize();
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     // TODO: we consider only planar quads
     auto const v1 = pointList[1]->coord-pointList[0]->coord;
@@ -433,7 +435,7 @@ public:
 
   Tetrahedron() = default;
 
-  virtual ~Tetrahedron() {}
+  ~Tetrahedron() override = default;
 
   Vec3 midpoint() const final
   {
@@ -456,12 +458,12 @@ public:
     return (v1.cross(v2)).dot(v3) / 6.;
   }
 
-  virtual void buildNormal() final
+  void buildNormal() final
   {
     std::abort();
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     std::abort();
   }
@@ -500,7 +502,7 @@ public:
 
   Hexahedron() = default;
 
-  virtual ~Hexahedron() {}
+  ~Hexahedron() override = default;
 
   Vec3 midpoint() const final
   {
@@ -527,12 +529,12 @@ public:
     return (v1.cross(v2)).dot(v3);
   }
 
-  virtual void buildNormal() final
+  void buildNormal() final
   {
     std::abort();
   }
 
-  virtual Vec3 normal() const final
+  Vec3 normal() const final
   {
     std::abort();
   }

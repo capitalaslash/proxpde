@@ -19,7 +19,7 @@ template<typename T>
 constexpr auto accumulator(T const & array, size_t const end =  std::tuple_size<T>::value)
 {
   // static_assert(N <= std::tuple_size<T>::value, "cannot accumulate beyond array size");
-  typename T::value_type sum(typename T::value_type(0));
+  auto sum = typename T::value_type(0);
   for(uint i=0; i<end; ++i)
   {
     sum += array[i];

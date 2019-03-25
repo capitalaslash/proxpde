@@ -25,35 +25,36 @@ std::string join(std::vector<T> const & v)
 
 enum class XDMFNumberType : int8_t
 {
-    INT,
-    FLOAT
+  INT,
+  FLOAT
 };
 
 static const std::map<XDMFNumberType, char const *> XDMFNumberTypeToString =
 {
-    {XDMFNumberType::INT, "Int"},
-    {XDMFNumberType::FLOAT, "Float"},
+  {XDMFNumberType::INT, "Int"},
+  {XDMFNumberType::FLOAT, "Float"},
 };
 
 enum class XDMFFormat : int8_t
 {
-    HDF,
-    //INLINE
+  HDF,
+  // INLINE
 };
 
 static const std::map<XDMFFormat, char const *> XDMFFormatToString =
 {
-    {XDMFFormat::HDF, "HDF"},
+  {XDMFFormat::HDF, "HDF"},
+  // {XDMFFormat::INLINE, "XML"},
 };
 
 template <typename RefFE>
 class XDMFDoc
 {
 public:
-  explicit XDMFDoc(fs::path const & fp,
+  explicit XDMFDoc(fs::path const fp,
                    std::string_view s,
                    std::string_view geoS = "mesh"):
-    filepath(fp),
+    filepath(std::move(fp)),
     suffix(s),
     geoSuffix(geoS)
   {
@@ -99,12 +100,12 @@ public:
     auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
         + ".h5:/connectivity\n";
     createDataItem(
-            topoNode,
-            {numElems, RefFE::numGeoFuns},
-            XDMFNumberType::INT,
-            8,
-            XDMFFormat::HDF,
-            buf);
+          topoNode,
+          {numElems, RefFE::numGeoFuns},
+          XDMFNumberType::INT,
+          8,
+          XDMFFormat::HDF,
+          buf);
   }
 
   void setGeometry(uint const mapSize)
@@ -191,8 +192,8 @@ class HDF5
 {
 public:
 
-  HDF5(fs::path const & fn):
-    filepath(fn),
+  HDF5(fs::path const fn):
+    filepath(std::move(fn)),
     file_id(H5Fcreate(filepath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)),
     status(0)
   {}
@@ -263,11 +264,11 @@ struct IOManager
   using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
 
   IOManager(FESpace_T const & fe,
-            fs::path const & fp,
+            fs::path const fp,
             double const tin = 0.0,
             uint const it = 0):
     feSpace(fe),
-    filepath(fp),
+    filepath(std::move(fp)),
     // h5Time{fs::path{filepath} += ".time.h5"},
     time(tin),
     iter(it)

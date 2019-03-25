@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
   config["tolerance"] = 1.e-8;
   config["maxNumIters"] = 2000;
   using DiagPrec = Eigen::DiagonalPreconditioner<Mat::Scalar>;
-  using ILUTPrec = Eigen::IncompleteLUT<Mat::Scalar>;
+  // using ILUTPrec = Eigen::IncompleteLUT<Mat::Scalar>;
 
   t.start("BiCGSTAB DiagPrec");
   std::cout << "BiCGSTAB DiagPrec" << std::endl;

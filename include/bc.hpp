@@ -63,33 +63,37 @@ public:
 
   // use manual-provided set of DOFs
   BCEss(FESpace_T const & feSpace,
-        DofSet_T const & dofSet,
-        Value_T const & v):
+        DofSet_T const dofSet,
+        Value_T const v):
     curFE(feSpace.curFE),
-    constrainedDOFSet(dofSet),
+    constrainedDOFSet(std::move(dofSet)),
     constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
     dimSize(feSpace.dof.size),
-    value(v)
+    value(std::move(v))
   {
     fillConstrainedDOFVector();
+    std::cout << "new bc on dofset with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
   // this can be used with scalar FESpaces only
   BCEss(FESpace_T const & feSpace,
-        DofSet_T const & dofSet,
+        DofSet_T const dofSet,
         scalarFun_T const & v):
-    BCEss(feSpace, dofSet, [v](Vec3 const & p){return Vec1{v(p)};})
-  {
-    fillConstrainedDOFVector();
-  }
+    BCEss(feSpace, std::move(dofSet), [v](Vec3 const & p){return Vec1{v(p)};})
+  {}
 
   BCEss(FESpace_T const & feSpace,
-        marker_T m,
-        Fun<FESpace_T::dim,3> const & v,
-        std::vector<uint> const & comp = {0}):
-    BCEss(feSpace, fillDofSet(feSpace, m, comp), v)
+        marker_T const m,
+        Fun<FESpace_T::dim,3> const v,
+        std::vector<uint> const & comp = allComp<FESpace>()):
+    curFE(feSpace.curFE),
+    constrainedDOFSet(fillDofSet(feSpace, m, comp)),
+    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
+    dimSize(feSpace.dof.size),
+    value(std::move(v)),
+    marker(m)
   {
-    marker = m;
+    fillConstrainedDOFVector();
     std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
@@ -97,9 +101,17 @@ public:
   BCEss(FESpace_T const & feSpace,
         marker_T m,
         scalarFun_T const & v,
-        std::vector<uint> const & comp = {0}):
-    BCEss(feSpace, m, [v](Vec3 const & p){return Vec1{v(p)};}, comp)
-  {}
+        std::vector<uint> const & comp = allComp<FESpace>()):
+    curFE(feSpace.curFE),
+    constrainedDOFSet(fillDofSet(feSpace, m, comp)),
+    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
+    dimSize(feSpace.dof.size),
+    value([v](Vec3 const & p){return Vec1{v(p)};}),
+    marker(m)
+  {
+    fillConstrainedDOFVector();
+    std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
+  }
 
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
@@ -164,10 +176,13 @@ struct BCNat
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCNat(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = allComp<FESpace>()):
+  explicit BCNat(
+      marker_T const m,
+      Fun<FESpace::dim,3> const f,
+      std::vector<uint> const c = allComp<FESpace>()):
     marker(m),
-    value(f),
-    comp(c)
+    value(std::move(f)),
+    comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
   }
@@ -180,7 +195,7 @@ struct BCNat
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace::dim,3> const value;
-  std::vector<uint> comp;
+  std::vector<uint> const comp;
 };
 
 // this class deals only with the matrix part of the mixed bc, the rhs part is
@@ -193,10 +208,10 @@ struct BCMixed
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCMixed(marker_T m, Fun<FESpace::dim,3> const & f, std::vector<uint> c = {0}):
+  explicit BCMixed(marker_T m, Fun<FESpace::dim,3> const f, std::vector<uint> const c = allComp<FESpace>()):
     marker(m),
-    coeff(f),
-    comp(c)
+    coeff(std::move(f)),
+    comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
   }
@@ -209,7 +224,7 @@ struct BCMixed
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace::dim,3> const coeff;
-  std::vector<uint> comp;
+  std::vector<uint> const comp;
 };
 
 template <typename FESpace>
@@ -227,8 +242,8 @@ public:
 
   void addEssentialBC(
       marker_T const m,
-      Fun<FESpace::dim,3> const & f,
-      std::vector<uint> const & comp = allComp<FESpace>())
+      Fun<FESpace::dim,3> const f,
+      std::vector<uint> const comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
@@ -236,7 +251,7 @@ public:
       abort();
     }
     fixedMarkers.insert(m);
-    bcEssList.emplace_back(feSpace, m, f, comp);
+    bcEssList.emplace_back(feSpace, m, std::move(f), std::move(comp));
   }
 
 //  // this overload works only when FESpace::dim == 1
@@ -244,8 +259,8 @@ public:
             std::enable_if_t<FESpace1::dim == 1, bool> = true>
   void addEssentialBC(
       marker_T const m,
-      scalarFun_T const & f,
-      std::vector<uint> const & comp = allComp<FESpace>())
+      scalarFun_T const f,
+      std::vector<uint> const comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
@@ -253,7 +268,7 @@ public:
       abort();
     }
     fixedMarkers.insert(m);
-    bcEssList.emplace_back(feSpace, m, f, comp);
+    bcEssList.emplace_back(feSpace, m, std::move(f), std::move(comp));
   }
 
   // otherwise, we fail
@@ -261,8 +276,8 @@ public:
             std::enable_if_t<FESpace1::dim != 1, bool> = true>
   void addEssentialBC(
       marker_T const,
-      scalarFun_T const &,
-      std::vector<uint> const &)
+      scalarFun_T const,
+      std::vector<uint> const)
   {
     std::cerr << __FILE__ << ":" << __LINE__ << " > this funcytion only works with FESpace::dim == 1" << std::endl;
     std::abort();
@@ -270,29 +285,29 @@ public:
 
   void addEssentialBC(
       DofSet_T dofSet,
-      Fun<FESpace::dim,3> const & f)
+      Fun<FESpace::dim,3> const f)
   {
-    bcEssList.emplace_back(feSpace, dofSet, f);
+    bcEssList.emplace_back(feSpace, dofSet, std::move(f));
   }
 
   void addEssentialBC(
       DofSet_T dofSet,
-      scalarFun_T const & f)
+      scalarFun_T const f)
   {
-    bcEssList.emplace_back(feSpace, dofSet, f);
+    bcEssList.emplace_back(feSpace, dofSet, std::move(f));
   }
 
   void addNaturalBC(
       marker_T const m,
-      Fun<FESpace::dim,3> const & f,
-      std::vector<uint> const & comp = allComp<FESpace>())
+      Fun<FESpace::dim,3> const f,
+      std::vector<uint> const comp = allComp<FESpace>())
   {
     if (checkMarkerFixed(m))
     {
       std::cerr << "the marker " << m << " has already been fixed." << std::endl;
       abort();
     }
-    bcNatList.emplace_back(m, f, comp);
+    bcNatList.emplace_back(m, std::move(f), std::move(comp));
     fixedMarkers.insert(m);
   }
 
@@ -301,10 +316,10 @@ public:
             std::enable_if_t<FESpace1::dim == 1, bool> = true>
   void addNaturalBC(
       marker_T const m,
-      scalarFun_T const & f,
-      std::vector<uint> const & comp = allComp<FESpace>())
+      scalarFun_T const f,
+      std::vector<uint> const comp = allComp<FESpace>())
   {
-    addNaturalBC(m, [f] (Vec3 const & p) {return Vec1(f(p));}, comp);
+    addNaturalBC(m, [f] (Vec3 const & p) {return Vec1(f(p));}, std::move(comp));
   }
 
   // otherwise, we should fail
@@ -312,8 +327,8 @@ public:
             std::enable_if_t<FESpace1::dim != 1, bool> = true>
   void addNaturalBC(
       marker_T const,
-      scalarFun_T const &,
-      std::vector<uint> const &)
+      scalarFun_T const,
+      std::vector<uint> const)
   {
     std::cerr << __FILE__ << ":" << __LINE__ << " > this funcytion only works with FESpace::dim == 1" << std::endl;
     std::abort();
@@ -328,12 +343,12 @@ public:
   // a >= \eps > 0 cohercitivity to guarantee solution
   void addMixedBC(
       marker_T const m,
-      scalarFun_T const & a,
-      scalarFun_T const & b,
-      std::vector<uint> const & comp = allComp<FESpace>())
+      scalarFun_T const a,
+      scalarFun_T const b,
+      std::vector<uint> const comp = allComp<FESpace>())
   {
-    addNaturalBC(m, b, comp);
-    bcMixedList.emplace_back(m, [a] (Vec3 const & p) {return Vec1(a(p));}, comp);
+    addNaturalBC(m, std::move(b), comp);
+    bcMixedList.emplace_back(m, [a] (Vec3 const & p) {return Vec1(a(p));}, std::move(comp));
   }
 
   bool checkMarkerFixed(marker_T const m) const

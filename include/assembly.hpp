@@ -11,9 +11,9 @@ struct AssemblyBase
 {
   using CompList = std::vector<uint>;
 
-  uint const offset_row;
-  uint const offset_clm;
-  CompList const comp;
+  uint const offset_row = 0U;
+  uint const offset_clm = 0U;
+  CompList const comp = {};
 
   bool hasComp(uint c) const
   {
@@ -34,7 +34,7 @@ struct Diagonal: public AssemblyBase
     feSpace(fe)
   {}
 
-  virtual ~Diagonal() {}
+  virtual ~Diagonal() = default;
 
   virtual void build(LMat_T & Ke) const = 0;
   virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
@@ -69,7 +69,7 @@ struct Coupling: public AssemblyBase
     feSpace2(fe2)
   {}
 
-  virtual ~Coupling() {}
+  virtual ~Coupling() = default;
 
   virtual void build(LMat_T & Ke) const = 0;
 
@@ -96,7 +96,7 @@ struct AssemblyVector: public AssemblyBase
     feSpace(fe)
   {}
 
-  virtual ~AssemblyVector() {}
+  virtual ~AssemblyVector() = default;
 
   virtual void build(LVec_T & Fe) const = 0;
 
@@ -125,7 +125,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
     coeff(c)
   {}
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -140,7 +140,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const
+  LMat_T build(/*LMat_T & Ke*/) const override
   {
     LMat_T Ke;
     this->build(Ke);
@@ -167,7 +167,7 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
     coeff(c)
   {}
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -200,7 +200,7 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const
+  LMat_T build(/*LMat_T & Ke*/) const override
   {
     LMat_T Ke;
     this->build(Ke);
@@ -228,7 +228,7 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
     velOld(uOld)
   {}
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
 //     using CurFE_T = typename FESpace_T::CurFE_T;
 //     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -282,7 +282,7 @@ struct AssemblyMass: public Diagonal<FESpace>
      coeff(c)
   {}
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
@@ -298,7 +298,7 @@ struct AssemblyMass: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const
+  LMat_T build(/*LMat_T & Ke*/) const override
   {
     LMat_T Ke;
     this->build(Ke);
@@ -325,7 +325,7 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
      coeff(c)
   {}
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
@@ -341,7 +341,7 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build() const
+  LMat_T build() const override
   {
     LMat_T Ke;
     this->build(Ke);
@@ -359,22 +359,22 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const & r,
+  AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const r,
                       FESpace & fe,
-                      AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                      AssemblyBase::CompList const comp = allComp<FESpace>(),
                       uint offset_row = 0):
-    AssemblyVector<FESpace>(fe, offset_row, comp),
-    rhs(r)
+    AssemblyVector<FESpace>(fe, offset_row, std::move(comp)),
+    rhs(std::move(r))
   {}
 
   // this constructor is available only when FESpace::dim == 1
   template <typename FESpace1 = FESpace,
             std::enable_if_t<FESpace1::dim == 1, bool> = true>
-  AssemblyAnalyticRhs(scalarFun_T const & r,
+  AssemblyAnalyticRhs(scalarFun_T const r,
                       FESpace & fe,
-                      AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                      AssemblyBase::CompList const comp = allComp<FESpace>(),
                       uint offset_row = 0):
-    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, comp, offset_row)
+    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, std::move(comp), offset_row)
   {}
 
   // otherwise, we fail
@@ -389,7 +389,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     std::abort();
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -427,7 +427,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     vel(u)
   {}
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -449,7 +449,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const
+  LMat_T build(/*LMat_T & Ke*/) const override
   {
     LMat_T Ke;
     this->build(Ke);
@@ -486,7 +486,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
           "the two quad rule are not the same");
   }
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -545,7 +545,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
           "the two quad rule are not the same");
   }
 
-  void build(LMat_T & Ke) const
+  void build(LMat_T & Ke) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -604,7 +604,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
           "the two quad rule are not the same");
   }
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     // if constexpr (!std::is_same<FESpace_T,FESpaceRhs_T>::value)
@@ -613,7 +613,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
     }
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
@@ -668,13 +668,13 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
           "the two quad rule are not the same");
   }
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpaceRhs.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
@@ -726,13 +726,13 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
           "the two quad rule are not the same");
   }
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpaceRhs.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
@@ -798,7 +798,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
           std::is_same<
           typename FESpace_T::CurFE_T::QR_T,
           typename FESpaceRhs_T::CurFE_T::QR_T>::value,
-          "the two quad rule are not the same");
+          "the two quad rules are not the same");
 
     if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR &&
                   FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::SCALAR)
@@ -827,12 +827,12 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     }
   }
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     assembly->reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     assembly->build(Fe);
   }
@@ -866,13 +866,13 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace1>
     data(vec)
   {}
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpace2.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -930,13 +930,13 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
     data(vec)
   {}
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpace2.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -998,13 +998,13 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
     data(vec)
   {}
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpace2.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -1077,13 +1077,13 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
     data(vec)
   {}
 
-  void reinit(GeoElem const & elem) const
+  void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
     feSpace2.curFE.reinit(elem);
   }
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
@@ -1141,17 +1141,17 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   using QR_T = SideQR_T<typename FESpace::QR_T>;
   using FacetCurFE_T = CurFE<Facet_T, QR_T>;
 
-  AssemblyBCNormal(scalarFun_T const & r,
+  AssemblyBCNormal(scalarFun_T const r,
                    marker_T const m,
                    FESpace & fe,
-                   AssemblyBase::CompList const & comp = allComp<FESpace>(),
+                   AssemblyBase::CompList const comp = allComp<FESpace>(),
                    uint offset_row = 0):
-    AssemblyVector<FESpace>(fe, offset_row, comp),
-    rhs(r),
+    AssemblyVector<FESpace>(fe, offset_row, std::move(comp)),
+    rhs(std::move(r)),
     marker(m)
   {}
 
-  void build(LVec_T & Fe) const
+  void build(LVec_T & Fe) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 

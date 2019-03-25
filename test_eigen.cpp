@@ -1,5 +1,5 @@
-#include <iostream>
-#include <array>
+#include "def.hpp"
+
 #include <Eigen/Dense>
 
 int main()

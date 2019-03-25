@@ -28,8 +28,8 @@ using FacetFESpace_T = FESpace<FacetMesh_T,
                                FEType<Elem_T::Facet_T,0>::RefFE_T,
                                FEType<Elem_T::Facet_T,0>::RecommendedQR>;
 using VelFESpace_T = FESpace<Mesh_T,
-                            FEType<Elem_T,1>::RefFE_T,
-                            FEType<Elem_T,1>::RecommendedQR, 2>;
+                             FEType<Elem_T,1>::RefFE_T,
+                             FEType<Elem_T,1>::RecommendedQR, 2>;
 
 
 template <typename Elem>
@@ -47,7 +47,7 @@ static scalarFun_T ic = [] (Vec3 const& p)
 //  return 0.;
 };
 
-static Fun<2, 3> velFun = [] (Vec3 const& p)
+static Fun<2, 3> velFun = [] (Vec3 const & p)
 {
   // double const r = std::sqrt((p(0)-0.5)*(p(0)-0.5) + (p(1)-0.5)*(p(1)-0.5));
   return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));

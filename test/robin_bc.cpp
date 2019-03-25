@@ -20,9 +20,9 @@ int test(YAML::Node const & config)
 {
   MilliTimer t;
 
-  const double hConv = config["hConv"].as<double>();
-  const double temp0 = config["temp0"].as<double>();
-  const double tempA = config["tempA"].as<double>();
+  auto const hConv = config["hConv"].as<double>();
+  auto const temp0 = config["temp0"].as<double>();
+  auto const tempA = config["tempA"].as<double>();
 
   std::cout << "test setup:\n"
             << "  - hConv = " << hConv << "\n"
@@ -41,7 +41,7 @@ int test(YAML::Node const & config)
                     + temp0;
   };
 
-  uint const numPts = config["n"].as<uint>()+1;
+  auto const numPts = config["n"].as<uint>()+1;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 

@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
   std::cout << "read config file: " << t << " ms" << std::endl;
 
   t.start();
-  uint const numPts_x = config["nx"].as<uint>()+1;
-  uint const numPts_y = config["ny"].as<uint>()+1;
+  auto const numPts_x = config["nx"].as<uint>()+1;
+  auto const numPts_y = config["ny"].as<uint>()+1;
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*dim + dofP;
 
-  double const mu = config["mu"].as<double>();
-  double const dt = config["timestep"].as<double>();
+  auto const mu = config["mu"].as<double>();
+  auto const dt = config["timestep"].as<double>();
   Vec velOld{dofU*dim};
 
   AssemblyTensorStiffness stiffness(mu, feSpaceVel);
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
   // Eigen::UmfPackLU<Mat> solver;
   IterSolver solver;
   IterSolver fixedSolver;
-  uint const ntime = config["numsteps"].as<uint>();
+  auto const ntime = config["numsteps"].as<uint>();
   double time = 0.0;
   for (uint itime=0; itime<ntime; itime++)
   {

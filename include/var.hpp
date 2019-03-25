@@ -6,25 +6,19 @@
 struct Var
 {
   explicit Var(std::string_view const n, uint size = 0):
-    name(n),
+    name{n},
     data(size)
   {}
 
-  Var(std::string_view const n, Vec const & vec):
-    name(n),
-    data(vec)
+  Var(std::string_view const n, Vec const vec):
+    name{n},
+    data(std::move(vec))
   {}
 
   Var(std::string_view const n, Vec const & vec, uint offset, uint size):
-    name(n),
+    name{n},
     data(vec.block(offset,0,size,1))
   {}
-
-  // template <typename FESpace>
-  // Var(std::string n, FESpace const & feSpace):
-  //   name(n),
-  //   data(feSpace.dof.size * feSpace.dim)
-  // {}
 
   std::string name;
   Vec data;

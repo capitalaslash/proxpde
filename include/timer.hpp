@@ -19,7 +19,7 @@ class Timer
 public:
   using Clock_T = std::chrono::high_resolution_clock;
 
-  explicit Timer() {}
+  Timer() = default;
 
   void start(std::string_view const name = "no name")
   {

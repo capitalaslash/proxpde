@@ -87,15 +87,15 @@ int main(int argc, char* argv[])
   t.start();
   auto const zero = [](Vec3 const & p){return 0.;};
   BCList bcsP1{feSpaceP1};
-  bcsP1.addEssentialBC(side::LEFT, zero);
-  bcsP1.addEssentialBC(side::BOTTOM, zero);
-  bcsP1.addEssentialBC(side::RIGHT, zero);
-  bcsP1.addEssentialBC(side::TOP, zero);
+  bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, zero});
+  bcsP1.addBC(BCEss{feSpaceP1, side::BOTTOM, zero});
+  bcsP1.addBC(BCEss{feSpaceP1, side::RIGHT, zero});
+  bcsP1.addBC(BCEss{feSpaceP1, side::TOP, zero});
   BCList bcsP0{feSpaceP0};
-  bcsP0.addEssentialBC(side::LEFT, zero);
-  bcsP0.addEssentialBC(side::BOTTOM, zero);
-  bcsP0.addEssentialBC(side::RIGHT, zero);
-  bcsP0.addEssentialBC(side::TOP, zero);
+  bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, zero});
+  bcsP0.addBC(BCEss{feSpaceP0, side::BOTTOM, zero});
+  bcsP0.addBC(BCEss{feSpaceP0, side::RIGHT, zero});
+  bcsP0.addBC(BCEss{feSpaceP0, side::TOP, zero});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // auto const velocity = Vec2(0.2, 0.0);

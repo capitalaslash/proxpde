@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
   FESpace_T feSpace{*mesh};
 
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
-  bcs.addEssentialBC(side::BOTTOM, [](Vec3 const &){return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
 
   Builder builder{feSpace.dof.size};
   builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);

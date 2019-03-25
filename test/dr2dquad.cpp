@@ -86,10 +86,10 @@ int main(int argc, char* argv[])
 
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::BOTTOM, zeroFun);
-  bcs.addEssentialBC(side::RIGHT, zeroFun);
-  bcs.addEssentialBC(side::TOP, zeroFun);
-  bcs.addEssentialBC(side::LEFT, zeroFun);
+  bcs.addBC(BCEss{feSpace, side::RIGHT, zeroFun});
+  bcs.addBC(BCEss{feSpace, side::LEFT, zeroFun});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, zeroFun});
+  bcs.addBC(BCEss{feSpace, side::TOP, zeroFun});
 
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyMass mass{1.0, feSpace};

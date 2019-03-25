@@ -121,9 +121,9 @@ int main(int argc, char* argv[])
   t.start("bcs");
   auto const leftBC = [](Vec3 const &){return 1.;};
   BCList bcsP1{feSpaceP1};
-  bcsP1.addEssentialBC(side::LEFT, leftBC);
+  bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, leftBC});
   BCList bcsP0{feSpaceP0};
-  bcsP0.addEssentialBC(side::LEFT, leftBC);
+  bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, leftBC});
   t.stop();
 
   t.start("fe builder");

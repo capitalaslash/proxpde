@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
     }
     return v;
   };
-  bcs.addEssentialBC(side::LEFT, bcValue);
-  bcs.addNaturalBC(side::RIGHT, bcValue);
+  bcs.addBC(BCEss{feSpace, side::LEFT, bcValue});
+  bcs.addBC(BCNat<FESpace_T>{side::RIGHT, bcValue});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
 

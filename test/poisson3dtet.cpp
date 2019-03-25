@@ -46,8 +46,8 @@ int main(int argc, char* argv[])
   t.start();
   BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
-  bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();

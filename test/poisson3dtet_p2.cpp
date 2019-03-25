@@ -43,8 +43,8 @@ int test(YAML::Node const & config)
   t.start("bcs");
   BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
-  bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
   t.stop();
 
   // std::cout << bcs << std::endl;

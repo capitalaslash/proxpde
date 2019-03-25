@@ -41,12 +41,12 @@ int main(int argc, char* argv[])
   auto zero = [] (Vec3 const &) { return Vec3::Constant(0.); };
   auto inlet = [] (Vec3 const & p) { return Vec3(0., 0.5*(1.-p(0)*p(0)), 0.); };
   BCList bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::BOTTOM, inlet);
-  bcsVel.addEssentialBC(side::RIGHT, zero);
-  bcsVel.addEssentialBC(side::TOP, zero, {0, 2});
-  bcsVel.addEssentialBC(side::LEFT, zero, {0, 2});
-  bcsVel.addEssentialBC(side::BACK, zero, {2});
-  bcsVel.addEssentialBC(side::FRONT, zero, {2});
+  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
+  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, zero, {0, 2}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero, {0, 2}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::BACK, zero, {2}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::FRONT, zero, {2}});
   // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
   BCList bcsP{feSpaceP};
 

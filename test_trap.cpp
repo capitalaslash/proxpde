@@ -51,7 +51,7 @@ int main()
 
   // bc setup
   BCList bcs{feSpace};
-  // bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
+  // bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
 
   AssemblyMass mass{1.0, feSpace};
 

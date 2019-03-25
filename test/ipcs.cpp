@@ -43,22 +43,22 @@ int main(int argc, char* argv[])
   auto pIn = [] (Vec3 const &) {return -12.;};
 
   BCList bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, zero);
-  bcsVel.addEssentialBC(side::LEFT, zero);
-  // bcsVel.addEssentialBC(side::BOTTOM, inlet);
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero});
+  // bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
   BCList bcsP{feSpaceP};
-  bcsP.addEssentialBC(side::TOP, [] (Vec3 const &) {return 0.;});
+  bcsP.addBC(BCEss{feSpaceP, side::TOP, [] (Vec3 const &) {return 0.;}});
   // DofSet_T pinSet = {1};
-  // bcsP.addEssentialBC(pinSet, [] (Vec3 const &) {return 0.;});
+  // bcsP.addBC(BCEss{feSpaceP, pinSet, [] (Vec3 const &) {return 0.;}});
 
-  eqnUstar.bcList.addEssentialBC(side::RIGHT, zero);
-  eqnUstar.bcList.addEssentialBC(side::LEFT, zero);
-  // eqnUstar.bcList.addEssentialBC(side::BOTTOM, inlet);
-  eqnP.bcList.addEssentialBC(side::TOP, [] (Vec3 const &) {return 0.;});
-  eqnP.bcList.addEssentialBC(side::BOTTOM, [] (Vec3 const &) {return 12.;});
-  eqnU.bcList.addEssentialBC(side::RIGHT, zero);
-  eqnU.bcList.addEssentialBC(side::LEFT, zero);
-  // eqnU.bcList.addEssentialBC(side::BOTTOM, inlet);
+  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::RIGHT, zero});
+  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::LEFT, zero});
+  // eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::BOTTOM, inlet});
+  eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::TOP, [] (Vec3 const &) {return 0.;}});
+  eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, [] (Vec3 const &) {return 12.;}});
+  eqnU.bcList.addBC(BCEss{eqnU.feSpace, side::RIGHT, zero});
+  eqnU.bcList.addBC(BCEss{eqnU.feSpace, side::LEFT, zero});
+  // eqnU.bcList.addBC(BCEss{eqnU.feSpace, side::BOTTOM, inlet});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // t.start();

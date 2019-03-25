@@ -38,12 +38,12 @@ int main(int argc, char* argv[])
   auto zeroFun = [] (Vec3 const&) {return 0.;};
   auto oneFun = [] (Vec3 const&) {return 1.;};
   BCList bcsU{feSpaceU};
-  bcsU.addEssentialBC(side::CIRCLE, zeroFun);
-  bcsU.addEssentialBC(side::TOP, zeroFun);
+  bcsU.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
+  bcsU.addBC(BCEss{feSpaceU, side::TOP, zeroFun});
   bcsU.addNaturalBC(side::LEFT, oneFun);
   BCList bcsV{feSpaceU};
-  bcsV.addEssentialBC(side::CIRCLE, zeroFun);
-  bcsV.addEssentialBC(side::LEFT, zeroFun);
+  bcsV.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
+  bcsV.addBC(BCEss{feSpaceU, side::LEFT, zeroFun});
   BCList bcsP(feSpaceP);
 
   uint const numDOFs = 2*feSpaceU.dof.size + feSpaceP.dof.size;

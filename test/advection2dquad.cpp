@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
   t.start();
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 1.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 1.;}});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   double const dt = 0.1;

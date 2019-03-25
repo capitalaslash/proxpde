@@ -20,11 +20,13 @@ static scalarFun_T rhs = [] (Vec3 const& p)
 {
   return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   // return 2.;
+  // return 0.;
 };
 static scalarFun_T exactSol = [] (Vec3 const& p)
 {
   return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   // return 2.*p(0) - p(0)*p(0);
+  // return 1.;
 };
 
 int test(YAML::Node const & config)
@@ -48,8 +50,8 @@ int test(YAML::Node const & config)
   t.start("bcs");
   BCList bcs{feSpace};
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
-  bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
   t.stop();
 
   t.start("fe build");

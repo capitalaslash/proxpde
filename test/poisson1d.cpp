@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [](Vec3 const &){return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
   t.stop();
 
   t.start("fe build");
@@ -89,6 +89,8 @@ int main(int argc, char* argv[])
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
   t.stop();
+
+  // std::cout << "u:\n" << sol.data << std::endl;
 
   Var exact{"exact"};
   auto rotatedESol = [&Rt] (Vec3 const& p) {return exactSol(Rt * p);};

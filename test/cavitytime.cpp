@@ -51,16 +51,16 @@ int main(int argc, char* argv[])
   t.start();
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   BCList bcsVel{feSpaceVel};
-  bcsVel.addEssentialBC(side::RIGHT, zero);
-  bcsVel.addEssentialBC(side::LEFT, zero);
-  bcsVel.addEssentialBC(side::BOTTOM, zero);
-  bcsVel.addEssentialBC(side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);});
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
   BCList bcsP{feSpaceP};
   // select the point on the bottom boundary in the middle
   DOFCoordSet pinSet{
       feSpaceP,
       [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}};
-  bcsP.addEssentialBC(pinSet.ids, [] (Vec3 const &) {return 0.;});
+  bcsP.addBC(BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // t.start();

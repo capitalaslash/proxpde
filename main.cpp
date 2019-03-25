@@ -57,7 +57,7 @@ int main()
 
   // right bc not used here
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
 
   AssemblyStiffness assembly(1.0, feSpace);
 

@@ -59,7 +59,7 @@ int test(YAML::Node const & config)
 
   t.start();
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [temp0](Vec3 const &){return temp0;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [temp0](Vec3 const &){return temp0;}});
   // mixed bc: a u + \nabla u = b
   // - \nabla u = hConv (u - tempA)
   // -> a = hConv, b = hConv * tempA

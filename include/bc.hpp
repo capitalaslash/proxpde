@@ -53,18 +53,17 @@ DofSet_T fillDofSet(
   return constrainedDOFset;
 }
 
-template <typename FESpace, typename Value = Fun<FESpace::dim,3>>
+template <typename FESpace>
 class BCEss
 {
 public:
   using FESpace_T = FESpace;
-  using Value_T = Value;
   using CurFE_T = typename FESpace_T::CurFE_T;
 
   // use manual-provided set of DOFs
   BCEss(FESpace_T const & feSpace,
         DofSet_T const dofSet,
-        Value_T const v):
+        Fun<FESpace::dim,3> const v):
     curFE(feSpace.curFE),
     constrainedDOFSet(std::move(dofSet)),
     constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
@@ -136,7 +135,7 @@ public:
     }
   }
 
-  friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T, Value> const & bc)
+  friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T> const & bc)
   {
     out << "bc constrainedDOFVector: " << bc.constrainedDOFVector.transpose() << std::endl;
     out << "constrainedDOFset: ";
@@ -161,7 +160,7 @@ protected:
   DofSet_T constrainedDOFSet;
   BoolArray_T constrainedDOFVector;
   uint const dimSize;
-  Value_T const value;
+  Fun<FESpace::dim,3> const value;
 
 public:
   marker_T marker = markerNotSet;
@@ -232,69 +231,42 @@ class BCList
 {
 public:
   explicit BCList(FESpace const & fe):
-  feSpace(fe)
+    feSpace(fe)
   {}
 
-  void addEssentialBC(BCEss<FESpace> const & bc)
+  template <typename BC>
+  void addBC(BC const & bc)
   {
-    bcEssList.push_back(bc);
-  }
-
-  void addEssentialBC(
-      marker_T const m,
-      Fun<FESpace::dim,3> const f,
-      std::vector<uint> const comp = allComp<FESpace>())
-  {
-    if (checkMarkerFixed(m))
+    static_assert(std::is_same_v<typename BC::FESpace_T, FESpace>, "this BC does not use the same FESpace");
+    if (bc.marker != markerNotSet)
     {
-      std::cerr << "the marker " << m << " has already been fixed." << std::endl;
-      abort();
+      if (checkMarkerFixed(bc.marker))
+      {
+        std::cerr << "the marker " << bc.marker << " has already been fixed." << std::endl;
+        abort();
+      }
+      fixedMarkers.insert(bc.marker);
     }
-    fixedMarkers.insert(m);
-    bcEssList.emplace_back(feSpace, m, std::move(f), std::move(comp));
-  }
 
-//  // this overload works only when FESpace::dim == 1
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim == 1, bool> = true>
-  void addEssentialBC(
-      marker_T const m,
-      scalarFun_T const f,
-      std::vector<uint> const comp = allComp<FESpace>())
-  {
-    if (checkMarkerFixed(m))
+    if constexpr (std::is_same_v<BC, BCEss<FESpace>>)
     {
-      std::cerr << "the marker " << m << " has already been fixed." << std::endl;
-      abort();
+      bcEssList.push_back(bc);
     }
-    fixedMarkers.insert(m);
-    bcEssList.emplace_back(feSpace, m, std::move(f), std::move(comp));
-  }
-
-  // otherwise, we fail
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim != 1, bool> = true>
-  void addEssentialBC(
-      marker_T const,
-      scalarFun_T const,
-      std::vector<uint> const)
-  {
-    std::cerr << __FILE__ << ":" << __LINE__ << " > this funcytion only works with FESpace::dim == 1" << std::endl;
-    std::abort();
-  }
-
-  void addEssentialBC(
-      DofSet_T dofSet,
-      Fun<FESpace::dim,3> const f)
-  {
-    bcEssList.emplace_back(feSpace, dofSet, std::move(f));
-  }
-
-  void addEssentialBC(
-      DofSet_T dofSet,
-      scalarFun_T const f)
-  {
-    bcEssList.emplace_back(feSpace, dofSet, std::move(f));
+    else if constexpr (std::is_same_v<BC, BCNat<FESpace>>)
+    {
+      bcNatList.push_back(bc);
+    }
+    else if constexpr (std::is_same_v<BC, BCMixed<FESpace>>)
+    {
+      bcNatList.emplace_back(bc.marker, bc.b, bc.comp);
+      bcMixedList.push_back(bc);
+    }
+    else
+    {
+      // this should never happen
+      std::cerr << "a BC of type " << typeid(bc).name() << " has been added." << std::endl;
+      std::abort();
+    }
   }
 
   void addNaturalBC(

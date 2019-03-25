@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   BCList bcs{feSpace};
-  bcs.addEssentialBC(side::LEFT, [] (Vec3 const&) {return 0.;});
-  bcs.addEssentialBC(side::BOTTOM, [] (Vec3 const&) {return 0.;});
+  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
+  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
   t.stop();
 
 

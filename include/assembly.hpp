@@ -37,7 +37,7 @@ struct Diagonal: public AssemblyBase
   virtual ~Diagonal() = default;
 
   virtual void build(LMat_T & Ke) const = 0;
-  virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
+  // virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
   virtual void reinit(GeoElem const & elem) const final
   {
@@ -140,12 +140,12 @@ struct AssemblyStiffness: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const override
-  {
-    LMat_T Ke;
-    this->build(Ke);
-    return Ke;
-  }
+  // LMat_T build(/*LMat_T & Ke*/) const override
+  // {
+  //   LMat_T Ke;
+  //   this->build(Ke);
+  //   return Ke;
+  // }
 
   double coeff;
 };
@@ -200,12 +200,12 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const override
-  {
-    LMat_T Ke;
-    this->build(Ke);
-    return Ke;
-  }
+  // LMat_T build(/*LMat_T & Ke*/) const override
+  // {
+  //   LMat_T Ke;
+  //   this->build(Ke);
+  //   return Ke;
+  // }
 
   double coeff;
 };
@@ -298,12 +298,12 @@ struct AssemblyMass: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const override
-  {
-    LMat_T Ke;
-    this->build(Ke);
-    return Ke;
-  }
+  // LMat_T build(/*LMat_T & Ke*/) const override
+  // {
+  //   LMat_T Ke;
+  //   this->build(Ke);
+  //   return Ke;
+  // }
 
   double coeff;
 };
@@ -341,12 +341,12 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build() const override
-  {
-    LMat_T Ke;
-    this->build(Ke);
-    return Ke;
-  }
+  // LMat_T build() const override
+  // {
+  //   LMat_T Ke;
+  //   this->build(Ke);
+  //   return Ke;
+  // }
 
   double coeff;
 };
@@ -449,12 +449,12 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     }
   }
 
-  LMat_T build(/*LMat_T & Ke*/) const override
-  {
-    LMat_T Ke;
-    this->build(Ke);
-    return Ke;
-  }
+  // LMat_T build(/*LMat_T & Ke*/) const override
+  // {
+  //   LMat_T Ke;
+  //   this->build(Ke);
+  //   return Ke;
+  // }
 
   double const coeff;
   Vec const & vel;

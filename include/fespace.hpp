@@ -73,7 +73,7 @@ struct FESpace
   }
 
   Mesh const & mesh;
-  CurFE_T curFE;
+  CurFE_T mutable curFE;
   DOF_T const dof;
 };
 

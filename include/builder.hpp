@@ -91,7 +91,7 @@ struct Builder
             bc.curFE.reinit(facet);
             for(uint q=0; q<BCMixed<FESpace>::QR_T::numPts; ++q)
             {
-              for (uint d=0; d<assembly.feSpace.dim; ++d)
+              for (uint d=0; d<FESpace::dim; ++d)
               {
                 if (bc.hasComp(d))
                 {

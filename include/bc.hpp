@@ -157,7 +157,7 @@ protected:
     }
   }
 
-  CurFE_T const & curFE;
+  CurFE_T mutable curFE;
   DofSet_T constrainedDOFSet;
   BoolArray_T constrainedDOFVector;
   uint const dimSize;
@@ -244,7 +244,7 @@ public:
   {}
 
   template <typename BC>
-  void addBC(BC const & bc)
+  void addBC(BC const bc)
   {
     static_assert(std::is_same_v<typename BC::FESpace_T, FESpace>, "this BC does not use the same FESpace");
     if (bc.marker != markerNotSet)
@@ -259,16 +259,16 @@ public:
 
     if constexpr (std::is_same_v<BC, BCEss<FESpace>>)
     {
-      bcEssList.push_back(bc);
+      bcEssList.push_back(std::move(bc));
     }
     else if constexpr (std::is_same_v<BC, BCNat<FESpace>>)
     {
-      bcNatList.push_back(bc);
+      bcNatList.push_back(std::move(bc));
     }
     else if constexpr (std::is_same_v<BC, BCMixed<FESpace>>)
     {
       bcNatList.emplace_back(bc.marker, bc.b, bc.comp);
-      bcMixedList.push_back(bc);
+      bcMixedList.push_back(std::move(bc));
     }
     else
     {

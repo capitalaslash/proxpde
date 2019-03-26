@@ -1167,16 +1167,13 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
         facetCurFE.reinit(facet);
         for(uint q=0; q<QR_T::numPts; ++q)
         {
-          for (uint d=0; d<FESpace::dim; ++d)
+          auto const value = rhs(facetCurFE.qpoint[q]);
+          for (uint const d: this->comp)
           {
-            if (this->hasComp(d))
+            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
             {
-              auto const value = rhs(facetCurFE.qpoint[q]);
-              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
-              {
-                auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
-                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value;
-              }
+              auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+              Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value;
             }
           }
         }
@@ -1238,6 +1235,70 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
               {
                 auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
                 Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * value;
+              }
+            }
+          }
+        }
+      }
+      facetCounter++;
+    }
+  }
+
+  scalarFun_T const rhs;
+  marker_T const marker;
+  mutable FacetCurFE_T facetCurFE;
+};
+
+template <typename FESpace>
+struct AssemblyBCMixed: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
+  using QR_T = SideQR_T<typename FESpace::QR_T>;
+  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+
+  AssemblyBCMixed(scalarFun_T const r,
+                  marker_T const m,
+                  FESpace & fe,
+                  AssemblyBase::CompList const comp = allComp<FESpace>(),
+                  uint offset_row = 0,
+                  uint offset_clm = 0):
+    Diagonal<FESpace>(fe, offset_row, offset_clm, std::move(comp)),
+    rhs(std::move(r)),
+    marker(m)
+  {}
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    auto const & mesh = this->feSpace.mesh;
+    auto const & e = *this->feSpace.curFE.e;
+    uint facetCounter = 0;
+    for(auto const facetId: mesh.elemToFacet[e.id])
+    {
+      if(facetId != dofIdNotSet &&
+         mesh.facetList[facetId].marker == marker)
+      {
+        auto const & facet = mesh.facetList[facetId];
+        facetCurFE.reinit(facet);
+        for(uint q=0; q<QR_T::numPts; ++q)
+        {
+          auto const value = rhs(facetCurFE.qpoint[q]);
+          for (uint const d: this->comp)
+          {
+            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+            {
+              auto const idI = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+              for(uint j=0; j<BCNat<FESpace>::RefFE_T::numFuns; ++j)
+              {
+                auto const idJ = CurFE_T::RefFE_T::dofOnFacet[facetCounter][j] + d*CurFE_T::numDOFs;
+                Ke(idI, idJ) +=
+                  facetCurFE.JxW[q] * value * facetCurFE.phi[q](i) * facetCurFE.phi[q](j);
               }
             }
           }

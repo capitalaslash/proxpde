@@ -61,10 +61,10 @@ int test(YAML::Node const & config)
   // -> a = hConv, b = hConv * tempA
   // hConv -> 0: \nabla u = 0, Neumann homogeneous
   // hConv -> inf: u = b / a = tempA, Dirichlet
-  bcs.addMixedBC(
-        side::RIGHT,
-        [hConv](Vec3 const &){return hConv;},
-        [hConv, tempA](Vec3 const &){return hConv * tempA;});
+  // bcs.addMixedBC(
+  //       side::RIGHT,
+  //       [hConv](Vec3 const &){return hConv;},
+  //       [hConv, tempA](Vec3 const &){return hConv * tempA;});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   AssemblyStiffness stiffness{1.0, feSpace};
@@ -74,6 +74,8 @@ int test(YAML::Node const & config)
   Builder builder{feSpace.dof.size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
+  builder.buildProblem(AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}, bcs);
+  builder.buildProblem(AssemblyBCNatural{[hConv, tempA](Vec3 const &){return hConv * tempA;}, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
 
@@ -102,7 +104,7 @@ int test(YAML::Node const & config)
 
   auto const errorNorm = error.data.norm();
   std::cout << "the norm of the error is "<< std::setprecision(16) << errorNorm << std::endl;
-  if(std::fabs(errorNorm - config["expected_error"].as<double>()) > 1.e-15)
+  if(std::fabs(errorNorm - config["expected_error"].as<double>()) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;
@@ -158,7 +160,7 @@ int main()
     config["filename"] = "sol_robin_test3";
     config["expected_error"] = 3.106760453810386e-07;
 
-    tests[2] = test(config);
+    tests[3] = test(config);
   }
 
   return tests.any();

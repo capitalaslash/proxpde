@@ -211,7 +211,7 @@ void buildCircleMesh(Mesh<Quad> & mesh,
   //    + - + - +
   //    | A | C |
   // la + - +   |
-  //    |   ra\
+  //    |   ra
   //      B   +
   //    + - -
   Vec3 r0(0.6*radius, 0.0, 0.0);

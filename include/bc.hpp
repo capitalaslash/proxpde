@@ -170,6 +170,7 @@ public:
 template <typename FESpace>
 struct BCNat
 {
+  using FESpace_T = FESpace;
   using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
   using CurFE_T = CurFE<Elem_T, QR_T>;

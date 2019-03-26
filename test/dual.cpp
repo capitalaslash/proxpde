@@ -22,7 +22,9 @@ using FESpaceP0_T = FESpace<Mesh_T,
                           FEType<Elem_T,0>::RefFE_T,
                           FEType<Elem_T,0>::RecommendedQR>;
 using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
-
+using VelFESpace_T = FESpace<Mesh_T,
+                             FEType<Elem_T,1>::RefFE_T,
+                             FEType<Elem_T,1>::RecommendedQR, 2>;
 static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
@@ -60,6 +62,11 @@ struct DualCell //: public GeoElem
   elemNeighborList_T elemNeighbors;
   edgeNeighborList_T edgeNeighbors;
   std::vector<double> volumes;
+};
+
+static Fun<2, 3> velFun = [] (Vec3 const &)
+{
+  return Vec2(0.2, 0.0);
 };
 
 int main(int argc, char* argv[])
@@ -128,18 +135,24 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("fe builder");
-  auto const velocity = Vec2(0.2, 0.0);
+  auto const & sizeP1 = feSpaceP1.dof.size;
+  VelFESpace_T velFESpace{*mesh};
+  Var velFE{"velocity", sizeP1 * 2};
+  for (uint d=0; d<2; d++)
+  {
+    for (uint i =0; i< sizeP1; i++)
+    {
+      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1) =
+          velFun(mesh->pointList[i].coord)[d];
+    }
+  }
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(*mesh, velocity, dt);
+  auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
 
-  auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  Vec velOldStyle = Vec::Zero(2*sizeP1);
-  velOldStyle.block(   0, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[0]);
-  velOldStyle.block(sizeP1, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[1]);
-  AssemblyAdvection advection(1.0, velOldStyle, feSpaceP1);
+  AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
   AssemblyMass timeder(1./dt, feSpaceP1);
   Vec concP1Old(sizeP1);
   AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
@@ -151,8 +164,8 @@ int main(int argc, char* argv[])
 
   FVSolver_T fv{feSpaceP0, bcsP0};
   Table<double, 2> vel(sizeP1, 2);
-  vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
-  vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);
+  vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);
+  vel.block(0, 1, sizeP1, 1) = velFE.data.block(sizeP1, 0, sizeP1, 1);
   t.stop();
 
   uint const ntime = 50;

@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
   BCList bcsU{feSpaceU};
   bcsU.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
   bcsU.addBC(BCEss{feSpaceU, side::TOP, zeroFun});
-  bcsU.addNaturalBC(side::LEFT, oneFun);
+  bcsU.addBC(BCNat<FESpaceU_T>{side::LEFT, oneFun});
   BCList bcsV{feSpaceU};
   bcsV.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
   bcsV.addBC(BCEss{feSpaceU, side::LEFT, zeroFun});

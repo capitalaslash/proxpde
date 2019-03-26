@@ -123,3 +123,55 @@ void interpolateAnalyticFunction(scalarFun_T const & f,
 {
   interpolateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
 }
+
+template <typename FESpace>
+void reconstructGradient(
+    Vec const & data,
+    FESpace & feSpace,
+    Vec & grad,
+    std::vector<uint> const & comp = allComp<FESpace>(),
+    uint const offset = 0)
+{
+  auto const size = feSpace.dof.size;
+  assert(data.size() == size);
+  assert(FESpace::dim == comp.size());
+  grad = Vec::Zero(size * FESpace::dim);
+  Vec numberOfPasses = Vec::Zero(size);
+  for (auto const & elem: feSpace.mesh.elementList)
+  {
+    feSpace.curFE.reinit(elem);
+    for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
+    {
+      auto const baseDof = feSpace.dof.getId(elem.id, k);
+      auto const value = data[baseDof];
+      numberOfPasses[baseDof] += 1;
+      for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
+      {
+        for (auto const d: comp)
+        {
+          if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+          {
+            // grad u (x_i) = sum_k u_k dphi_k (x_i)
+            grad[offset + feSpace.dof.getId(elem.id, i) + d*size ] +=
+                value * feSpace.curFE.dphi[i](k, d);
+          }
+          else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+          {
+            abort();
+            // the value of the dof is the flux through the face
+            // u_k = u.dot(n_k)
+            // v[offset + baseDof + d*size] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
+          }
+        }
+      }
+    }
+  }
+  // divide by the number of elements which provided a gradient to get the mean value of the gradient
+  for (uint i=0; i<size; ++i)
+  {
+    for (auto const d: comp)
+    {
+      grad[i + d*size] /= numberOfPasses[i];
+    }
+  }
+}

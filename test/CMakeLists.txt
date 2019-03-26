@@ -67,6 +67,7 @@ minifem_add_test(poisson3dhex)
 minifem_add_test(poisson3dhex_q2)
 
 minifem_add_test(poisson2dproj)
+minifem_add_test(neumann)
 
 minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)

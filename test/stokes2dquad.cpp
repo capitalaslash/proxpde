@@ -40,15 +40,15 @@ int main(int argc, char* argv[])
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
   // auto inlet = [] (Vec3 const & p) {return Vec2(0., 1.);};
-//  auto inlet = [] (Vec3 const &p) {
-//    return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
-//  };
+  // auto inlet = [] (Vec3 const &p) {
+  //   return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
+  // };
   BCList bcsVel{feSpaceVel};
   bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
   bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
   bcsVel.addBC(BCEss{feSpaceVel, side::TOP, zero, {0}});
   bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero, {0}});
-  // bcsVel.addNaturalBC(side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);});
+  // bcsVel.addBC(BCNat<FESpaceVel_T>{side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);}});
   BCList bcsP{feSpaceP};
 
   auto const dofU = feSpaceVel.dof.size;

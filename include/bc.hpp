@@ -108,6 +108,7 @@ public:
     value([v](Vec3 const & p){return Vec1{v(p)};}),
     marker(m)
   {
+    static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
     fillConstrainedDOFVector();
     std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
@@ -176,15 +177,22 @@ struct BCNat
   using CurFE_T = CurFE<Elem_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCNat(
-      marker_T const m,
-      Fun<FESpace::dim,3> const f,
-      std::vector<uint> const c = allComp<FESpace>()):
+  BCNat(marker_T const m,
+        Fun<FESpace::dim,3> const f,
+        std::vector<uint> const c = allComp<FESpace>()):
     marker(m),
     value(std::move(f)),
     comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
+  }
+
+  BCNat(marker_T const m,
+        scalarFun_T const f,
+        std::vector<uint> const c = allComp<FESpace>()):
+    BCNat{m, [f] (Vec3 const & p) { return Vec1(f(p)); }, c}
+  {
+    static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
   }
 
   bool hasComp(uint c)

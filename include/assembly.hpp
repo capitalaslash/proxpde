@@ -1130,6 +1130,67 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
 };
 
 template <typename FESpace>
+struct AssemblyBCNatural: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = AssemblyVector<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
+  using QR_T = SideQR_T<typename FESpace::QR_T>;
+  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+
+  AssemblyBCNatural(scalarFun_T const r,
+                    marker_T const m,
+                    FESpace & fe,
+                    AssemblyBase::CompList const comp = allComp<FESpace>(),
+                    uint offset_row = 0):
+    AssemblyVector<FESpace>(fe, offset_row, std::move(comp)),
+    rhs(std::move(r)),
+    marker(m)
+  {}
+
+  void build(LVec_T & Fe) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    auto const & mesh = this->feSpace.mesh;
+    auto const & e = *this->feSpace.curFE.e;
+    uint facetCounter = 0;
+    for(auto const facetId: mesh.elemToFacet[e.id])
+    {
+      if(facetId != dofIdNotSet &&
+         mesh.facetList[facetId].marker == marker)
+      {
+        auto const & facet = mesh.facetList[facetId];
+        facetCurFE.reinit(facet);
+        for(uint q=0; q<QR_T::numPts; ++q)
+        {
+          for (uint d=0; d<FESpace::dim; ++d)
+          {
+            if (this->hasComp(d))
+            {
+              auto const value = rhs(facetCurFE.qpoint[q]);
+              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+              {
+                auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value;
+              }
+            }
+          }
+        }
+      }
+      facetCounter++;
+    }
+  }
+
+  scalarFun_T const rhs;
+  marker_T const marker;
+  mutable FacetCurFE_T facetCurFE;
+};
+
+template <typename FESpace>
 struct AssemblyBCNormal: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;

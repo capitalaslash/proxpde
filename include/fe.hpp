@@ -19,6 +19,7 @@ struct FEType<Line,1>
 {
   using RefFE_T = RefLineP1;
   using RecommendedQR = GaussQR<Line,2>;
+  using ReconstructionQR = TrapQR<Line>;
 };
 
 template <>
@@ -54,6 +55,7 @@ struct FEType<Quad,1>
 {
   using RefFE_T = RefQuadQ1;
   using RecommendedQR = GaussQR<Quad,4>;
+  using ReconstructionQR = TrapQR<Quad>;
 };
 
 template <>

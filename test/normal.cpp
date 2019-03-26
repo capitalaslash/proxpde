@@ -1,17 +1,29 @@
 #include "def.hpp"
 #include "mesh.hpp"
 
+int vectorTest(Vec3 const & v, Vec3 const & e)
+{
+  auto const norm = (v - e).norm();
+  if (norm > 1e-8)
+  {
+    std::cerr << "the normal " << v.transpose() << " does not correspond to " << v.transpose()
+              << " with an error of " << norm << std::endl;
+    return 1;
+  }
+  return 0;
+}
+
 int main()
 {
   std::shared_ptr<Mesh<Triangle>> triangleMesh{new Mesh<Triangle>()};
   refTriangleMesh(*triangleMesh);
   buildFacets(*triangleMesh);
   buildNormals(*triangleMesh);
-  auto normal0 = triangleMesh->facetList[0]._normal;
-  assert((normal0 - Vec3(0.0, -1.0, 0.0)).norm() < 1e-12);
-  auto normal1 = triangleMesh->facetList[1]._normal;
-  assert((normal1 - Vec3(-1.0, 0.0, 0.0)).norm() < 1e-12);
-  auto normal2 = triangleMesh->facetList[2]._normal;
-  assert((normal2 - Vec3(.5 * std::sqrt(2.), .5 * std::sqrt(2.), 0.0)).norm() < 1e-12);
-  return 0;
+
+  std::bitset<3> tests;
+  tests[0] = vectorTest(triangleMesh->facetList[0]._normal, Vec3(0.0, -1.0, 0.0));
+  tests[1] = vectorTest(triangleMesh->facetList[1]._normal, Vec3(-1.0, 0.0, 0.0));
+  tests[2] = vectorTest(triangleMesh->facetList[2]._normal, Vec3(0.5 * std::sqrt(2), 0.5 * std::sqrt(2), 0.0));
+
+  return tests.any();
 }

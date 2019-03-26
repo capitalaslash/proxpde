@@ -23,8 +23,7 @@ int main(int argc, char* argv[])
 
   t.start();
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{3, 2, 0}});
+  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{2, 1, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

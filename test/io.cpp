@@ -11,17 +11,16 @@ using FESpace_T = FESpace<Mesh_T, RefHexahedronQ2, GaussQR<Hexahedron,1>>;
 
 int main(int argc, char* argv[])
 {
-  array<uint,3> numPts = {{2, 2, 2}};
+  array<uint,3> numElems = {{1, 1, 1}};
   if (argc == 4)
   {
-    numPts[0] = static_cast<uint>(std::stoi(argv[1]));
-    numPts[1] = static_cast<uint>(std::stoi(argv[2]));
-    numPts[1] = static_cast<uint>(std::stoi(argv[3]));
+    numElems[0] = static_cast<uint>(std::stoi(argv[1]));
+    numElems[1] = static_cast<uint>(std::stoi(argv[2]));
+    numElems[2] = static_cast<uint>(std::stoi(argv[3]));
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, Vec3{0., 0., 0.}, Vec3{1., 1., 1.}, numPts);
+  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 1., 1.}, numElems);
 
   FESpace_T feSpace{*mesh};
 

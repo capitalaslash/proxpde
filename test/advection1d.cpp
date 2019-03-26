@@ -34,13 +34,10 @@ int main(int argc, char* argv[])
 
   t.start();
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  // we need internal facets
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   uint const numElems = config["n"].as<uint>();
-  meshBuilder.build(*mesh, origin, length, {{numElems+1, 0, 0}}, true);
-  buildNormals(*mesh);
+  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, KEEP_INTERNAL_FACETS | BUILD_NORMALS);
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

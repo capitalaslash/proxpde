@@ -41,16 +41,15 @@ auto const solver_type = SolverType::SPARSELU;
 
 int main()
 {
-  uint const numPts_x = 21;
-  uint const numPts_y = 2;
+  uint const numElemsX = 20;
+  uint const numElemsY = 1;
 
   Vec3 const origin(0., 0., 0.);
   Vec3 const length(1., 0.02, 0.);
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
   // std::cout << *mesh << std::endl;
 
   FESpace_T feSpace{*mesh};

@@ -76,7 +76,7 @@ int test(
     long double const relativeError)
 {
   auto value = 0.L;
-  for (uint n=0; n<qr.numPts; ++n)
+  for (uint n=0; n<QR::numPts; ++n)
   {
     auto const w = qr.weight[n];
     auto const localValue = Poly::value(PolyVec(qr.node[n]));

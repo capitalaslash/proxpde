@@ -26,8 +26,8 @@ static scalarFun_T ic = [] (Vec3 const& p)
 int main(int argc, char* argv[])
 {
   MilliTimer t;
-  uint const numPts_x = (argc < 3)? 5 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 3)? 5 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -35,8 +35,7 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
@@ -76,8 +75,8 @@ int main(int argc, char* argv[])
     builder.buildProblem(timeder_rhs, bcs);
     builder.buildProblem(advection, bcs);
     builder.closeMatrix();
-    std::cout << "A:\n" << builder.A << std::endl;
-    std::cout << "b:\n" << builder.b << std::endl;
+    // std::cout << "A:\n" << builder.A << std::endl;
+    // std::cout << "b:\n" << builder.b << std::endl;
 
     solver.analyzePattern(builder.A);
     solver.factorize(builder.A);

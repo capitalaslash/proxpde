@@ -44,13 +44,11 @@ int test(YAML::Node const & config)
     return temp0 + (tempA - temp0) * p(0);
   };
 
-  uint const numPts = config["n"].as<uint>()+1;
-
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  uint const numElems = config["n"].as<uint>();
 
   t.start();
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, {0., 0., 0.}, {1., 0., 0.}, {{numPts, 0, 0}});
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  buildHyperCube(*mesh, {0., 0., 0.}, {1., 0., 0.}, {{numElems, 0, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

@@ -42,7 +42,7 @@ void solve(Mat const & A, Vec const & b, YAML::Node const & config, Vec & x)
 int main(int argc, char* argv[])
 {
   MilliTimer t;
-  uint const numPts = (argc < 2)? 11 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2)? 10 : std::stoi(argv[1]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 1.};
@@ -50,8 +50,7 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start("mesh build");
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts, numPts, numPts}});
+  buildHyperCube(*mesh, origin, length, {{numElems, numElems, numElems}});
   t.stop();
 
   t.start("fespace");

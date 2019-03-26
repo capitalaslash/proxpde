@@ -1,21 +1,20 @@
 #include "mesh.hpp"
 
-void buildMesh1D(Mesh<Line> & mesh,
+void buildLine(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 uint const numPts,
+                 uint const numElems,
                  bool keepInternalFacets)
 {
-  assert(numPts > 1);
-  assert(length[0] > 0.);
-  Vec3 const h = length / (numPts-1);
-  mesh.pointList.reserve(numPts);
-  for(uint p=0; p<numPts; ++p)
+  assert(numElems > 0);
+  assert(length.norm() > 0.);
+  Vec3 const h = length / numElems;
+  mesh.pointList.reserve(numElems + 1);
+  for(uint p=0; p<numElems + 1; ++p)
   {
     mesh.pointList.emplace_back(origin + p * h, p);
   }
 
-  uint const numElems = numPts-1;
   mesh.elementList.reserve(numElems);
   for(uint e=0; e<numElems; ++e)
   {
@@ -73,16 +72,18 @@ void markFacetsCube(Mesh & mesh,
   }
 }
 
-void buildMesh2D(Mesh<Triangle> & mesh,
+void buildSquare(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts,
+                 array<uint, 2> const numElems,
                  bool keepInternalFacets)
 {
-  assert(numPts[0] > 1 && numPts[1] > 1);
+  assert(numElems[0] > 0 && numElems[1] > 0);
+  // TODO: generalize for planes in 3D space
   assert(length[0] > 0. && length[1] > 0.);
-  Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
-  mesh.pointList.reserve(numPts[0]*numPts[1]);
+  Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], 1.};
+  array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
+  mesh.pointList.reserve(numPts[0] * numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
   {
     for(uint i=0; i<numPts[0]; ++i)
@@ -95,24 +96,21 @@ void buildMesh2D(Mesh<Triangle> & mesh,
   for(uint s=0; s<numPts[0]; s++)
   {
     mesh.pointList[s].marker = side::BOTTOM;
-    mesh.pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
+    mesh.pointList[numElems[1]*numPts[0]+s].marker = side::TOP;
   }
   for(uint s=0; s<numPts[1]; s++)
   {
     mesh.pointList[0+numPts[0]*s].marker = side::LEFT;
-    mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
+    mesh.pointList[numElems[0]+numPts[0]*s].marker = side::RIGHT;
   }
 
-  uint const numElems = (numPts[0]-1)*(numPts[1]-1);
-  mesh.elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems[0] * numElems[1]);
   id_T counter = 0;
-  for(uint j=0; j<numPts[1]-1; ++j)
-    for(uint i=0; i<numPts[0]-1; ++i)
+  for(uint j=0; j<numElems[1]; ++j)
+    for(uint i=0; i<numElems[0]; ++i)
     {
       id_T const base = i + j*numPts[0];
       array<id_T,3> triplet_b, triplet_t;
-      // TODO: make the traingle pattern configurable via a templated flag
-      // if ((i-0.5*(numPts[0]-2))*(j-0.5*(numPts[1]-2)) < 0)
       if (base % 2)
       {
         triplet_b[0] = base;
@@ -147,16 +145,19 @@ void buildMesh2D(Mesh<Triangle> & mesh,
   markFacetsCube(mesh, origin, length);
 }
 
-void buildMesh2D(Mesh<Quad> & mesh,
+void buildSquare(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts,
+                 array<uint, 2> const numElems,
                  bool keepInternalFacets)
 {
-  assert(numPts[0] > 1 && numPts[1] > 1);
+  assert(numElems[0] > 0 && numElems[1] > 0);
+  // TODO: generalize for planes in 3D space
   assert(length[0] > 0. && length[1] > 0.);
-  Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), 1.};
-  mesh.pointList.reserve(numPts[0]*numPts[1]);
+  Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], 1.};
+  array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
+
+  mesh.pointList.reserve(numPts[0] * numPts[1]);
   for(uint j=0; j<numPts[1]; ++j)
   {
     for(uint i=0; i<numPts[0]; ++i)
@@ -169,19 +170,18 @@ void buildMesh2D(Mesh<Quad> & mesh,
   for(uint s=0; s<numPts[0]; s++)
   {
     mesh.pointList[s].marker = side::BOTTOM;
-    mesh.pointList[(numPts[1]-1)*numPts[0]+s].marker = side::TOP;
+    mesh.pointList[numElems[1]*numPts[0]+s].marker = side::TOP;
   }
   for(uint s=0; s<numPts[1]; s++)
   {
     mesh.pointList[0+numPts[0]*s].marker = side::LEFT;
-    mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
+    mesh.pointList[numElems[0]+numPts[0]*s].marker = side::RIGHT;
   }
 
-  uint const numElems = (numPts[0]-1)*(numPts[1]-1);
-  mesh.elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems[0] * numElems[1]);
   id_T counter = 0;
-  for(uint j=0; j<numPts[1]-1; ++j)
-    for(uint i=0; i<numPts[0]-1; ++i)
+  for(uint j=0; j<numElems[1]; ++j)
+    for(uint i=0; i<numElems[0]; ++i)
     {
       id_T const base = i + j*numPts[0];
       mesh.elementList.emplace_back(
@@ -199,26 +199,37 @@ void buildMesh2D(Mesh<Quad> & mesh,
 void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
                      double const& radius,
-                     array<uint, 3> const numPts)
+                     array<uint, 3> const numElems)
 {
+  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.resize(
-    numPts[0]*numPts[1] +
-    numPts[0]*(numPts[2]-1) +
-    (numPts[1]-1)*(numPts[2]-1)
+    numPts[0] * numPts[1] +
+    numPts[0] * numElems[2] +
+    numElems[1] * numElems[2]
   );
-  // uint ptCounter = 0;
+  //    l0  r0
+  //    + - + - +
+  //    | A | C |
+  // la + - +   |
+  //    |   ra\
+  //      B   +
+  //    + - -
   Vec3 r0(0.6*radius, 0.0, 0.0);
   Vec3 ra(sqrt(2.)*0.3*radius, -sqrt(2.)*0.3*radius, 0.0);
   Vec3 l0(0.0, 0.0, 0.0);
   Vec3 la(0.0, -0.6*radius, 0.0);
+  // section A
   for(uint j=0; j<numPts[1]; ++j)
   {
-    double sj = j/(numPts[1]-1.);
+    double const sj = static_cast<double>(j) / numElems[1];
+    // point between l0 and la
     Vec3 b = (1.-sj)*l0 + sj*la;
+    // point between r0 and ra
     Vec3 e = (1.-sj)*r0 + sj*ra;
     for(uint i=0; i<numPts[0]; ++i)
     {
-      double si = i/(numPts[0]-1.);
+      double si = static_cast<double>(i) / numElems[0];
+      // point between b and e
       Vec3 p = (1.-si)*b + si*e;
       const id_T id = i + numPts[0]*j;
       mesh.pointList[id] = Point(origin + p, id);
@@ -226,33 +237,41 @@ void buildCircleMesh(Mesh<Quad> & mesh,
   }
 
   uint offset = numPts[0]*numPts[1];
+  // section B
   for(uint i=0; i<numPts[0]; ++i)
   {
-    double const alpha = 0.25*M_PI*i/(numPts[0]-1.);
-    double si = i/(numPts[0]-1.);
+    double const alpha = i * 0.25 * M_PI / numElems[0];
+    double const si = static_cast<double>(i) / numElems[0];
+    // point between la and ra
     Vec3 b = la*(1.-si) + ra*si;
+    // point on circle
     Vec3 e(std::sin(alpha) * radius, -std::cos(alpha) * radius, 0.0);
-    for(uint j=1; j<numPts[2]; ++j)
+    for(uint r=1; r<numPts[2]; ++r)
     {
-      double sj = j/(numPts[2]-1.);
-      Vec3 const p = b*(1-sj) + e*sj;
-      const id_T id = offset + i + numPts[0]*(j-1);
+      double const sr = static_cast<double>(r) / numElems[2];
+      // point between b and e
+      Vec3 const p = b*(1-sr) + e*sr;
+      const id_T id = offset + i + numPts[0]*(r-1);
       mesh.pointList[id] = Point(origin + p, id);
     }
   }
 
   offset += numPts[0]*(numPts[2]-1);
+  //section C
   for(uint j=0; j<numPts[1]-1; ++j)
   {
-    double const alpha = 0.25*M_PI*j/(numPts[1]-1);
-    double const sj = j/(numPts[1]-1.);
+    double const alpha = j * 0.25 * M_PI / numElems[1];
+    double const sj = static_cast<double>(j) / numElems[1];
+    // point between r0 and ra
     Vec3 b = r0*(1.-sj)+ra*sj;
+    // point on circle
     Vec3 e(std::cos(alpha), -std::sin(alpha), 0.0);
-    for(uint i=1; i<numPts[2]; ++i)
+    for(uint r=1; r<numPts[2]; ++r)
     {
-      double const si = i/(numPts[2]-1.);
-      Vec3 p = b*(1.-si) + e*si;
-      const id_T id = offset + i-1 + (numPts[2]-1)*j;
+      double const sr = static_cast<double>(r) / numElems[2];
+      // point between b  and e
+      Vec3 p = b*(1.-sr) + e*sr;
+      const id_T id = offset + r-1 + (numPts[2]-1)*j;
       mesh.pointList[id] = Point(origin + p, id);
     }
   }
@@ -267,15 +286,15 @@ void buildCircleMesh(Mesh<Quad> & mesh,
   //   mesh.pointList[numPts[0]-1+numPts[0]*s].marker = side::RIGHT;
   // }
 
-  uint const numElems =
-    (numPts[0]-1)*(numPts[1]-1) +
-    (numPts[0]-1)*(numPts[2]-1) +
-    (numPts[1]-1)*(numPts[2]-1);
+  uint const totalNumElems =
+    numElems[0] * numElems[1] +
+    numElems[0] * numElems[2] +
+    numElems[1] * numElems[2];
 
-  mesh.elementList.reserve(numElems);
+  mesh.elementList.reserve(totalNumElems);
   id_T counter = 0;
-  for(uint j=0; j<numPts[1]-1 + numPts[2]-1; ++j)
-    for(uint i=0; i<numPts[0]-1; ++i)
+  for(uint j=0; j<numElems[1] + numElems[2]; ++j)
+    for(uint i=0; i<numElems[0]; ++i)
     {
       id_T const base = i + j*numPts[0];
       mesh.elementList.emplace_back(
@@ -287,7 +306,7 @@ void buildCircleMesh(Mesh<Quad> & mesh,
     }
 
   uint blockOffset = numPts[0]*numPts[1]+numPts[0]*(numPts[2]-1);
-  for(uint j=0; j<numPts[1]-2; ++j)
+  for(uint j=0; j<numElems[1]-1; ++j)
   {
     id_T const base = numPts[0]-1 + j*numPts[0];
     mesh.elementList.emplace_back(
@@ -304,9 +323,9 @@ void buildCircleMesh(Mesh<Quad> & mesh,
           &mesh.pointList[numPts[0]-1 + (numPts[1]-2)*numPts[0]+numPts[0]]},
           counter++});
 
-  for(uint i=1; i<numPts[2]-1; ++i)
+  for(uint i=1; i<numElems[2]; ++i)
   {
-    for(uint j=0; j<numPts[1]-2; ++j)
+    for(uint j=0; j<numElems[1]-1; ++j)
     {
       id_T const base = blockOffset + i-1 + j*(numPts[2]-1);
       mesh.elementList.emplace_back(
@@ -347,16 +366,17 @@ void buildCircleMesh(Mesh<Quad> & mesh,
   }
 }
 
-void buildMesh3D(Mesh<Tetrahedron> & mesh,
+void buildCube(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 3> const numPts,
+                 array<uint, 3> const numElems,
                  bool keepInternalFacets)
 {
-  assert(numPts[0] > 1 && numPts[1] > 1 && numPts[2] > 1);
+  assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
-  Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
-  mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
+  Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
+  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
   for(uint k=0; k<numPts[2]; ++k)
   {
     for(uint j=0; j<numPts[1]; ++j)
@@ -395,15 +415,14 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  uint const numElems = 5*(numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
-  mesh.elementList.reserve(numElems);
+  mesh.elementList.reserve(5 * numElems[0] * numElems[1] * numElems[2]);
   id_T counter = 0;
   auto const dx = 1;
   auto const dy = numPts[0];
   auto const dz = numPts[1]*numPts[0];
-  for(uint k=0; k<numPts[2]-1; ++k)
-    for(uint j=0; j<numPts[1]-1; ++j)
-      for(uint i=0; i<numPts[0]-1; ++i)
+  for(uint k=0; k<numElems[2]; ++k)
+    for(uint j=0; j<numElems[1]; ++j)
+      for(uint i=0; i<numElems[0]; ++i)
       {
         id_T const base = i + j*numPts[0] + k*numPts[1]*numPts[0];
         Eigen::Matrix<id_T, 5, 4> idTable;
@@ -439,15 +458,16 @@ void buildMesh3D(Mesh<Tetrahedron> & mesh,
   markFacetsCube(mesh, origin, length);
 }
 
-void buildMesh3D(Mesh<Hexahedron> & mesh,
+void buildCube(Mesh<Hexahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 3> const numPts,
+                 array<uint, 3> const numElems,
                  bool keepInternalFacets)
 {
-  assert(numPts[0] > 1 && numPts[1] > 1 && numPts[2] > 1);
+  assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
-  Vec3 const h = {length(0) / (numPts[0]-1.), length(1) / (numPts[1]-1.), length(2) / (numPts[2]-1.)};
+  Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
+  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.reserve(numPts[0]*numPts[1]*numPts[2]);
   for(uint k=0; k<numPts[2]; ++k)
   {
@@ -487,15 +507,14 @@ void buildMesh3D(Mesh<Hexahedron> & mesh,
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  uint const numElems = (numPts[0]-1)*(numPts[1]-1)*(numPts[2]-1);
-  mesh.elementList.reserve(numElems);
+  mesh.elementList.reserve(numElems[0] * numElems[1] * numElems[2]);
   id_T counter = 0;
   auto const dx = 1;
   auto const dy = numPts[0];
   auto const dz = numPts[1]*numPts[0];
-  for(uint k=0; k<numPts[2]-1; ++k)
-    for(uint j=0; j<numPts[1]-1; ++j)
-      for(uint i=0; i<numPts[0]-1; ++i)
+  for(uint k=0; k<numElems[2]; ++k)
+    for(uint j=0; j<numElems[1]; ++j)
+      for(uint i=0; i<numElems[0]; ++i)
       {
         id_T const base = i + j*numPts[0] + k*numPts[1]*numPts[0];
         mesh.elementList.emplace_back(

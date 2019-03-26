@@ -31,16 +31,14 @@ int main(int argc, char* argv[])
   std::cout << "read config file: " << t << " ms" << std::endl;
 
   t.start();
-  auto const numPts_x = config["nx"].as<uint>()+1;
-  auto const numPts_y = config["ny"].as<uint>()+1;
+  auto const numElemsX = config["nx"].as<uint>();
+  auto const numElemsY = config["ny"].as<uint>();
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();
@@ -51,9 +49,9 @@ int main(int argc, char* argv[])
   t.start();
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero});
+  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, zero});
   bcsVel.addBC(BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
   BCList bcsP{feSpaceP};
   // select the point on the bottom boundary in the middle

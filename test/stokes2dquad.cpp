@@ -19,16 +19,15 @@ using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
 
 int main(int argc, char* argv[])
 {
-  uint const numPts_x = (argc < 3)? 3 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 3)? 3 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3)? 2 : std::stoi(argv[2]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts_x, numPts_y, 0}});
+  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
 
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceP_T feSpaceP{*mesh};

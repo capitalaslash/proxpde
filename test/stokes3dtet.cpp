@@ -21,13 +21,13 @@ int main(int argc, char* argv[])
 {
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  uint const numPtsX = (argc < 3)? 3 : std::stoi(argv[1]);
-  uint const numPtsY = (argc < 3)? 3 : std::stoi(argv[2]);
-  uint const numPtsZ = (argc < 3)? 3 : std::stoi(argv[3]);
+  uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3)? 2 : std::stoi(argv[2]);
+  uint const numElemsZ = (argc < 3)? 2 : std::stoi(argv[3]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 1.};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPtsX, numPtsY, numPtsZ}});
+  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, numElemsZ}});
+
   // readGMSH(*mesh, "cube_uns.msh");
 
   FESpaceVel_T feSpaceVel{*mesh};

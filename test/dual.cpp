@@ -70,15 +70,16 @@ int main(int argc, char* argv[])
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   hexagonSquare(*mesh, true);
-  // MeshBuilder<Elem_T> meshBuilder;
-  // uint const numPtsX = (argc < 3)? 17 : std::stoul(argv[1]);
-  // uint const numPtsY = (argc < 3)? 17 : std::stoul(argv[2]);
-  // meshBuilder.build(
+
+  // uint const numElemsX = (argc < 3)? 16 : std::stoul(argv[1]);
+  // uint const numElemsY = (argc < 3)? 16 : std::stoul(argv[2]);
+  // buildHyperCube(
   //       *mesh,
   //       {0., 0., 0.},
   //       {1., 1., 0.},
-  //       {{numPtsX, numPtsY, 0}},
-  //       true);
+  //       {{numElemsX, numElemsY, 0}},
+  //       KEEP_INTERNAL_FACETS | BUILD_NORMALS);
+
   // readGMSH(*mesh, "square_uns.msh");
   // buildFacets(*mesh, true);
   // buildNormals(*mesh);

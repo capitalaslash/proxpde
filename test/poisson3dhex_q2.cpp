@@ -35,12 +35,11 @@ int test(YAML::Node const & config)
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(
+  buildHyperCube(
     *mesh,
     {0., 0., 0.},
     {1., 1., 1.},
-    {config["n"].as<uint>()+1, config["n"].as<uint>()+1, config["n"].as<uint>()+1});
+    {config["n"].as<uint>(), config["n"].as<uint>(), config["n"].as<uint>()});
   t.stop();
 
   t.start("fe space");

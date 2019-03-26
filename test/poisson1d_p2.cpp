@@ -28,7 +28,7 @@ static scalarFun_T exactSol = [] (Vec3 const& p)
 int main(int argc, char* argv[])
 {
   MilliTimer t;
-  uint const numPts = (argc < 2)? 21 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2)? 20 : std::stoi(argv[1]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
@@ -36,8 +36,7 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
+  buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

@@ -18,12 +18,11 @@ int main(int argc, char* argv[])
   using FESpace_T = FESpace<Mesh_T,
                             FEType<Elem_T,1>::RefFE_T,
                             FEType<Elem_T,1>::RecommendedQR>;
-  uint const numPts = (argc < 2)? 4 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2)? 3 : std::stoi(argv[1]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{numPts, 0, 0}});
+  buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
 
   FESpace_T feSpace{*mesh};
 

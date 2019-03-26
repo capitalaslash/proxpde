@@ -18,8 +18,7 @@ int main()
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  MeshBuilder<Elem_T> meshBuilder;
-  meshBuilder.build(*mesh, origin, length, {{2, 2, 0}});
+  buildHyperCube(*mesh, origin, length, {1, 1, 0});
 
   FESpace1_T feSpace1{*mesh};
   FESpace2_T feSpace2{*mesh};

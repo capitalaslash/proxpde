@@ -18,12 +18,11 @@ void referenceMesh(Mesh<Elem> & mesh)
         std::is_same<Elem, Quad>::value ||
         std::is_same<Elem, Hexahedron>::value)
   {
-    MeshBuilder<Elem> meshBuilder;
-    meshBuilder.build(
+    buildHyperCube(
       mesh,
       {-1., -1., -1.},
       {2., 2., 2.},
-      {2, 2, 2});
+      {1, 1, 1});
   }
   else if constexpr (std::is_same<Elem, Triangle>::value)
   {

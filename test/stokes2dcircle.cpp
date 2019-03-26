@@ -21,15 +21,15 @@ using FESpaceP_T = FESpace<Mesh_T,
 
 int main(int argc, char* argv[])
 {
-  uint const numPts_x = (argc < 4)? 3 : std::stoi(argv[1]);
-  uint const numPts_y = (argc < 4)? 3 : std::stoi(argv[2]);
-  uint const numPts_r = (argc < 4)? 3 : std::stoi(argv[3]);
+  uint const numElemsX = (argc < 4)? 2 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 4)? 2 : std::stoi(argv[2]);
+  uint const numElemsR = (argc < 4)? 2 : std::stoi(argv[3]);
 
   Vec3 const origin{0., 0., 0.};
   double const radius = 1.;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildCircleMesh(*mesh, origin, radius, {{numPts_x, numPts_y, numPts_r}});
+  buildCircleMesh(*mesh, origin, radius, {{numElemsX, numElemsY, numElemsR}});
   // std::cout << *mesh << std::endl;
 
   FESpaceU_T feSpaceU{*mesh};

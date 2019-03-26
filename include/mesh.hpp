@@ -175,115 +175,88 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
   assert(iFacetCount == facetCount);
 }
 
-void buildMesh1D(Mesh<Line> & mesh,
+void buildLine(Mesh<Line> & mesh,
+               Vec3 const& origin,
+               Vec3 const& length,
+               uint const numElems,
+               bool keepInternalFacets);
+
+void buildSquare(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 uint const numPts,
+                 array<uint, 2> const numElems,
                  bool keepInternalFacets);
 
-void buildMesh2D(Mesh<Triangle> & mesh,
+void buildSquare(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
-                 array<uint, 2> const numPts,
-                 bool keepInternalFacets);
-
-void buildMesh2D(Mesh<Quad> & mesh,
-                 Vec3 const& origin,
-                 Vec3 const& length,
-                 array<uint, 2> const numPts,
+                 array<uint, 2> const numElems,
                  bool keepInternalFacets);
 
 void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
                      double const& radius,
-                     array<uint, 3> const numPts);
+                     array<uint, 3> const numElems);
 
-void buildMesh3D(Mesh<Tetrahedron> & mesh,
-                 Vec3 const& origin,
-                 Vec3 const& length,
-                 array<uint, 3> const numPts,
-                 bool keepInternalFacets);
+void buildCube(Mesh<Tetrahedron> & mesh,
+               Vec3 const& origin,
+               Vec3 const& length,
+               array<uint, 3> const numElems,
+               bool keepInternalFacets);
 
-void buildMesh3D(Mesh<Hexahedron> & mesh,
-                 Vec3 const& origin,
-                 Vec3 const& length,
-                 array<uint, 3> const numPts,
-                 bool keepInternalFacets);
+void buildCube(Mesh<Hexahedron> & mesh,
+               Vec3 const& origin,
+               Vec3 const& length,
+               array<uint, 3> const numElems,
+               bool keepInternalFacets);
 
-template <class Elem>
-struct MeshBuilder
+using MeshFlags = std::bitset<2>;
+static constexpr MeshFlags NONE = 0b00;
+static constexpr MeshFlags KEEP_INTERNAL_FACETS = 0b01;
+static constexpr MeshFlags BUILD_NORMALS = 0b10;
+
+template <typename Elem>
+void buildHyperCube(Mesh<Elem> & mesh,
+               Vec3 const& origin,
+               Vec3 const& length,
+               array<uint, 3> const numElems,
+               MeshFlags flags = NONE)
 {
-  void build(Mesh<Elem> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false);
-};
-
-template <>
-struct MeshBuilder<Line>
-{
-  void build(Mesh<Line> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false)
+  if constexpr (std::is_same_v<Elem, Line>)
   {
-    buildMesh1D(mesh, origin, length, numPts[0], keepInternalFacets);
+    buildLine(mesh,
+              origin,
+              length,
+              numElems[0],
+              flags[0]);
   }
-};
-
-template <>
-struct MeshBuilder<Triangle>
-{
-  void build(Mesh<Triangle> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false)
+  else if constexpr (std::is_same_v<Elem, Triangle> || std::is_same_v<Elem, Quad>)
   {
-    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}}, keepInternalFacets);
+    buildSquare(mesh,
+                origin,
+                length,
+                {{numElems[0], numElems[1]}},
+                flags[0]);
   }
-};
-
-template <>
-struct MeshBuilder<Quad>
-{
-  void build(Mesh<Quad> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false)
+  else if constexpr (std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
   {
-    buildMesh2D(mesh, origin, length, {{numPts[0], numPts[1]}}, keepInternalFacets);
+    buildCube(mesh,
+              origin,
+              length,
+              {{numElems[0], numElems[1], numElems[2]}},
+              flags[0]);
   }
-};
-
-template <>
-struct MeshBuilder<Tetrahedron>
-{
-  void build(Mesh<Tetrahedron> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false)
+  else
   {
-    buildMesh3D(mesh, origin, length, numPts, keepInternalFacets);
+    // this should never happen
+    std::cerr << "element type " << typeid(Elem{}).name() << " not recognized." << std::endl;
+    abort();
   }
-};
-
-template <>
-struct MeshBuilder<Hexahedron>
-{
-  void build(Mesh<Hexahedron> & mesh,
-             Vec3 const& origin,
-             Vec3 const& length,
-             array<uint, 3> const numPts,
-             bool keepInternalFacets = false)
+  if (flags[1])
   {
-    buildMesh3D(mesh, origin, length, numPts, keepInternalFacets);
+    buildNormals(mesh);
   }
-};
+}
 
 void refTriangleMesh(Mesh<Triangle> & mesh);
 void hexagonMesh(Mesh<Triangle> & mesh);
@@ -551,16 +524,16 @@ void readMesh(Mesh & mesh, YAML::Node const & config)
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")
   {
-    array<uint,3> numPts =
+    array<uint,3> numElems =
     {
-      config["nx"].as<uint>() + 1,
-      config["ny"].as<uint>() + 1,
-      config["nz"].as<uint>() + 1
+      config["nx"].as<uint>(),
+      config["ny"].as<uint>(),
+      config["nz"].as<uint>()
     };
+    // TODO: auto const origin = config["origin"].as<Vec3>();
     Vec3 const origin{0., 0., 0.};
     Vec3 const length{1., 1., 1.};
-    MeshBuilder<typename Mesh::Elem_T> meshBuilder;
-    meshBuilder.build(mesh, origin, length, numPts);
+    buildHyperCube(mesh, origin, length, numElems);
   }
   else if (mesh_type == "msh")
   {

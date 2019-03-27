@@ -1184,7 +1184,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
 
   scalarFun_T const rhs;
   marker_T const marker;
-  mutable FacetCurFE_T facetCurFE;
+  FacetCurFE_T mutable facetCurFE;
 };
 
 template <typename FESpace>
@@ -1246,7 +1246,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
 
   scalarFun_T const rhs;
   marker_T const marker;
-  mutable FacetCurFE_T facetCurFE;
+  FacetCurFE_T mutable facetCurFE;
 };
 
 template <typename FESpace>
@@ -1310,5 +1310,5 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
 
   scalarFun_T const rhs;
   marker_T const marker;
-  mutable FacetCurFE_T facetCurFE;
+  FacetCurFE_T mutable facetCurFE;
 };

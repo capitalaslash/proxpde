@@ -157,7 +157,7 @@ protected:
     }
   }
 
-  CurFE_T mutable curFE;
+  CurFE_T & curFE;
   DofSet_T constrainedDOFSet;
   BoolArray_T constrainedDOFVector;
   uint const dimSize;

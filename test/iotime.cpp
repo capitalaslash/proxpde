@@ -30,8 +30,22 @@ int main(int argc, char* argv[])
 
   interpolateAnalyticFunction([](Vec3 const & p){ return p(0)*p(0); }, feSpace, u.data);
 
-  IOManager io{feSpace, "output_io/u"};
+
+  uint const nsteps = 5;
+  double const dt = 0.2;
+  double time = 0.0;
+  IOManager io{feSpace, "output_iotime/u"};
+  io.time = time;
+  io.iter = 0;
   io.print({u});
+  for (uint itime=0; itime<nsteps; ++itime)
+  {
+    time += dt;
+    interpolateAnalyticFunction([time](Vec3 const & p){ return p(0)*p(0) * (1.-time); }, feSpace, u.data);
+    io.iter += 1;
+    io.time = time;
+    io.print({u});
+  }
 
   return 0;
 }

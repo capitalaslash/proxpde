@@ -1226,16 +1226,13 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
         facetCurFE.reinit(facet);
         for(uint q=0; q<QR_T::numPts; ++q)
         {
-          for (uint d=0; d<FESpace::dim; ++d)
+          for (auto const d: this->comp)
           {
-            if (this->hasComp(d))
+            auto const value = rhs(facetCurFE.qpoint[q]);
+            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
             {
-              auto const value = rhs(facetCurFE.qpoint[q]);
-              for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
-              {
-                auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
-                Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * value;
-              }
+              auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
+              Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * value;
             }
           }
         }

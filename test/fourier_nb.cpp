@@ -15,6 +15,9 @@ using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,1>::RefFE_T,
                           FEType<Elem_T,1>::RecommendedQR>;
+using RecFESpace_T = FESpace<Mesh_T,
+                             FEType<Elem_T, 1>::RefFE_T,
+                             FEType<Elem_T, 1>::ReconstructionQR>;
 
 int test(YAML::Node const & config)
 {
@@ -31,17 +34,17 @@ int test(YAML::Node const & config)
 
   const scalarFun_T rhs = [] (Vec3 const &)
   {
-    return 1.;
+    return 2.;
   };
 
-  const scalarFun_T exactSol = [hConv, temp0, tempA] (Vec3 const & p)
+  const scalarFun_T exactSol = [] (Vec3 const & p)
   {
-    return temp0 - 0.5 * p(0) * p(0) + p(0) * (1. / hConv + 0.5 - (temp0 - tempA)) / (1. + 1. / hConv);
+    return 4. - p(0) * p(0);
   };
 
-  const scalarFun_T ic = [temp0, tempA] (Vec3 const & p)
+  const scalarFun_T ic = [tempA] (Vec3 const & p)
   {
-    return temp0 + (tempA - temp0) * p(0);
+    return tempA;
   };
 
   uint const numElems = config["n"].as<uint>();
@@ -53,38 +56,46 @@ int test(YAML::Node const & config)
 
   t.start();
   FESpace_T feSpace{*mesh};
+  RecFESpace_T feSpaceRec{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
   BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, [temp0](Vec3 const &){return temp0;}});
+  // bcs.addBC(BCEss{feSpace, side::LEFT, [temp0](Vec3 const &){return temp0;}});
   // mixed bc: a u + \nabla u = b
   // - \nabla u = hConv (u - tempA)
   // -> a = hConv, b = hConv * tempA
   // hConv -> 0: \nabla u = 0, Neumann homogeneous
   // hConv -> inf: u = b / a = tempA, Dirichlet
-  bcs.addMixedBC(
-        side::RIGHT,
-        [hConv](Vec3 const &){return hConv;},
-        [hConv, tempA](Vec3 const &){return hConv * tempA;});
+  // bcs.addMixedBC(
+  //       side::RIGHT,
+  //       [hConv] (Vec3 const &) { return hConv; },
+  //       [hConv, tempA] (Vec3 const &) { return hConv * tempA; });
   std::cout << "bcs: " << t << " ms" << std::endl;
 
+  uint const size = feSpace.dof.size;
   Var sol{"u"};
   interpolateAnalyticFunction(ic, feSpace, sol.data);
   Vec solOld;
+  Var exact{"exact"};
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   LUSolver solver;
   double const steps = 10;
-  double const dt = 0.1;
+  double const dt = 2.0;
 
   AssemblyMass timeDer{1. / dt, feSpace};
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};
   AssemblyProjection timeRhs{1. / dt, solOld, feSpace};
+  AssemblyBCMixed mixBC{[hConv] (Vec3 const &) { return hConv; }, side::RIGHT, feSpace};
+  AssemblyBCNatural natBC{[hConv, tempA] (Vec3 const &) { return hConv * tempA; }, side::RIGHT, feSpace};
 
-  Builder builder{feSpace.dof.size};
+  Var flux{"flux", size};
+
+  Builder builder{size};
   double time = 0.;
   IOManager io{feSpace, fs::path{"output_fourier"} / config["filename"].as<std::string>(), 0., 0};
-  io.print({sol});
+  io.print({sol, flux});
   for (uint itime = 0; itime < steps; ++itime)
   {
     time += dt;
@@ -93,10 +104,12 @@ int test(YAML::Node const & config)
     solOld = sol.data;
 
     builder.clear();
-    // builder.buildProblem(timeDer, bcs);
+    builder.buildProblem(timeDer, bcs);
     builder.buildProblem(stiffness, bcs);
-    // builder.buildProblem(timeRhs, bcs);
+    builder.buildProblem(timeRhs, bcs);
     builder.buildProblem(f, bcs);
+    builder.buildProblem(natBC, bcs);
+    builder.buildProblem(mixBC, bcs);
     builder.closeMatrix();
     // std::cout << "A:\n" << builder.A << std::endl;
     // std::cout << "b:\n" << builder.b << std::endl;
@@ -106,9 +119,14 @@ int test(YAML::Node const & config)
     sol.data = solver.solve(builder.b);
     // std::cout << "u:\n" << sol.data << std::endl;
 
+    reconstructGradient(sol.data, feSpaceRec, flux.data);
+    std::cout << "u|1 = " << sol.data[size-1] << ", exact = " << exact.data[size-1] << std::endl;
+    std::cout << "du / dx |1 = " << flux.data[size-1] << std::endl;
+    std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size-1] - tempA) << std::endl;
+
     io.time = time;
     io.iter += 1;
-    io.print({sol});
+    io.print({sol, flux});
   }
 
   t.start();
@@ -117,8 +135,6 @@ int test(YAML::Node const & config)
   t.start();
   std::cout << "solve: " << t << " ms" << std::endl;
 
-  Var exact{"exact"};
-  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;
 
@@ -142,7 +158,6 @@ int main()
     YAML::Node config;
     config["n"] = 20;
     config["hConv"] = 1.0;
-    config["temp0"] = 2.0;
     config["tempA"] = 1.0;
     config["filename"] = "sol_fourier_test0";
     config["expected_error"] = 3.106760735256447e-07;

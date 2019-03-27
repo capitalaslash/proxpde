@@ -3,6 +3,18 @@
 #include "def.hpp"
 #include "reffe.hpp"
 
+enum class XDMFGridType : int8_t
+{
+  SINGLE,
+  COLLECTION
+};
+
+static const std::unordered_map<XDMFGridType,std::string> XDMFGridTypeToString =
+{
+  {XDMFGridType::SINGLE, "Uniform"},
+  {XDMFGridType::COLLECTION, "Collection"},
+};
+
 enum class XDMFNumberType : int8_t
 {
   INT,

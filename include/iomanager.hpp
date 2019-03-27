@@ -30,7 +30,8 @@ public:
   explicit XDMFDoc(fs::path const fp,
                    std::string_view s = "",
                    std::string_view meshS = "mesh",
-                   std::string_view dataS = ""):
+                   std::string_view dataS = "",
+                   XDMFGridType gridType = XDMFGridType::SINGLE):
     filepath(std::move(fp)),
     suffix(s),
     meshSuffix(meshS),
@@ -66,7 +67,11 @@ public:
     auto domainNode = xdmfNode.append_child("Domain");
 
     gridNode = domainNode.append_child("Grid");
-    gridNode.append_attribute("GridType") = "Uniform";
+    gridNode.append_attribute("GridType") = XDMFGridTypeToString.at(gridType).data();
+    if (gridType == XDMFGridType::COLLECTION)
+    {
+      gridNode.append_attribute("CollectionType") = "Temporal";
+    }
   }
 
   ~XDMFDoc()
@@ -137,6 +142,14 @@ public:
             buf);
   }
 
+  void appendTimeStep(std::pair<uint, double> const step)
+  {
+    auto stepNode = gridNode.append_child("xi:include");
+    stepNode.append_attribute("href") =
+        (filepath.filename().string() + "." + std::to_string(step.first) + ".xmf").data();
+    stepNode.append_attribute("xpointer") = "element(/1/1/1)";
+  }
+
 private:
   pugi::xml_node createDataItem(
           pugi::xml_node & parent,
@@ -204,6 +217,7 @@ public:
     }
   }
 
+  template <typename FESpace>
   void print(Var const & var)
   {
     hsize_t dimsf[2] = {1, static_cast<hsize_t>(var.data.size())};
@@ -288,13 +302,26 @@ struct IOManager
     }
   }
 
+  ~IOManager()
+  {
+    printTimeSeries();
+  }
+
   void print(std::vector<Var> const & data);
 
 protected:
+  void printTimeSeries()
+  {
+    XDMFDoc<typename FESpace::RefFE_T> doc{filepath, "time", "", "", XDMFGridType::COLLECTION};
+    for (auto const step: timeSeries)
+    {
+      doc.appendTimeStep(step);
+    }
+  }
+
   void printMeshData()
   {
     using FE_T = typename FESpace_T::RefFE_T;
-    Mesh_T const & mesh = feSpace.mesh;
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
@@ -315,7 +342,7 @@ protected:
     }
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
-    for (auto const & e: mesh.elementList)
+    for (auto const & e: feSpace.mesh.elementList)
     {
       for (uint p=0; p<FE_T::numGeoFuns; ++p)
       {
@@ -377,6 +404,7 @@ public:
   // HDF5 h5Time;
   double time;
   uint iter;
+  std::vector<std::pair<uint, double>> timeSeries;
 };
 
 // implementation --------------------------------------------------------------
@@ -384,6 +412,7 @@ public:
 template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> const & data)
 {
+  timeSeries.push_back({iter, time});
   XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
   doc.setTime(time);
   doc.setTopology(feSpace.mesh.elementList.size());

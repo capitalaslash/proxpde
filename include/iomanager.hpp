@@ -23,41 +23,36 @@ std::string join(std::vector<T> const & v)
   return buf;
 }
 
-enum class XDMFNumberType : int8_t
-{
-  INT,
-  FLOAT
-};
-
-static const std::map<XDMFNumberType, char const *> XDMFNumberTypeToString =
-{
-  {XDMFNumberType::INT, "Int"},
-  {XDMFNumberType::FLOAT, "Float"},
-};
-
-enum class XDMFFormat : int8_t
-{
-  HDF,
-  // INLINE
-};
-
-static const std::map<XDMFFormat, char const *> XDMFFormatToString =
-{
-  {XDMFFormat::HDF, "HDF"},
-  // {XDMFFormat::INLINE, "XML"},
-};
-
 template <typename RefFE>
 class XDMFDoc
 {
 public:
   explicit XDMFDoc(fs::path const fp,
-                   std::string_view s,
-                   std::string_view geoS = "mesh"):
+                   std::string_view s = "",
+                   std::string_view meshS = "mesh",
+                   std::string_view dataS = ""):
     filepath(std::move(fp)),
     suffix(s),
-    geoSuffix(geoS)
+    meshSuffix(meshS),
+    dataSuffix(dataS)
   {
+    if (!suffix.empty())
+    {
+      suffix = "." + suffix;
+    }
+    if (!meshSuffix.empty())
+    {
+      meshSuffix = "." + meshSuffix;
+    }
+    if (!dataSuffix.empty())
+    {
+      dataSuffix = "." + dataSuffix;
+    }
+    else
+    {
+      dataSuffix = suffix;
+    }
+
     auto decl = doc.prepend_child(pugi::node_declaration);
     decl.append_attribute("version") = "1.0";
     decl.append_attribute("encoding") = "UTF-8";
@@ -76,12 +71,7 @@ public:
 
   ~XDMFDoc()
   {
-    auto xmlFilepath = filepath;
-    if (!suffix.empty())
-    {
-      xmlFilepath += "." + suffix;
-    }
-    xmlFilepath += ".xmf";
+    auto xmlFilepath = filepath.c_str() + suffix + ".xmf";
     doc.save_file(xmlFilepath.c_str());
   }
 
@@ -91,14 +81,15 @@ public:
     timeNode.append_attribute("Value") = time;
   }
 
-  void setTopology(uint const numElems)
+  void setTopology(uint const numElems,
+                   std::string_view const connName = "connectivity")
   {
     auto topoNode = gridNode.append_child("Topology");
     topoNode.append_attribute("TopologyType") = XDMFTraits<RefFE>::shapeName;
     topoNode.append_attribute("Dimensions") = numElems;
 
-    auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
-        + ".h5:/connectivity\n";
+    auto const buf = "\n" + filepath.filename().string() + meshSuffix
+        + ".h5:/" + connName.data() + "\n";
     createDataItem(
           topoNode,
           {numElems, RefFE::numGeoFuns},
@@ -108,13 +99,14 @@ public:
           buf);
   }
 
-  void setGeometry(uint const mapSize)
+  void setGeometry(uint const mapSize,
+                   std::string_view const coordName = "coords")
   {
     auto geoNode = gridNode.append_child("Geometry");
     geoNode.append_attribute("GeometryType") = "XYZ";
 
-    auto const buf = "\n" + filepath.filename().string() + "." + geoSuffix
-        + ".h5:/coords\n";
+    auto const buf = "\n" + filepath.filename().string() + meshSuffix
+        + ".h5:/" + coordName.data() + "\n";
     createDataItem(
             geoNode,
             {mapSize, 3},
@@ -124,22 +116,21 @@ public:
             buf);
   }
 
-  // TODO: set up struct with all relevant data (name, type, size, format, number type)
-  void setVar(std::string_view const name, std::string_view const type, uint const size)
+  void setVar(XDMFVar const & var)
   {
     auto varNode = gridNode.append_child("Attribute");
-    varNode.append_attribute("Name") = name.data();
+    varNode.append_attribute("Name") = var.name.data();
     varNode.append_attribute("Active") = 1;
     varNode.append_attribute("AttributeType") = "Scalar";
-    varNode.append_attribute("Center") = type.data();
+    varNode.append_attribute("Center") = XDMFCenterToString.at(var.center).data();
 
-    auto const buf = "\n" + filepath.filename().string() + "." + suffix
-        + ".h5:/" + name.data() + "\n";
+    auto const buf = "\n" + filepath.filename().string() + dataSuffix
+        + ".h5:/" + var.name + "\n";
     // auto const buf = "\n" + filepath.filename().string() + ".time.h5:/"
     //     + name + "." + iter + "\n";
     createDataItem(
             varNode,
-            {1, size},
+            {1, var.size},
             XDMFNumberType::FLOAT,
             8,
             XDMFFormat::HDF,
@@ -149,7 +140,7 @@ public:
 private:
   pugi::xml_node createDataItem(
           pugi::xml_node & parent,
-          std::vector<uint> const & dims,
+          std::vector<ulong> const & dims,
           XDMFNumberType const type,
           uint const precision,
           XDMFFormat const format,
@@ -165,8 +156,9 @@ private:
   }
 
   fs::path filepath;
-  std::string const suffix;
-  std::string const geoSuffix;
+  std::string suffix;
+  std::string meshSuffix;
+  std::string dataSuffix;
   pugi::xml_document doc;
   pugi::xml_node gridNode;
 };
@@ -188,15 +180,29 @@ struct HDF5Var<double>
 };
 hid_t HDF5Var<double>::value = H5T_IEEE_F64LE;
 
+enum class HDF5FileMode : int8_t
+{
+  OVERWRITE,
+  APPEND
+};
+
 class HDF5
 {
 public:
 
-  HDF5(fs::path const fn):
+  HDF5(fs::path const fn, HDF5FileMode const mode):
     filepath(std::move(fn)),
-    file_id(H5Fcreate(filepath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)),
     status(0)
-  {}
+  {
+    if (mode == HDF5FileMode::OVERWRITE)
+    {
+      file_id = H5Fcreate(filepath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    }
+    else if (mode == HDF5FileMode::APPEND)
+    {
+      file_id = H5Fopen(filepath.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    }
+  }
 
   void print(Var const & var)
   {
@@ -289,7 +295,7 @@ protected:
   {
     using FE_T = typename FESpace_T::RefFE_T;
     Mesh_T const & mesh = feSpace.mesh;
-    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5"};
+    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
     {
@@ -325,13 +331,13 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
 
     // we always use linear elements for boundary facets
-    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filepath, "meshb", "meshb"};
-    doc.setTopology(mesh.facetList.size());
-    doc.setGeometry(mesh.pointList.size());
-    doc.setVar("facetMarker", "Cell", mesh.facetList.size());
-    doc.setVar("nodeMarker", "Node", mesh.pointList.size());
+    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filepath, "boundary", "mesh", "mesh"};
+    doc.setTopology(mesh.facetList.size(), "connectivity_bd");
+    doc.setGeometry(mesh.pointList.size(), "coords_bd");
+    doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
+    doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
 
-    HDF5 h5Mesh{fs::path{filepath} += ".meshb.h5"};
+    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::APPEND};
 
     Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
     for (auto const & f: mesh.facetList)
@@ -341,14 +347,14 @@ protected:
         conn(f.id, p) = f.pointList[p]->id;
       }
     }
-    h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity");
+    h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity_bd");
 
     Table<double, 3> coords(mesh.pointList.size(), 3);
     for (auto const & p: mesh.pointList)
     {
       coords.row(p.id) = p.coord;
     }
-    h5Mesh.print<double, 3>(coords, "coords");
+    h5Mesh.print<double, 3>(coords, "coords_bd");
 
     Vec facetMarkerData(mesh.facetList.size());
     for (auto const & f: mesh.facetList)
@@ -383,7 +389,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
   doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
-  HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5"};
+  HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
   for(auto& v: data)
   {
     for (uint d=0; d<feSpace.dim; ++d)
@@ -394,7 +400,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
         name += "_" + std::to_string(d);
       }
 
-      doc.setVar(name, Traits_T::attributeType, feSpace.dof.size);
+      doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
 
       // this works only with Lagrange elements
       Vec const compdata = v.data.block(d*feSpace.dof.size, 0, feSpace.dof.size, 1);

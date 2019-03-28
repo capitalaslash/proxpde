@@ -61,8 +61,8 @@ int main(int argc, char* argv[])
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   // hexagonSquare(*mesh, true);
-  uint const numElemsX = (argc < 3)? 21 : std::stoul(argv[1]);
-  uint const numElemsY = (argc < 3)? 21 : std::stoul(argv[2]);
+  uint const numElemsX = (argc < 3)? 20 : std::stoul(argv[1]);
+  uint const numElemsY = (argc < 3)? 20 : std::stoul(argv[2]);
   buildHyperCube(*mesh,
             {0., 0., 0.},
             {1., 1., 0.},
@@ -96,20 +96,18 @@ int main(int argc, char* argv[])
   bcsP0.addBC(BCEss{feSpaceP0, side::TOP, zero});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  // auto const velocity = Vec2(0.2, 0.0);
-  double const dt = 0.1;
-
   auto const & sizeP1 = feSpaceP1.dof.size;
   VelFESpace_T velFESpace{*mesh};
-  Var velFE("vel", velFESpace.dof.size*2);
+  Var velFE("velocity", velFESpace.dof.size*2);
   for (uint d=0; d<2; d++)
   {
     for (uint i =0; i< sizeP1; i++)
     {
-      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1)=velFun(mesh->pointList[i].coord)[d];
+      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1) =
+          velFun(mesh->pointList[i].coord)[d];
     }
   }
-
+  double const dt = 0.1;
   auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
 
@@ -189,10 +187,10 @@ int main(int argc, char* argv[])
   }
 
   double normP1 = concP1.data.norm();
-  std::cout << "the norm of the P1 solution is " << std::setprecision(12) << normP1 << std::endl;
+  std::cout << "the norm of the P1 solution is " << std::setprecision(16) << normP1 << std::endl;
   double normP0 = concP0.data.norm();
-  std::cout << "the norm of the P0 solution is " << std::setprecision(12) << normP0 << std::endl;
-  if(std::fabs(normP1 - 10.8594759676) > 1.e-10 || std::fabs(normP0 - 13.7780000857) > 1.e-10)
+  std::cout << "the norm of the P0 solution is " << std::setprecision(16) << normP0 << std::endl;
+  if(std::fabs(normP1 - 3.454949238277135) > 1.e-10 || std::fabs(normP0 - 4.323756033948087) > 1.e-10)
   {
     std::cerr << "the norm of the solution is not the prescribed value" << std::endl;
     return 1;

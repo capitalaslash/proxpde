@@ -35,6 +35,11 @@ double minmod(double const r)
   return std::max(0., std::min(1., r));
 }
 
+double superbee(double const r)
+{
+  return std::max(std::max(0., std::min(2.*r, 1.)), std::min(r, 2.));
+}
+
 double pureUpwind(double const)
 {
   return 0.;
@@ -43,19 +48,22 @@ double pureUpwind(double const)
 enum class LimiterType
 {
   UPWIND,
-  MINMOD
+  MINMOD,
+  SUPERBEE
 };
 
 static const std::map<LimiterType, std::function<double(double const)>> limiterMap =
 {
   {LimiterType::UPWIND, pureUpwind},
   {LimiterType::MINMOD, minmod},
+  {LimiterType::SUPERBEE, superbee},
 };
 
 static const std::map<std::string, LimiterType> stringToLimiter =
 {
   {"upwind", LimiterType::UPWIND},
   {"minmod", LimiterType::MINMOD},
+  {"superbee", LimiterType::SUPERBEE},
 };
 
 // template <typename ElemRefFE>

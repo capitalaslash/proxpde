@@ -66,8 +66,20 @@ struct CurFE
       // phi values on qpoints are unaffected by the change of coords
       // this update can potentially be done in the constructor
       phi[q] = phiRef[q];
-      phiVect[q] = phiVectRef[q] * jacPlus[q];
       dphi[q] = dphiRef[q] * jacPlus[q];
+      // Piola transformation
+      if (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+      {
+        phiVect[q] = phiVectRef[q] * jac[q].transpose() / detJ[q];
+        // adjust signs based on normal going from lower id to greater id
+        for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
+        {
+          if (elem.facetList[f]->facingElem[0].ptr->id != elem.id)
+          {
+            phiVect[q].row(f) *= -1.;
+          }
+        }
+      }
     }
   }
 

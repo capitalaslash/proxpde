@@ -37,9 +37,10 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
 struct GeoElem
 {
   using PointList_T = std::vector<Point *>;
+  using FacetList_T = std::vector<GeoElem *>;
   struct FacingElem
   {
-    GeoElem const * ptr;
+    GeoElem * ptr;
     id_T side;
   };
 
@@ -94,6 +95,7 @@ struct GeoElem
   }
 
   PointList_T pointList = {};
+  FacetList_T facetList = {};
   id_T id = idNotSet;
   marker_T marker = markerNotSet;
   // stores internal and external (element, facet side) pairs

@@ -89,7 +89,7 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
 
   uint facetCount = 0;
   uint iFacetCount = 0;
-  for (auto const & e: mesh.elementList)
+  for (auto & e: mesh.elementList)
   {
     uint side = 0;
     for (auto const & row: Mesh::Elem_T::elemToFacet)

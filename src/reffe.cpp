@@ -211,11 +211,10 @@ array<scalarTwodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiFun =
   [] (Vec_T const & ) { return 0.L; },
 }};
 
-static double const sqrt2 = std::sqrt(2);
 array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiVectFun =
 {{
   [] (Vec_T const & p) { return Vec_T(p(0), p(1)-1.); },
-  [] (Vec_T const & p) { return Vec_T(sqrt2*p(0), sqrt2*p(1)); },
+  [] (Vec_T const & p) { return Vec_T(p(0), p(1)); },
   [] (Vec_T const & p) { return Vec_T(p(0)-1., p(1)); },
 }};
 

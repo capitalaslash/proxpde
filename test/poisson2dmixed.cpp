@@ -31,12 +31,12 @@ static scalarFun_T exactSol = [] (Vec3 const& p)
 int main(int argc, char* argv[])
 {
   array<uint,3> numElems;
-  numElems[0] = (argc < 3)? 2 : std::stoi(argv[1]);
-  numElems[1] = (argc < 3)? 1 : std::stoi(argv[2]);
+  numElems[0] = (argc < 3)? 10 : std::stoi(argv[1]);
+  numElems[1] = (argc < 3)? 20 : std::stoi(argv[2]);
   numElems[2] = 0U;
 
   Vec3 const origin{0., 0., 0.};
-  Vec3 const length{2., 1., 0.};
+  Vec3 const length{1., 1., 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(*mesh, origin, length, numElems, KEEP_INTERNAL_FACETS);
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
   BCList bcsDummy{feSpaceP0Vec};
   Vec rhsW;
-  interpolateAnalyticFunction([](Vec3 const &){ return Vec2(1.0, 2.0); }, feSpaceP0Vec, rhsW);
+  interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
   builder.buildProblem(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
 
   builder.buildProblem(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);

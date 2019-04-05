@@ -5,6 +5,7 @@ ci_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 envfile=$ci_dir/ci.env
 logfile=$ci_dir/ci.log
 lockfile=$ci_dir/.ci.lock
+repo=git@stag:minifem.git
 
 tmp_dir=/tmp/ci
 
@@ -30,7 +31,7 @@ mkdir -p $tmp_dir
 pushd $tmp_dir || quit "tmp dir $tmp_dir not found" 2
 
 message "cloning..."
-git clone /home/cervone/repo/minifem >> $logfile || quit "clone failed in $tmp_dir" 3
+git clone $repo >> $logfile || quit "clone failed in $tmp_dir" 3
 pushd minifem/
 
 message "loading environment..."

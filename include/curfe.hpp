@@ -22,12 +22,15 @@ struct CurFE
     {
       for(uint i=0; i<RefFE::numFuns; ++i)
       {
-        phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
-        if constexpr (FEDim<RefFE>::value == FEDimType::VECTOR)
+        if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
+        {
+          phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
+          dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
+        }
+        else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
         {
           phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
         }
-        dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
       }
       for(uint i=0; i<RefFE::numGeoFuns; ++i)
       {
@@ -63,13 +66,16 @@ struct CurFE
       JxW[q] = detJ[q] * QR::weight[q];
       qpoint[q] = elem.origin() + jac[q] * QR::node[q];
 
-      // phi values on qpoints are unaffected by the change of coords
-      // this update can potentially be done in the constructor
-      phi[q] = phiRef[q];
-      dphi[q] = dphiRef[q] * jacPlus[q];
-      // Piola transformation
-      if (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+      if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
       {
+        // phi values on qpoints are unaffected by the change of coords
+        // this update can potentially be done in the constructor
+        phi[q] = phiRef[q];
+        dphi[q] = dphiRef[q] * jacPlus[q];
+      }
+      else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+      {
+        // Piola transformation
         phiVect[q] = phiVectRef[q] * jac[q].transpose() / detJ[q];
         // adjust signs based on normal going from lower id to greater id
         for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)

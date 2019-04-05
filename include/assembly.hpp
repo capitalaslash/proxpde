@@ -660,6 +660,8 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
     rhs(r),
     feSpaceRhs(feRhs)
   {
+    static_assert(FESpace_T::RefFE_T::dim == FESpaceRhs_T::dim,
+                  "the two fespaces are not of the same dimension");
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
           std::is_same<
@@ -681,7 +683,7 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
     for (uint d=0; d<CurFE_T::RefFE_T::dim; ++d)
     {
       FVec<CurFERhs_T::size> localRhs;
-      for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
+      for(uint n=0; n<CurFERhs_T::size; ++n)
       {
         id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.e->id, n) + d*feSpaceRhs.dof.size;
         localRhs[n] = rhs[dofId];

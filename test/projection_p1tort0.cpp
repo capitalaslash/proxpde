@@ -17,16 +17,8 @@ using FESpaceRT0_T = FESpace<Mesh_T, RefTriangleRT0, QR>;
 int main()
 {
   std::unique_ptr<Mesh_T> triangleMesh{new Mesh_T};
-  triangleMesh->pointList = {
-    Point(Vec3(0., 0., 0.), 0),
-    Point(Vec3(1., 0., 0.), 1),
-    Point(Vec3(0., 1., 0.), 2)
-  };
-  triangleMesh->elementList = {Triangle{{&triangleMesh->pointList[0],
-                                         &triangleMesh->pointList[1],
-                                         &triangleMesh->pointList[2]},
-                                         0}};
-  triangleMesh->buildConnectivity();
+  refTriangleMesh(*triangleMesh);
+  addElemFacetList(*triangleMesh);
 
   FESpaceP0_T feSpaceP0{*triangleMesh};
   FESpaceP1_T feSpaceP1{*triangleMesh};

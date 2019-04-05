@@ -40,25 +40,10 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(*mesh, origin, length, numElems, KEEP_INTERNAL_FACETS);
-  for (auto & elem: mesh->elementList)
-  {
-    elem.facetList.resize(Elem_T::numFacets);
-  }
-  for (auto & facet: mesh->facetList)
-  {
-    auto insideElem = facet.facingElem[0].ptr;
-    auto const insidePos = facet.facingElem[0].side;
-    insideElem->facetList[insidePos] = &facet;
-    auto outsideElem = facet.facingElem[1].ptr;
-    if (outsideElem)
-    {
-      auto const outsidePos = facet.facingElem[1].side;
-      outsideElem->facetList[outsidePos] = &facet;
-    }
-  }
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
-  std::cout << "mesh: " << *mesh << std::endl;
+  addElemFacetList(*mesh);
+  // std::cout << "mesh: " << *mesh << std::endl;
 
   FESpaceP0_T feSpaceP0{*mesh};
   FESpaceRT0_T feSpaceRT0{*mesh};
@@ -86,17 +71,16 @@ int main(int argc, char* argv[])
   builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceP0, {0}, sizeW), bcsU);
   builder.closeMatrix();
 
-  std::cout << "A:\n" << builder.A << std::endl;
-  std::cout << "b:\n" << builder.b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   Vec sol;
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol = solver.solve(builder.b);
-  // sol[2] = 1.;
 
-  std::cout << "sol: " << sol.transpose() << std::endl;
+  // std::cout << "sol: " << sol.transpose() << std::endl;
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exactSol, feSpace, exact.data);

@@ -17,7 +17,6 @@ int main()
 {
   std::shared_ptr<Mesh<Triangle>> triangleMesh{new Mesh<Triangle>()};
   refTriangleMesh(*triangleMesh);
-  buildFacets(*triangleMesh);
   buildNormals(*triangleMesh);
 
   std::bitset<3> tests;

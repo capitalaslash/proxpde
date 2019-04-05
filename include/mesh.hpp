@@ -288,6 +288,27 @@ void buildNormals(Mesh & mesh)
   }
 }
 
+template <typename Mesh>
+void addElemFacetList(Mesh & mesh)
+{
+  for (auto & elem: mesh.elementList)
+  {
+    elem.facetList.resize(Mesh::Elem_T::numFacets);
+  }
+  for (auto & facet: mesh.facetList)
+  {
+    auto insideElem = facet.facingElem[0].ptr;
+    auto const insidePos = facet.facingElem[0].side;
+    insideElem->facetList[insidePos] = &facet;
+    auto outsideElem = facet.facingElem[1].ptr;
+    if (outsideElem)
+    {
+      auto const outsidePos = facet.facingElem[1].side;
+      outsideElem->facetList[outsidePos] = &facet;
+    }
+  }
+}
+
 enum  GMSHElemType: int8_t
 {
   GMSHNull = 0,

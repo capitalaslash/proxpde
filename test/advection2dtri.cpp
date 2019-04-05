@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
             {0., 0., 0.},
             {1., 1., 0.},
             {{numElemsX, numElemsY, 0}},
-            KEEP_INTERNAL_FACETS | BUILD_NORMALS);
+            INTERNAL_FACETS | NORMALS);
   // readGMSH(*mesh, "square_uns.msh");
   // buildFacets(*mesh, true);
   // buildNormals(*mesh);

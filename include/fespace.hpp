@@ -20,7 +20,13 @@ struct FESpace
   explicit FESpace(Mesh const & m):
     mesh(m),
     dof(m)
-  {}
+  {
+    if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+    {
+      // vector fespace such as RT0 require internal facets and facet ptrs
+      assert ((mesh.flags & (INTERNAL_FACETS | FACET_PTRS)).any());
+    }
+  }
 
   FVec<dim> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
   {

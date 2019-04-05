@@ -39,10 +39,10 @@ int main(int argc, char* argv[])
   Vec3 const length{1., 1., 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, origin, length, numElems, KEEP_INTERNAL_FACETS);
+  buildHyperCube(*mesh, origin, length, numElems, INTERNAL_FACETS | FACET_PTRS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
-  addElemFacetList(*mesh);
+  // addElemFacetList(*mesh);
   // std::cout << "mesh: " << *mesh << std::endl;
 
   FESpaceP0_T feSpaceP0{*mesh};

@@ -10,6 +10,13 @@
 
 #include <yaml-cpp/yaml.h>
 
+using MeshFlags = std::bitset<4>;
+static constexpr MeshFlags NONE = 0b00;
+static constexpr MeshFlags BOUNDARY_FACETS = 0b0001;
+static constexpr MeshFlags INTERNAL_FACETS = 0b0010;
+static constexpr MeshFlags NORMALS = 0b0100;
+static constexpr MeshFlags FACET_PTRS = 0b1000;
+
 template <typename Elem>
 class Mesh
 {
@@ -43,6 +50,7 @@ public:
   FacetList_T facetList;
   elemToPoint_T elemToPoint;
   elemToFacet_T elemToFacet;
+  MeshFlags flags;
 };
 
 template <typename Elem>
@@ -173,6 +181,11 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
   }
   assert(bFacetCount == bFacetSize);
   assert(iFacetCount == facetCount);
+  mesh.flags |= BOUNDARY_FACETS;
+  if (keepInternal)
+  {
+    mesh.flags |= INTERNAL_FACETS;
+  }
 }
 
 void buildLine(Mesh<Line> & mesh,
@@ -210,11 +223,6 @@ void buildCube(Mesh<Hexahedron> & mesh,
                array<uint, 3> const numElems,
                bool keepInternalFacets);
 
-using MeshFlags = std::bitset<2>;
-static constexpr MeshFlags NONE = 0b00;
-static constexpr MeshFlags KEEP_INTERNAL_FACETS = 0b01;
-static constexpr MeshFlags BUILD_NORMALS = 0b10;
-
 template <typename Elem>
 void buildHyperCube(Mesh<Elem> & mesh,
                Vec3 const& origin,
@@ -228,7 +236,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               numElems[0],
-              flags[0]);
+              flags.test(1));
   }
   else if constexpr (std::is_same_v<Elem, Triangle> || std::is_same_v<Elem, Quad>)
   {
@@ -236,7 +244,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
                 origin,
                 length,
                 {{numElems[0], numElems[1]}},
-                flags[0]);
+                flags.test(1));
   }
   else if constexpr (std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
   {
@@ -244,7 +252,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               {{numElems[0], numElems[1], numElems[2]}},
-              flags[0]);
+              flags.test(1));
   }
   else
   {
@@ -252,9 +260,13 @@ void buildHyperCube(Mesh<Elem> & mesh,
     std::cerr << "element type " << typeid(Elem{}).name() << " not recognized." << std::endl;
     abort();
   }
-  if (flags[1])
+  if (flags.test(2))
   {
     buildNormals(mesh);
+  }
+  if (flags.test(3))
+  {
+    addElemFacetList(mesh);
   }
 }
 
@@ -279,13 +291,13 @@ void buildNormals(Mesh & mesh)
       }
     }
     // all internal normals should point from facing elem 0 towards facing elem 1
-    else
-      if ((facet.facingElem[1].ptr->midpoint() -
-           facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
-      {
-        facet._normal *= -1.0;
-      }
+    else if ((facet.facingElem[1].ptr->midpoint() -
+              facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
+    {
+      facet._normal *= -1.0;
+    }
   }
+  mesh.flags |= NORMALS;
 }
 
 template <typename Mesh>
@@ -307,6 +319,7 @@ void addElemFacetList(Mesh & mesh)
       outsideElem->facetList[outsidePos] = &facet;
     }
   }
+  mesh.flags |= FACET_PTRS;
 }
 
 enum  GMSHElemType: int8_t

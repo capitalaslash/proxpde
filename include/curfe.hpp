@@ -30,6 +30,7 @@ struct CurFE
         else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
         {
           phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
+          divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
         }
       }
       for(uint i=0; i<RefFE::numGeoFuns; ++i)
@@ -68,7 +69,7 @@ struct CurFE
 
       if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
       {
-        // phi values on qpoints are unaffected by the change of coords
+        // TODO: phi values on qpoints are unaffected by the change of coords
         // this update can potentially be done in the constructor
         phi[q] = phiRef[q];
         dphi[q] = dphiRef[q] * jacPlus[q];
@@ -85,6 +86,8 @@ struct CurFE
             phiVect[q].row(f) *= -1.;
           }
         }
+        // TODO: this can be done in constructor once
+        divphi[q] = divphiRef[q];
       }
     }
   }
@@ -98,14 +101,16 @@ struct CurFE
   array<double,QR::numPts> JxW;
   array<Vec3,QR::numPts> qpoint;
   array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
-  array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> phiVectRef;
   array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> dphiRef;
+  array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> phiVectRef;
+  array<FVec<RefFE::numFuns>,QR::numPts> divphiRef;
   array<FMat<RefFE::numGeoFuns,RefFE::dim>,QR::numPts> mapping;
   // vectorFun_T inverseMapping;
   array<FVec<RefFE::numFuns>,QR::numPts> phi;
+  array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
   // TODO: box phiVect in external data struct that is specialized on the FEDimType
   array<FMat<RefFE::numFuns,3>,QR::numPts> phiVect;
-  array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
+  array<FVec<RefFE::numFuns>,QR::numPts> divphi;
 };
 
 template <typename QR>

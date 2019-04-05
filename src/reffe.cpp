@@ -204,12 +204,18 @@ uint constexpr RefTriangleRT0::numFuns;
 array<uint,4> constexpr RefTriangleRT0::dofPlace;
 array<array<uint,1>,3> constexpr RefTriangleRT0::dofOnFacet;
 
-double const sqrt2 = std::sqrt(2.);
 array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiVectFun =
 {{
   [] (Vec_T const & p) { return Vec_T(p(0), p(1) - 1.); },
   [] (Vec_T const & p) { return Vec_T(p(0), p(1)); },
   [] (Vec_T const & p) { return Vec_T(p(0) - 1., p(1)); },
+}};
+
+array<scalarTwodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::divphiFun =
+{{
+  [] (Vec_T const & ) { return 2.; },
+  [] (Vec_T const & ) { return 2.; },
+  [] (Vec_T const & ) { return 2.; },
 }};
 
 // linear mapping

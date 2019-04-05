@@ -28,7 +28,6 @@ struct RefPointP1
 
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
-  static array<onedFun_T,numFuns> const phiVectFun;
   static array<onedFun_T,numFuns> const dphiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 1.L;
@@ -69,7 +68,6 @@ struct RefLineP0
 
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
-  static array<onedFun_T,numFuns> const phiVectFun;
   static array<onedFun_T,numFuns> const dphiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   // static LocalMat_T const massMat;
@@ -113,7 +111,6 @@ struct RefLineP1
 
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
-  static array<onedFun_T,numFuns> const phiVectFun;
   static array<onedFun_T,numFuns> const dphiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   // static LocalMat_T const massMat;
@@ -154,7 +151,6 @@ struct RefLineP2
 
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
-  static array<onedFun_T,numFuns> const phiVectFun;
   static array<onedFun_T,numFuns> const dphiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   static LocalMat_T const massMat;
@@ -194,7 +190,6 @@ struct RefTriangleP0
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 0.5L;
@@ -236,7 +231,6 @@ struct RefTriangleP1
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 0.5L;
@@ -277,7 +271,6 @@ struct RefTriangleP2
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 0.5L;
@@ -319,9 +312,8 @@ struct RefTriangleRT0
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
 
-  static array<scalarTwodFun_T,numFuns> const phiFun;
   static array<twodFun_T,numFuns> const phiVectFun;
-  static array<twodFun_T,numFuns> const dphiFun;
+  static array<scalarTwodFun_T,numFuns> const divphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 0.5L;
 
@@ -359,7 +351,6 @@ struct RefQuadQ1
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 4.L;
@@ -399,7 +390,6 @@ struct RefQuadP2
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 4.L;
@@ -443,7 +433,6 @@ struct RefQuadQ2
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarTwodFun_T,numFuns> const phiFun;
-  static array<twodFun_T,numFuns> const phiVectFun;
   static array<twodFun_T,numFuns> const dphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 4.L;
@@ -488,7 +477,6 @@ struct RefTetrahedronP1
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarThreedFun_T,numFuns> const phiFun;
-  static array<threedFun_T,numFuns> const phiVectFun;
   static array<threedFun_T,numFuns> const dphiFun;
   static array<threedFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 1./6;
@@ -528,7 +516,6 @@ struct RefTetrahedronP2
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarThreedFun_T,numFuns> const phiFun;
-  static array<threedFun_T,numFuns> const phiVectFun;
   static array<threedFun_T,numFuns> const dphiFun;
   static array<threedFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 1./6;
@@ -576,7 +563,6 @@ struct RefHexahedronQ1
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarThreedFun_T,numFuns> const phiFun;
-  static array<threedFun_T,numFuns> const phiVectFun;
   static array<threedFun_T,numFuns> const dphiFun;
   static array<threedFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 8.;
@@ -627,7 +613,6 @@ struct RefHexahedronQ2
   using LocalMat_T = FMat<numFuns,numFuns>;
 
   static array<scalarThreedFun_T,numFuns> const phiFun;
-  static array<threedFun_T,numFuns> const phiVectFun;
   static array<threedFun_T,numFuns> const dphiFun;
   static array<threedFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 8.;

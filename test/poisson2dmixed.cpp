@@ -31,8 +31,8 @@ static scalarFun_T exactSol = [] (Vec3 const& p)
 int main(int argc, char* argv[])
 {
   array<uint,3> numElems;
-  numElems[0] = (argc < 3)? 10 : std::stoi(argv[1]);
-  numElems[1] = (argc < 3)? 20 : std::stoi(argv[2]);
+  numElems[0] = (argc < 3)? 2 : std::stoi(argv[1]);
+  numElems[1] = (argc < 3)? 2 : std::stoi(argv[2]);
   numElems[2] = 0U;
 
   Vec3 const origin{0., 0., 0.};
@@ -45,34 +45,37 @@ int main(int argc, char* argv[])
   // addElemFacetList(*mesh);
   // std::cout << "mesh: " << *mesh << std::endl;
 
-  FESpaceP0_T feSpaceP0{*mesh};
-  FESpaceRT0_T feSpaceRT0{*mesh};
+  FESpaceP0_T feSpaceU{*mesh};
+  FESpaceRT0_T feSpaceW{*mesh};
 
-  BCList bcsU{feSpaceP0};
+  BCList bcsU{feSpaceU};
   // bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
   // bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
-  BCList bcsW{feSpaceRT0};
+  BCList bcsW{feSpaceW};
+  bcsW.addBC(BCEss{feSpaceW, side::LEFT, [] (Vec3 const & ) { return 1.; }});
 
-  uint const sizeU = feSpaceP0.dof.size;
+  uint const sizeU = feSpaceU.dof.size;
   Var u("u", sizeU);
-  uint const sizeW = feSpaceRT0.dof.size;
+  uint const sizeW = feSpaceW.dof.size;
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
-  builder.buildProblem(AssemblyVectorMass(1.0, feSpaceRT0), bcsW);
+  builder.buildProblem(AssemblyVectorMass(1.0, feSpaceW), bcsW);
+  builder.buildProblem(AssemblyVectorGrad(-1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
+  builder.buildProblem(AssemblyVectorDiv(-1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
   BCList bcsDummy{feSpaceP0Vec};
-  Vec rhsW;
-  interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
-  builder.buildProblem(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
+  // Vec rhsW;
+  // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
+  // builder.buildProblem(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
 
-  builder.buildProblem(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
+  // builder.buildProblem(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec rhsU;
-  interpolateAnalyticFunction([](Vec3 const &){ return 3.0; }, feSpaceP0, rhsU);
-  builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceP0, {0}, sizeW), bcsU);
+  interpolateAnalyticFunction([](Vec3 const &){ return 3.0; }, feSpaceU, rhsU);
+  builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
   builder.closeMatrix();
 
-  // std::cout << "A:\n" << builder.A << std::endl;
-  // std::cout << "b:\n" << builder.b << std::endl;
+  std::cout << "A:\n" << builder.A << std::endl;
+  std::cout << "b:\n" << builder.b << std::endl;
 
   Vec sol;
   LUSolver solver;
@@ -80,7 +83,7 @@ int main(int argc, char* argv[])
   solver.factorize(builder.A);
   sol = solver.solve(builder.b);
 
-  // std::cout << "sol: " << sol.transpose() << std::endl;
+  std::cout << "sol: " << sol.transpose() << std::endl;
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exactSol, feSpace, exact.data);
@@ -88,13 +91,13 @@ int main(int argc, char* argv[])
   // error.data = sol.data - exact.data;
 
   u.data = sol.block(sizeW, 0, sizeU, 1);
-  IOManager ioP0{feSpaceP0, "output_poisson2dmixed/u"};
+  IOManager ioP0{feSpaceU, "output_poisson2dmixed/u"};
   ioP0.print({u});
 
   w.data = sol.block(0, 0, sizeW, 1);
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
   builderRT0.buildProblem(AssemblyMass(1.0, feSpaceP0Vec), bcsDummy);
-  builderRT0.buildProblem(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceRT0), bcsDummy);
+  builderRT0.buildProblem(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");
   LUSolver solverRT0;

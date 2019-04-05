@@ -524,11 +524,11 @@ public:
   double volume() const final
   {
     // TODO: this is not correct for general hexahedrons, just for parallelepids
-    // a betetr way is to split the hexahedron in ettrahedra and sum their volumes
+    // a better way is to split the hexahedron in tetrahedra and sum their volumes
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[3]->coord - pointList[0]->coord;
     auto const v3 = pointList[4]->coord - pointList[0]->coord;
-    return (v1.cross(v2)).dot(v3);
+    return std::fabs((v1.cross(v2)).dot(v3));
   }
 
   void buildNormal() final

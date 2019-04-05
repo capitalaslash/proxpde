@@ -24,12 +24,10 @@ int test(YAML::Node const & config)
   MilliTimer t;
 
   auto const hConv = config["hConv"].as<double>();
-  auto const temp0 = config["temp0"].as<double>();
   auto const tempA = config["tempA"].as<double>();
 
   std::cout << "test setup:\n"
             << "  - hConv = " << hConv << "\n"
-            << "  - temp0 = " << temp0 << "\n"
             << "  - tempA = " << tempA << std::endl;
 
   const scalarFun_T rhs = [] (Vec3 const &)
@@ -160,7 +158,7 @@ int main()
     config["hConv"] = 1.0;
     config["tempA"] = 1.0;
     config["filename"] = "sol_fourier_test0";
-    config["expected_error"] = 3.106760735256447e-07;
+    config["expected_error"] = 0.001390624752302502;
 
     tests[0] = test(config);
   }

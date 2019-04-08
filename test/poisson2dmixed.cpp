@@ -17,39 +17,35 @@ using FESpaceRT0_T = FESpace<Mesh_T, RefTriangleRT0, QR>;
 using FESpaceP0_T = FESpace<Mesh_T, RefTriangleP0, QR>;
 using FESpaceP0Vec_T = FESpace<Mesh_T, RefTriangleP0, QR, 2>;
 
-static scalarFun_T rhs = [] (Vec3 const& p)
+int test(YAML::Node const & config)
 {
-  return -2.;
-  // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return p(0) * (2. - p(0));
-  // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-
-int main(int argc, char* argv[])
-{
-  array<uint,3> numElems;
-  numElems[0] = (argc < 3)? 10 : std::stoi(argv[1]);
-  numElems[1] = (argc < 3)? 10 : std::stoi(argv[2]);
-  numElems[2] = 0U;
-
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
-
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, origin, length, numElems, INTERNAL_FACETS | FACET_PTRS);
+  buildHyperCube(*mesh, origin, length, {n, n, 0}, INTERNAL_FACETS | FACET_PTRS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
   // addElemFacetList(*mesh);
   // std::cout << "mesh: " << *mesh << std::endl;
 
+  auto const g = config["g"].as<double>();
+  scalarFun_T rhs = [] (Vec3 const& p)
+  {
+    return -2.;
+    // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+  scalarFun_T exactSol = [g] (Vec3 const& p)
+  {
+    return p(0) * (2. + g - p(0));
+    // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+
   FESpaceP0_T feSpaceU{*mesh};
   FESpaceRT0_T feSpaceW{*mesh};
 
   BCList bcsU{feSpaceU};
-  double const hx = 1. / numElems[0];
+  double const hx = 1. / n;
   DOFCoordSet leftStrip{
     feSpaceU,
         [hx](Vec3 const & p){return std::fabs(p[0]) < .5 * hx;}
@@ -61,8 +57,8 @@ int main(int argc, char* argv[])
   // bcsU.addBC(BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}});
   // bcsU.addBC(BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
   BCList bcsW{feSpaceW};
-  // the function must be the normal flux, positive if entrant
-  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [] (Vec3 const & ) { return 0.; }});
+  // the function must be the normal flux, negative if entrant
+  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return -g; }});
   // symmetry
   bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
   bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
@@ -123,16 +119,61 @@ int main(int argc, char* argv[])
   IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixed/w"};
   ioRT0.print({wP0});
 
-  // 10x10: 0.01571348402636837
-  // 20x20: 0.007856742013184393
-  // 40x40: 0.003928371006589719
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - 0.01571348402636837) > 1.e-12)
+  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;
   }
 
   return 0;
+}
+
+int main()
+{
+  std::bitset<6> tests;
+
+  {
+    YAML::Node config;
+    config["n"] = 10;
+    config["g"] = 0.0;
+    config["expected_error"] = 0.01571348402636837;
+    tests[0] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 20;
+    config["g"] = 0.0;
+    config["expected_error"] = 0.007856742013184393;
+    tests[1] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 40;
+    config["g"] = 0.0;
+    config["expected_error"] = 0.003928371006589719;
+    tests[2] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 10;
+    config["g"] = 1.0;
+    config["expected_error"] = 0.01571348402636837;
+    tests[3] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 20;
+    config["g"] = 1.0;
+    config["expected_error"] = 0.007856742013184393;
+    tests[4] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 40;
+    config["g"] = 1.0;
+    config["expected_error"] = 0.003928371006596717;
+    tests[5] = test(config);
+  }
 }

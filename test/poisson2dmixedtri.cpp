@@ -30,15 +30,19 @@ int test(YAML::Node const & config)
   // std::cout << "mesh: " << *mesh << std::endl;
 
   auto const g = config["g"].as<double>();
-  scalarFun_T rhs = [] (Vec3 const& p)
+  scalarFun_T rhs = [] (Vec3 const & )
   {
     return -2.;
     // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  scalarFun_T exactSol = [g] (Vec3 const& p)
+  scalarFun_T exactSol = [g] (Vec3 const & p)
   {
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+  Fun<2,3> exactGrad = [g] (Vec3 const & p)
+  {
+    return Vec2(2. + g - 2. * p(0), 0.);
   };
 
   FESpaceP0_T feSpaceU{*mesh};
@@ -57,8 +61,8 @@ int test(YAML::Node const & config)
   // bcsU.addBC(BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}});
   // bcsU.addBC(BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
   BCList bcsW{feSpaceW};
-  // the function must be the normal flux, negative if entrant
-  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return -g; }});
+  // the function must be the normal flux, positive if entrant
+  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return g; }});
   // symmetry
   bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
   bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
@@ -69,8 +73,8 @@ int test(YAML::Node const & config)
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
   builder.buildProblem(AssemblyVectorMass(1.0, feSpaceW), bcsW);
-  builder.buildProblem(AssemblyVectorGrad(-1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
-  builder.buildProblem(AssemblyVectorDiv(-1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
+  builder.buildProblem(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
+  builder.buildProblem(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
   BCList bcsDummy{feSpaceP0Vec};
   // Vec rhsW;
@@ -94,19 +98,19 @@ int test(YAML::Node const & config)
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol = solver.solve(builder.b);
+  w.data = sol.block(0, 0, sizeW, 1);
   u.data = sol.block(sizeW, 0, sizeU, 1);
 
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
-  Var exact{"exact"};
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact.data);
-  Var error{"error"};
-  error.data = u.data - exact.data;
+  Var exactU{"exactU"};
+  interpolateAnalyticFunction(exactSol, feSpaceU, exactU.data);
+  Var errorU{"errorU"};
+  errorU.data = u.data - exactU.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedtri/u"};
-  ioP0.print({u, exact, error});
+  ioP0.print({u, exactU, errorU});
 
-  w.data = sol.block(0, 0, sizeW, 1);
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
   builderRT0.buildProblem(AssemblyMass(1.0, feSpaceP0Vec), bcsDummy);
   builderRT0.buildProblem(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
@@ -116,10 +120,16 @@ int test(YAML::Node const & config)
   solverRT0.analyzePattern(builderRT0.A);
   solverRT0.factorize(builderRT0.A);
   wP0.data = solverRT0.solve(builderRT0.b);
-  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
-  ioRT0.print({wP0});
 
-  double norm = error.data.norm();
+  Var exactW{"exactW"};
+  interpolateAnalyticFunction(exactGrad, feSpaceP0Vec, exactW.data);
+  Var errorW{"errorW"};
+  errorW.data = wP0.data - exactW.data;
+
+  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
+  ioRT0.print({wP0, exactW, errorW});
+
+  double norm = errorU.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
   if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-12)
   {

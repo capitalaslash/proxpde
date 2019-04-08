@@ -21,6 +21,8 @@ struct FESpace
     mesh(m),
     dof(m)
   {
+    static_assert (std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>, "mesh element and reference element are not compatible.");
+    static_assert (std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>, "reference element and quad rule are not compatible.");
     if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
     {
       // vector fespace such as RT0 require internal facets and facet ptrs
@@ -92,7 +94,7 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
   // set the vector data to the appropriate dimension if it comes with length 0
   if (v.size() == 0)
   {
-    v = Vec::Zero(feSpace.dof.size * feSpace.dim);
+    v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
 
   for(auto const & e: feSpace.mesh.elementList)

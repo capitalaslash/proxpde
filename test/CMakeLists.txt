@@ -65,6 +65,7 @@ minifem_add_test(dual)
 # 2d quad
 minifem_add_test(poisson2dquad)
 minifem_add_test(poisson2dquad_q2)
+minifem_add_test(poisson2dmixedquad)
 minifem_add_test(dr2dquad)
 minifem_add_test(advection2dquad)
 

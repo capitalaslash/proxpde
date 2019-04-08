@@ -110,6 +110,14 @@ struct XDMFTraits<RefTriangleP2>
 };
 
 template <>
+struct XDMFTraits<RefQuadP0>
+{
+  static constexpr char const * shapeName = "Quadrilateral";
+  static constexpr XDMFCenter attributeType = XDMFCenter::CELL;
+  static constexpr bool needsMapping = false;
+};
+
+template <>
 struct XDMFTraits<RefQuadQ1>
 {
   static constexpr char const * shapeName = "Quadrilateral";

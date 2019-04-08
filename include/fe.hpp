@@ -51,6 +51,13 @@ struct FEType<Triangle,2>
 };
 
 template <>
+struct FEType<Quad,0>
+{
+  using RefFE_T = RefQuadP0;
+  using RecommendedQR = GaussQR<Quad,1>;
+};
+
+template <>
 struct FEType<Quad,1>
 {
   using RefFE_T = RefQuadQ1;

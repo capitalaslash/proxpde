@@ -219,12 +219,7 @@ array<scalarTwodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::divphiFun =
 }};
 
 // linear mapping
-array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::mapping =
-{{
-   [] (Vec_T const & ) { return Vec_T(-1.L, -1.L); },
-   [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
-   [] (Vec_T const & ) { return Vec_T( 0.L,  1.L); }
-}};
+array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::mapping = RefTriangleP1::mapping;
 
 // ----------------------------------------------------------------------------
 using feFun_T = std::function<double (double const)>;
@@ -342,6 +337,48 @@ array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
 }};
 
 array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::mapping = RefQuadQ2::dphiFun;
+
+// ----------------------------------------------------------------------------
+uint constexpr RefQuadP0::numFuns;
+array<uint,4> constexpr RefQuadP0::dofPlace;
+array<array<uint,0>,0> constexpr RefQuadP0::dofOnFacet;
+
+array<scalarTwodFun_T,RefQuadP0::numFuns> const RefQuadP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.; }
+}};
+
+array<twodFun_T,RefQuadP0::numFuns> const RefQuadP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// bi-linear mapping
+array<twodFun_T,RefQuadP0::numGeoFuns> const RefQuadP0::mapping = RefQuadQ1::mapping;
+
+// ----------------------------------------------------------------------------
+uint constexpr RefQuadRT0::numFuns;
+array<uint,4> constexpr RefQuadRT0::dofPlace;
+array<array<uint,1>,4> constexpr RefQuadRT0::dofOnFacet;
+
+array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::phiVectFun =
+{{
+  [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) - 1.)); },
+  [] (Vec_T const & p) { return Vec_T(0.5 * (p(1) + 1.), 0.); },
+  [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) + 1.)); },
+  [] (Vec_T const & p) { return Vec_T(0.5 * (p(0) - 1.), 0.); },
+}};
+
+array<scalarTwodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::divphiFun =
+{{
+  [] (Vec_T const & ) { return 0.5; },
+  [] (Vec_T const & ) { return 0.5; },
+  [] (Vec_T const & ) { return 0.5; },
+  [] (Vec_T const & ) { return 0.5; },
+}};
+
+// bi-linear mapping
+array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::mapping = RefQuadQ1::mapping;
 
 // ----------------------------------------------------------------------------
 uint constexpr RefTetrahedronP1::numFuns;

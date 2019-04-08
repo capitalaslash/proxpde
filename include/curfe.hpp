@@ -77,17 +77,18 @@ struct CurFE
       else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
       {
         // Piola transformation
-        phiVect[q] = phiVectRef[q] * jac[q].transpose() / detJ[q];
+        double detJInv = 1. / detJ[q];
+        phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
+        divphi[q] = detJInv * divphiRef[q];
         // adjust signs based on normal going from lower id to greater id
         for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
         {
           if (elem.facetList[f]->facingElem[0].ptr->id != elem.id)
           {
             phiVect[q].row(f) *= -1.;
+            divphi[q](f) *= -1.;
           }
         }
-        // TODO: this can be done in constructor once
-        divphi[q] = divphiRef[q];
       }
     }
   }

@@ -19,20 +19,20 @@ using FESpaceP0Vec_T = FESpace<Mesh_T, RefTriangleP0, QR, 2>;
 
 static scalarFun_T rhs = [] (Vec3 const& p)
 {
-  return 0.;
+  return -2.;
   // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
 static scalarFun_T exactSol = [] (Vec3 const& p)
 {
-  return p(0);
+  return p(0) * (2. - p(0));
   // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
 
 int main(int argc, char* argv[])
 {
   array<uint,3> numElems;
-  numElems[0] = (argc < 3)? 2 : std::stoi(argv[1]);
-  numElems[1] = (argc < 3)? 2 : std::stoi(argv[2]);
+  numElems[0] = (argc < 3)? 10 : std::stoi(argv[1]);
+  numElems[1] = (argc < 3)? 10 : std::stoi(argv[2]);
   numElems[2] = 0U;
 
   Vec3 const origin{0., 0., 0.};
@@ -49,10 +49,23 @@ int main(int argc, char* argv[])
   FESpaceRT0_T feSpaceW{*mesh};
 
   BCList bcsU{feSpaceU};
-  // bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
-  // bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
+  double const hx = 1. / numElems[0];
+  DOFCoordSet leftStrip{
+    feSpaceU,
+        [hx](Vec3 const & p){return std::fabs(p[0]) < .5 * hx;}
+  };
+  DOFCoordSet rightStrip{
+    feSpaceU,
+        [length, hx](Vec3 const & p){return std::fabs(length[0] - p[0]) < .5 * hx;}
+  };
+  // bcsU.addBC(BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}});
+  // bcsU.addBC(BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
   BCList bcsW{feSpaceW};
-  bcsW.addBC(BCEss{feSpaceW, side::LEFT, [] (Vec3 const & ) { return 1.; }});
+  // the function must be the normal flux, positive if entrant
+  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [] (Vec3 const & ) { return 0.; }});
+  // symmetry
+  bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
+  bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
 
   uint const sizeU = feSpaceU.dof.size;
   Var u("u", sizeU);
@@ -68,31 +81,34 @@ int main(int argc, char* argv[])
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
   // builder.buildProblem(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
 
+  // in order to apply essential bcs on U
+  // builder.buildProblem(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
+
   // builder.buildProblem(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec rhsU;
-  interpolateAnalyticFunction([](Vec3 const &){ return 3.0; }, feSpaceU, rhsU);
+  interpolateAnalyticFunction(rhs, feSpaceU, rhsU);
   builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
   builder.closeMatrix();
 
-  std::cout << "A:\n" << builder.A << std::endl;
-  std::cout << "b:\n" << builder.b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   Vec sol;
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol = solver.solve(builder.b);
-
-  std::cout << "sol: " << sol.transpose() << std::endl;
-
-  // Var exact{"exact"};
-  // interpolateAnalyticFunction(exactSol, feSpace, exact.data);
-  // Var error{"e"};
-  // error.data = sol.data - exact.data;
-
   u.data = sol.block(sizeW, 0, sizeU, 1);
+
+  // std::cout << "sol: " << sol.transpose() << std::endl;
+
+  Var exact{"exact"};
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact.data);
+  Var error{"error"};
+  error.data = u.data - exact.data;
+
   IOManager ioP0{feSpaceU, "output_poisson2dmixed/u"};
-  ioP0.print({u});
+  ioP0.print({u, exact, error});
 
   w.data = sol.block(0, 0, sizeW, 1);
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
@@ -107,13 +123,16 @@ int main(int argc, char* argv[])
   IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixed/w"};
   ioRT0.print({wP0});
 
-  // double norm = error.data.norm();
-  // std::cout << "the norm of the error is " << norm << std::endl;
-  // if(std::fabs(norm - 0.0595034) > 1.e-5)
-  // {
-  //   std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-  //   return 1;
-  // }
+  // 10x10: 0.01571348402636837
+  // 20x20: 0.007856742013184393
+  // 40x40: 0.003928371006589719
+  double norm = error.data.norm();
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  if(std::fabs(norm - 0.01571348402636837) > 1.e-12)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

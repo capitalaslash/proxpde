@@ -317,9 +317,13 @@ struct RefTriangleRT0
   static array<twodFun_T,numGeoFuns> const mapping;
   static double constexpr volume = 0.5L;
 
-  static array<Vec3,numFuns> dofPts(GeoElem const &)
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {
-    return array<Vec3,numFuns>{};
+    return array<Vec3,numFuns>{
+      e.pointList[0]->coord + e.pointList[1]->coord,
+      e.pointList[1]->coord + e.pointList[2]->coord,
+      e.pointList[2]->coord + e.pointList[0]->coord,
+    };
   }
 
   static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)

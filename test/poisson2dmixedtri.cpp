@@ -103,7 +103,7 @@ int test(YAML::Node const & config)
   Var error{"error"};
   error.data = u.data - exact.data;
 
-  IOManager ioP0{feSpaceU, "output_poisson2dmixed/u"};
+  IOManager ioP0{feSpaceU, "output_poisson2dmixedtri/u"};
   ioP0.print({u, exact, error});
 
   w.data = sol.block(0, 0, sizeW, 1);
@@ -116,7 +116,7 @@ int test(YAML::Node const & config)
   solverRT0.analyzePattern(builderRT0.A);
   solverRT0.factorize(builderRT0.A);
   wP0.data = solverRT0.solve(builderRT0.b);
-  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixed/w"};
+  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
   ioRT0.print({wP0});
 
   double norm = error.data.norm();
@@ -176,4 +176,6 @@ int main()
     config["expected_error"] = 0.003928371006596717;
     tests[5] = test(config);
   }
+
+  return tests.any();
 }

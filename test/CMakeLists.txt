@@ -40,39 +40,46 @@ macro(minifem_add_test name)
 
 endmacro()
 
+# basic tests
 minifem_add_test(blockmatrix)
 minifem_add_test(hdf5write)
 minifem_add_test(qr)
 minifem_add_test(normal)
 minifem_add_test(reffe_test)
 minifem_add_test(solver_test)
+minifem_add_test(vectorfe1d)
+minifem_add_test(assemblyvector)
 
+# 1d
 minifem_add_test(poisson1d)
 minifem_add_test(poisson1d_p2)
 minifem_add_test(advection1d DATA advection1d.yaml)
 
+# 2d tri
 minifem_add_test(poisson2dtri)
 minifem_add_test(poisson2dtri_p2)
+minifem_add_test(poisson2dmixedtri)
 minifem_add_test(advection2dtri)
 minifem_add_test(dual)
 
+# 2d quad
 minifem_add_test(poisson2dquad)
 minifem_add_test(poisson2dquad_q2)
-minifem_add_test(poisson2dmixed)
 minifem_add_test(dr2dquad)
 minifem_add_test(advection2dquad)
 
+# 3d tet
 minifem_add_test(poisson3dtet DATA poisson3dtet.yaml cube_uns.msh)
 minifem_add_test(poisson3dtet_p2)
+
+# 3d hex
 minifem_add_test(poisson3dhex)
 minifem_add_test(poisson3dhex_q2)
 
 minifem_add_test(poisson2dproj)
 minifem_add_test(neumann)
 
-minifem_add_test(vectorfe1d)
-minifem_add_test(assemblyvector)
-
+# 2d stokes
 minifem_add_test(stokes2dquad)
 minifem_add_test(stokes2dtri DATA square_uns.msh)
 minifem_add_test(stokes2dcircle)
@@ -80,13 +87,16 @@ minifem_add_test(ipcs)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
 
+# 3d stokes
 minifem_add_test(stokes3dtet)
 
+# bc
 minifem_add_test(robin_bc)
 minifem_add_test(fourier_nb)
 minifem_add_test(projection_p1top2)
 minifem_add_test(projection_p2top1)
 minifem_add_test(projection_p1tort0)
 
+# io
 minifem_add_test(io)
 minifem_add_test(iotime)

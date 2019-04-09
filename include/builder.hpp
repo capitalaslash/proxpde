@@ -132,13 +132,13 @@ struct Builder
       {
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
-          auto localValue = bc.evaluate(i);
           for (uint d=0; d<FESpace::dim; ++d)
           {
             auto const pos = i+d*FESpace::RefFE_T::numFuns;
             DOFid_T const id = assembly.feSpace.dof.getId(e.id, pos);
             if (bc.isConstrained(id))
             {
+              auto const localValue = bc.evaluate(i);
               C(pos, pos) = 0.;
               h[pos] = localValue[d];
             }

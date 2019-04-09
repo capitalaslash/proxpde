@@ -22,8 +22,8 @@ int test(YAML::Node const & config)
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
-  buildHyperCube(*mesh, origin, length, {n, n, 0}, INTERNAL_FACETS | FACET_PTRS);
+  Vec3 const length{1., 1./3, 0.};
+  buildHyperCube(*mesh, origin, length, {n, 1, 0}, INTERNAL_FACETS | FACET_PTRS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
   // addElemFacetList(*mesh);
@@ -49,20 +49,21 @@ int test(YAML::Node const & config)
   FESpaceRT0_T feSpaceW{*mesh};
 
   BCList bcsU{feSpaceU};
-  double const hx = 1. / n;
-  DOFCoordSet leftStrip{
-    feSpaceU,
-        [hx](Vec3 const & p){return std::fabs(p[0]) < .5 * hx;}
-  };
-  DOFCoordSet rightStrip{
-    feSpaceU,
-        [length, hx](Vec3 const & p){return std::fabs(length[0] - p[0]) < .5 * hx;}
-  };
+  // double const hx = 1. / n;
+  // DOFCoordSet leftStrip{
+  //   feSpaceU,
+  //   [hx](Vec3 const & p){return std::fabs(p[0]) < hx;}
+  // };
+  // DOFCoordSet rightStrip{
+  //   feSpaceU,
+  //   [length, hx](Vec3 const & p){return std::fabs(length[0] - p[0]) < hx;}
+  // };
   // bcsU.addBC(BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}});
   // bcsU.addBC(BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
   BCList bcsW{feSpaceW};
   // the function must be the normal flux, positive if entrant
-  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return g; }});
+  // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
+  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return .5*g; }});
   // symmetry
   bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
   bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
@@ -75,6 +76,11 @@ int test(YAML::Node const & config)
   builder.buildProblem(AssemblyVectorMass(1.0, feSpaceW), bcsW);
   builder.buildProblem(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
   builder.buildProblem(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
+  // fixed u value
+  // builder.buildProblem(AssemblyBCNatural(
+  //                        [] (Vec3 const & ) { return 1.; },
+  //                      side::RIGHT,
+  //                      feSpaceW), bcsW);
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
   BCList bcsDummy{feSpaceP0Vec};
   // Vec rhsW;
@@ -101,14 +107,14 @@ int test(YAML::Node const & config)
   w.data = sol.block(0, 0, sizeW, 1);
   u.data = sol.block(sizeW, 0, sizeU, 1);
 
-  std::cout << "sol: " << sol.transpose() << std::endl;
+  std::cout << "sol:\n" << sol << std::endl;
 
   Var exactU{"exactU"};
   interpolateAnalyticFunction(exactSol, feSpaceU, exactU.data);
   Var errorU{"errorU"};
   errorU.data = u.data - exactU.data;
 
-  IOManager ioP0{feSpaceU, "output_poisson2dmixedtri/u"};
+  IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
   ioP0.print({u, exactU, errorU});
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
@@ -126,7 +132,7 @@ int test(YAML::Node const & config)
   Var errorW{"errorW"};
   errorW.data = wP0.data - exactW.data;
 
-  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
+  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedquad/w"};
   ioRT0.print({wP0, exactW, errorW});
 
   double norm = errorU.data.norm();
@@ -146,32 +152,32 @@ int main()
 
   {
     YAML::Node config;
-    config["n"] = 3;
+    config["n"] = 10;
     config["g"] = 0.0;
-    config["expected_error"] = 0.01571348402636837;
+    config["expected_error"] = 0.00833333333333487;
     tests[0] = test(config);
   }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 20;
-  //   config["g"] = 0.0;
-  //   config["expected_error"] = 0.007856742013184393;
-  //   tests[1] = test(config);
-  // }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 40;
-  //   config["g"] = 0.0;
-  //   config["expected_error"] = 0.003928371006589719;
-  //   tests[2] = test(config);
-  // }
-  // {
-  //   YAML::Node config;
-  //   config["n"] = 10;
-  //   config["g"] = 1.0;
-  //   config["expected_error"] = 0.01571348402636837;
-  //   tests[3] = test(config);
-  // }
+  {
+    YAML::Node config;
+    config["n"] = 20;
+    config["g"] = 0.0;
+    config["expected_error"] = 0.004166666666669872;
+    tests[1] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 40;
+    config["g"] = 0.0;
+    config["expected_error"] = 0.00208333333334122;
+    tests[2] = test(config);
+  }
+  {
+    YAML::Node config;
+    config["n"] = 10;
+    config["g"] = 1.0;
+    config["expected_error"] = 0.01571348402636837;
+    tests[3] = test(config);
+  }
   // {
   //   YAML::Node config;
   //   config["n"] = 20;

@@ -364,7 +364,7 @@ array<array<uint,1>,4> constexpr RefQuadRT0::dofOnFacet;
 array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::phiVectFun =
 {{
   [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) - 1.)); },
-  [] (Vec_T const & p) { return Vec_T(0.5 * (p(1) + 1.), 0.); },
+  [] (Vec_T const & p) { return Vec_T(0.5 * (p(0) + 1.), 0.); },
   [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) + 1.)); },
   [] (Vec_T const & p) { return Vec_T(0.5 * (p(0) - 1.), 0.); },
 }};

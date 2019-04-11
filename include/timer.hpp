@@ -35,7 +35,7 @@ public:
   TimeUnit elapsed()
   {
     auto const elapsed = std::chrono::duration_cast<TimeUnit>(Clock_T::now() - _start);
-    _times.push_back(std::pair(_tmpName, elapsed.count()));
+    _times[_tmpName] += elapsed.count();
     return elapsed;
   }
 
@@ -66,7 +66,7 @@ public:
 private:
   Clock_T::time_point _start;
   std::string _tmpName;
-  std::list<std::pair<std::string, typename TimeUnit::rep>> _times;
+  std::unordered_map<std::string, typename TimeUnit::rep> _times;
 };
 
 template <typename TimeUnit>

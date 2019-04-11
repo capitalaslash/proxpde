@@ -22,27 +22,31 @@ int test(YAML::Node const & config)
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1./3, 0.};
-  buildHyperCube(*mesh, origin, length, {n, 1, 0}, INTERNAL_FACETS | FACET_PTRS);
-  // refTriangleMesh(*mesh);
-  // mesh->pointList[2].coord = Vec3(1., 1., 0.);
-  // addElemFacetList(*mesh);
+  Vec3 const length{1., 1., 0.};
+  buildHyperCube(*mesh, origin, length, {n, n, 0}, INTERNAL_FACETS | FACET_PTRS);
+  double const h = 1. / n;
+  for (uint i=1; i<n; i += 2)
+    for (uint j=1; j<n; j += 2)
+      mesh->pointList[i + (n+1)*j].coord[1] += 0.5 * h;
   // std::cout << "mesh: " << *mesh << std::endl;
 
   auto const g = config["g"].as<double>();
-  scalarFun_T rhs = [] (Vec3 const & )
+  scalarFun_T rhs = [] (Vec3 const & p)
   {
-    return -2.;
+    // return -2.;
+    return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
     // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
   scalarFun_T exactSol = [g] (Vec3 const & p)
   {
-    return p(0) * (2. + g - p(0));
+    // return p(0) * (2. + g - p(0));
+    return std::sin(0.5 * M_PI * p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
   Fun<2,3> exactGrad = [g] (Vec3 const & p)
   {
-    return Vec2(2. + g - 2. * p(0), 0.);
+    // return Vec2(2. + g - 2. * p(0), 0.);
+    return Vec2(0.5 * M_PI * std::cos(0.5 * M_PI * p(0)), 0.);
   };
 
   FESpaceP0_T feSpaceU{*mesh};
@@ -96,8 +100,8 @@ int test(YAML::Node const & config)
   builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
   builder.closeMatrix();
 
-  std::cout << "A:\n" << builder.A << std::endl;
-  std::cout << "b:\n" << builder.b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
 
   Vec sol;
   LUSolver solver;
@@ -107,7 +111,7 @@ int test(YAML::Node const & config)
   w.data = sol.block(0, 0, sizeW, 1);
   u.data = sol.block(sizeW, 0, sizeU, 1);
 
-  std::cout << "sol:\n" << sol << std::endl;
+  // std::cout << "sol:\n" << sol << std::endl;
 
   Var exactU{"exactU"};
   interpolateAnalyticFunction(exactSol, feSpaceU, exactU.data);
@@ -171,13 +175,13 @@ int main()
     config["expected_error"] = 0.00208333333334122;
     tests[2] = test(config);
   }
-  {
-    YAML::Node config;
-    config["n"] = 10;
-    config["g"] = 1.0;
-    config["expected_error"] = 0.01571348402636837;
-    tests[3] = test(config);
-  }
+  // {
+  //   YAML::Node config;
+  //   config["n"] = 10;
+  //   config["g"] = 1.0;
+  //   config["expected_error"] = 0.01571348402636837;
+  //   tests[3] = test(config);
+  // }
   // {
   //   YAML::Node config;
   //   config["n"] = 20;

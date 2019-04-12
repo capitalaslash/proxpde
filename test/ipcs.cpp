@@ -22,9 +22,12 @@ int main(int argc, char* argv[])
 {
   MilliTimer t;
 
+  uint const numElemX = (argc == 3) ? std::atoi(argv[1]) : 4;
+  uint const numElemY = (argc == 3) ? std::atoi(argv[2]) : 8;
+
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{4, 8, 0}});
+  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{numElemX, numElemY, 0}});
   t.stop();
 
   t.start("fespace");
@@ -32,42 +35,45 @@ int main(int argc, char* argv[])
   FESpaceU_T feSpaceU{*mesh};
   FESpaceP_T feSpaceP{*mesh};
 
-  Eqn eqnVelStar{"velStar", feSpaceVel};
   Eqn eqnUstar{"uStar", feSpaceU};
   Eqn eqnVstar{"vStar", feSpaceU};
+
   Eqn eqnP{"p", feSpaceP};
-  Eqn eqnVel{"vel", feSpaceVel};
+
   Eqn eqnU{"u", feSpaceU};
   Eqn eqnV{"v", feSpaceU};
   t.stop();
 
   t.start("bc");
   auto zeroS = [] (Vec3 const &) {return 0.;};
-  auto oneS = [] (Vec3 const &) {return 1.;};
-  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
+  auto zeroV = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const &) {return Vec2(0.0, 1.0);};
   // auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 6.0*p[0]*(1-p[0]));};
-  // auto pIn = [] (Vec3 const &) {return -12.;};
+  auto inlet0 = [&inlet] (Vec3 const & p) {return inlet(p)[0];};
+  auto inlet1 = [&inlet] (Vec3 const & p) {return inlet(p)[1];};
+  // auto pIn = [] (Vec3 const &) {return 12.;};
 
   BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero, {0}});
+  // last essential bc wins on corners
   bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
-  BCList bcsP{feSpaceP};
-  bcsP.addBC(BCEss{feSpaceP, side::TOP, [] (Vec3 const &) {return 0.;}});
-  // DofSet_T pinSet = {1};
-  // bcsP.addBC(BCEss{feSpaceP, pinSet, [] (Vec3 const &) {return 0.;}});
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zeroV});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zeroV, {0}});
 
+  BCList bcsP{feSpaceP};
+  bcsP.addBC(BCEss{feSpaceP, side::TOP, zeroS});
+  // DofSet_T pinSet = {1};
+  // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
+
+  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::BOTTOM, inlet0});
   eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::RIGHT, zeroS});
   eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::LEFT, zeroS});
-  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::BOTTOM, zeroS});
+
+  // last essential bc wins on corners
+  eqnVstar.bcList.addBC(BCEss{eqnVstar.feSpace, side::BOTTOM, inlet1});
   eqnVstar.bcList.addBC(BCEss{eqnVstar.feSpace, side::RIGHT, zeroS});
-  eqnVstar.bcList.addBC(BCEss{eqnVstar.feSpace, side::BOTTOM, oneS});
-  eqnVelStar.bcList.addBC(BCEss{eqnVelStar.feSpace, side::RIGHT, zero});
-  eqnVelStar.bcList.addBC(BCEss{eqnVelStar.feSpace, side::LEFT, zero, {0}});
-  eqnVelStar.bcList.addBC(BCEss{eqnVelStar.feSpace, side::BOTTOM, inlet});
-  eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::TOP, [] (Vec3 const &) {return 0.;}});
-  // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, [] (Vec3 const &) {return 12.;}});
+
+  eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::TOP, zeroS});
+  // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
   t.stop();
 
   t.start("assembly");
@@ -100,43 +106,50 @@ int main(int argc, char* argv[])
   builderStatic.closeMatrix();
 
   Vec pOld = Vec::Zero(dofP);
+  Vec vel(2 * dofU);
+  vel << eqnU.sol.data, eqnV.sol.data;
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, eqnVel.sol.data, feSpaceU});
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyTensorStiffness{nu, feSpaceU});
+  eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
+  eqnUstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnUstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnU.sol.data, feSpaceU});
+
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, eqnVel.sol.data, feSpaceU});
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyTensorStiffness{nu, feSpaceU});
+  eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
+  eqnVstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnVstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnV.sol.data, feSpaceU});
-  eqnVelStar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceVel});
-  eqnVelStar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, eqnVel.sol.data, feSpaceVel});
-  eqnVelStar.assemblyListLhs.emplace_back(new AssemblyTensorStiffness{nu, feSpaceVel});
-  eqnVelStar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnVel.sol.data, feSpaceVel});
-  // eqnUstar.assemblyListRhs.emplace_back(new AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
+  // eqnVelStar.assemblyListRhs.emplace_back(new AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
   eqnP.assemblyListLhs.emplace_back(new AssemblyStiffness{dt, feSpaceP});
-  eqnP.assemblyListRhs.emplace_back(new AssemblyDivRhs{-1.0, eqnVelStar.sol.data, feSpaceP, feSpaceVel});
+  Vec velStar{2*dofU};
+  eqnP.assemblyListRhs.emplace_back(new AssemblyDivRhs{-1.0, velStar, feSpaceP, feSpaceVel});
   // eqnP.assemblyListRhs.emplace_back(new AssemblyStiffnessRhs{dt, pOld, feSpaceP, feSpaceP});
 
-  eqnVel.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceVel});
-  eqnVel.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVelStar.sol.data, feSpaceVel});
-  eqnVel.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceVel, feSpaceP});
+  eqnU.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  eqnU.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnUstar.sol.data, feSpaceU});
+  eqnU.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {0}});
+
+  eqnV.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  eqnV.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVstar.sol.data, feSpaceU});
+  eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
 
   BlockVar velM{"velM", {dofU, dofU, dofP}};
   auto ic = [](Vec3 const &) {return Vec2(0., 1.);};
   // auto ic = zero;
+  auto ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};
+  auto ic1 = [&ic] (Vec3 const & p) {return ic(p)[1];};
   interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
-  interpolateAnalyticFunction(zeroS, eqnUstar.feSpace, eqnUstar.sol.data);
-  interpolateAnalyticFunction(oneS, eqnVstar.feSpace, eqnVstar.sol.data);
-  interpolateAnalyticFunction(ic, feSpaceVel, eqnVel.sol.data);
-  eqnVelStar.sol.data = eqnVel.sol.data;
+  interpolateAnalyticFunction(ic0, eqnU.feSpace, eqnU.sol.data);
+  interpolateAnalyticFunction(ic1, eqnV.feSpace, eqnV.sol.data);
+
+  eqnUstar.sol.data = eqnU.sol.data;
+  eqnVstar.sol.data = eqnV.sol.data;
   t.stop();
 
   t.start("print");
-  IOManager ioS{feSpaceU, "output_ipcs/sol_s"};
-  ioS.print({eqnUstar.sol, eqnVstar.sol});
-  IOManager ioVel{feSpaceVel, "output_ipcs/sol_v"};
-  ioVel.print({velM, eqnVelStar.sol, eqnVel.sol});
+  Var uM{"uM", velM.block(0)};
+  Var vM{"vM", velM.block(1)};
+  IOManager ioV{feSpaceU, "output_ipcs/sol_s"};
+  ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_ipcs/sol_p"};
   Var pM{"pM", velM.block(2)};
   ioP.print({pM, eqnP.sol});
@@ -153,7 +166,7 @@ int main(int argc, char* argv[])
               << ", time = " << time << std::endl;
     filelog << "\n" << separator;
 
-    t.start("monolithic");
+    t.start("monolithic build");
     velOldMonolithic = velM.data;
     // pOld += eqnP.sol.data;
 
@@ -163,59 +176,75 @@ int main(int argc, char* argv[])
 
     Mat const A = builderMonolithic.A + builderStatic.A;
     Vec const b = builderMonolithic.b + builderStatic.b;
+    t.stop();
+
+    t.start("monolithic solve");
     solverMonolithic.compute(A);
     velM.data = solverMonolithic.solve(b);
     auto res = A * velM.data - b;
     std::cout << "residual norm: " << res.norm() << std::endl;
-    builderMonolithic.clear();
     t.stop();
 
-    t.start("split");
-    eqnVelStar.build();
-    // filelog << "AUstar:\n" << eqnUstar.builder.A.block(dofU, dofU, dofU, dofU) << std::endl;
-    // filelog << "bUstar:\n" << eqnUstar.builder.b.block(dofU,0,dofU,1) << std::endl;
-    eqnVelStar.solve();
-    // filelog << "ustar:\n" << eqnUstar.sol.data.block(dofU,0,dofU,1) << std::endl;
-    std::cout << "eqnVelStar residual norm: " << eqnVelStar.residualNorm() << std::endl;
+    t.start("split build");
+    vel << eqnU.sol.data, eqnV.sol.data;
+    eqnUstar.build();
+    eqnVstar.build();
+    t.stop();
 
+    t.start("split solve");
+    eqnUstar.solve();
+    std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+    eqnVstar.solve();
+    std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+    t.stop();
+
+    t.start("split build");
+    velStar << eqnUstar.sol.data, eqnVstar.sol.data;
     eqnP.build();
+    t.stop();
+
+    t.start("split solve");
     eqnP.solve();
     std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
     t.stop();
 
-    t.start("new split");
-    eqnUstar.build();
-    eqnUstar.solve();
-    std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
-    eqnVstar.build();
-    eqnVstar.solve();
-    std::cout << "eqnUstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+    t.start("split build");
+    eqnU.build();
+    eqnV.build();
     t.stop();
 
-    t.start("split post");
-    eqnVel.build();
-    // filelog << "AU:\n" << eqnU.builder.A << std::endl;
-    // filelog << "bU:\n" << eqnU.builder.b << std::endl;
-    eqnVel.solve();
-    // filelog << "u:\n" << eqnU.sol.data.block(dofU,0,dofU,1) << std::endl;
-    std::cout << "eqnU residual norm: " << eqnVel.residualNorm() << std::endl;
+    t.start("split solve");
+    eqnU.solve();
+    std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
+    eqnV.solve();
+    std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
+    t.stop();
 
-    eqnVelStar.builder.clear();
+    t.start("monolithic clear");
+    builderMonolithic.clear();
+    t.stop();
+
+    t.start("split clear");
+    eqnUstar.builder.clear();
+    eqnVstar.builder.clear();
     eqnP.builder.clear();
-    eqnVel.builder.clear();
+    eqnU.builder.clear();
+    eqnV.builder.clear();
     t.stop();
 
     t.start("print");
     if ((itime+1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
-      ioVel.time = time;
-      ioVel.iter += 1;
-      ioVel.print({velM, eqnVelStar.sol, eqnVel.sol});
+      uM.data = velM.block(0);
+      vM.data = velM.block(1);
+      ioV.time = time;
+      ioV.iter += 1;
+      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
 
+      pM.data = velM.block(2);
       ioP.time = time;
       ioP.iter += 1;
-      pM.data = velM.block(2);
       ioP.print({pM, eqnP.sol});
     }
     t.stop();
@@ -223,18 +252,15 @@ int main(int argc, char* argv[])
   t.print();
 
   double const normM = velM.data.block(0, 0, dofU*FESpaceVel_T::dim, 1).norm();
-  double const normS = eqnVel.sol.data.norm();
-  Vec velStarNew(2 * dofU);
-  velStarNew << eqnUstar.sol.data, eqnVstar.sol.data;
-  double const normNew = velStarNew.norm();
-  std::cout << "normM: " << std::setprecision(16) << normM << std::endl;
-  std::cout << "normS: " << std::setprecision(16) << normS << std::endl;
-  std::cout << "normStar: " << std::setprecision(16) << eqnVelStar.sol.data.norm() << std::endl;
-  std::cout << "normNew: " << std::setprecision(16) << normNew << std::endl;
+  double const normS = vel.norm();
+  std::cout << "normM:  " << std::setprecision(16) << normM << std::endl;
+  std::cout << "normS:  " << std::setprecision(16) << normS << std::endl;
+  std::cout << "normS*: " << std::setprecision(16) << velStar.norm() << std::endl;
 
-  if (std::fabs(normM - 13.3871233713913) > 1.e-12 ||
-      std::fabs(normS - 13.33549681268924) > 1.e-12)
+  if (std::fabs(normM - 12.82197035137505) > 1.e-12 ||
+      std::fabs(normS - 12.79716268754416) > 1.e-12)
   {
+    std::cerr << "one of the norms does not coincide with the expected value" << std::endl;
     return 1;
   }
   return 0;

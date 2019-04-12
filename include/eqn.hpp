@@ -58,11 +58,11 @@ struct Eqn
     return (builder.A * sol.data - builder.b).norm();
   }
 
-  FESpace_T feSpace;
+  FESpace_T const & feSpace;
   BCList<FESpace_T> bcList;
   BlockVar sol;
   Builder builder;
   std::vector<std::unique_ptr<Diagonal<FESpace_T>>> assemblyListLhs;
   std::vector<std::unique_ptr<AssemblyVector<FESpace_T>>> assemblyListRhs;
-  LUSolver solver;
+  IterSolver solver;
 };

@@ -5,23 +5,20 @@
 #include "bc.hpp"
 #include "var.hpp"
 #include "builder.hpp"
-#include "assembly.hpp"
 
-template <
-    typename Mesh,
-    typename RefFE,
-    typename QR,
-    uint Dimension = 1>
+template <typename FESpace>
+struct Diagonal;
+template <typename FESpace>
+struct AssemblyVector;
+
+template <typename FESpace>
 struct Eqn
 {
-  using Mesh_T = Mesh;
-  using RefFE_T = RefFE;
-  using QR_T = QR;
-  using FESpace_T = FESpace<Mesh_T, RefFE_T, QR_T, Dimension>;
-  static uint const dim = Dimension;
+  using FESpace_T = FESpace;
+  static uint const dim = FESpace_T::dim;
 
-  Eqn(std::string_view const name, Mesh const & mesh):
-    feSpace{mesh},
+  Eqn(std::string_view const name, FESpace_T const & fe):
+    feSpace{fe},
     bcList{feSpace},
     sol{name, std::vector<uint>(dim, feSpace.dof.size)},
     builder{feSpace.dof.size*dim}
@@ -69,4 +66,3 @@ struct Eqn
   std::vector<std::unique_ptr<AssemblyVector<FESpace_T>>> assemblyListRhs;
   LUSolver solver;
 };
-

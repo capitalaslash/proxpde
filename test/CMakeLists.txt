@@ -84,9 +84,9 @@ minifem_add_test(neumann)
 minifem_add_test(stokes2dquad)
 minifem_add_test(stokes2dtri DATA square_uns.msh)
 minifem_add_test(stokes2dcircle)
-minifem_add_test(ipcs)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
+minifem_add_test(nipcs)
 
 # 3d stokes
 minifem_add_test(stokes3dtet)

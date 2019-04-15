@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
   t.start("bc");
   auto zeroS = [] (Vec3 const &) {return 0.;};
   auto zeroV = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  auto inlet = [] (Vec3 const &) {return Vec2(0.0, 1.0);};
-  // auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 6.0*p[0]*(1-p[0]));};
+  // auto inlet = [] (Vec3 const &) {return Vec2(0.0, 1.0);};
+  auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 1.5 * (1. - p[0]*p[0]));};
   auto inlet0 = [&inlet] (Vec3 const & p) {return inlet(p)[0];};
   auto inlet1 = [&inlet] (Vec3 const & p) {return inlet(p)[1];};
   // auto pIn = [] (Vec3 const &) {return 12.;};
@@ -81,9 +81,9 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
 
   double time = 0.0;
-  double const dt = 5.e-2;
+  double const dt = 5e-2;
   uint const ntime = 100;
-  uint const printStep = 1;
+  uint const printStep = 10;
   double const nu = 1.e-1;
 
   Vec velOldMonolithic(2*dofU);
@@ -105,29 +105,36 @@ int main(int argc, char* argv[])
   builderStatic.buildProblem(div, bcsP, bcsVel);
   builderStatic.closeMatrix();
 
-  Vec pOld = Vec::Zero(dofP);
   Vec vel(2 * dofU);
   vel << eqnU.sol.data, eqnV.sol.data;
+  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt
+  // (uStar, \phi) / dt + ((vel \cdot \nabla) uStar, \phi) + nu (\nabla uStar, \nabla \phi) = (u, \phi) / dt
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnUstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnU.sol.data, feSpaceU});
 
+  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt
+  // (vStar, \phi) / dt + ((vel \cdot \nabla) vStar, \phi) + nu (\nabla vStar, \nabla \phi) = (v, \phi) / dt
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnVstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnV.sol.data, feSpaceU});
-  // eqnVelStar.assemblyListRhs.emplace_back(new AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
+  // dt \nabla^2 p = \nabla \cdot velStar
+  // dt (\nabla p, \nabla q) = - (\nabla \cdot velStar, q)
   eqnP.assemblyListLhs.emplace_back(new AssemblyStiffness{dt, feSpaceP});
   Vec velStar{2*dofU};
   eqnP.assemblyListRhs.emplace_back(new AssemblyDivRhs{-1.0, velStar, feSpaceP, feSpaceVel});
-  // eqnP.assemblyListRhs.emplace_back(new AssemblyStiffnessRhs{dt, pOld, feSpaceP, feSpaceP});
 
+  // u = uStar - dt dp / dx
+  // (u, \phi) = (uStar, \phi) - dt (dp / dx, \phi)
   eqnU.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
   eqnU.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnUstar.sol.data, feSpaceU});
   eqnU.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {0}});
 
+  // v = vStar - dt dp / dy
+  // (v, \phi) = (vStar, \phi) - dt (dp / dy, \phi)
   eqnV.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
   eqnV.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVstar.sol.data, feSpaceU});
   eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
@@ -148,9 +155,9 @@ int main(int argc, char* argv[])
   t.start("print");
   Var uM{"uM", velM.block(0)};
   Var vM{"vM", velM.block(1)};
-  IOManager ioV{feSpaceU, "output_ipcs/sol_s"};
+  IOManager ioV{feSpaceU, "output_nipcs/sol_s"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
-  IOManager ioP{feSpaceP, "output_ipcs/sol_p"};
+  IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
   Var pM{"pM", velM.block(2)};
   ioP.print({pM, eqnP.sol});
   t.stop();
@@ -168,7 +175,6 @@ int main(int argc, char* argv[])
 
     t.start("monolithic build");
     velOldMonolithic = velM.data;
-    // pOld += eqnP.sol.data;
 
     builderMonolithic.buildProblem(timederRhs, bcsVel);
     builderMonolithic.buildProblem(advection, bcsVel);
@@ -251,16 +257,22 @@ int main(int argc, char* argv[])
   }
   t.print();
 
-  double const normM = velM.data.block(0, 0, dofU*FESpaceVel_T::dim, 1).norm();
-  double const normS = vel.norm();
-  std::cout << "normM:  " << std::setprecision(16) << normM << std::endl;
-  std::cout << "normS:  " << std::setprecision(16) << normS << std::endl;
-  std::cout << "normS*: " << std::setprecision(16) << velStar.norm() << std::endl;
+  Var errorU{"errorU"};
+  errorU.data = uM.data - eqnU.sol.data;
+  Var errorV{"errorV"};
+  errorV.data = vM.data - eqnV.sol.data;
+  Var errorP{"errorP"};
+  errorP.data = pM.data - eqnP.sol.data;
 
-  if (std::fabs(normM - 12.82197035137505) > 1.e-12 ||
-      std::fabs(normS - 12.79716268754416) > 1.e-12)
+  std::cout << "errorU: " << std::setprecision(16) << errorU.data.norm() << std::endl;
+  std::cout << "errorV: " << std::setprecision(16) << errorV.data.norm() << std::endl;
+  std::cout << "errorP: " << std::setprecision(16) << errorP.data.norm() << std::endl;
+
+  if (std::fabs(errorU.data.norm() - 0.007214809990684357) > 1.e-12 ||
+      std::fabs(errorV.data.norm() - 0.1007968800021731) > 1.e-12 ||
+      std::fabs(errorP.data.norm() - 0.2134516643382494) > 1.e-12 )
   {
-    std::cerr << "one of the norms does not coincide with the expected value" << std::endl;
+    std::cerr << "one of the error norms does not coincide with its expected value." << std::endl;
     return 1;
   }
   return 0;

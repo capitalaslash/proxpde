@@ -87,6 +87,7 @@ minifem_add_test(stokes2dcircle)
 minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
 minifem_add_test(nipcs)
+minifem_add_test(ipcs)
 
 # 3d stokes
 minifem_add_test(stokes3dtet)

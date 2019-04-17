@@ -1061,6 +1061,74 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
   Vec const & data;
 };
 
+template <typename FESpace1, typename FESpace2>
+struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
+{
+  using FESpace1_T = FESpace1;
+  using FESpace2_T = FESpace2;
+  using Super_T = AssemblyVector<FESpace1_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyGradRhs2(double const c,
+                            Vec const & vec,
+                            FESpace1_T & fe1,
+                            FESpace2_T & fe2,
+                            std::vector<uint> comp = allComp<FESpace1_T>(),
+                            uint offset_row = 0):
+    AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
+    coeff(c),
+    feSpace2(fe2),
+    data(vec)
+  {}
+
+  void reinit(GeoElem const & elem) const override
+  {
+    this->feSpace.curFE.reinit(elem);
+    feSpace2.curFE.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const override
+  {
+    using CurFE1_T = typename FESpace1_T::CurFE_T;
+    using CurFE2_T = typename FESpace2_T::CurFE_T;
+    FVec<CurFE2_T::size> localData;
+
+    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    {
+      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.e->id, n);
+      localData[n] = data[dofId];
+    }
+    uint d = 0;
+    for (auto const c: this->comp)
+    {
+      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      {
+        // Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+        //     coeff * this->feSpace.curFE.JxW[q] *
+        //     this->feSpace.curFE.phi[q] *
+        //     (feSpace2.curFE.dphi[q].col(c).dot(localData));
+        Fe.template block<CurFE1_T::size,1>(d*CurFE1_T::size, 0) +=
+            coeff * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.dphi[q].col(c) *
+            (feSpace2.curFE.phi[q].dot(localData));
+      }
+      d++;
+    }
+  }
+
+  LVec_T build(/*LVec_T & Fe*/) const
+  {
+    LVec_T Fe;
+    this->build(Fe);
+    return Fe;
+  }
+
+  double const coeff;
+  FESpace2_T & feSpace2;
+  Vec const & data;
+};
+
 template <typename FESpace1, typename FESpace2 = FESpace1>
 struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
 {

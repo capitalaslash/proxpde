@@ -49,6 +49,7 @@ minifem_add_test(reffe_test)
 minifem_add_test(solver_test)
 minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)
+minifem_add_test(timeder)
 
 # 1d
 minifem_add_test(poisson1d)

@@ -267,6 +267,7 @@ template<> array<GaussQR<Hexahedron, 27>::Vec_T, 27> const GaussQR<Hexahedron, 2
 template <typename GeoElem>
 struct TrapQR
 {
+  using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
   static uint const numPts = GeoElem::numPts;
 

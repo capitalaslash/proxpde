@@ -116,7 +116,7 @@ struct Assembler
 
   std::tuple<FESpaces...> const & feList;
   uint dofTotalNum;
-  Mat matrix;
+  Mat<StorageType::ClmMajor> matrix;
   Vec rhs;
   Vec sol;
   BlockMatrix<FESpaces::RefFE_T::numFuns...> localMatrix;

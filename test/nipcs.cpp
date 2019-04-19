@@ -38,10 +38,10 @@ int main(int argc, char* argv[])
   Eqn eqnUstar{"uStar", feSpaceU};
   Eqn eqnVstar{"vStar", feSpaceU};
 
-  Eqn<FESpaceP_T, LUSolver> eqnP{"p", feSpaceP};
+  Eqn<FESpaceP_T, StorageType::ClmMajor> eqnP{"p", feSpaceP};
 
-  Eqn<FESpaceU_T, LUSolver> eqnU{"u", feSpaceU};
-  Eqn<FESpaceU_T, LUSolver> eqnV{"v", feSpaceU};
+  Eqn<FESpaceU_T, StorageType::ClmMajor> eqnU{"u", feSpaceU};
+  Eqn<FESpaceU_T, StorageType::ClmMajor> eqnV{"v", feSpaceU};
   t.stop();
 
   t.start("bc");
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
     builderMonolithic.buildProblem(advection, bcsVel);
     builderMonolithic.closeMatrix();
 
-    Mat const A = builderMonolithic.A + builderStatic.A;
+    Mat<StorageType::ClmMajor> const A = builderMonolithic.A + builderStatic.A;
     Vec const b = builderMonolithic.b + builderStatic.b;
     t.stop();
 

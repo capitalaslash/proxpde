@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   builder.closeMatrix();
 
   Var sol("vel", numDOFs);
-  Eigen::UmfPackLU<Mat> solver(builder.A);
+  LUSolver solver(builder.A);
   sol.data = solver.solve(builder.b);
 
   // std::cout << "A:\n" << builder.A << std::endl;

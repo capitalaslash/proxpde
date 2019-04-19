@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
   t.start("solve");
   Var sol{"u"};
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);

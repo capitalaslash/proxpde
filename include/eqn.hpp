@@ -11,7 +11,7 @@ struct Diagonal;
 template <typename FESpace>
 struct AssemblyVector;
 
-template <typename FESpace, typename Solver = IterSolver>
+template <typename FESpace, StorageType Storage = StorageType::ClmMajor>
 struct Eqn
 {
   using FESpace_T = FESpace;
@@ -65,8 +65,8 @@ struct Eqn
   FESpace_T const & feSpace;
   BCList<FESpace_T> bcList;
   BlockVar sol;
-  Builder builder;
+  Builder<Storage> builder;
   std::vector<std::unique_ptr<Diagonal<FESpace_T>>> assemblyListLhs;
   std::vector<std::unique_ptr<AssemblyVector<FESpace_T>>> assemblyListRhs;
-  Solver solver;
+  RecommendedSolverType<Storage> solver;
 };

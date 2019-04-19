@@ -15,17 +15,17 @@ using FESpace_T = FESpace<Mesh_T,
                           FEType<Elem_T,2>::RefFE_T,
                           FEType<Elem_T,2>::RecommendedQR>;
 
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-
 int main(int argc, char* argv[])
 {
+  scalarFun_T rhs = [] (Vec3 const& p)
+  {
+    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+  scalarFun_T exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+
   uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
   uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   builder.closeMatrix();
 
   Var sol{"u"};
-  Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+  LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);

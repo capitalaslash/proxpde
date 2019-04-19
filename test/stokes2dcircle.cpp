@@ -69,9 +69,7 @@ int main(int argc, char* argv[])
   builder.closeMatrix();
 
   Vec sol{numDOFs};
-  // Eigen::GMRES<Mat> solver(builder.A);
-  Eigen::UmfPackLU<Mat> solver(builder.A);
-  // Eigen::SuperLU<Mat> solver(builder.A);
+  LUSolver solver(builder.A);
   sol = solver.solve(builder.b);
 
   // std::cout << "A:\n" << builder.A << std::endl;

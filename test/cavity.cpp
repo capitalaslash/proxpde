@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   // this is required to properly apply the pinning on the pressure
   AssemblyMass dummy(0.0, feSpaceP, {0}, dofU*dim, dofU*dim);
 
-  Builder builder{numDOFs};
+  Builder<StorageType::RowMajor> builder{numDOFs};
   Var sol{"sol"};
   builder.buildProblem(stiffness, bcsVel);
   builder.buildProblem(grad, bcsVel, bcsP);
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
   builder.buildProblem(dummy, bcsP);
   builder.closeMatrix();
 
-  Eigen::UmfPackLU<Mat> solver(builder.A);
+  IterSolver solver(builder.A);
   sol.data = solver.solve(builder.b);
 
   // std::cout << "A:\n" << builder.A << std::endl;

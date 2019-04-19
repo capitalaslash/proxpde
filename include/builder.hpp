@@ -6,8 +6,11 @@
 #include "assembly.hpp"
 #include "bc.hpp"
 
+template <StorageType Storage = StorageType::ClmMajor>
 struct Builder
 {
+  using Mat_T = Mat<Storage>;
+
   explicit Builder(uint const size):
     A(size, size),
     b{Vec::Zero(size)}
@@ -393,7 +396,7 @@ struct Builder
     clearRhs();
   }
 
-  Mat A;
+  Mat_T A;
   Vec b;
   std::vector<Triplet> _triplets;
   // array<std::vector<AssemblyBase*>,3> assemblies;

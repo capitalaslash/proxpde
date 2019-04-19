@@ -27,8 +27,8 @@ static scalarFun_T exactSol = [] (Vec3 const& p)
   return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
 };
 
-template <typename Solver>
-void solve(Mat const & A, Vec const & b, YAML::Node const & config, Vec & x)
+template <StorageType Storage, typename Solver>
+void solve(Mat<Storage> const & A, Vec const & b, YAML::Node const & config, Vec & x)
 {
   Solver solver;
   solver.setTolerance(config["tolerance"].as<double>());
@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
   t.start("fe build");
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};
-  Builder builder{feSpace.dof.size};
-  builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(f, bcs);
-  builder.closeMatrix();
+  Builder<StorageType::RowMajor> builderR{feSpace.dof.size};
+  builderR.buildProblem(stiffness, bcs);
+  builderR.buildProblem(f, bcs);
+  builderR.closeMatrix();
   t.stop();
 
   // filelog << "A:\n" << builder.A << std::endl;
@@ -78,25 +78,28 @@ int main(int argc, char* argv[])
   YAML::Node config;
   config["tolerance"] = 1.e-8;
   config["maxNumIters"] = 2000;
-  using DiagPrec = Eigen::DiagonalPreconditioner<Mat::Scalar>;
-  // using ILUTPrec = Eigen::IncompleteLUT<Mat::Scalar>;
+  using DiagPrec = Eigen::DiagonalPreconditioner<double>;
+  // using ILUTPrec = Eigen::IncompleteLUT<double>;
 
   t.start("BiCGSTAB DiagPrec");
   std::cout << "BiCGSTAB DiagPrec" << std::endl;
   Var solCG{"uBiCGSTAB"};
-  solve<Eigen::BiCGSTAB<Mat, DiagPrec>>(builder.A, builder.b, config, solCG.data);
+  solve<StorageType::RowMajor, Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec>>(
+        builderR.A, builderR.b, config, solCG.data);
   t.stop();
 
   t.start("MINRES DiagPrec");
   std::cout << "MINRES DiagPrec" << std::endl;
   Var solMINRES{"uMINRES"};
-  solve<Eigen::MINRES<Mat, Eigen::Lower, DiagPrec>>(builder.A, builder.b, config, solMINRES.data);
+  solve<StorageType::RowMajor, Eigen::MINRES<Mat<StorageType::RowMajor>, Eigen::Lower, DiagPrec>>(
+        builderR.A, builderR.b, config, solMINRES.data);
   t.stop();
 
   t.start("GMRES DiagPrec");
   std::cout << "GMRES DiagPrec" << std::endl;
   Var solGMRES{"uGMRES"};
-  solve<Eigen::GMRES<Mat, DiagPrec>>(builder.A, builder.b, config, solGMRES.data);
+  solve<StorageType::RowMajor, Eigen::GMRES<Mat<StorageType::RowMajor>, DiagPrec>>(
+        builderR.A, builderR.b, config, solGMRES.data);
   t.stop();
 
   // crashes in opt build
@@ -119,20 +122,20 @@ int main(int argc, char* argv[])
   std::cout << "BiCGSTAB scaling" << std::endl;
   {
     Vec x;
-    Eigen::IterScaling<Mat> scal;
+    Eigen::IterScaling<Mat<StorageType::RowMajor>> scal;
 
     // Compute the left and right scaling vectors. The matrix is equilibrated at output
-    scal.computeRef(builder.A);
+    scal.computeRef(builderR.A);
 
     // Scale the right hand side
-    builder.b = scal.LeftScaling().cwiseProduct(builder.b);
+    builderR.b = scal.LeftScaling().cwiseProduct(builderR.b);
 
     // Now, solve the equilibrated linear system with any available solver
-    Eigen::BiCGSTAB<Mat, DiagPrec> solver;
+    Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec> solver;
     solver.setTolerance(config["tolerance"].as<double>());
     solver.setMaxIterations(config["maxNumIters"].as<int>());
-    solver.compute(builder.A);
-    x = solver.solve(builder.b);
+    solver.compute(builderR.A);
+    x = solver.solve(builderR.b);
     std::cout << "iters: " << solver.iterations() << std::endl;
     std::cout << "error: " << solver.error() << std::endl;
 
@@ -144,19 +147,19 @@ int main(int argc, char* argv[])
   // t.start("BiCGSTAB ILUTPrec");
   // std::cout << "BiCGSTAB ILUTPrec" << std::endl;
   // Var solCGILUT{"uBiCGSTABILUT"};
-  // solve<Eigen::BiCGSTAB<Mat, ILUTPrec>>(builder.A, builder.b, config, solCGILUT.data);
+  // solve<StorageType::RowMajor, Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, ILUTPrec>>(builderR.A, builderR.b, config, solCGILUT.data);
   // t.stop();
   //
   // t.start("MINRES ILUTPrec");
   // std::cout << "MINRES ILUTPrec" << std::endl;
   // Var solMINRESILUT{"uMINRESILUT"};
-  // solve<Eigen::MINRES<Mat, Eigen::Lower, ILUTPrec>>(builder.A, builder.b, config, solMINRESILUT.data);
+  // solve<StorageType::RowMajor, Eigen::MINRES<Mat<StorageType::RowMajor>, Eigen::Lower, ILUTPrec>>(builderR.A, builderR.b, config, solMINRESILUT.data);
   // t.stop();
   //
   // t.start("GMRES ILUTPrec");
   // std::cout << "GMRES ILUTPrec" << std::endl;
   // Var solGMRESILUT{"uGMRESILUT"};
-  // solve<Eigen::GMRES<Mat, ILUTPrec>>(builder.A, builder.b, config, solGMRESILUT.data);
+  // solve<StorageType::RowMajor, Eigen::GMRES<Mat<StorageType::RowMajor>, ILUTPrec>>(builderR.A, builderR.b, config, solGMRESILUT.data);
   // t.stop();
 
   // t.start("solver LU");

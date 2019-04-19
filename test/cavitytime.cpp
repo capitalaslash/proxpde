@@ -92,19 +92,18 @@ int main(int argc, char* argv[])
   Var p{"p", sol.data, dofU*dim, dofP};
   ioP.print({p});
 
-  Builder builder{numDOFs};
+  Builder<StorageType::RowMajor> builder{numDOFs};
 
-  Builder fixedBuilder{numDOFs};
+  Builder<StorageType::RowMajor> fixedBuilder{numDOFs};
   fixedBuilder.buildProblem(timeder, bcsVel);
   fixedBuilder.buildProblem(stiffness, bcsVel);
   fixedBuilder.buildProblem(grad, bcsVel, bcsP);
   fixedBuilder.buildProblem(div, bcsP, bcsVel);
   fixedBuilder.buildProblem(dummy, bcsP);
   fixedBuilder.closeMatrix();
-  Mat const fixedMat = fixedBuilder.A;
-  Vec const fixedRhs = fixedBuilder.b;
+  auto const fixedMat = fixedBuilder.A;
+  auto const fixedRhs = fixedBuilder.b;
 
-  // Eigen::UmfPackLU<Mat> solver;
   IterSolver solver;
   IterSolver fixedSolver;
   auto const ntime = config["numsteps"].as<uint>();

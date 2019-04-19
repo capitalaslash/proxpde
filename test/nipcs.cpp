@@ -38,10 +38,10 @@ int main(int argc, char* argv[])
   Eqn eqnUstar{"uStar", feSpaceU};
   Eqn eqnVstar{"vStar", feSpaceU};
 
-  Eqn eqnP{"p", feSpaceP};
+  Eqn<FESpaceP_T, LUSolver> eqnP{"p", feSpaceP};
 
-  Eqn eqnU{"u", feSpaceU};
-  Eqn eqnV{"v", feSpaceU};
+  Eqn<FESpaceU_T, LUSolver> eqnU{"u", feSpaceU};
+  Eqn<FESpaceU_T, LUSolver> eqnV{"v", feSpaceU};
   t.stop();
 
   t.start("bc");
@@ -124,18 +124,28 @@ int main(int argc, char* argv[])
   // dt \nabla^2 p = \nabla \cdot velStar
   // dt (\nabla p, \nabla q) = - (\nabla \cdot velStar, q)
   eqnP.assemblyListLhs.emplace_back(new AssemblyStiffness{dt, feSpaceP});
+  // eqnP lhs does not change in time, we can pre-compute and factorize it
+  eqnP.buildLhs();
+  eqnP.compute();
   Vec velStar{2*dofU};
   eqnP.assemblyListRhs.emplace_back(new AssemblyDivRhs{-1.0, velStar, feSpaceP, feSpaceVel});
 
   // u = uStar - dt dp / dx
   // (u, \phi) = (uStar, \phi) - dt (dp / dx, \phi)
+  // (u, \phi) = (uStar, \phi) + dt (p, d \phi / dx)
   eqnU.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  // eqnU lhs does not change in time, we can pre-compute and factorize it
+  eqnU.buildLhs();
+  eqnU.compute();
   eqnU.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnUstar.sol.data, feSpaceU});
   eqnU.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {0}});
 
   // v = vStar - dt dp / dy
   // (v, \phi) = (vStar, \phi) - dt (dp / dy, \phi)
   eqnV.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  // eqnV lhs does not change in time, we can pre-compute and factorize it
+  eqnV.buildLhs();
+  eqnV.compute();
   eqnV.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVstar.sol.data, feSpaceU});
   eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
 
@@ -155,7 +165,7 @@ int main(int argc, char* argv[])
   t.start("print");
   Var uM{"uM", velM.block(0)};
   Var vM{"vM", velM.block(1)};
-  IOManager ioV{feSpaceU, "output_nipcs/sol_s"};
+  IOManager ioV{feSpaceU, "output_nipcs/sol_v"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
   Var pM{"pM", velM.block(2)};
@@ -171,7 +181,7 @@ int main(int argc, char* argv[])
     std::cout << "\n" << separator
               << "solving timestep " << itime+1
               << ", time = " << time << std::endl;
-    filelog << "\n" << separator;
+    // filelog << "\n" << separator;
 
     t.start("monolithic build");
     velOldMonolithic = velM.data;
@@ -191,35 +201,37 @@ int main(int argc, char* argv[])
     std::cout << "residual norm: " << res.norm() << std::endl;
     t.stop();
 
-    t.start("split build");
+    t.start("ustar build");
     vel << eqnU.sol.data, eqnV.sol.data;
     eqnUstar.build();
     eqnVstar.build();
     t.stop();
 
-    t.start("split solve");
+    t.start("ustar solve");
+    eqnUstar.compute();
     eqnUstar.solve();
     std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+    eqnVstar.compute();
     eqnVstar.solve();
     std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
     t.stop();
 
-    t.start("split build");
+    t.start("p build");
     velStar << eqnUstar.sol.data, eqnVstar.sol.data;
-    eqnP.build();
+    eqnP.buildRhs();
     t.stop();
 
-    t.start("split solve");
+    t.start("p solve");
     eqnP.solve();
     std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
     t.stop();
 
-    t.start("split build");
-    eqnU.build();
-    eqnV.build();
+    t.start("u build");
+    eqnU.buildRhs();
+    eqnV.buildRhs();
     t.stop();
 
-    t.start("split solve");
+    t.start("u solve");
     eqnU.solve();
     std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
     eqnV.solve();

@@ -11,7 +11,7 @@ struct Diagonal;
 template <typename FESpace>
 struct AssemblyVector;
 
-template <typename FESpace>
+template <typename FESpace, typename Solver = IterSolver>
 struct Eqn
 {
   using FESpace_T = FESpace;
@@ -47,9 +47,13 @@ struct Eqn
     buildRhs();
   }
 
-  void solve()
+  void compute()
   {
     solver.compute(builder.A);
+  }
+
+  void solve()
+  {
     sol.data = solver.solve(builder.b);
   }
 
@@ -64,5 +68,5 @@ struct Eqn
   Builder builder;
   std::vector<std::unique_ptr<Diagonal<FESpace_T>>> assemblyListLhs;
   std::vector<std::unique_ptr<AssemblyVector<FESpace_T>>> assemblyListRhs;
-  IterSolver solver;
+  Solver solver;
 };

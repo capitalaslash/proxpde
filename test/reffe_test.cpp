@@ -39,7 +39,7 @@ int test()
       }
     }
   }
-  std::cout << matDPhi << std::endl;
+  // std::cout << matDPhi << std::endl;
 
   auto const normPhi = (matPhi - FMat<size, size>::Identity()).norm();
   auto const normDPhi = matDPhi.norm();
@@ -62,7 +62,7 @@ int main()
   tests[4] = test<Quad, 1>();
   tests[5] = test<Quad, 2>();
   tests[6] = test<Tetrahedron, 1>();
-  // tests[7] = test<Tetrahedron, 2>();
+  tests[7] = test<Tetrahedron, 2>();
   tests[8] = test<Hexahedron, 1>();
   tests[9] = test<Hexahedron, 2>();
   std::cout << tests << std::endl;

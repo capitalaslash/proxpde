@@ -593,3 +593,121 @@ private:
   Mat_T _m;
   Mat_T _mi;
 };
+
+// http://blackpawn.com/texts/pointinpoly/default.html
+inline bool sameSide2d(Vec3 const & p1, Vec3 const & p2, array<Vec3, 2> const & line)
+{
+  // the two points p1 and p2 are on the same side of the line through a and b
+  // iff their cross product with the line itself point in the same direction
+  Vec3 const diff = line[1] - line[0];
+  return ((p1 - line[0]).cross(diff)).dot((p2 - line[0]).cross(diff)) >= 0.;
+}
+
+inline bool sameSide3d(Vec3 const & p1, Vec3 const & p2, array<Vec3, 3> const & plane)
+{
+  // the two points p1 and p2 are on the same side of the plane through a, b and c
+  // iff the dot products of of them with the normal to the plane has the same sign.
+  Vec3 const normal = (plane[1] - plane[0]).cross(plane[2] - plane[0]);
+  return (p1 - plane[0]).dot(normal) * (p2 - plane[0]).dot(normal) >= 0.;
+}
+
+template <typename Elem>
+bool inside(Elem const & e, Vec3 const & pt)
+{
+  if constexpr (std::is_same_v<Elem, Line>)
+  {
+    Vec3 const & p0 = e.pointList[0]->coord;
+    Vec3 const & p1 = e.pointList[1]->coord;
+    if (pt[0] >= p0[0] && pt[0] <= p1[0])
+      return true;
+  }
+  else if constexpr (std::is_same_v<Elem, Triangle>)
+  {
+    Vec3 const & p0 = e.pointList[0]->coord;
+    Vec3 const & p1 = e.pointList[1]->coord;
+    Vec3 const & p2 = e.pointList[2]->coord;
+    // check that the point is on the same side of each edge wrt to the third point
+    if (sameSide2d(pt, p0, {p1, p2}) &&
+        sameSide2d(pt, p1, {p2, p0}) &&
+        sameSide2d(pt, p2, {p0, p1}))
+      return true;
+  }
+  else if constexpr (std::is_same_v<Elem, Quad>)
+  {
+    // this approach requires 3 + 0.5 * 3 checks asymptotically
+    // // split in two triangles and check for them
+    // if (inside(Triangle{{e.pointList[0], e.pointList[1], e.pointList[2]}, idNotSet}, pt))
+    //   return true;
+    // else if (inside(Triangle{{e.pointList[2], e.pointList[3], e.pointList[0]}, idNotSet}, pt))
+    //   return true;
+
+    // this approach always requires 4 checks
+    Vec3 const & p0 = e.pointList[0]->coord;
+    Vec3 const & p1 = e.pointList[1]->coord;
+    Vec3 const & p2 = e.pointList[2]->coord;
+    Vec3 const & p3 = e.pointList[3]->coord;
+    if (sameSide2d(pt, p0, {p2, p3}) &&
+        sameSide2d(pt, p2, {p0, p1}) &&
+        sameSide2d(pt, p3, {p1, p2}) &&
+        sameSide2d(pt, p1, {p3, p0}))
+      return true;
+  }
+  else if constexpr (std::is_same_v<Elem, Tetrahedron>)
+  {
+    Vec3 const & p0 = e.pointList[0]->coord;
+    Vec3 const & p1 = e.pointList[1]->coord;
+    Vec3 const & p2 = e.pointList[2]->coord;
+    Vec3 const & p3 = e.pointList[3]->coord;
+    // check that the point is on the same side of each face wrt to the forth point
+    if (sameSide3d(pt, p3, {p0, p1, p2}) &&
+        sameSide3d(pt, p0, {p1, p2, p3}) &&
+        sameSide3d(pt, p1, {p2, p3, p0}) &&
+        sameSide3d(pt, p2, {p3, p0, p1}))
+      return true;
+  }
+  else if constexpr (std::is_same_v<Elem, Hexahedron>)
+  {
+    // the faces of an hexahedron may not lay on a plane.
+    // in these cases all methods below are approximations that
+    // relay on splitting each face in a number of planes
+
+    // // split in 5 (* 8) tetrahedrons and check for them
+    // asymptotic cost:
+    //   (largest tet first)
+    //   4 * (1 + 2/3 * 1/6 + 1/2 * 1/6 + 1/3 * 1/6 + 1/6 * 1/6) = 4 * 23 / 18 = 5.11111
+    if (inside(Tetrahedron{{e.pointList[0], e.pointList[2], e.pointList[5], e.pointList[7]}, idNotSet}, pt))
+      return true;
+    else if (inside(Tetrahedron{{e.pointList[1], e.pointList[2], e.pointList[0], e.pointList[5]}, idNotSet}, pt))
+      return true;
+    else if (inside(Tetrahedron{{e.pointList[3], e.pointList[0], e.pointList[2], e.pointList[7]}, idNotSet}, pt))
+      return true;
+    else if (inside(Tetrahedron{{e.pointList[4], e.pointList[5], e.pointList[7], e.pointList[0]}, idNotSet}, pt))
+      return true;
+    else if (inside(Tetrahedron{{e.pointList[6], e.pointList[7], e.pointList[5], e.pointList[2]}, idNotSet}, pt))
+      return true;
+
+    // // minimum cost: 6 checks (1 per face)
+    // // split each face in 2: 12 checks
+    // // split each face in 8: 48 checks
+    // Vec3 const & p0 = e.pointList[0]->coord;
+    // Vec3 const & p1 = e.pointList[1]->coord;
+    // Vec3 const & p2 = e.pointList[2]->coord;
+    // Vec3 const & p3 = e.pointList[3]->coord;
+    // Vec3 const & p4 = e.pointList[0]->coord;
+    // Vec3 const & p5 = e.pointList[1]->coord;
+    // Vec3 const & p6 = e.pointList[2]->coord;
+    // Vec3 const & p7 = e.pointList[3]->coord;
+    // if (sameSide3d(pt, p0, {p1, p2, p5}) &&
+    //     sameSide3d(pt, p1, {p0, p3, p4}) &&
+    //     sameSide3d(pt, p0, {p2, p3, p7}) &&
+    //     sameSide3d(pt, p3, {p0, p1, p5}) &&
+    //     sameSide3d(pt, p0, {p4, p5, p6}) &&
+    //     sameSide3d(pt, p4, {p0, p1, p2}))
+    //   return true;
+  }
+  else
+  {
+    abort();
+  }
+  return false;
+}

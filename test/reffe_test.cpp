@@ -10,34 +10,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-template <typename Elem>
-void referenceMesh(Mesh<Elem> & mesh)
-{
-  if constexpr (
-        std::is_same<Elem, Line>::value ||
-        std::is_same<Elem, Quad>::value ||
-        std::is_same<Elem, Hexahedron>::value)
-  {
-    buildHyperCube(
-      mesh,
-      {-1., -1., -1.},
-      {2., 2., 2.},
-      {1, 1, 1});
-  }
-  else if constexpr (std::is_same<Elem, Triangle>::value)
-  {
-    refTriangleMesh(mesh);
-  }
-  else if constexpr (std::is_same<Elem, Tetrahedron>::value)
-  {
-    refTetrahedronMesh(mesh);
-  }
-  else
-  {
-    abort();
-  }
-}
-
 template <typename Elem, uint Order>
 int test()
 {

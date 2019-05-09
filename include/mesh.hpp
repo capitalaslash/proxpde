@@ -275,6 +275,47 @@ void hexagonMesh(Mesh<Triangle> & mesh);
 void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets = false);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
 
+template <typename Elem>
+void referenceMesh(Mesh<Elem> & mesh)
+{
+  if constexpr (std::is_same<Elem, Line>::value)
+  {
+    buildHyperCube(
+      mesh,
+      {-1., 0., 0.},
+      {2., 0., 0.},
+      {1, 0, 0});
+  }
+  else if constexpr (std::is_same<Elem, Quad>::value)
+  {
+    buildHyperCube(
+      mesh,
+      {-1., -1., 0.},
+      {2., 2., 0.},
+      {1, 1, 0});
+  }
+  else if constexpr (std::is_same<Elem, Hexahedron>::value)
+  {
+    buildHyperCube(
+      mesh,
+      {-1., -1., -1.},
+      {2., 2., 2.},
+      {1, 1, 1});
+  }
+  else if constexpr (std::is_same<Elem, Triangle>::value)
+  {
+    refTriangleMesh(mesh);
+  }
+  else if constexpr (std::is_same<Elem, Tetrahedron>::value)
+  {
+    refTetrahedronMesh(mesh);
+  }
+  else
+  {
+    abort();
+  }
+}
+
 template <typename Mesh>
 void buildNormals(Mesh & mesh)
 {

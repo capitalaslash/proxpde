@@ -43,12 +43,12 @@ struct CurFE
   // CurFE(CurFE const &) = delete;
   // CurFE & operator=(CurFE const &) = delete;
 
-  void reinit(GeoElem const & elem)
+  void reinit(GeoElem const & e)
   {
-    e = &elem;
-    dofPts = RefFE::dofPts(elem);
+    elem = &e;
+    dofPts = RefFE::dofPts(*elem);
 
-    auto const mappingPts = RefFE::mappingPts(elem);
+    auto const mappingPts = RefFE::mappingPts(*elem);
 
     for(uint q=0; q<QR::numPts; ++q)
     {
@@ -59,13 +59,14 @@ struct CurFE
       }
 
       // J^+ = (J^T J)^-1 J^T
-      auto jTj = jac[q].transpose() * jac[q];
-      auto jTjI = jTj.inverse();
+      auto const jTj = jac[q].transpose() * jac[q];
+      auto const jTjI = jTj.inverse();
       detJ[q] = std::sqrt(jTj.determinant());
       jacPlus[q] = jTjI * jac[q].transpose();
 
       JxW[q] = detJ[q] * QR::weight[q];
-      qpoint[q] = elem.origin() + jac[q] * QR::node[q];
+      // forward mapping on qpoint
+      qpoint[q] = elem->origin() + jac[q] * QR::node[q];
 
       if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
       {
@@ -83,7 +84,7 @@ struct CurFE
         // adjust signs based on normal going from lower id to greater id
         for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
         {
-          if (elem.facetList[f]->facingElem[0].ptr->id != elem.id)
+          if (elem->facetList[f]->facingElem[0].ptr->id != elem->id)
           {
             phiVect[q].row(f) *= -1.;
             divphi[q](f) *= -1.;
@@ -93,7 +94,7 @@ struct CurFE
     }
   }
 
-  GeoElem const* e;
+  GeoElem const * elem;
   static int const size = RefFE::numFuns;
   array<Vec3,RefFE::numFuns> dofPts;
   array<JacMat_T,QR::numPts> jac;
@@ -119,15 +120,15 @@ struct CurFE<RefPointP1,QR>
 {
   using RefFE_T = RefPointP1;
 
-  void reinit(GeoElem const & elem)
+  void reinit(GeoElem const & e)
   {
-    e = &elem;
-    dofPts = RefFE_T::dofPts(elem);
+    elem = &e;
+    dofPts = RefFE_T::dofPts(*elem);
 
-    qpoint = {{elem.origin()}};
+    qpoint = {{elem->origin()}};
   }
 
-  GeoElem const* e;
+  GeoElem const * elem;
   array<Vec3,RefFE_T::numFuns> dofPts;
   array<double,QR::numPts> JxW = {{1.L}};
   array<Vec3,QR::numPts> qpoint;

@@ -128,7 +128,7 @@ public:
     else if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
     {
       // std::abort();
-      return value(curFE.dofPts[i]) * curFE.e->facetList[i]->volume(); // * curFE.e->facetList[i]->normal();
+      return value(curFE.dofPts[i]) * curFE.elem->facetList[i]->volume(); // * curFE.elem->facetList[i]->normal();
     }
     else
     {

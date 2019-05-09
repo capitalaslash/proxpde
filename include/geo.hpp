@@ -457,7 +457,7 @@ public:
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[2]->coord - pointList[0]->coord;
     auto const v3 = pointList[3]->coord - pointList[0]->coord;
-    return (v1.cross(v2)).dot(v3) / 6.;
+    return std::fabs((v1.cross(v2)).dot(v3)) / 6.;
   }
 
   void buildNormal() final

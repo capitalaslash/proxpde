@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
   // select the point on the bottom boundary in the middle
   DOFCoordSet pinSet{
       feSpaceP,
-      [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}};
+      [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}
+  };
   bcsP.addBC(BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
 
   auto const dofU = feSpaceVel.dof.size;

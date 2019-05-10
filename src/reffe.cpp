@@ -627,3 +627,17 @@ array<threedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::dphiFun =
 }};
 
 array<threedFun_T,RefHexahedronQ2::numGeoFuns> const RefHexahedronQ2::mapping = RefHexahedronQ2::dphiFun;
+
+// ----------------------------------------------------------------------------
+array<scalarThreedFun_T,RefHexahedronP0::numFuns> const RefHexahedronP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.; }
+}};
+
+array<threedFun_T,RefHexahedronP0::numFuns> const RefHexahedronP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// bi-linear mapping
+array<threedFun_T,RefHexahedronP0::numGeoFuns> const RefHexahedronP0::mapping = RefHexahedronQ1::mapping;

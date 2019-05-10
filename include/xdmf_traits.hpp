@@ -158,6 +158,14 @@ struct XDMFTraits<RefTetrahedronP2>
 };
 
 template <>
+struct XDMFTraits<RefHexahedronP0>
+{
+  static constexpr char const * shapeName = "Hexahedron";
+  static constexpr XDMFCenter attributeType = XDMFCenter::CELL;
+  static constexpr bool needsMapping = false;
+};
+
+template <>
 struct XDMFTraits<RefHexahedronQ1>
 {
   static constexpr char const * shapeName = "Hexahedron";

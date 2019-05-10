@@ -27,6 +27,7 @@ struct FEType<Line,2>
 {
   using RefFE_T = RefLineP2;
   using RecommendedQR = GaussQR<Line,3>;
+  using ReconstructionQR = SimpsonQR<Line>;
 };
 
 template <>
@@ -70,6 +71,7 @@ struct FEType<Quad,2>
 {
   using RefFE_T = RefQuadQ2;
   using RecommendedQR = GaussQR<Quad,9>;
+  using ReconstructionQR = SimpsonQR<Quad>;
 };
 
 template <>
@@ -87,10 +89,17 @@ struct FEType<Tetrahedron,2>
 };
 
 template <>
+struct FEType<Hexahedron,0>
+{
+  using RefFE_T = RefHexahedronP0;
+  using RecommendedQR = GaussQR<Hexahedron,1>;
+};
+template <>
 struct FEType<Hexahedron,1>
 {
   using RefFE_T = RefHexahedronQ1;
   using RecommendedQR = GaussQR<Hexahedron,8>;
+  using ReconstructionQR = TrapQR<Hexahedron>;
 };
 
 template <>
@@ -98,4 +107,5 @@ struct FEType<Hexahedron,2>
 {
   using RefFE_T = RefHexahedronQ2;
   using RecommendedQR = GaussQR<Hexahedron,27>;
+  using ReconstructionQR = SimpsonQR<Hexahedron>;
 };

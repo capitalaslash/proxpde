@@ -319,6 +319,7 @@ template<> array<TrapQR<Hexahedron>::Vec_T,8> const TrapQR<Hexahedron>::node =
 template <typename GeoElem>
 struct SimpsonQR
 {
+  using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
   static uint const numPts = pow(3, GeoElem::dim);
 
@@ -330,9 +331,60 @@ template<> FVec<3> const SimpsonQR<Line>::weight =
     (FVec<3>() << 1., 4., 1.).finished() / 3.;
 template<> array<SimpsonQR<Line>::Vec_T, 3> const SimpsonQR<Line>::node =
 {{
-   SimpsonQR<Line>::Vec_T::Constant(-1.L),
-   SimpsonQR<Line>::Vec_T::Constant( 0.L),
-   SimpsonQR<Line>::Vec_T::Constant( 1.L)
+   SimpsonQR<Line>::Vec_T{-1.},
+   SimpsonQR<Line>::Vec_T{ 0.},
+   SimpsonQR<Line>::Vec_T{ 1.},
+}};
+
+template<> FVec<9> const SimpsonQR<Quad>::weight =
+    (FVec<9>() << 1., 4., 1., 4., 16., 4., 1., 4., 1.).finished() / 9.;
+template<> array<SimpsonQR<Quad>::Vec_T, 9> const SimpsonQR<Quad>::node =
+{{
+   SimpsonQR<Quad>::Vec_T{-1., -1.},
+   SimpsonQR<Quad>::Vec_T{ 0., -1.},
+   SimpsonQR<Quad>::Vec_T{ 1., -1.},
+   SimpsonQR<Quad>::Vec_T{-1.,  0.},
+   SimpsonQR<Quad>::Vec_T{ 0.,  0.},
+   SimpsonQR<Quad>::Vec_T{ 1.,  0.},
+   SimpsonQR<Quad>::Vec_T{-1.,  1.},
+   SimpsonQR<Quad>::Vec_T{ 0.,  1.},
+   SimpsonQR<Quad>::Vec_T{ 1.,  1.},
+}};
+
+template<> FVec<27> const SimpsonQR<Hexahedron>::weight =
+    (FVec<27>() <<
+     1., 4., 1., 4., 16., 4., 1., 4., 1.,
+     4., 16., 4., 16., 64., 16., 4., 16., 4.,
+     1., 4., 1., 4., 16., 4., 1., 4., 1.).finished() / 27.;
+template<> array<SimpsonQR<Hexahedron>::Vec_T, 27> const SimpsonQR<Hexahedron>::node =
+{{
+   SimpsonQR<Hexahedron>::Vec_T{-1., -1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0., -1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1., -1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  0., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  0., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  0., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  1., -1.},
+   SimpsonQR<Hexahedron>::Vec_T{-1., -1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0., -1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1., -1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  0.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  0.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  0.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  1.,  0.},
+   SimpsonQR<Hexahedron>::Vec_T{-1., -1.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0., -1.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1., -1.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  0.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  0.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  0.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{-1.,  1.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 0.,  1.,  1.},
+   SimpsonQR<Hexahedron>::Vec_T{ 1.,  1.,  1.},
 }};
 
 template <typename QR>

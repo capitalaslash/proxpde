@@ -633,6 +633,51 @@ struct RefTetrahedronP2
   }
 };
 
+struct RefHexahedronP0
+{
+  using GeoElem_T = Hexahedron;
+  using RefFacet_T = RefQuadP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 3;
+  static uint constexpr numFuns = 1U;
+  static uint constexpr numGeoFuns = 8U;
+  static array<uint,4> constexpr dofPlace{{1,0,0,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
+  static uint constexpr dofPerFacet = 0U;
+  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<scalarThreedFun_T,numFuns> const phiFun;
+  static array<threedFun_T,numFuns> const dphiFun;
+  static array<threedFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 8.;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     array<Vec3,numFuns> dofPts {{
+       e.midpoint()
+     }};
+     return dofPts;
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+    array<Vec3,numGeoFuns> mappingPts {{
+        e.pointList[0]->coord,
+        e.pointList[1]->coord,
+        e.pointList[2]->coord,
+        e.pointList[3]->coord,
+        e.pointList[4]->coord,
+        e.pointList[5]->coord,
+        e.pointList[6]->coord,
+        e.pointList[7]->coord,
+    }};
+    return mappingPts;
+  }
+};
+
 struct RefHexahedronQ1
 {
   using GeoElem_T = Hexahedron;
@@ -816,6 +861,8 @@ struct Family<RefTetrahedronP1>{ static constexpr FamilyType value = FamilyType:
 template <>
 struct Family<RefTetrahedronP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
+struct Family<RefHexahedronP0>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
 struct Family<RefHexahedronQ1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefHexahedronQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
@@ -861,6 +908,8 @@ struct FEDim<RefTetrahedronP1>{ static constexpr FEDimType value = FEDimType::SC
 template <>
 struct FEDim<RefTetrahedronP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
+struct FEDim<RefHexahedronP0>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
 struct FEDim<RefHexahedronQ1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefHexahedronQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
@@ -878,3 +927,5 @@ template <>
 struct MappingIsSeparate<RefQuadP0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefQuadRT0>{ static constexpr bool value = true; };
+template <>
+struct MappingIsSeparate<RefHexahedronP0>{ static constexpr bool value = true; };

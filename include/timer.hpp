@@ -46,7 +46,7 @@ public:
 
   void print(std::ostream & out = std::cout) const
   {
-    double totalTime = 0;
+    typename TimeUnit::rep totalTime = 0;
     size_t strLength = 9;
     // sort by id
     std::vector<std::pair<std::string, typename TimeUnit::rep>> sortedData(_data.size());

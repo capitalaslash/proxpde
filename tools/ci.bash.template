@@ -5,7 +5,7 @@ ci_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 envfile=$ci_dir/ci.env
 logfile=$ci_dir/ci.log
 lockfile=$ci_dir/.ci.lock
-repo=git@stag:minifem.git
+repo=$(dirname $ci_dir)
 
 tmp_dir=/tmp/ci
 
@@ -30,7 +30,7 @@ echo "commit: $(git rev-parse HEAD)" | tee -a $logfile
 mkdir -p $tmp_dir
 pushd $tmp_dir || quit "tmp dir $tmp_dir not found" 2
 
-message "cloning..."
+message "cloning $repo into $PWD..."
 git clone $repo >> $logfile || quit "clone failed in $tmp_dir" 3
 pushd minifem/
 
@@ -50,7 +50,7 @@ for build in Release Debug; do
 
   pushd test/
   message "testing..."
-  ctest -j$parallel >> $logfile || quit "test failed" 6
+  ctest -j$parallel --output-on-failure >> $logfile || quit "test failed" 6
   popd
 
   popd

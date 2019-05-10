@@ -20,7 +20,7 @@ using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
 using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 
-uint compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
+unsigned long compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
 {
   using KeyT = std::pair<int,int>;
   using DbT = std::map<KeyT, double>;
@@ -48,23 +48,22 @@ uint compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const
     }
     else
     {
-      if (missing.find(key) != missing.end())
-      {
-        missing[key] += t.value();
-      }
-      else
-      {
-        missing[key] = t.value();
-      }
+      missing[key] += t.value();
     }
   }
 
+  std::vector<KeyT> keysToBeErased;
   for (auto & [key, value]: db)
   {
     if (std::fabs(value) < 1e-12)
     {
-      db.erase(key);
+      keysToBeErased.push_back(key);
     }
+  }
+
+  for (auto const & key: keysToBeErased)
+  {
+    db.erase(key);
   }
 
   for (auto & [key, value]: missing)

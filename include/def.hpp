@@ -205,7 +205,7 @@ template<class T> struct dependent_false : std::false_type {};
 static constexpr int ERROR_GMSH = 1;
 
 template<class T>
-inline constexpr T pow(const T base, unsigned const exponent)
+inline constexpr T pow(T const & base, unsigned const exponent)
 {
-    return exponent == 0 ? 1 : base * pow(base, exponent-1);
+  return exponent == 0 ? 1 : base * pow(base, exponent-1);
 }

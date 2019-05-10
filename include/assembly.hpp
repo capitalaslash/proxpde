@@ -1005,7 +1005,7 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
   explicit AssemblyGradRhs(double const c,
                           Vec const & vec,
                           FESpace1_T & fe1,
-                          FESpace2_T & fe2,
+                          FESpace2_T const & fe2,
                           std::vector<uint> comp = allComp<FESpace1_T>(),
                           uint offset_row = 0):
     AssemblyVector<FESpace1_T>(fe1, offset_row, comp),
@@ -1057,7 +1057,7 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
   }
 
   double const coeff;
-  FESpace2_T & feSpace2;
+  FESpace2_T const & feSpace2;
   Vec const & data;
 };
 

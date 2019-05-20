@@ -2,4 +2,6 @@ ci.bash
 ci.env
 ci.log
 .ci.lock
+spack.lock
+.spack-env/
 

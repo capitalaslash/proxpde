@@ -13,20 +13,22 @@
 
 #include <iostream>
 
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-// implicit finite element central
-using FESpaceP1_T = FESpace<Mesh_T,
-                            FEType<Elem_T, 1>::RefFE_T,
-                            FEType<Elem_T, 1>::RecommendedQR>;
-// explicit finite volume upwind
-using FESpaceP0_T = FESpace<Mesh_T,
-                            FEType<Elem_T, 0>::RefFE_T,
-                            FEType<Elem_T, 0>::RecommendedQR>;
-using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  // implicit finite element central
+  using FESpaceP1_T = FESpace<Mesh_T,
+                              FEType<Elem_T, 1>::RefFE_T,
+                              FEType<Elem_T, 1>::RecommendedQR>;
+  // explicit finite volume upwind
+  using FESpaceP0_T = FESpace<Mesh_T,
+                              FEType<Elem_T, 0>::RefFE_T,
+                              FEType<Elem_T, 0>::RecommendedQR>;
+  using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
+  // velocity field
+  using FESpaceVel_T = FESpaceP1_T;
+
   MilliTimer t;
 
   YAML::Node config;
@@ -76,18 +78,24 @@ int main(int argc, char* argv[])
   auto const dt = config["dt"].as<double>();
   // the only 1D velocity that is divergence free is a constant one
   auto const velocity = config["velocity"].as<double>();
-  Table<double, 1> vel(feSpaceP1.dof.size, 1);
-  vel.block(0, 0, feSpaceP1.dof.size, 1) = Vec::Constant(feSpaceP1.dof.size, velocity);
+  FESpaceVel_T feSpaceVel{*mesh};
+  Var velFE{"velocity"};
+  interpolateAnalyticFunction(
+        [velocity] (Vec3 const &){ return velocity; }, feSpaceVel, velFE.data);
   double const hinv = numElems;
   std::cout << "cfl = " << velocity * dt * hinv << std::endl;
 
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;
-  AssemblyAdvection advection(1.0, vel, feSpaceP1);
-  AssemblyMass timeder(1./dt, feSpaceP1);
+  AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
+  AssemblyMass timeDer(1./dt, feSpaceP1);
   Vec concP1Old(feSpaceP1.dof.size);
-  AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
+  AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
 
+  // FEVar c{"conc", feSpace};
+  // FEList feList{feSpace, feSpace};
+  // auto fe1 = std::get<0>(feList);
+  // BlockFEVar tmp{"tmp", feList};
   auto const threshold = config["threshold"].as<double>();
   scalarFun_T ic = [threshold] (Vec3 const& p)
   {
@@ -107,6 +115,12 @@ int main(int argc, char* argv[])
   t.stop();
 
   FVSolver_T fv{feSpaceP0, bcsP0};
+  auto const & sizeVel = feSpaceVel.dof.size;
+  Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
+  for (uint k=0; k<FESpaceVel_T::dim; ++k)
+  {
+    vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+  }
 
   auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
@@ -123,15 +137,14 @@ int main(int argc, char* argv[])
     // central implicit
     t.start("p1 assemby");
     concP1Old = concP1.data;
-    builder.buildProblem(timeder, bcsP1);
-    builder.buildProblem(timeder_rhs, bcsP1);
+    builder.buildProblem(timeDer, bcsP1);
+    builder.buildProblem(timeDerRhs, bcsP1);
     builder.buildProblem(advection, bcsP1);
     builder.closeMatrix();
     t.stop();
 
     t.start("p1 solve");
-    solver.analyzePattern(builder.A);
-    solver.factorize(builder.A);
+    solver.compute(builder.A);
     concP1.data = solver.solve(builder.b);
     builder.clear();
     t.stop();

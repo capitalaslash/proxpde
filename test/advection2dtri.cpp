@@ -11,27 +11,6 @@
 
 #include <iostream>
 
-using Elem_T = Triangle;
-using Mesh_T = Mesh<Elem_T>;
-// implicit finite element central
-using FESpaceP1_T = FESpace<Mesh_T,
-                            FEType<Elem_T,1>::RefFE_T,
-                            FEType<Elem_T,1>::RecommendedQR>;
-// explicit finite volume upwind
-using FESpaceP0_T = FESpace<Mesh_T,
-                            FEType<Elem_T,0>::RefFE_T,
-                            FEType<Elem_T,0>::RecommendedQR>;
-using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
-// flux feSpace
-using FacetMesh_T = Mesh<Elem_T::Facet_T>;
-using FacetFESpace_T = FESpace<FacetMesh_T,
-                               FEType<Elem_T::Facet_T,0>::RefFE_T,
-                               FEType<Elem_T::Facet_T,0>::RecommendedQR>;
-using VelFESpace_T = FESpace<Mesh_T,
-                             FEType<Elem_T,1>::RefFE_T,
-                             FEType<Elem_T,1>::RecommendedQR, 2>;
-
-
 template <typename Elem>
 void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
 {
@@ -40,28 +19,51 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
   facetMesh.buildConnectivity();
 }
 
-static scalarFun_T ic = [] (Vec3 const& p)
-{
-  // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50-(p(1)-0.7)*(p(1)-0.7)*50);
-  if (p(0) < .37) return 1.;
-  return 0.;
-};
-
-static Fun<2, 3> velFun = [] (Vec3 const & /*p*/)
-{
-  // double const r = std::sqrt((p(0)-0.5)*(p(0)-0.5) + (p(1)-0.5)*(p(1)-0.5));
-  // return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
-  return Vec2{0.2, 0.};
-};
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Triangle;
+  using Mesh_T = Mesh<Elem_T>;
+  // implicit finite element central
+  using FESpaceP1_T = FESpace<Mesh_T,
+                              FEType<Elem_T,1>::RefFE_T,
+                              FEType<Elem_T,1>::RecommendedQR>;
+  // explicit finite volume upwind
+  using FESpaceP0_T = FESpace<Mesh_T,
+                              FEType<Elem_T,0>::RefFE_T,
+                              FEType<Elem_T,0>::RecommendedQR>;
+  using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
+  // velocity field
+  using FESpaceVel_T = FESpace<Mesh_T,
+                               FEType<Elem_T,1>::RefFE_T,
+                               FEType<Elem_T,1>::RecommendedQR, Elem_T::dim>;
+  // flux feSpace
+  using MeshFacet_T = Mesh<Elem_T::Facet_T>;
+  using FESpaceFacet_T = FESpace<MeshFacet_T,
+                                 FEType<Elem_T::Facet_T,0>::RefFE_T,
+                                 FEType<Elem_T::Facet_T,0>::RecommendedQR>;
+
+  scalarFun_T const ic = [] (Vec3 const& p)
+  {
+    // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50-(p(1)-0.7)*(p(1)-0.7)*50);
+    if (p(0) < .37) return 1.;
+    return 0.;
+  };
+
+  Fun<2, 3> const velFun = [] (Vec3 const & /*p*/)
+  {
+    // double const r = std::sqrt((p(0)-0.5)*(p(0)-0.5) + (p(1)-0.5)*(p(1)-0.5));
+    // return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
+    return Vec2{0.2, 0.};
+  };
+
   MilliTimer t;
 
   t.start("mesh");
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   // hexagonSquare(*mesh, true);
+  // buildNormals(*mesh);
+
   uint const numElemsX = (argc < 3)? 10 : std::stoul(argv[1]);
   uint const numElemsY = (argc < 3)? 10 : std::stoul(argv[2]);
   buildHyperCube(*mesh,
@@ -69,16 +71,17 @@ int main(int argc, char* argv[])
             {1., 1., 0.},
             {{numElemsX, numElemsY, 0}},
             INTERNAL_FACETS | NORMALS);
+
   // readGMSH(*mesh, "square_uns.msh", INTERNAL_FACETS | NORMALS);
 
-  std::unique_ptr<FacetMesh_T> facetMesh{new FacetMesh_T};
+  std::unique_ptr<MeshFacet_T> facetMesh{new MeshFacet_T};
   buildFacetMesh(*facetMesh, *mesh);
   t.stop();
 
   t.start("fespace");
   FESpaceP1_T feSpaceP1{*mesh};
   FESpaceP0_T feSpaceP0{*mesh};
-  FacetFESpace_T facetFESpace{*facetMesh};
+  FESpaceFacet_T feSpaceFacet{*facetMesh};
   t.stop();
 
   t.start("bcs");
@@ -99,32 +102,22 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("velocity");
-  auto const & sizeP1 = feSpaceP1.dof.size;
-  VelFESpace_T velFESpace{*mesh};
-  Var velFE("velocity", velFESpace.dof.size*2);
-  for (uint d=0; d<2; d++)
-  {
-    for (uint i=0; i< sizeP1; i++)
-    {
-      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1) =
-          velFun(mesh->pointList[i].coord)[d];
-    }
-  }
+  FESpaceVel_T feSpaceVel{*mesh};
+  Var velFE{"velocity"};
+  interpolateAnalyticFunction(velFun, feSpaceVel, velFE.data);
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
+  auto const cfl = computeMaxCFL(feSpaceVel, velFE.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
   t.stop();
 
   t.start("p1 assembly setup");
+  auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  // Vec velOldStyle = Vec::Zero(2*sizeP1);
-  // velOldStyle.block(     0, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[0]);
-  // velOldStyle.block(sizeP1, 0, sizeP1, 1) = Vec::Constant(sizeP1, velocity[1]);
+  AssemblyMass timeDer(1./dt, feSpaceP1);
   AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
-  AssemblyMass timeder(1./dt, feSpaceP1);
-  Vec concP1Old(sizeP1);
-  AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
+  Vec concP1Old{sizeP1};
+  AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
   t.stop();
 
   t.start("init");
@@ -132,8 +125,8 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
   Var concP0{"concP0"};
   // we need to use the highest order available QR to integrate discontinuous functions
-  // FESpace<Mesh_T, RefTriangleP0, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
-  FESpace<Mesh_T, RefTriangleP0, MiniQR<Triangle, 10>> feSpaceIC{*mesh};
+  // FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
+  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
   // interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
   Var flux{"flux"};
@@ -141,11 +134,12 @@ int main(int argc, char* argv[])
   t.stop();
 
   FVSolver_T fv{feSpaceP0, bcsP0};
-  Table<double, 2> vel(sizeP1, 2);
-  //vel.block(0, 0, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[0]);
-  //vel.block(0, 1, sizeP1, 1) = Vec::Constant(sizeP1, 1, velocity[1]);
-  vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);
-  vel.block(0, 1, sizeP1, 1) = velFE.data.block(sizeP1, 0, sizeP1, 1);
+  auto const & sizeVel = feSpaceVel.dof.size;
+  Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
+  for (uint k=0; k<FESpaceVel_T::dim; ++k)
+  {
+    vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+  }
 
   uint const ntime = 50;
   double time = 0.0;
@@ -153,9 +147,9 @@ int main(int argc, char* argv[])
   ioP1.print({concP1});
   IOManager ioP0{feSpaceP0, "output_advection2dtri/solP0"};
   ioP0.print({concP0});
-  IOManager ioFlux{facetFESpace, "output_advection2dtri/flux"};
+  IOManager ioFlux{feSpaceFacet, "output_advection2dtri/flux"};
   ioFlux.print({flux});
-  IOManager ioVel{velFESpace, "output_advection2dtri/vel"};
+  IOManager ioVel{feSpaceVel, "output_advection2dtri/vel"};
   ioVel.print({velFE});
 
   for(uint itime=0; itime<ntime; itime++)
@@ -166,8 +160,8 @@ int main(int argc, char* argv[])
     // central implicit
     t.start("p1 assemby");
     concP1Old = concP1.data;
-    builder.buildProblem(timeder, bcsP1);
-    builder.buildProblem(timeder_rhs, bcsP1);
+    builder.buildProblem(timeDer, bcsP1);
+    builder.buildProblem(timeDerRhs, bcsP1);
     builder.buildProblem(advection, bcsP1);
     builder.closeMatrix();
     t.stop();

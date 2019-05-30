@@ -34,19 +34,20 @@ int test(YAML::Node const & config)
   scalarFun_T rhs = [] (Vec3 const & p)
   {
     // return -2.;
-    return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
-    // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
+    return - 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
   scalarFun_T exactSol = [g] (Vec3 const & p)
   {
     // return p(0) * (2. + g - p(0));
-    return std::sin(0.5 * M_PI * p(0));
-    // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return std::sin(0.5 * M_PI * p(0));
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
   Fun<2,3> exactGrad = [g] (Vec3 const & p)
   {
     // return Vec2(2. + g - 2. * p(0), 0.);
-    return Vec2(0.5 * M_PI * std::cos(0.5 * M_PI * p(0)), 0.);
+    // return Vec2(0.5 * M_PI * std::cos(0.5 * M_PI * p(0)), 0.);
+    return Vec2(0.5*M_PI*std::cos(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1)), 1.5*M_PI*std::sin(0.5*M_PI*p(0))*std::cos(1.5*M_PI*p(1)));
   };
 
   FESpaceP0_T feSpaceU{*mesh};
@@ -69,7 +70,7 @@ int test(YAML::Node const & config)
   // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
   bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return .5*g; }});
   // symmetry
-  bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
+  // bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
   bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
 
   uint const sizeU = feSpaceU.dof.size;
@@ -158,21 +159,24 @@ int main()
     YAML::Node config;
     config["n"] = 10;
     config["g"] = 0.0;
-    config["expected_error"] = 0.00833333333333487;
+    // config["expected_error"] = 0.08348795154846228;
+    config["expected_error"] = 0.1019896670364342;
     tests[0] = test(config);
   }
   {
     YAML::Node config;
     config["n"] = 20;
     config["g"] = 0.0;
-    config["expected_error"] = 0.004166666666669872;
+    // config["expected_error"] = 0.04205058380051464;
+    config["expected_error"] = 0.04995033213282237;
     tests[1] = test(config);
   }
   {
     YAML::Node config;
     config["n"] = 40;
     config["g"] = 0.0;
-    config["expected_error"] = 0.00208333333334122;
+    // config["expected_error"] = 0.02106314270654791;
+    config["expected_error"] = 0.02470542441168115;
     tests[2] = test(config);
   }
   // {

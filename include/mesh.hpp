@@ -589,11 +589,11 @@ void readGMSH(Mesh<Elem> & mesh,
 
   // the file should contain all the boundary facets
   // TODO: this does not work if the mesh has internal boundaries
-  uint const meshBdFacets = std::count_if(
-        mesh.facetList.begin(),
-        mesh.facetList.end(),
-        [](typename Elem::Facet_T const & f){ return f.onBoundary(); });
-  assert(meshBdFacets == facets.size());
+  assert(std::count_if(
+           mesh.facetList.begin(),
+           mesh.facetList.end(),
+           [](typename Elem::Facet_T const & f){ return f.onBoundary(); })
+         == static_cast<long int>(facets.size()));
 
   // use file facets to set boundary flags
   for (auto & meshFacet: mesh.facetList)

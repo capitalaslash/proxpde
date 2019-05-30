@@ -52,14 +52,14 @@ enum class LimiterType
   SUPERBEE
 };
 
-static const std::map<LimiterType, std::function<double(double const)>> limiterMap =
+static const std::unordered_map<LimiterType, std::function<double(double const)>> limiterMap =
 {
   {LimiterType::UPWIND, pureUpwind},
   {LimiterType::MINMOD, minmod},
   {LimiterType::SUPERBEE, superbee},
 };
 
-static const std::map<std::string, LimiterType> stringToLimiter =
+static const std::unordered_map<std::string, LimiterType> stringToLimiter =
 {
   {"upwind", LimiterType::UPWIND},
   {"minmod", LimiterType::MINMOD},
@@ -99,6 +99,8 @@ struct FVSolver
   {
     static_assert (Order<ElemRefFE_T>::value == 0,
                    "finite volume solver works only on order 0.");
+    assert((feSpace.mesh.flags & INTERNAL_FACETS).any());
+    assert((feSpace.mesh.flags & NORMALS).any());
 
     for (auto const & elem: feSpace.mesh.elementList)
     {
@@ -148,6 +150,11 @@ struct FVSolver
         auto const * upwindElem = facet.facingElem[upwindDir].ptr;
         if (upwindElem)
         {
+          // MUSCL: Kurganov-Tadmor scheme:
+          // https://en.wikipedia.org/wiki/MUSCL_scheme
+          // F*(i + 1/2) = 1/2 (F(uR) + F(uL) - a(uR - uL))
+          // with F(u) = a u reduces to
+          // F*(i + 1/2) = a(uR)
           double const uUpwind = uOld[feSpace.dof.getId(upwindElem->id)];
           // by default use pure upwind
           double uLimited = uUpwind;

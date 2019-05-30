@@ -198,6 +198,7 @@ public:
   static array<array<id_T,2>,1> constexpr elemToEdge = {{
     {{0,1}}
   }};
+  static double constexpr refVolume = 2.;
 
   explicit Line(std::initializer_list<Point *> const & pList,
                 id_T const i,
@@ -264,6 +265,7 @@ public:
   static array<array<id_T,3>,1> constexpr elemToFace = {{
     {{0,1,2}}
   }};
+  static double constexpr refVolume = 0.5;
 
   Triangle(std::initializer_list<Point *> const & pList,
            id_T const i,
@@ -346,6 +348,7 @@ public:
   static array<array<id_T,4>,1> constexpr elemToFace = {{
     {{0,1,2,3}}
   }};
+  static double constexpr refVolume = 4.;
 
   Quad(std::initializer_list<Point *> const & pList,
        id_T const i,
@@ -402,6 +405,13 @@ public:
     n.normalize();
     return n;
   }
+
+  double h_min() const
+  {
+    auto const d1 = pointList[2]->coord - pointList[0]->coord;
+    auto const d2 = pointList[3]->coord - pointList[1]->coord;
+    return std::min(d1.norm(), d2.norm());
+  }
 };
 
 class Tetrahedron: public GeoElem
@@ -422,6 +432,7 @@ public:
     {{0,1}}, {{1,2}}, {{2,0}}, {{0,3}}, {{1,3}}, {{2,3}}
   }};
   static array<array<id_T,3>,4> constexpr elemToFace = elemToFacet;
+  static double constexpr refVolume = 1. / 6;
 
   Tetrahedron(std::initializer_list<Point *> const & pList,
               id_T const i,
@@ -489,6 +500,7 @@ public:
     {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}, {{0,4}}, {{1,5}}, {{2,6}}, {{3,7}}, {{4,5}}, {{5,6}}, {{6,7}}, {{7,4}}
   }};
   static array<array<id_T,4>,6> constexpr elemToFace = elemToFacet;
+  static double constexpr refVolume = 8.;
 
   Hexahedron(std::initializer_list<Point *> const & pList,
              id_T const i,

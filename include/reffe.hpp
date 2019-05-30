@@ -525,7 +525,7 @@ struct RefQuadRT0
   static array<twodFun_T,numFuns> const phiVectFun;
   static array<scalarTwodFun_T,numFuns> const divphiFun;
   static array<twodFun_T,numGeoFuns> const mapping;
-  static double constexpr volume = 2.L;
+  static double constexpr volume = 4.L;
 
   static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {

@@ -2,7 +2,7 @@
   n: 10,
   dt: 0.1,
   velocity: 0.5,
-  threshold: 0.35,
+  threshold: 0.37,
   final_time: 3.0,
 }
 

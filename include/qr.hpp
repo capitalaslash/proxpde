@@ -13,7 +13,7 @@ struct GaussQR
   using Weights_T = FVec<N>;
   // using Vec_T = Eigen::Matrix<long double, GeoElem::dim, 1>;
   // using Weights_T = Eigen::Matrix<long double, N, 1>;
-  static int const numPts = N;
+  static int constexpr numPts = N;
 
   static Weights_T const weight;
   static array<Vec_T,N> const node;
@@ -387,6 +387,76 @@ template<> array<SimpsonQR<Hexahedron>::Vec_T, 27> const SimpsonQR<Hexahedron>::
    SimpsonQR<Hexahedron>::Vec_T{ 1.,  1.,  1.},
 }};
 
+// ----------------------------------------------------------------------------
+template <typename GeoElem, int N>
+struct MiniQR
+{
+  using GeoElem_T = GeoElem;
+  using Vec_T = FVec<GeoElem::dim>;
+  static int constexpr numPts = pow(N, GeoElem::dim);
+
+  static FVec<numPts> const weight;
+  static array<Vec_T, numPts> const node;
+};
+
+template <typename GeoElem, int N>
+FVec<MiniQR<GeoElem, N>::numPts> const MiniQR<GeoElem, N>::weight =
+    FVec<MiniQR<GeoElem, N>::numPts>::Constant(GeoElem::refVolume / MiniQR<GeoElem, N>::numPts);
+
+
+template <typename GeoElem, int N>
+static array<typename MiniQR<GeoElem, N>::Vec_T, MiniQR<GeoElem, N>::numPts> miniNodes()
+{
+  array<typename MiniQR<GeoElem, N>::Vec_T, MiniQR<GeoElem, N>::numPts> pts;
+
+  if constexpr (std::is_same_v<GeoElem, Line>)
+  {
+    auto const h = 2. / N;
+    for (uint k=0; k<N; ++k)
+    {
+      pts[k] = FVec<1>::Constant(-1. + (k + .5) * h);
+    }
+  }
+  else if constexpr (std::is_same_v<GeoElem, Triangle>)
+  {
+    // k is the number of stripes of triangles
+    for (int k=0; k<N; ++k)
+    {
+      auto const f = 2*(k+1)-1;
+      for (int i=0; i<f; ++i)
+      {
+        pts[pow(k, 2) + i] = FVec<2>
+        {
+            static_cast<double>(i+1 +       i/2) / (3*N),
+            static_cast<double>(f-i + (f-i-1)/2) / (3*N)
+        };
+      }
+    }
+  }
+  else if constexpr (std::is_same_v<GeoElem, Quad>)
+  {
+    auto const h = 2. / N;
+    for (uint i=0; i<N; ++i)
+    {
+      for (uint j=0; j<N; ++j)
+      {
+        pts[i*N + j] = FVec<2>(-1. + (i + .5) * h, -1. + (j + .5) * h);
+      }
+    }
+  }
+  else
+  {
+    // we should never reach this point
+    std::abort();
+  }
+  return pts;
+}
+
+template <typename GeoElem, int N>
+array<typename MiniQR<GeoElem, N>::Vec_T, MiniQR<GeoElem, N>::numPts> const
+MiniQR<GeoElem, N>::node = miniNodes<GeoElem, N>();
+
+// ----------------------------------------------------------------------------
 template <typename QR>
 struct SideQR {};
 

@@ -132,6 +132,65 @@ void interpolateAnalyticFunction(scalarFun_T const & f,
   interpolateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
 }
 
+
+template <typename FESpace>
+void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
+                               FESpace & feSpace,
+                               Vec & v,
+                               uint const offset = 0)
+{
+  auto & curFE = feSpace.curFE;
+
+  // set the vector data to the appropriate dimension if it comes with length 0
+  if (v.size() == 0)
+  {
+    v = Vec::Zero(feSpace.dof.size * FESpace::dim);
+  }
+
+  for(auto const & e: feSpace.mesh.elementList)
+  {
+    curFE.reinit(e);
+    for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
+    {
+      // auto const value = f(feSpace.curFE.dofPts[i]);
+      FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
+      for (uint q=0; q<FESpace::QR_T::numPts; ++q)
+      {
+        value += curFE.JxW[q] * f(curFE.qpoint[q]);
+      }
+      // TODO: this is required only for color functions, should be optional
+      value /= e.volume();
+
+      auto const baseDof = feSpace.dof.getId(e.id, i);
+      for (uint d=0; d<FESpace::dim; ++d)
+      {
+        if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+        {
+          // the value of the dof is the value of the function
+          // u_k = u phi_k
+          v[offset + baseDof + d*feSpace.dof.size] = value[d];
+        }
+        else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+        {
+          // the value of the dof is the flux through the face
+          // u_k = u.dot(n_k)
+          v[offset + baseDof + d*feSpace.dof.size] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
+        }
+      }
+    }
+  }
+}
+
+template <typename FESpace>
+void integrateAnalyticFunction(scalarFun_T const & f,
+                               FESpace & feSpace,
+                               Vec & v,
+                               uint const offset = 0)
+{
+  integrateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
+}
+
+
 template <typename FESpace>
 void reconstructGradient(
     Vec const & data,

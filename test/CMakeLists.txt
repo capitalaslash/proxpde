@@ -69,7 +69,7 @@ minifem_add_test(poisson2dquad)
 minifem_add_test(poisson2dquad_q2)
 minifem_add_test(poisson2dmixedquad)
 minifem_add_test(dr2dquad)
-minifem_add_test(advection2dquad)
+minifem_add_test(advection2dquad DATA square_q.msh)
 
 # 3d tet
 minifem_add_test(poisson3dtet DATA poisson3dtet.yaml cube_uns.msh)

@@ -7,96 +7,130 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
+#include "fv.hpp"
 
 #include <iostream>
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          FEType<Elem_T,1>::RecommendedQR>;
+using FESpaceP0_T = FESpace<Mesh_T,
+                          FEType<Elem_T, 0>::RefFE_T,
+                          FEType<Elem_T, 0>::RecommendedQR>;
+using FESpaceP1_T = FESpace<Mesh_T,
+                            FEType<Elem_T,1>::RefFE_T,
+                            FEType<Elem_T,1>::RecommendedQR>;
+using VelFESpace_T = FESpace<Mesh_T,
+                             FEType<Elem_T,1>::RefFE_T,
+                             FEType<Elem_T,1>::RecommendedQR, 2>;
+using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
 
 static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-  if(p(0) < .4) return 1.;
+  if(p(0) < .37) return 1.;
   return 0.;
+};
+
+static Fun<2, 3> velFun = [] (Vec3 const & p)
+{
+  return Vec2{0.1, 0.};
+  // return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
 };
 
 int main(int argc, char* argv[])
 {
   MilliTimer t;
-  uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
-
+  t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  // uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
+  // uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
+  // buildHyperCube(
+  //       *mesh,
+  //       {0., 0., 0.},
+  //       {1., 1., 0.},
+  //       {numElemsX, numElemsY, 0},
+  //       INTERNAL_FACETS | NORMALS);
+  readGMSH(*mesh, "square_q.msh", INTERNAL_FACETS | NORMALS);
+  t.stop();
 
-  t.start();
-  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.start("fespace");
+  FESpaceP0_T feSpace{*mesh};
+  FESpaceP1_T feSpaceP1{*mesh};
+  t.stop();
 
-  t.start();
-  FESpace_T feSpace(*mesh);
-  std::cout << "fespace: " << t << " ms" << std::endl;
-
-  t.start();
+  t.start("bcs");
+  auto const one = [](Vec3 const & ){return 1.;};
   BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 1.;}});
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  bcs.addBC(BCEss{feSpace, side::LEFT, one});
+  t.stop();
 
+  t.start("velocity");
+  auto const & sizeP1 = feSpaceP1.dof.size;
+  VelFESpace_T velFESpace{*mesh};
+  Var velFE("velocity", velFESpace.dof.size*2);
+  for (uint d=0; d<2; d++)
+  {
+    for (uint i=0; i< sizeP1; i++)
+    {
+      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1) =
+          velFun(mesh->pointList[i].coord)[d];
+    }
+  }
   double const dt = 0.1;
+  auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
+  std::cout << "max cfl = " << cfl << std::endl;
+  t.stop();
 
-  Vec vel = Vec::Zero(2*feSpace.dof.size);
-  vel.block(0, 0, feSpace.dof.size, 1) = Vec::Constant(feSpace.dof.size, 0.1);
-  AssemblyAdvection advection(1.0, vel, feSpace);
-  AssemblyMass timeder(1./dt, feSpace);
-  Vec cOld(feSpace.dof.size);
-  AssemblyProjection timeder_rhs(1./dt, cOld, feSpace);
-
+  t.start("init");
   Var c{"conc"};
-  interpolateAnalyticFunction(ic, feSpace, c.data);
-  IOManager io{feSpace, "output_advection2dquad/sol"};
+  Vec cOld(feSpace.dof.size);
+  FESpace<Mesh_T, RefQuadP0, MiniQR<Quad, 10>> feSpaceIC{*mesh};
+  integrateAnalyticFunction(ic, feSpaceIC, c.data);
+  // interpolateAnalyticFunction(ic, feSpace, c.data);
+  t.stop();
 
-  Builder builder{feSpace.dof.size};
-  LUSolver solver;
+  FVSolver_T fv{feSpace, bcs};
+  Table<double, 2> vel(sizeP1, 2);
+  vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);
+  vel.block(0, 1, sizeP1, 1) = velFE.data.block(sizeP1, 0, sizeP1, 1);
+
   uint const ntime = 200;
   double time = 0.0;
+  IOManager io{feSpace, "output_advection2dquad/sol"};
+  io.print({c});
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << std::endl;
 
+    t.start("update");
     cOld = c.data;
+    fv.update(c.data);
+    fv.computeFluxes(vel, feSpaceP1);
+    fv.advance(c.data, dt);
+    t.stop();
 
-    builder.buildProblem(timeder, bcs);
-    builder.buildProblem(timeder_rhs, bcs);
-    builder.buildProblem(advection, bcs);
-    builder.closeMatrix();
-    // std::cout << "A:\n" << builder.A << std::endl;
-    // std::cout << "b:\n" << builder.b << std::endl;
-
-    solver.analyzePattern(builder.A);
-    solver.factorize(builder.A);
-    c.data = solver.solve(builder.b);
-    builder.clear();
-
-    // std::cout << "sol:\n" << c.data << std::endl;
-
+    // print
+    t.start("print");
     io.time = time;
     io.iter += 1;
     io.print({c});
+    t.stop();
   }
 
-  // double norm = error.data.norm();
-  // std::cout << "the norm of the error is " << norm << std::endl;
-  // if(std::fabs(norm - 2.61664e-11) > 1.e-10)
-  // {
-  //   std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-  //   return 1;
-  // }
+  t.print();
+
+  Vec oneField;
+  interpolateAnalyticFunction(one, feSpace, oneField);
+
+  double errorNorm = (c.data - oneField).norm();
+  std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm << std::endl;
+  if (std::fabs(errorNorm - 6.389801046171856e-05) > 1.e-10)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    return 1;
+  }
 
   return 0;
 }

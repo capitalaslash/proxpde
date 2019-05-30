@@ -236,7 +236,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               numElems[0],
-              flags.test(1));
+              (flags & INTERNAL_FACETS).any());
   }
   else if constexpr (std::is_same_v<Elem, Triangle> || std::is_same_v<Elem, Quad>)
   {
@@ -244,7 +244,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
                 origin,
                 length,
                 {{numElems[0], numElems[1]}},
-                flags.test(1));
+                (flags & INTERNAL_FACETS).any());
   }
   else if constexpr (std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
   {
@@ -252,7 +252,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               {{numElems[0], numElems[1], numElems[2]}},
-              flags.test(1));
+              (flags & INTERNAL_FACETS).any());
   }
   else
   {
@@ -260,11 +260,12 @@ void buildHyperCube(Mesh<Elem> & mesh,
     std::cerr << "element type " << typeid(Elem{}).name() << " not recognized." << std::endl;
     abort();
   }
-  if (flags.test(2))
+
+  if ((flags & NORMALS).any())
   {
     buildNormals(mesh);
   }
-  if (flags.test(3))
+  if ((flags & FACET_PTRS).any())
   {
     addElemFacetList(mesh);
   }
@@ -319,48 +320,62 @@ void referenceMesh(Mesh<Elem> & mesh)
 template <typename Mesh>
 void buildNormals(Mesh & mesh)
 {
-  for (auto & facet: mesh.facetList)
+  if ((mesh.flags & NORMALS).none())
   {
-    facet.buildNormal();
-
-    // normals on boundary facets should all point outside
-    if (facet.onBoundary())
+    for (auto & facet: mesh.facetList)
     {
-      if ((facet.midpoint() - facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
+      facet.buildNormal();
+
+      // normals on boundary facets should all point outside
+      if (facet.onBoundary())
+      {
+        if ((facet.midpoint() - facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
+        {
+          facet._normal *= -1.0;
+        }
+      }
+      // all internal normals should point from facing elem 0 towards facing elem 1
+      else if ((facet.facingElem[1].ptr->midpoint() -
+                facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
       {
         facet._normal *= -1.0;
       }
     }
-    // all internal normals should point from facing elem 0 towards facing elem 1
-    else if ((facet.facingElem[1].ptr->midpoint() -
-              facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
-    {
-      facet._normal *= -1.0;
-    }
+    mesh.flags |= NORMALS;
   }
-  mesh.flags |= NORMALS;
+  else
+  {
+    std::cerr << "warning: mesh normals were already there" << std::endl;
+  }
 }
 
 template <typename Mesh>
 void addElemFacetList(Mesh & mesh)
 {
-  for (auto & elem: mesh.elementList)
+  if ((mesh.flags & FACET_PTRS).none())
   {
-    elem.facetList.resize(Mesh::Elem_T::numFacets);
-  }
-  for (auto & facet: mesh.facetList)
-  {
-    auto insideElem = facet.facingElem[0].ptr;
-    auto const insidePos = facet.facingElem[0].side;
-    insideElem->facetList[insidePos] = &facet;
-    auto outsideElem = facet.facingElem[1].ptr;
-    if (outsideElem)
+    for (auto & elem: mesh.elementList)
     {
-      auto const outsidePos = facet.facingElem[1].side;
-      outsideElem->facetList[outsidePos] = &facet;
+      elem.facetList.resize(Mesh::Elem_T::numFacets);
     }
+    for (auto & facet: mesh.facetList)
+    {
+      auto insideElem = facet.facingElem[0].ptr;
+      auto const insidePos = facet.facingElem[0].side;
+      insideElem->facetList[insidePos] = &facet;
+      auto outsideElem = facet.facingElem[1].ptr;
+      if (outsideElem)
+      {
+        auto const outsidePos = facet.facingElem[1].side;
+        outsideElem->facetList[outsidePos] = &facet;
+      }
+    }
+    mesh.flags |= FACET_PTRS;
   }
-  mesh.flags |= FACET_PTRS;
+  else
+  {
+    std::cerr << "warning: facet pointers were already there" << std::endl;
+  }
 }
 
 enum  GMSHElemType: int8_t
@@ -413,7 +428,8 @@ struct ElemToGmsh<Hexahedron>
 
 template <typename Elem>
 void readGMSH(Mesh<Elem> & mesh,
-              std::string_view const filename)
+              std::string_view const filename,
+              MeshFlags flags = NONE)
 {
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
@@ -569,10 +585,15 @@ void readGMSH(Mesh<Elem> & mesh,
     in >> buf;
   }
   mesh.buildConnectivity();
-  buildFacets(mesh);
+  buildFacets(mesh, (flags & INTERNAL_FACETS).any());
 
   // the file should contain all the boundary facets
-  assert(mesh.facetList.size() == facets.size());
+  // TODO: this does not work if the mesh has internal boundaries
+  uint const meshBdFacets = std::count_if(
+        mesh.facetList.begin(),
+        mesh.facetList.end(),
+        [](typename Elem::Facet_T const & f){ return f.onBoundary(); });
+  assert(meshBdFacets == facets.size());
 
   // use file facets to set boundary flags
   for (auto & meshFacet: mesh.facetList)
@@ -590,11 +611,21 @@ void readGMSH(Mesh<Elem> & mesh,
   // check that all facets have been found in the mesh
   assert(facets.size() == 0);
 
+  if ((flags & NORMALS).any())
+  {
+    buildNormals(mesh);
+  }
+  if ((flags & FACET_PTRS).any())
+  {
+    addElemFacetList(mesh);
+  }
   std::cout << "mesh file " << filename << " successfully read" << std::endl;
 }
 
 template <typename Mesh>
-void readMesh(Mesh & mesh, YAML::Node const & config)
+void readMesh(Mesh & mesh,
+              YAML::Node const & config,
+              MeshFlags flags = NONE)
 {
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")
@@ -608,10 +639,10 @@ void readMesh(Mesh & mesh, YAML::Node const & config)
     // TODO: auto const origin = config["origin"].as<Vec3>();
     Vec3 const origin{0., 0., 0.};
     Vec3 const length{1., 1., 1.};
-    buildHyperCube(mesh, origin, length, numElems);
+    buildHyperCube(mesh, origin, length, numElems, flags);
   }
   else if (mesh_type == "msh")
   {
-    readGMSH(mesh, config["mesh_file"].as<std::string>());
+    readGMSH(mesh, config["mesh_file"].as<std::string>(), flags);
   }
 }

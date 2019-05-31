@@ -31,10 +31,8 @@ int main(int argc, char* argv[])
 
   for (uint itime=0; itime<5; ++itime)
   {
-    io.iter = itime;
-    io.time = itime;
     sol.data = Vec::LinSpaced(feSpace.dof.size, itime, itime*2);
-    io.print({sol});
+    io.print({sol}, static_cast<double>(itime));
   }
 
   return 0;

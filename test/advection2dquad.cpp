@@ -103,9 +103,7 @@ int main(/*int argc, char* argv[]*/)
 
     // print
     t.start("print");
-    io.time = time;
-    io.iter += 1;
-    io.print({c});
+    io.print({c}, time);
     t.stop();
   }
 

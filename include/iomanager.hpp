@@ -285,12 +285,10 @@ struct IOManager
 
   IOManager(FESpace_T const & fe,
             fs::path const fp,
-            double const tin = 0.0,
             uint const it = 0):
     feSpace(fe),
     filepath(std::move(fp)),
     // h5Time{fs::path{filepath} += ".time.h5"},
-    time(tin),
     iter(it)
   {
     if (filepath.parent_path() != fs::path(""))
@@ -307,7 +305,7 @@ struct IOManager
     printTimeSeries();
   }
 
-  void print(std::vector<Var> const & data);
+  void print(std::vector<Var> const & data, double const t = 0.0);
 
 protected:
   void printTimeSeries()
@@ -402,7 +400,6 @@ public:
   FESpace const & feSpace;
   fs::path filepath;
   // HDF5 h5Time;
-  double time;
   uint iter;
   std::vector<std::pair<uint, double>> timeSeries;
 };
@@ -410,11 +407,11 @@ public:
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> const & data)
+void IOManager<FESpace>::print(std::vector<Var> const & data, double const t)
 {
-  timeSeries.push_back({iter, time});
+  timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
-  doc.setTime(time);
+  doc.setTime(t);
   doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
@@ -437,4 +434,5 @@ void IOManager<FESpace>::print(std::vector<Var> const & data)
       // h5Time.print(compdata, name + "." + std::to_string(iter));
     }
   }
+  iter++;
 }

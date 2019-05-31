@@ -92,7 +92,10 @@ int test(YAML::Node const & config)
 
   Builder builder{size};
   double time = 0.;
-  IOManager io{feSpace, fs::path{"output_fourier"} / config["filename"].as<std::string>(), 0., 0};
+  IOManager io{
+    feSpace,
+    fs::path{"output_fourier"} / config["filename"].as<std::string>()
+  };
   io.print({sol, flux});
   for (uint itime = 0; itime < steps; ++itime)
   {
@@ -122,9 +125,7 @@ int test(YAML::Node const & config)
     std::cout << "du / dx |1 = " << flux.data[size-1] << std::endl;
     std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size-1] - tempA) << std::endl;
 
-    io.time = time;
-    io.iter += 1;
-    io.print({sol, flux});
+    io.print({sol, flux}, time);
   }
 
   t.start();

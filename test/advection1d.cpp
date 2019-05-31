@@ -162,12 +162,8 @@ int main(int argc, char* argv[])
 
     // print
     t.start("print");
-    ioP1.time = time;
-    ioP1.iter += 1;
-    ioP1.print({concP1});
-    ioP0.time = time;
-    ioP0.iter += 1;
-    ioP0.print({concP0});
+    ioP1.print({concP1}, time);
+    ioP0.print({concP0}, time);
     t.stop();
   }
 

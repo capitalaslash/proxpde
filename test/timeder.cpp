@@ -153,9 +153,7 @@ int test(YAML::Node const & config)
     exactTime[itime] = exact.data[0];
 
     // print
-    io.time = time;
-    io.iter += 1;
-    io.print({u, exact, error});
+    io.print({u, exact, error}, time);
 
     builder.clear();
   }

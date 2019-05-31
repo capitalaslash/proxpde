@@ -150,13 +150,9 @@ int main(int argc, char* argv[])
       return 2;
     }
 
-    ioVel.time = time;
-    ioVel.iter += 1;
-    ioVel.print({sol});
+    ioVel.print({sol}, time);
     p.data = sol.data.block(dofU*dim,0,dofP,1);
-    ioP.time = time;
-    ioP.iter += 1;
-    ioP.print({p});
+    ioP.print({p}, time);
   }
 
   auto const solNorm = sol.data.norm();

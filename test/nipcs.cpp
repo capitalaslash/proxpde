@@ -256,14 +256,10 @@ int main(int argc, char* argv[])
       std::cout << "printing" << std::endl;
       uM.data = velM.block(0);
       vM.data = velM.block(1);
-      ioV.time = time;
-      ioV.iter += 1;
-      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
+      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
       pM.data = velM.block(2);
-      ioP.time = time;
-      ioP.iter += 1;
-      ioP.print({pM, eqnP.sol});
+      ioP.print({pM, eqnP.sol}, time);
     }
     t.stop();
   }

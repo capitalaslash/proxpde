@@ -7,7 +7,7 @@
 template <typename GeoElem, int N>
 struct GaussQR
 {
-  using Scalar_T = double;
+  using Real_T = double;
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem_T::dim>;
   using Weights_T = FVec<N>;
@@ -31,7 +31,7 @@ template<> array<GaussQR<Line, 1>::Vec_T,1> const GaussQR<Line, 1>::node =
    GaussQR<Line, 1>::Vec_T::Constant(0.0L)
 }};
 
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt13rd = 0.5773502691896258L;
+static GaussQR<NullElem, 0>::Real_T constexpr sqrt13rd = 0.5773502691896258L;
 template<> GaussQR<Line, 2>::Weights_T const GaussQR<Line, 2>::weight = {1.L, 1.L};
 template<> array<GaussQR<Line, 2>::Vec_T, 2> const GaussQR<Line, 2>::node =
 {{
@@ -39,7 +39,7 @@ template<> array<GaussQR<Line, 2>::Vec_T, 2> const GaussQR<Line, 2>::node =
    GaussQR<Line,2>::Vec_T::Constant( sqrt13rd),
 }};
 
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt35th = 0.774596669241483L;
+static GaussQR<NullElem, 0>::Real_T constexpr sqrt35th = 0.774596669241483L;
 template<> GaussQR<Line, 3>::Weights_T const GaussQR<Line, 3>::weight = {5.L/9, 8.L/9, 5.L/9};
 template<> array<GaussQR<Line,3>::Vec_T, 3> const GaussQR<Line, 3>::node =
 {{
@@ -48,8 +48,8 @@ template<> array<GaussQR<Line,3>::Vec_T, 3> const GaussQR<Line, 3>::node =
    GaussQR<Line, 3>::Vec_T::Constant( sqrt35th)
 }};
 
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thm = 0.3399810435848563L; // sqrt((3.L - 2.L * sqrt(1.2L)) / 7);
-static GaussQR<NullElem, 0>::Scalar_T constexpr sqrt37thp = 0.8611363115940526L; // sqrt((3.L + 2.L * sqrt(1.2L)) / 7);
+static GaussQR<NullElem, 0>::Real_T constexpr sqrt37thm = 0.3399810435848563L; // sqrt((3.L - 2.L * sqrt(1.2L)) / 7);
+static GaussQR<NullElem, 0>::Real_T constexpr sqrt37thp = 0.8611363115940526L; // sqrt((3.L + 2.L * sqrt(1.2L)) / 7);
 template<> GaussQR<Line, 4>::Weights_T const GaussQR<Line, 4>::weight = {
   (18.L - sqrt(30.L))/36, (18.L + sqrt(30.L))/36, (18.L + sqrt(30.L))/36, (18.L - sqrt(30.L))/36
 };

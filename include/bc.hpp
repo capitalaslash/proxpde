@@ -27,19 +27,10 @@ DofSet_T fillDofSet(
       auto const & [elem, side] = f.facingElem[0];
       for(uint i=0; i<RefFE_T::dofPerFacet; i++)
       {
-        DOFid_T const dof = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i]);
-        for(uint d=0; d<FESpace::dim; ++d)
+        for(auto const c: comp)
         {
-          bool const compIsConstrained =
-              std::any_of(
-                std::begin(comp),
-                std::end(comp),
-                [&d](uint i) { return i == d; }
-              );
-          if(compIsConstrained)
-          {
-            constrainedDOFset.insert(dof + d*feSpace.dof.size);
-          }
+          DOFid_T const dofId = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i], c);
+          constrainedDOFset.insert(dofId);
         }
       }
       // std::cout << "current dof set: ";
@@ -66,11 +57,9 @@ public:
         Fun<FESpace::dim,3> const v):
     curFE(feSpace.curFE),
     constrainedDOFSet(std::move(dofSet)),
-    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
-    dimSize(feSpace.dof.size),
+    dofSize(feSpace.dof.size),
     value(std::move(v))
   {
-    fillConstrainedDOFVector();
     std::cout << "new bc on dofset with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
@@ -87,12 +76,10 @@ public:
         std::vector<uint> const & comp = allComp<FESpace>()):
     curFE(feSpace.curFE),
     constrainedDOFSet(fillDofSet(feSpace, m, comp)),
-    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
-    dimSize(feSpace.dof.size),
+    dofSize(feSpace.dof.size),
     value(std::move(v)),
     marker(m)
   {
-    fillConstrainedDOFVector();
     std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
@@ -103,23 +90,22 @@ public:
         std::vector<uint> const & comp = allComp<FESpace>()):
     curFE(feSpace.curFE),
     constrainedDOFSet(fillDofSet(feSpace, m, comp)),
-    constrainedDOFVector(BoolArray_T::Constant(feSpace.dof.size*FESpace_T::dim, false)),
-    dimSize(feSpace.dof.size),
+    dofSize(feSpace.dof.size),
     value([v](Vec3 const & p){return Vec1{v(p)};}),
     marker(m)
   {
     static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
-    fillConstrainedDOFVector();
     std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
   }
 
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
-    return constrainedDOFVector[id + d*dimSize];
+    return constrainedDOFSet.count(id + d * dofSize) > 0;
   }
 
   FVec<FESpace_T::dim> evaluate(DOFid_T const & i) const
   {
+    // curFE.reinit(e);
     if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::LAGRANGE)
     {
       // TODO: this is a crude implementation that works only for Lagrange elements
@@ -138,7 +124,6 @@ public:
 
   friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T> const & bc)
   {
-    out << "bc constrainedDOFVector: " << bc.constrainedDOFVector.transpose() << std::endl;
     out << "constrainedDOFset: ";
     for(auto const i: bc.constrainedDOFSet)
     {
@@ -149,18 +134,11 @@ public:
   }
 
 protected:
-  void fillConstrainedDOFVector()
-  {
-    for(auto const id: constrainedDOFSet)
-    {
-      constrainedDOFVector[id] = true;
-    }
-  }
 
+public:
   CurFE_T & curFE;
   DofSet_T constrainedDOFSet;
-  BoolArray_T constrainedDOFVector;
-  uint const dimSize;
+  uint const dofSize;
   Fun<FESpace::dim,3> const value;
 
 public:

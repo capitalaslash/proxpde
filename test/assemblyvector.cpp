@@ -102,57 +102,79 @@ int main(int argc, char* argv[])
 
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceU_T feSpaceU{*mesh};
+  FESpaceU_T feSpaceV{*mesh};
   FESpaceP_T feSpaceP{*mesh};
-
-  auto zero = [] (Vec3 const &) {return 0.;};
-  auto one = [] (Vec3 const &) {return 1.;};
-  BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, [] (Vec3 const &) {return Vec2::Constant(0.);}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, [] (Vec3 const &) {return Vec2::Constant(0.);}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
-  BCList bcsU{feSpaceU};
-  bcsU.addBC(BCEss{feSpaceU, side::RIGHT, zero});
-  bcsU.addBC(BCEss{feSpaceU, side::LEFT, zero});
-  bcsU.addBC(BCEss{feSpaceU, side::BOTTOM, zero});
-  bcsU.addBC(BCEss{feSpaceU, side::TOP, one});
-  BCList bcsV{feSpaceU};
-  bcsV.addBC(BCEss{feSpaceU, side::RIGHT, zero});
-  bcsV.addBC(BCEss{feSpaceU, side::LEFT, zero});
-  bcsV.addBC(BCEss{feSpaceU, side::BOTTOM, zero});
-  bcsV.addBC(BCEss{feSpaceU, side::TOP, zero});
-  BCList bcsP{feSpaceP};
-  // DofSet_T pinSet = {1};
-  // bcsP.addBC(BCEss{feSpaceP, pinSet, zero});
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
-  AssemblyStiffness stiffness(1.0, feSpaceVel);
-  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  if constexpr (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
+  {
+    for (uint e=0; e<feSpaceU.dof.rows; ++e)
+    {
+      for (uint k=0; k<FESpaceU_T::RefFE_T::numFuns; ++k)
+      {
+        feSpaceV.dof.elemMap(e, k) += dofU;
+      }
+    }
+  }
+  else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
+  {
+    for (uint e=0; e<feSpaceU.dof.rows; ++e)
+    {
+      for (uint k=0; k<FESpaceU_T::RefFE_T::numFuns; ++k)
+      {
+        feSpaceU.dof.elemMap(e, k) *= 2;
+        feSpaceV.dof.elemMap(e, k) *= 2;
+        feSpaceV.dof.elemMap(e, k) += 1;
+      }
+    }
+  }
+  for (uint e=0; e<feSpaceP.dof.rows; ++e)
+  {
+    for (uint k=0; k<FESpaceP_T::RefFE_T::numFuns; ++k)
+    {
+      feSpaceP.dof.elemMap(e, k) += 2 * dofU;
+    }
+  }
+
+  auto const zero1d = [] (Vec3 const &) {return 0.;};
+  auto const one =    [] (Vec3 const &) {return 1.;};
+  auto const zero2d = [] (Vec3 const &) {return Vec2{0., 0.};};
+  auto const inlet =  [] (Vec3 const &) {return Vec2{1., 0.};};
+  BCList bcsVel{feSpaceVel};
+  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT,  zero2d});
+  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT,   zero2d});
+  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, zero2d});
+  bcsVel.addBC(BCEss{feSpaceVel, side::TOP,    inlet});
+  BCList bcsU{feSpaceU};
+  bcsU.addBC(BCEss{feSpaceU, side::RIGHT,  zero1d});
+  bcsU.addBC(BCEss{feSpaceU, side::LEFT,   zero1d});
+  bcsU.addBC(BCEss{feSpaceU, side::BOTTOM, zero1d});
+  bcsU.addBC(BCEss{feSpaceU, side::TOP,    one});
+  BCList bcsV{feSpaceV};
+  bcsV.addBC(BCEss{feSpaceV, side::RIGHT,  zero1d});
+  bcsV.addBC(BCEss{feSpaceV, side::LEFT,   zero1d});
+  bcsV.addBC(BCEss{feSpaceV, side::BOTTOM, zero1d});
+  bcsV.addBC(BCEss{feSpaceV, side::TOP,    zero1d});
+  BCList bcsP{feSpaceP};
+  // DofSet_T pinSet = {1};
+  // bcsP.addBC(BCEss{feSpaceP, pinSet, zero});
 
   Builder builder{numDOFs};
-  builder.buildProblem(stiffness, bcsVel);
-  builder.buildProblem(grad, bcsVel, bcsP);
-  builder.buildProblem(div, bcsP, bcsVel);
+  builder.buildProblem(AssemblyStiffness{1.0, feSpaceVel}, bcsVel);
+  builder.buildProblem(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
+  builder.buildProblem(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
   builder.closeMatrix();
 
-  AssemblyStiffness stiffnessU(1.0, feSpaceU);
-  AssemblyStiffness stiffnessV(1.0, feSpaceU, {1}, dofU, dofU);
-  AssemblyGrad gradU(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*dofU);
-  AssemblyGrad gradV(-1.0, feSpaceU, feSpaceP, {1}, dofU, 2*dofU);
-  AssemblyDiv divU(-1.0, feSpaceP, feSpaceU, {0}, 2*dofU, 0);
-  AssemblyDiv divV(-1.0, feSpaceP, feSpaceU, {1}, 2*dofU, dofU);
-
   Builder builderS{numDOFs};
-  builderS.buildProblem(stiffnessU, bcsU);
-  builderS.buildProblem(gradU, bcsU, bcsP);
-  builderS.buildProblem(divU, bcsP, bcsU);
-  builderS.buildProblem(stiffnessV, bcsV);
-  builderS.buildProblem(gradV, bcsV, bcsP);
-  builderS.buildProblem(divV, bcsP, bcsV);
+  builderS.buildProblem(AssemblyStiffness{1.0, feSpaceU}, bcsU);
+  builderS.buildProblem(AssemblyGrad{-1.0, feSpaceU, feSpaceP, {0}}, bcsU, bcsP);
+  builderS.buildProblem(AssemblyDiv{-1.0, feSpaceP, feSpaceU, {0}}, bcsP, bcsU);
+  builderS.buildProblem(AssemblyStiffness{1.0, feSpaceV, {1}}, bcsV);
+  builderS.buildProblem(AssemblyGrad{-1.0, feSpaceV, feSpaceP, {1}}, bcsV, bcsP);
+  builderS.buildProblem(AssemblyDiv{-1.0, feSpaceP, feSpaceV, {1}}, bcsP, bcsV);
   builderS.closeMatrix();
 
   if (compareTriplets(builder._triplets, builderS._triplets))

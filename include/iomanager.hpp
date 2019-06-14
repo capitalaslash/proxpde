@@ -279,14 +279,17 @@ template <typename FESpace>
 struct IOManager
 {
   using FESpace_T = FESpace;
-  using Mesh_T = typename FESpace::Mesh_T;
+  using Mesh_T = typename FESpace_T::Mesh_T;
+  using RefFE_T = typename FESpace_T::RefFE_T;
+  using FESpaceScalar_T = Scalar_T<FESpace>;
   using Elem_T = typename Mesh_T::Elem_T;
-  using Traits_T = XDMFTraits<typename FESpace::RefFE_T>;
+  using Traits_T = XDMFTraits<RefFE_T>;
 
   IOManager(FESpace_T const & fe,
             fs::path const fp,
             uint const it = 0):
-    feSpace(fe),
+    feSpace{fe},
+    feSpaceScalar{fe.mesh},
     filepath(std::move(fp)),
     // h5Time{fs::path{filepath} += ".time.h5"},
     iter(it)
@@ -305,12 +308,12 @@ struct IOManager
     printTimeSeries();
   }
 
-  void print(std::vector<Var> const & data, double const t = 0.0);
+  void print(std::vector<Var> && data, double const t = 0.0);
 
 protected:
   void printTimeSeries()
   {
-    XDMFDoc<typename FESpace::RefFE_T> doc{filepath, "time", "", "", XDMFGridType::COLLECTION};
+    XDMFDoc<RefFE_T> doc{filepath, "time", "", "", XDMFGridType::COLLECTION};
     for (auto const step: timeSeries)
     {
       doc.appendTimeStep(step);
@@ -319,32 +322,32 @@ protected:
 
   void printMeshData()
   {
-    using FE_T = typename FESpace_T::RefFE_T;
     HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
     {
-      Table<DOFid_T, FE_T::numGeoFuns> mappedConn(feSpace.mesh.elementList.size(), FE_T::numGeoFuns);
+      Table<DOFid_T, RefFE_T::numGeoFuns> mappedConn(
+            feSpace.mesh.elementList.size(), RefFE_T::numGeoFuns);
       for (uint i=0; i<feSpace.mesh.elementList.size(); ++i)
       {
-        for (uint j=0; j<FE_T::numGeoFuns; ++j)
+        for (uint j=0; j<RefFE_T::numGeoFuns; ++j)
         {
           mappedConn(i, j) = feSpace.dof.geoMap(i, Traits_T::mapping[j]);
         }
       }
-      h5Mesh.print<id_T, FE_T::numGeoFuns>(mappedConn, "connectivity");
+      h5Mesh.print<id_T, RefFE_T::numGeoFuns>(mappedConn, "connectivity");
     }
     else
     {
-      h5Mesh.print<id_T, FE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
+      h5Mesh.print<id_T, RefFE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
     }
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: feSpace.mesh.elementList)
     {
-      for (uint p=0; p<FE_T::numGeoFuns; ++p)
+      for (uint p=0; p<RefFE_T::numGeoFuns; ++p)
       {
-        coords.row(feSpace.dof.geoMap(e.id, p)) = FE_T::mappingPts(e)[p];
+        coords.row(feSpace.dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
       }
     }
     h5Mesh.print<double, 3>(coords, "coords");
@@ -397,7 +400,8 @@ protected:
   }
 
 public:
-  FESpace const & feSpace;
+  FESpace_T const & feSpace;
+  FESpaceScalar_T feSpaceScalar;
   fs::path filepath;
   // HDF5 h5Time;
   uint iter;
@@ -407,7 +411,7 @@ public:
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> const & data, double const t)
+void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
 {
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
@@ -416,7 +420,7 @@ void IOManager<FESpace>::print(std::vector<Var> const & data, double const t)
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
-  for(auto& v: data)
+  for (auto & v: data)
   {
     for (uint d=0; d<feSpace.dim; ++d)
     {
@@ -429,7 +433,17 @@ void IOManager<FESpace>::print(std::vector<Var> const & data, double const t)
       doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
 
       // this works only with Lagrange elements
-      Vec const compdata = v.data.block(d*feSpace.dof.size, 0, feSpace.dof.size, 1);
+      Vec compdata{feSpace.dof.size};
+      // TODO: pass data as const &
+      if constexpr (FESpace_T::dim > 1)
+      {
+        // TOOD: print vector variable as vector xdmf data
+        getComponent(compdata, feSpaceScalar, v.data, feSpace, d);
+      }
+      else
+      {
+        compdata = v.data;
+      }
       h5Iter.print(compdata, name);
       // h5Time.print(compdata, name + "." + std::to_string(iter));
     }

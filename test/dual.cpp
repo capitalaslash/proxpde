@@ -22,7 +22,7 @@ using FESpaceP0_T = FESpace<Mesh_T,
                           FEType<Elem_T,0>::RefFE_T,
                           FEType<Elem_T,0>::RecommendedQR>;
 using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
-using VelFESpace_T = FESpace<Mesh_T,
+using FESpaceVel_T = FESpace<Mesh_T,
                              FEType<Elem_T,1>::RefFE_T,
                              FEType<Elem_T,1>::RecommendedQR, 2>;
 static scalarFun_T ic = [] (Vec3 const& p)
@@ -135,24 +135,17 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("fe builder");
-  auto const & sizeP1 = feSpaceP1.dof.size;
-  VelFESpace_T velFESpace{*mesh};
-  Var velFE{"velocity", sizeP1 * 2};
-  for (uint d=0; d<2; d++)
-  {
-    for (uint i =0; i< sizeP1; i++)
-    {
-      velFE.data(velFESpace.dof.ptMap[i] + d*sizeP1) =
-          velFun(mesh->pointList[i].coord)[d];
-    }
-  }
+  FESpaceVel_T feSpaceVel{*mesh};
+  Var velFE{"velocity"};
+  interpolateAnalyticFunction(velFun, feSpaceVel, velFE.data);
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(velFESpace, velFE.data, dt);
+  auto const cfl = computeMaxCFL(feSpaceVel, velFE.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
 
+  auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
+  AssemblyAdvection advection(1.0, velFE.data, feSpaceVel, feSpaceP1);
   AssemblyMass timeder(1./dt, feSpaceP1);
   Vec concP1Old(sizeP1);
   AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);

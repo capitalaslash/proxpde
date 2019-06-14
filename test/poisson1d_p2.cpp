@@ -66,6 +66,9 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
   std::cout << "solve: " << t << " ms" << std::endl;
 
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
+
   Var exact{"exact"};
   interpolateAnalyticFunction(exactSol, feSpace, exact.data);
   Var error{"e"};

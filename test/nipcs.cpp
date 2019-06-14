@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
   FESpaceU_T feSpaceU{*mesh};
   FESpaceP_T feSpaceP{*mesh};
 
-  Eqn eqnUstar{"uStar", feSpaceU};
-  Eqn eqnVstar{"vStar", feSpaceU};
+  Eqn<FESpaceU_T, StorageType::RowMajor> eqnUstar{"uStar", feSpaceU};
+  Eqn<FESpaceU_T, StorageType::RowMajor> eqnVstar{"vStar", feSpaceU};
 
-  Eqn<FESpaceP_T, StorageType::ClmMajor> eqnP{"p", feSpaceP};
+  Eqn eqnP{"p", feSpaceP};
 
-  Eqn<FESpaceU_T, StorageType::ClmMajor> eqnU{"u", feSpaceU};
-  Eqn<FESpaceU_T, StorageType::ClmMajor> eqnV{"v", feSpaceU};
+  Eqn eqnU{"u", feSpaceU};
+  Eqn eqnV{"v", feSpaceU};
   t.stop();
 
   t.start("bc");
@@ -86,9 +86,9 @@ int main(int argc, char* argv[])
   uint const printStep = 10;
   double const nu = 1.e-1;
 
-  Vec velOldMonolithic(2*dofU);
+  Vec velOldMonolithic{2*dofU};
   AssemblyMass timeder(1./dt, feSpaceVel);
-  AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel);
+  AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel, feSpaceVel);
   AssemblyTensorStiffness stiffness(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
@@ -105,19 +105,21 @@ int main(int argc, char* argv[])
   builderStatic.buildProblem(div, bcsP, bcsVel);
   builderStatic.closeMatrix();
 
-  Vec vel(2 * dofU);
-  vel << eqnU.sol.data, eqnV.sol.data;
+  Vec vel{2 * dofU};
+  setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
+  setComponent(vel, feSpaceVel, eqnV.sol.data, eqnV.feSpace, 1);
+
   // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt
   // (uStar, \phi) / dt + ((vel \cdot \nabla) uStar, \phi) + nu (\nabla uStar, \nabla \phi) = (u, \phi) / dt
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
+  eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU});
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnUstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnU.sol.data, feSpaceU});
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt
   // (vStar, \phi) / dt + ((vel \cdot \nabla) vStar, \phi) + nu (\nabla vStar, \nabla \phi) = (v, \phi) / dt
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceU});
+  eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU});
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnVstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnV.sol.data, feSpaceU});
 
@@ -149,7 +151,7 @@ int main(int argc, char* argv[])
   eqnV.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVstar.sol.data, feSpaceU});
   eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
 
-  BlockVar velM{"velM", {dofU, dofU, dofP}};
+  Var velM{"velM", 2*dofU + dofP};
   auto ic = [](Vec3 const &) {return Vec2(0., 1.);};
   // auto ic = zero;
   auto ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};
@@ -163,12 +165,14 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("print");
-  Var uM{"uM", velM.block(0)};
-  Var vM{"vM", velM.block(1)};
+  Var uM{"uM"};
+  Var vM{"vM"};
+  getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
+  getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
+  Var pM{"pM", velM.data.block(2*dofU, 0, dofP, 1)};
   IOManager ioV{feSpaceU, "output_nipcs/sol_v"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
-  Var pM{"pM", velM.block(2)};
   ioP.print({pM, eqnP.sol});
   t.stop();
 
@@ -202,7 +206,8 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("ustar build");
-    vel << eqnU.sol.data, eqnV.sol.data;
+    setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
+    setComponent(vel, feSpaceVel, eqnV.sol.data, eqnV.feSpace, 1);
     eqnUstar.build();
     eqnVstar.build();
     t.stop();
@@ -217,7 +222,8 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("p build");
-    velStar << eqnUstar.sol.data, eqnVstar.sol.data;
+    setComponent(velStar, feSpaceVel, eqnUstar.sol.data, eqnUstar.feSpace, 0);
+    setComponent(velStar, feSpaceVel, eqnVstar.sol.data, eqnVstar.feSpace, 1);
     eqnP.buildRhs();
     t.stop();
 
@@ -254,11 +260,11 @@ int main(int argc, char* argv[])
     if ((itime+1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
-      uM.data = velM.block(0);
-      vM.data = velM.block(1);
+      getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
+      getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
-      pM.data = velM.block(2);
+      pM.data = velM.data.block(2*dofU, 0, dofP, 1);
       ioP.print({pM, eqnP.sol}, time);
     }
     t.stop();

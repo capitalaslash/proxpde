@@ -16,6 +16,7 @@ using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
 using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,3>;
+using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 
 int main(int argc, char* argv[])
 {
@@ -32,6 +33,7 @@ int main(int argc, char* argv[])
 
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceP_T feSpaceP{*mesh};
+  FESpaceComponent_T feSpaceComponent{*mesh};
   // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);
@@ -85,34 +87,41 @@ int main(int argc, char* argv[])
 
   std::cout << sol.data.norm() << std::endl;
 
-  Var u{"u", sol.data, 0, dofU};
-  Var v{"v", sol.data, dofU, dofU};
-  Var w{"w", sol.data, 2*dofU, dofU};
-  Var p{"p", sol.data, pOffset, dofP};
-  Var ue{"ue", exact.data, 0, dofU};
-  Var ve{"ve", exact.data, dofU, dofU};
-  Var we{"we", exact.data, 2*dofU, dofU};
-  Var pe{"pe", exact.data, pOffset, dofP};
+  Var u{"u"};
+  Var v{"v"};
+  Var w{"w"};
+  getComponent(u.data, feSpaceComponent, sol.data, feSpaceVel, 0);
+  getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
+  getComponent(w.data, feSpaceComponent, sol.data, feSpaceVel, 2);
+  Var p{"p", sol.data, 3*dofU, dofP};
+
+  Var ue{"ue"};
+  Var ve{"ve"};
+  Var we{"we"};
+  getComponent(ue.data, feSpaceComponent, exact.data, feSpaceVel, 0);
+  getComponent(ve.data, feSpaceComponent, exact.data, feSpaceVel, 1);
+  getComponent(we.data, feSpaceComponent, exact.data, feSpaceVel, 2);
+  Var pe{"pe", exact.data, 3*dofU, dofP};
 
   IOManager ioVel{feSpaceVel, "output_stokes3dtet/vel"};
   ioVel.print({sol, exact});
   IOManager ioP{feSpaceP, "output_stokes3dtet/p"};
   ioP.print({p, pe});
 
-  auto uNorm = (u.data - ue.data).norm();
-  auto vNorm = (v.data - ve.data).norm();
-  auto wNorm = (w.data - we.data).norm();
-  auto pNorm = (p.data - pe.data).norm();
+  auto uError = (u.data - ue.data).norm();
+  auto vError = (v.data - ve.data).norm();
+  auto wError = (w.data - we.data).norm();
+  auto pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << std::setprecision(16) << uNorm << std::endl;
-  std::cout << "v error norm: " << std::setprecision(16) << vNorm << std::endl;
-  std::cout << "w error norm: " << std::setprecision(16) << wNorm << std::endl;
-  std::cout << "p error norm: " << std::setprecision(16) << pNorm << std::endl;
+  std::cout << "u error norm: " << std::setprecision(16) << uError << std::endl;
+  std::cout << "v error norm: " << std::setprecision(16) << vError << std::endl;
+  std::cout << "w error norm: " << std::setprecision(16) << wError << std::endl;
+  std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
 
-  if ( (uNorm - 7.163490691351315e-06) > 1e-12 ||
-       (vNorm - 1.083035964559222e-05) > 1e-12 ||
-       (wNorm - 2.689732977272767e-06) > 1e-12 ||
-       (pNorm - 0.0007046548064074682) > 1e-12)
+  if ( (uError - 7.163490691351315e-06) > 1.e-12 ||
+       (vError - 1.083035964559222e-05) > 1.e-12 ||
+       (wError - 2.689732977272767e-06) > 1.e-12 ||
+       (pError - 0.0007046548064074682) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

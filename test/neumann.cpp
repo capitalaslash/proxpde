@@ -117,7 +117,7 @@ int test(YAML::Node const & config)
             typename FEType<Elem_T, order>::RefFE_T,
             typename FEType<Elem_T, order>::ReconstructionQR, Elem_T::dim>;
   RecFESpace_T feSpaceRec{*mesh};
-  reconstructGradient(sol.data, feSpaceRec, flux.data);
+  reconstructGradient(sol.data, feSpace, feSpaceRec, flux.data);
   t.stop();
 
   t.start("gradient");

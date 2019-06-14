@@ -16,11 +16,14 @@ int main(/*int argc, char* argv[]*/)
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpaceP0_T = FESpace<Mesh_T,
-                            FEType<Elem_T, 0>::RefFE_T,
-                            FEType<Elem_T, 0>::RecommendedQR>;
+                              FEType<Elem_T, 0>::RefFE_T,
+                              FEType<Elem_T, 0>::RecommendedQR>;
+  using FESpaceP1_T = FESpace<Mesh_T,
+                              FEType<Elem_T, 1>::RefFE_T,
+                              FEType<Elem_T, 1>::RecommendedQR>;
   using FESpaceVel_T = FESpace<Mesh_T,
-                               FEType<Elem_T,1>::RefFE_T,
-                               FEType<Elem_T,1>::RecommendedQR, 2>;
+                               FEType<Elem_T, 1>::RefFE_T,
+                               FEType<Elem_T, 1>::RecommendedQR, 2>;
   using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
 
   scalarFun_T const ic = [] (Vec3 const& p)
@@ -53,6 +56,7 @@ int main(/*int argc, char* argv[]*/)
 
   t.start("fespace");
   FESpaceP0_T feSpace{*mesh};
+  FESpaceP1_T feSpaceP1{*mesh};
   t.stop();
 
   t.start("bcs");
@@ -78,11 +82,22 @@ int main(/*int argc, char* argv[]*/)
   t.stop();
 
   FVSolver_T fv{feSpace, bcs};
+
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
-  for (uint k=0; k<FESpaceVel_T::dim; ++k)
+  if (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+    for (uint k=0; k<FESpaceVel_T::dim; ++k)
+    {
+      vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+    }
+  }
+  else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
+  {
+    for (uint r=0; r<sizeVel; ++r)
+    {
+      vel.row(r) = velFE.data.block(r*FESpaceVel_T::dim, 0, FESpaceVel_T::dim, 1).transpose();
+    }
   }
 
   uint const ntime = 200;
@@ -97,7 +112,7 @@ int main(/*int argc, char* argv[]*/)
     t.start("update");
     cOld = c.data;
     fv.update(c.data);
-    fv.computeFluxes(vel, feSpaceVel);
+    fv.computeFluxes(vel, feSpaceP1);
     fv.advance(c.data, dt);
     t.stop();
 

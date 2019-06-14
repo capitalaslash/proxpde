@@ -120,7 +120,7 @@ int test(YAML::Node const & config)
     sol.data = solver.solve(builder.b);
     // std::cout << "u:\n" << sol.data << std::endl;
 
-    reconstructGradient(sol.data, feSpaceRec, flux.data);
+    reconstructGradient(sol.data, feSpace, feSpaceRec, flux.data);
     std::cout << "u|1 = " << sol.data[size-1] << ", exact = " << exact.data[size-1] << std::endl;
     std::cout << "du / dx |1 = " << flux.data[size-1] << std::endl;
     std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size-1] - tempA) << std::endl;

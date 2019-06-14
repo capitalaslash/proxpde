@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 project(MiniFEM
   VERSION 0.1
@@ -46,6 +46,14 @@ message(STATUS "compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
 message(STATUS "c++ flags       : ${${BUILD_FLAGS}}")
 message(STATUS "================================================================")
+
+option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
+
+configure_file (
+  "${PROJECT_SOURCE_DIR}/minifem.h.in"
+  "${PROJECT_BINARY_DIR}/minifem.h"
+  )
+include_directories("${PROJECT_BINARY_DIR}")
 
 add_library(minifem SHARED
   src/geo.cpp

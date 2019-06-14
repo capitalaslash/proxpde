@@ -1,9 +1,10 @@
 #pragma once
 
+#include "minifem.h"
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <array>
 #include <vector>
 #include <memory>
 #include <functional>
@@ -16,6 +17,8 @@
 #include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
 #include <unsupported/Eigen/IterativeSolvers>
+
+#include <yaml-cpp/yaml.h>
 
 #ifdef NDEBUG
 static std::ofstream debug{"/dev/null"};
@@ -42,9 +45,21 @@ std::vector<uint> allComp()
   return comp;
 }
 
-// template <typename T, std::size_t N>
-// using array = std::array<T,N>;
-#include "array.hpp"
+#include <array>
+template <typename T, std::size_t N>
+using array = std::array<T,N>;
+// #include "array.hpp"
+
+template <typename T, int N>
+static constexpr array<T, N> fillArray(T const & t)
+{
+  array<T, N> a;
+  for (int k=0; k<N; ++k)
+  {
+    a[k] = t;
+  }
+  return a;
+}
 
 // ColMajor is better for UMFPack
 // RowMajor is better for iterative solvers
@@ -164,7 +179,7 @@ FVec<dim2> promote(FVec<dim1> const & v1)
   return v2;
 }
 
-template<int dim>
+template <int dim>
 FVec<dim> promote(FVec<dim> const & v)
 {
   return v;
@@ -182,9 +197,20 @@ FVec<dim2> narrow(FVec<dim1> const & v1)
   return v2;
 }
 
-template<int dim>
+template <int dim>
 FVec<dim> narrow(FVec<dim> const & v)
 {
+  return v;
+}
+
+template <int dim>
+FVec<dim> arrayToFVec(array<double, dim> const & a)
+{
+  FVec<dim> v;
+  for (uint k=0; k<dim; ++k)
+  {
+    v[k] = a[k];
+  }
   return v;
 }
 
@@ -208,4 +234,30 @@ template<class T>
 inline constexpr T pow(T const & base, unsigned const exponent)
 {
   return exponent == 0 ? 1 : base * pow(base, exponent-1);
+}
+
+using ParameterDict = YAML::Node;
+
+namespace YAML {
+template<>
+struct convert<Vec3> {
+  static Node encode(const Vec3& rhs) {
+    Node node;
+    node.push_back(rhs[0]);
+    node.push_back(rhs[1]);
+    node.push_back(rhs[2]);
+    return node;
+  }
+
+  static bool decode(const Node& node, Vec3& rhs) {
+    if(!node.IsSequence() || node.size() != 3) {
+      return false;
+    }
+
+    rhs[0] = node[0].as<double>();
+    rhs[1] = node[1].as<double>();
+    rhs[2] = node[2].as<double>();
+    return true;
+  }
+};
 }

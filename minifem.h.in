@@ -1,0 +1,3 @@
+#pragma once
+
+#cmakedefine DOF_INTERLEAVED

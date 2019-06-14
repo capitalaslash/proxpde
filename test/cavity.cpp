@@ -73,8 +73,11 @@ int main(int argc, char* argv[])
   // std::cout << "b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol.data << std::endl;
 
-  Var u{"u", sol.data, 0, dofU};
-  Var v{"v", sol.data, dofU, dofU};
+  Var u{"u"};
+  Var v{"v"};
+  Scalar_T<FESpaceVel_T> feSpaceScalar{*mesh};
+  getComponent(u.data, feSpaceScalar, sol.data, feSpaceVel, 0);
+  getComponent(v.data, feSpaceScalar, sol.data, feSpaceVel, 1);
   Var p{"p", sol.data, dofU*dim, dofP};
 
   auto uNorm = u.data.norm();

@@ -19,9 +19,11 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
       FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
       for(uint n=0; n<FESpace::CurFE_T::RefFE_T::numFuns; ++n)
       {
-        id_T const dofId = feSpace.dof.getId(elem.id, n);
         for (uint d=0; d<FESpace::RefFE_T::dim; ++d)
-          localVel[d] += vel[dofId + d*feSpace.dof.size];
+        {
+          id_T const dofId = feSpace.dof.getId(elem.id, n, d);
+          localVel[d] += vel[dofId];
+        }
       }
       localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
 
@@ -130,18 +132,23 @@ struct FVSolver
     }
   }
 
-  template <typename VelFESpace>
-  void computeFluxes(Table<double, dim> const & vel, VelFESpace const & feSpaceVel)
+  template <typename FESpaceVel>
+  void computeFluxes(Table<double, dim> const & vel, FESpaceVel const & feSpaceVel)
   {
+    using RefFEVel_T = typename FESpaceVel::RefFE_T;
+    using FacetRefFEVel_T = typename RefFEVel_T::RefFacet_T;
+
     // assert(static_cast<size_t>(vel.size() / dim) == feSpace.mesh.facetList.size());
     for (auto const & facet: feSpace.mesh.facetList)
     {
+      auto const [insideElemPtr, side] = facet.facingElem[0];
       FVec<dim> v = FVec<dim>::Zero();
-      for (uint f=0; f<Facet_T::numPts; ++f)
+      for (uint f=0; f<FacetRefFEVel_T::numFuns; ++f)
       {
-        v += vel.row(feSpaceVel.dof.ptMap[facet.pointList[f]->id]);
+        auto const dofId = feSpaceVel.dof.getId(insideElemPtr->id, RefFEVel_T::dofOnFacet[side][f]);
+        v += vel.row(dofId);
       }
-      v /= Facet_T::numPts;
+      v /= FacetRefFEVel_T::numFuns;
       Vec3 v3 = promote<dim, 3>(v);
       double const vNorm = v3.dot(facet._normal);
       if (std::fabs(vNorm) > 1.e-16)
@@ -188,10 +195,11 @@ struct FVSolver
           {
             if (bc.marker == facet.marker)
             {
+              auto const uLocal = bc.evaluate(0)[0];
               fluxes[facet.id] =
                   vNorm *
                   facet.volume() *
-                  bc.evaluate(0)[0];
+                  uLocal;
             }
           }
         }
@@ -218,7 +226,7 @@ struct FVSolver
 //      {
 //        if (bc.isConstrained(id))
 //        {
-//          fluxes[facet.id] = bc.evaluate(id)[0] * v;
+//          fluxes[facet.id] = bc.evaluate(*facet.facingElem[0].ptr, id)[0] * v;
 //        }
 //      }
 //    }

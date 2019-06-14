@@ -9,27 +9,27 @@
 #include "assembler.hpp"
 #include "iomanager.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
-using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
-using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
-
 int main(int argc, char* argv[])
 {
-  uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 2 : std::stoi(argv[2]);
-
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
+  using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
+  using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
+  using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
+  using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
+  uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3)? 2 : std::stoi(argv[2]);
+  Vec3 const origin{0., 0., 0.};
+  Vec3 const length{1., 1., 0.};
   buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
 
   FESpaceVel_T feSpaceVel{*mesh};
+  FESpaceComponent_T feSpaceComponent{*mesh};
   FESpaceP_T feSpaceP{*mesh};
   // std::cout << feSpaceVel.dof << std::endl;
 
@@ -84,11 +84,16 @@ int main(int argc, char* argv[])
   // std::cout << "solution:\n" << sol.data << std::endl;
   // std::cout << sol.data.norm() << std::endl;
 
-  Var u{"u", sol.data, 0, dofU};
-  Var v{"v", sol.data, dofU, dofU};
+  Var u{"u"};
+  Var v{"v"};
+  getComponent(u.data, feSpaceComponent, sol.data, feSpaceVel, 0);
+  getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
   Var p{"p", sol.data, 2*dofU, dofP};
-  Var ue{"ue", exact.data, 0, dofU};
-  Var ve{"ve", exact.data, dofU, dofU};
+
+  Var ue{"ue"};
+  Var ve{"ve"};
+  getComponent(ue.data, feSpaceComponent, exact.data, feSpaceVel, 0);
+  getComponent(ve.data, feSpaceComponent, exact.data, feSpaceVel, 1);
   Var pe{"pe", exact.data, 2*dofU, dofP};
 
   IOManager ioVel{feSpaceVel, "output_stokes2dquad/vel"};
@@ -96,17 +101,19 @@ int main(int argc, char* argv[])
   IOManager ioP{feSpaceP, "output_stokes2dquad/p"};
   ioP.print({p, pe});
 
-  auto uNorm = (u.data - ue.data).norm();
-  auto vNorm = (v.data - ve.data).norm();
-  auto pNorm = (p.data - pe.data).norm();
+  auto uError = (u.data - ue.data).norm();
+  auto vError = (v.data - ve.data).norm();
+  auto pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << uNorm << std::endl;
-  std::cout << "v error norm: " << vNorm << std::endl;
-  std::cout << "p error norm: " << pNorm << std::endl;
+  std::cout << "u error norm: " << uError << std::endl;
+  std::cout << "v error norm: " << vError << std::endl;
+  std::cout << "p error norm: " << pError << std::endl;
 
-  if (uNorm + vNorm + pNorm > 1.e-14)
+  if(std::fabs(uError) > 3.e-16 ||
+     std::fabs(vError) > 6.e-16 ||
+     std::fabs(pError) > 6.e-15)
   {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    std::cerr << "one of the norms of the error is not the prescribed value" << std::endl;
     return 1;
   }
 

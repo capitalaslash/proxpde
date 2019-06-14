@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
   Builder builder{sizeP1};
   LUSolver solver;
   AssemblyMass timeDer(1./dt, feSpaceP1);
-  AssemblyAdvection advection(1.0, velFE.data, feSpaceP1);
+  AssemblyAdvection advection(1.0, velFE.data, feSpaceVel, feSpaceP1);
   Vec concP1Old{sizeP1};
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
   t.stop();
@@ -134,11 +134,22 @@ int main(int argc, char* argv[])
   t.stop();
 
   FVSolver_T fv{feSpaceP0, bcsP0};
+
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
-  for (uint k=0; k<FESpaceVel_T::dim; ++k)
+  if (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+    for (uint k=0; k<FESpaceVel_T::dim; ++k)
+    {
+      vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
+    }
+  }
+  else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
+  {
+    for (uint r=0; r<sizeVel; ++r)
+    {
+      vel.row(r) = velFE.data.block(r*FESpaceVel_T::dim, 0, FESpaceVel_T::dim, 1).transpose();
+    }
   }
 
   uint const ntime = 50;

@@ -9,7 +9,7 @@
 #include "timer.hpp"
 
 template <typename FESpaceOrig, typename Solver = LUSolver>
-void computeGradient(FESpaceOrig const & feSpaceOrig, Vec const & u, Vec & grad)
+void computeGradient(Vec & grad, Vec const & u, FESpaceOrig const & feSpaceOrig)
 {
   using Mesh_T = typename FESpaceOrig::Mesh_T;
   using Elem_T = typename FESpaceOrig::Mesh_T::Elem_T;
@@ -117,12 +117,12 @@ int test(YAML::Node const & config)
             typename FEType<Elem_T, order>::RefFE_T,
             typename FEType<Elem_T, order>::ReconstructionQR, Elem_T::dim>;
   RecFESpace_T feSpaceRec{*mesh};
-  reconstructGradient(sol.data, feSpace, feSpaceRec, flux.data);
+  reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
   t.stop();
 
   t.start("gradient");
   Var grad{"grad"};
-  computeGradient(feSpace, sol.data, grad.data);
+  computeGradient(grad.data, sol.data, feSpace);
   t.stop();
 
   t.start("error");

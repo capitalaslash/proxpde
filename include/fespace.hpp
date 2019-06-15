@@ -198,10 +198,10 @@ void integrateAnalyticFunction(scalarFun_T const & f,
 
 template <typename FESpaceData, typename FESpaceGrad>
 void reconstructGradient(
+    Vec & grad,
+    FESpaceGrad & feSpaceGrad,
     Vec const & data,
     FESpaceData & feSpaceData,
-    FESpaceGrad & feSpaceGrad,
-    Vec & grad,
     std::vector<uint> const & comp = allComp<FESpaceGrad>(),
     uint const offset = 0)
 {

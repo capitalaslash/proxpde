@@ -18,7 +18,7 @@ DofSet_T fillDofSet(
     std::vector<uint> const & comp)
 {
   using RefFE_T = typename FESpace::RefFE_T;
-  DofSet_T constrainedDOFset;
+  DofSet_T constrainedDofSet;
   for(auto const & f: feSpace.mesh.facetList)
   {
     if(f.marker == marker)
@@ -30,7 +30,7 @@ DofSet_T fillDofSet(
         for(auto const c: comp)
         {
           DOFid_T const dofId = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i], c);
-          constrainedDOFset.insert(dofId);
+          constrainedDofSet.insert(dofId);
         }
       }
       // std::cout << "current dof set: ";
@@ -41,7 +41,7 @@ DofSet_T fillDofSet(
       // std::cout << std::endl;
     }
   }
-  return constrainedDOFset;
+  return constrainedDofSet;
 }
 
 template <typename FESpace>
@@ -56,11 +56,11 @@ public:
         DofSet_T const dofSet,
         Fun<FESpace::dim,3> const v):
     curFE(feSpace.curFE),
-    constrainedDOFSet(std::move(dofSet)),
+    constrainedDofSet(std::move(dofSet)),
     dofSize(feSpace.dof.size),
     value(std::move(v))
   {
-    std::cout << "new bc on dofset with " << constrainedDOFSet.size() << " dofs" << std::endl;
+    std::cout << "new bc on dofset with " << constrainedDofSet.size() << " dofs" << std::endl;
   }
 
   // this can be used with scalar FESpaces only
@@ -75,12 +75,12 @@ public:
         Fun<FESpace_T::dim,3> const v,
         std::vector<uint> const & comp = allComp<FESpace>()):
     curFE(feSpace.curFE),
-    constrainedDOFSet(fillDofSet(feSpace, m, comp)),
+    constrainedDofSet(fillDofSet(feSpace, m, comp)),
     dofSize(feSpace.dof.size),
     value(std::move(v)),
     marker(m)
   {
-    std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
+    std::cout << "new bc on marker " << m << " with " << constrainedDofSet.size() << " dofs" << std::endl;
   }
 
   // this can be used with scalar FESpaces only
@@ -89,18 +89,18 @@ public:
         scalarFun_T const & v,
         std::vector<uint> const & comp = allComp<FESpace>()):
     curFE(feSpace.curFE),
-    constrainedDOFSet(fillDofSet(feSpace, m, comp)),
+    constrainedDofSet(fillDofSet(feSpace, m, comp)),
     dofSize(feSpace.dof.size),
     value([v](Vec3 const & p){return Vec1{v(p)};}),
     marker(m)
   {
     static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
-    std::cout << "new bc on marker " << m << " with " << constrainedDOFSet.size() << " dofs" << std::endl;
+    std::cout << "new bc on marker " << m << " with " << constrainedDofSet.size() << " dofs" << std::endl;
   }
 
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
-    return constrainedDOFSet.count(id + d * dofSize) > 0;
+    return constrainedDofSet.count(id + d * dofSize) > 0;
   }
 
   FVec<FESpace_T::dim> evaluate(DOFid_T const & i) const
@@ -125,7 +125,7 @@ public:
   friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T> const & bc)
   {
     out << "constrainedDOFset: ";
-    for(auto const i: bc.constrainedDOFSet)
+    for(auto const i: bc.constrainedDofSet)
     {
       out << i << " ";
     }
@@ -134,14 +134,12 @@ public:
   }
 
 protected:
+  DofSet_T constrainedDofSet;
 
 public:
   CurFE_T & curFE;
-  DofSet_T constrainedDOFSet;
   uint const dofSize;
   Fun<FESpace::dim,3> const value;
-
-public:
   marker_T marker = markerNotSet;
   double diag = 1.0;
 };

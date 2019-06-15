@@ -31,7 +31,7 @@ struct FESpace
     if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
     {
       // vector fespace such as RT0 require internal facets and facet ptrs
-      assert ((mesh.flags & (INTERNAL_FACETS | FACET_PTRS)).any());
+      assert ((mesh.flags & (INTERNAL_FACETS | FACET_PTRS)).count() == 2);
     }
   }
 
@@ -136,7 +136,6 @@ void interpolateAnalyticFunction(scalarFun_T const & f,
 {
   interpolateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
 }
-
 
 template <typename FESpace>
 void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,

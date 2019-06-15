@@ -548,7 +548,7 @@ void refTriangleMesh(Mesh<Triangle> & mesh)
               0},
   };
   mesh.buildConnectivity();
-  buildFacets(mesh, false);
+  buildFacets(mesh, true);
 }
 
 void hexagonMesh(Mesh<Triangle> & mesh)

@@ -148,10 +148,9 @@ template <typename FESpace>
 struct BCNat
 {
   using FESpace_T = FESpace;
-  using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using CurFE_T = CurFE<Elem_T, QR_T>;
-  using RefFE_T = typename CurFE_T::RefFE_T;
+  using RefFE_T = typename FESpace_T::RefFE_T::RefFacet_T;
+  using QR_T = SideQR_T<typename FESpace_T::QR_T>;
+  using CurFE_T = CurFE<RefFE_T, QR_T>;
 
   BCNat(marker_T const m,
         Fun<FESpace::dim,3> const f,

@@ -90,7 +90,7 @@ int test(YAML::Node const & config)
 
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-16)
+  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-14)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

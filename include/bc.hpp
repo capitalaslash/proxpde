@@ -55,8 +55,8 @@ public:
   BCEss(FESpace_T const & feSpace,
         DofSet_T const dofSet,
         Fun<FESpace::dim,3> const v):
-    curFE(feSpace.curFE),
     constrainedDofSet(std::move(dofSet)),
+    curFE(feSpace.curFE),
     dofSize(feSpace.dof.size),
     value(std::move(v))
   {
@@ -74,8 +74,8 @@ public:
         marker_T const m,
         Fun<FESpace_T::dim,3> const v,
         std::vector<uint> const & comp = allComp<FESpace>()):
-    curFE(feSpace.curFE),
     constrainedDofSet(fillDofSet(feSpace, m, comp)),
+    curFE(feSpace.curFE),
     dofSize(feSpace.dof.size),
     value(std::move(v)),
     marker(m)
@@ -88,8 +88,8 @@ public:
         marker_T m,
         scalarFun_T const & v,
         std::vector<uint> const & comp = allComp<FESpace>()):
-    curFE(feSpace.curFE),
     constrainedDofSet(fillDofSet(feSpace, m, comp)),
+    curFE(feSpace.curFE),
     dofSize(feSpace.dof.size),
     value([v](Vec3 const & p){return Vec1{v(p)};}),
     marker(m)

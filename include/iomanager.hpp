@@ -295,7 +295,9 @@ struct IOManager
     iter(it)
   {
     if (filepath.parent_path() != fs::path(""))
-      fs::create_directory(filepath.parent_path());
+    {
+      fs::create_directories(filepath.parent_path());
+    }
     printMeshData();
     if constexpr (Elem_T::dim > 1)
     {

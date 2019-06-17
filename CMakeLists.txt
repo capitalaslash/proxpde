@@ -27,11 +27,12 @@ write_compiler_detection_header(
   COMPILERS GNU Clang
   FEATURES
     cxx_variadic_templates
+    # cxx_if_constexpr
 )
 
 #add_compile_options(-Wall -Wpedantic)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
+# set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+# set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_STATIC_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
@@ -40,19 +41,23 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(Contrib)
 
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_FLAGS)
-message(STATUS "================================================================")
+message(STATUS "=== COMPILER OPTIONS ===========================================")
 message(STATUS "compiler id     : ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
 message(STATUS "c++ flags       : ${${BUILD_FLAGS}}")
-message(STATUS "================================================================")
 
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
 
-configure_file (
+message(STATUS "=== CONFIG OPTIONS =============================================")
+message(STATUS "DOF_INTERLEAVED: ${DOF_INTERLEAVED}")
+
+message(STATUS "================================================================")
+
+configure_file(
   "${PROJECT_SOURCE_DIR}/minifem.h.in"
   "${PROJECT_BINARY_DIR}/minifem.h"
-  )
+)
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_library(minifem SHARED
@@ -67,12 +72,14 @@ target_include_directories(minifem PUBLIC
   # $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
   ${HDF5_INCLUDE_DIRS}
-  )
+)
 
 # use generic c++17 dependency until specific cxx_if_constexpr is available
 target_compile_features(minifem PUBLIC cxx_std_17)
 
-target_compile_options(minifem PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic>)
+target_compile_options(minifem
+  PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic -Wextra>
+)
 
 target_link_libraries(minifem PUBLIC
   Eigen3::Eigen

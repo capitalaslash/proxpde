@@ -95,7 +95,6 @@ struct CurFE
   }
 
   GeoElem const * elem;
-  static int const size = RefFE::numFuns;
   array<Vec3,RefFE::numFuns> dofPts;
   array<JacMat_T,QR::numPts> jac;
   array<JacTMat_T,QR::numPts> jacPlus;

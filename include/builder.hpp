@@ -175,19 +175,19 @@ struct Builder
         for (uint d1=0; d1<FESpace::dim; ++d1)
         {
           DOFid_T const id_i = assembly.feSpace.dof.getId(e.id, i, d1);
-          b(assembly.offset_row + id_i) += Fe(i + d1*FESpace::CurFE_T::size);
+          b(assembly.offsetRow + id_i) += Fe(i + d1*FESpace::CurFE_T::numDOFs);
 
           for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace::dim; ++d2)
             {
               DOFid_T const id_j = assembly.feSpace.dof.getId(e.id, j, d2);
-              auto val = Ke(i + d1*FESpace::CurFE_T::size, j + d2*FESpace::CurFE_T::size);
+              auto val = Ke(i + d1*FESpace::CurFE_T::numDOFs, j + d2*FESpace::CurFE_T::numDOFs);
               if(std::fabs(val) > 1.e-16)
               {
                 _triplets.emplace_back(
-                      assembly.offset_row + id_i,
-                      assembly.offset_clm + id_j,
+                      assembly.offsetRow + id_i,
+                      assembly.offsetClm + id_j,
                       val);
               }
             }
@@ -206,9 +206,9 @@ struct Builder
     using CurFE2_T = typename FESpace2::CurFE_T;
     using LMat_T = typename Coupling<FESpace1, FESpace2>::LMat_T;
     using LVec_T = typename Coupling<FESpace1, FESpace2>::LVec_T;
-    using SquareMat1_T = FMat<FESpace1::dim*CurFE1_T::size,FESpace1::dim*CurFE1_T::size>;
-    using SquareMat2_T = FMat<FESpace2::dim*CurFE2_T::size,FESpace2::dim*CurFE2_T::size>;
-    using Vec2_T = FVec<FESpace2::dim*CurFE2_T::size>;
+    using SquareMat1_T = FMat<FESpace1::dim*CurFE1_T::numDOFs, FESpace1::dim*CurFE1_T::numDOFs>;
+    using SquareMat2_T = FMat<FESpace2::dim*CurFE2_T::numDOFs, FESpace2::dim*CurFE2_T::numDOFs>;
+    using Vec2_T = FVec<FESpace2::dim*CurFE2_T::numDOFs>;
 
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
@@ -283,19 +283,19 @@ struct Builder
         for (uint d1=0; d1<FESpace1::dim; ++d1)
         {
           DOFid_T const id_i = assembly.feSpace1.dof.getId(e.id, i, d1);
-          b(assembly.offset_row + id_i) += Fe(i + d1*FESpace1::CurFE_T::size);
+          b(assembly.offsetRow + id_i) += Fe(i + d1*FESpace1::CurFE_T::numDOFs);
 
           for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace2::dim; ++d2)
             {
               DOFid_T const id_j = assembly.feSpace2.dof.getId(e.id, j, d2);
-              auto val = Ke(i + d1*FESpace1::CurFE_T::size,j+d2*FESpace2::CurFE_T::size);
+              auto val = Ke(i + d1*FESpace1::CurFE_T::numDOFs, j+d2*FESpace2::CurFE_T::numDOFs);
               if(std::fabs(val) > 1.e-16)
               {
                 _triplets.emplace_back(
-                      assembly.offset_row + id_i,
-                      assembly.offset_clm + id_j,
+                      assembly.offsetRow + id_i,
+                      assembly.offsetClm + id_j,
                       val);
               }
             }
@@ -359,7 +359,7 @@ struct Builder
         for (uint d=0; d<FESpace::dim; ++d)
         {
           DOFid_T const id_i = assembly.feSpace.dof.getId(e.id, i, d);
-          b(assembly.offset_row + id_i) += Fe(i + d*FESpace::CurFE_T::size);
+          b(assembly.offsetRow + id_i) += Fe(i + d*FESpace::CurFE_T::numDOFs);
         }
       }
     }

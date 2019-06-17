@@ -45,56 +45,65 @@ struct CurFE
 
   void reinit(GeoElem const & e)
   {
-    elem = &e;
-    dofPts = RefFE::dofPts(*elem);
-
-    auto const mappingPts = RefFE::mappingPts(*elem);
-
-    for(uint q=0; q<QR::numPts; ++q)
+    // no need to recompute everything if the element is the same
+    // TODO: watch out for GeoElems from different classes
+    if (!elem || elem->id != e.id)
     {
-      jac[q] = JacMat_T::Zero();
-      for(uint n=0; n<RefFE::numGeoFuns; ++n)
-      {
-        jac[q] += mappingPts[n] * mapping[q].row(n);
-      }
+      elem = &e;
+      dofPts = RefFE::dofPts(*elem);
 
-      // J^+ = (J^T J)^-1 J^T
-      auto const jTj = jac[q].transpose() * jac[q];
-      auto const jTjI = jTj.inverse();
-      detJ[q] = std::sqrt(jTj.determinant());
-      jacPlus[q] = jTjI * jac[q].transpose();
+      auto const mappingPts = RefFE::mappingPts(*elem);
 
-      JxW[q] = detJ[q] * QR::weight[q];
-      // forward mapping on qpoint
-      qpoint[q] = elem->origin() + jac[q] * QR::node[q];
-
-      if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
+      for(uint q=0; q<QR::numPts; ++q)
       {
-        // TODO: phi values on qpoints are unaffected by the change of coords
-        // this update can potentially be done in the constructor
-        phi[q] = phiRef[q];
-        dphi[q] = dphiRef[q] * jacPlus[q];
-      }
-      else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
-      {
-        // Piola transformation
-        double detJInv = 1. / detJ[q];
-        phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
-        divphi[q] = detJInv * divphiRef[q];
-        // adjust signs based on normal going from lower id to greater id
-        for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
+        jac[q] = JacMat_T::Zero();
+        for(uint n=0; n<RefFE::numGeoFuns; ++n)
         {
-          if (elem->facetList[f]->facingElem[0].ptr->id != elem->id)
+          jac[q] += mappingPts[n] * mapping[q].row(n);
+        }
+
+        // J^+ = (J^T J)^-1 J^T
+        auto const jTj = jac[q].transpose() * jac[q];
+        auto const jTjI = jTj.inverse();
+        detJ[q] = std::sqrt(jTj.determinant());
+        jacPlus[q] = jTjI * jac[q].transpose();
+
+        JxW[q] = detJ[q] * QR::weight[q];
+        // forward mapping on qpoint
+        qpoint[q] = elem->origin() + jac[q] * QR::node[q];
+
+        if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
+        {
+          // TODO: phi values on qpoints are unaffected by the change of coords
+          // this update can potentially be done in the constructor
+          phi[q] = phiRef[q];
+          dphi[q] = dphiRef[q] * jacPlus[q];
+        }
+        else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+        {
+          // Piola transformation
+          double detJInv = 1. / detJ[q];
+          phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
+          divphi[q] = detJInv * divphiRef[q];
+          // adjust signs based on normal going from lower id to greater id
+          for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
           {
-            phiVect[q].row(f) *= -1.;
-            divphi[q](f) *= -1.;
+            if (elem->facetList[f]->facingElem[0].ptr->id != elem->id)
+            {
+              phiVect[q].row(f) *= -1.;
+              divphi[q](f) *= -1.;
+            }
           }
         }
       }
     }
+    // else
+    // {
+    //   std::cout << "warning: no reinit, element coincide" << std::endl;
+    // }
   }
 
-  GeoElem const * elem;
+  GeoElem const * elem = nullptr;
   array<Vec3,RefFE::numFuns> dofPts;
   array<JacMat_T,QR::numPts> jac;
   array<JacTMat_T,QR::numPts> jacPlus;

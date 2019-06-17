@@ -93,15 +93,17 @@ int main(int /*argc*/, char* /*argv*/[])
   IOManager ioP{feSpaceP, "output_stokes2dtri/p"};
   ioP.print({p, pe});
 
-  auto uNorm = (u.data - ue.data).norm();
-  auto vNorm = (v.data - ve.data).norm();
-  auto pNorm = (p.data - pe.data).norm();
+  auto uError = (u.data - ue.data).norm();
+  auto vError = (v.data - ve.data).norm();
+  auto pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << uNorm << std::endl;
-  std::cout << "v error norm: " << vNorm << std::endl;
-  std::cout << "p error norm: " << pNorm << std::endl;
+  std::cout << "u error norm: " << uError << std::endl;
+  std::cout << "v error norm: " << vError << std::endl;
+  std::cout << "p error norm: " << pError << std::endl;
 
-  if (uNorm + vNorm + pNorm > 2.e-13)
+  if (std::fabs(uError) > 1.e-13 ||
+      std::fabs(vError) > 1.e-13 ||
+      std::fabs(pError) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

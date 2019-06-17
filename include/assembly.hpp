@@ -4,8 +4,23 @@
 #include "blockmatrix.hpp"
 #include "fespace.hpp"
 #include "bc.hpp"
+#include "var.hpp"
 
-#include <type_traits>
+struct ScalarCoef
+{
+  explicit ScalarCoef(double const c):
+    coef{c}
+  {}
+
+  void reinit(GeoElem const & /*elem*/) {}
+
+  double evaluate(uint const /*q*/) const
+  {
+    return coef;
+  }
+
+  double coef;
+};
 
 struct AssemblyBase
 {
@@ -148,6 +163,50 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   // }
 
   double coeff;
+};
+
+template <typename FESpace, typename Coef>
+struct AssemblyStiffnessFE: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  AssemblyStiffnessFE(Coef & c,
+                      FESpace_T & fe,
+                      AssemblyBase::CompList const & cmp = allComp<FESpace>(),
+                      uint oRow = 0,
+                      uint oClm = 0):
+    Diagonal<FESpace_T>(fe, oRow, oClm, cmp),
+    coef(c)
+  {}
+
+  void reinit(GeoElem const & elem) const override
+  {
+    this->feSpace.curFE.reinit(elem);
+    coef.reinit(elem);
+  }
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const coefQPoint = coef.evaluate(q);
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>
+            (d*CurFE_T::numDOFs, d*CurFE_T::numDOFs) +=
+            coefQPoint * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.dphi[q] *
+            this->feSpace.curFE.dphi[q].transpose();
+      }
+    }
+  }
+
+private:
+  Coef & coef;
 };
 
 template <typename FESpace>
@@ -306,6 +365,56 @@ struct AssemblyMass: public Diagonal<FESpace>
   // }
 
   double coeff;
+};
+
+template <typename FESpace, typename Coef>
+struct AssemblyMassFE: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyMassFE(double const c,
+                          Coef & cFE,
+                          FESpace_T & fe,
+                          AssemblyBase::CompList const & cmp = allComp<FESpace>(),
+                          uint oRow = 0,
+                          uint oClm = 0):
+     Diagonal<FESpace>(fe, oRow, oClm, cmp),
+     coef(c),
+     coefFE(cFE)
+  {}
+
+  void reinit(GeoElem const & elem) const override
+  {
+    this->feSpace.curFE.reinit(elem);
+    coefFE.reinit(elem);
+  }
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const coefQPoint = coefFE.evaluate(q);
+      for (auto const c: this->comp)
+      {
+        Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>
+            (c*CurFE_T::numDOFs, c*CurFE_T::numDOFs) +=
+            coef * coefQPoint *
+            this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            this->feSpace.curFE.phi[q].transpose();
+      }
+    }
+  }
+
+  double const coef;
+
+private:
+  Coef & coefFE;
 };
 
 template <typename FESpace>

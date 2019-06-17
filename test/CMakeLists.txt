@@ -51,6 +51,7 @@ minifem_add_test(inverse_mapping)
 minifem_add_test(solver_test)
 minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)
+minifem_add_test(fevar)
 minifem_add_test(timeder)
 
 # 1d

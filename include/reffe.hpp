@@ -635,6 +635,54 @@ struct RefQuadRT0
   }
 };
 
+struct RefTetrahedronP0
+{
+  using GeoElem_T = Tetrahedron;
+  using RefFacet_T = RefTriangleP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 3;
+  static uint constexpr numFuns = 1U;
+  static uint constexpr numGeoFuns = 4U;
+  static array<uint,4> constexpr dofPlace{{1,0,0,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
+  static uint constexpr dofPerFacet = 0U;
+  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static Vec3 const refMidpoint;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<scalarThreedFun_T,numFuns> const phiFun;
+  static array<threedFun_T,numFuns> const dphiFun;
+  static array<threedFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 1./6;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+     array<Vec3,numFuns> dofPts {{
+       e.midpoint()
+     }};
+     return dofPts;
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+    array<Vec3,numGeoFuns> mappingPts {{
+        e.pointList[0]->coord,
+        e.pointList[1]->coord,
+        e.pointList[2]->coord,
+        e.pointList[3]->coord,
+    }};
+    return mappingPts;
+  }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[2] > 0. - 1.e-16 &&
+        p[0] + p[1] + p[2] < 1. + 1.e-16;
+  }
+};
+
 struct RefTetrahedronP1
 {
   using GeoElem_T = Tetrahedron;
@@ -985,6 +1033,8 @@ struct Family<RefQuadQ2>{ static constexpr FamilyType value = FamilyType::LAGRAN
 template <>
 struct Family<RefQuadRT0>{ static constexpr FamilyType value = FamilyType::RAVIART_THOMAS; };
 template <>
+struct Family<RefTetrahedronP0>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
 struct Family<RefTetrahedronP1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefTetrahedronP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
@@ -1032,6 +1082,8 @@ struct FEDim<RefQuadQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; }
 template <>
 struct FEDim<RefQuadRT0>{ static constexpr FEDimType value = FEDimType::VECTOR; };
 template <>
+struct FEDim<RefTetrahedronP0>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
 struct FEDim<RefTetrahedronP1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefTetrahedronP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
@@ -1055,5 +1107,7 @@ template <>
 struct MappingIsSeparate<RefQuadP0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefQuadRT0>{ static constexpr bool value = true; };
+template <>
+struct MappingIsSeparate<RefTetrahedronP0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefHexahedronP0>{ static constexpr bool value = true; };

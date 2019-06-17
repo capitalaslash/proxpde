@@ -150,6 +150,14 @@ struct XDMFTraits<RefTetrahedronP1>
 };
 
 template <>
+struct XDMFTraits<RefTetrahedronP0>
+{
+  static constexpr char const * shapeName = "Tetrahedron";
+  static constexpr XDMFCenter attributeType = XDMFCenter::CELL;
+  static constexpr bool needsMapping = false;
+};
+
+template <>
 struct XDMFTraits<RefTetrahedronP2>
 {
   static constexpr char const * shapeName = "Tetrahedron_10";

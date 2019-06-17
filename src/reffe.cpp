@@ -414,6 +414,23 @@ array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::dphiFun =
 array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::mapping = RefTetrahedronP2::dphiFun;
 
 // ----------------------------------------------------------------------------
+Vec3 const RefTetrahedronP0::refMidpoint = Vec3{0.25, 0.25, 0.25};
+
+array<scalarThreedFun_T,RefTetrahedronP0::numFuns> const RefTetrahedronP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.; }
+}};
+
+array<threedFun_T,RefTetrahedronP0::numFuns> const RefTetrahedronP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// linear mapping
+array<threedFun_T,RefTetrahedronP0::numGeoFuns> const RefTetrahedronP0::mapping = RefTetrahedronP1::mapping;
+
+// ----------------------------------------------------------------------------
+Vec3 const RefHexahedronQ1::refMidpoint = Vec3{0., 0., 0.};
 
 array<scalarThreedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::phiFun =
 {{

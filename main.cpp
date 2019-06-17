@@ -1,4 +1,4 @@
-
+#include "def.hpp"
 #include "assembly.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
@@ -7,24 +7,6 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-#include <iostream>
-
-scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
-
-// scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
-
-// scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
-// scalarFun_T exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
-
 enum class SolverType
 {
   CHOLESKY,
@@ -32,36 +14,55 @@ enum class SolverType
   SPARSELU
 };
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          GaussQR<Elem_T,9>>;
-auto const solver_type = SolverType::SPARSELU;
-
 int main()
 {
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            FEType<Elem_T, 1>::RefFE_T,
+                            GaussQR<Elem_T, 4>>;
+
+  auto const solverType = SolverType::SPARSELU;
+
+  auto const rhs = [] (Vec3 const & p)
+  {
+    return M_PI*std::sin(M_PI*p(0));
+  };
+
+  auto const exactSol = [] (Vec3 const & p)
+  {
+    return std::sin(M_PI*p(0))/M_PI + p(0);
+  };
+
+  // auto const rhs = [] (Vec3 const& p) { return p(0); };
+  // auto const exact_sol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
+
+  // auto const rhs = [] (Vec3 const&) { return 8.; };
+  // auto const exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
+  // auto const exact_sol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
+
   uint const numElemsX = 20;
   uint const numElemsY = 1;
 
-  Vec3 const origin(0., 0., 0.);
-  Vec3 const length(1., 0.02, 0.);
+  Vec3 const origin{0., 0., 0.};
+  Vec3 const length{1., 0.02, 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
+  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
   // std::cout << *mesh << std::endl;
 
   FESpace_T feSpace{*mesh};
 
-  // right bc not used here
   BCList bcs{feSpace};
   bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
 
-  AssemblyStiffness assembly(1.0, feSpace);
+  AssemblyStiffness stiffness{1.0, feSpace};
+  AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(assembly, bcs);
+  builder.buildProblem(stiffness, bcs);
+  builder.buildProblem(f, bcs);
   builder.closeMatrix();
 
   // std::cout << "builder.A:\n" << builder.A << std::endl;
@@ -81,22 +82,22 @@ int main()
   // fout.close();
 
   Var sol{"u"};
-  switch(solver_type)
+  switch (solverType)
   {
     case SolverType::CHOLESKY:
     {
-      Eigen::SimplicialCholesky<Mat> solver(builder.A);
+      Eigen::SimplicialCholesky<Mat<StorageType::ClmMajor>> solver(builder.A);
       sol.data = solver.solve(builder.b);
       break;
     }
     case SolverType::BICGSTAB:
     {
-      Eigen::SimplicialCholesky<Mat> solver(builder.A);
+      Eigen::BiCGSTAB<Mat<StorageType::RowMajor>> solver(builder.A);
       sol.data = solver.solve(builder.b);
     }
     case SolverType::SPARSELU:
     {
-      Eigen::SparseLU<Mat, Eigen::COLAMDOrdering<int>> solver;
+      Eigen::SparseLU<Mat<StorageType::ClmMajor>, Eigen::COLAMDOrdering<int>> solver;
       // Compute the ordering permutation vector from the structural pattern of A
       solver.analyzePattern(builder.A);
       // Compute the numerical factorization

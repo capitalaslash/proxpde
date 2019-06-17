@@ -11,14 +11,6 @@
 
 #include <iostream>
 
-template <typename Elem>
-void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
-{
-  facetMesh.pointList = mesh.pointList;
-  facetMesh.elementList = mesh.facetList;
-  facetMesh.buildConnectivity();
-}
-
 int main(int argc, char* argv[])
 {
   using Elem_T = Triangle;

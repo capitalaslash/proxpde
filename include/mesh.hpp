@@ -646,3 +646,11 @@ void readMesh(Mesh & mesh,
     readGMSH(mesh, config["mesh_file"].as<std::string>(), flags);
   }
 }
+
+template <typename Elem>
+void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
+{
+  facetMesh.pointList = mesh.pointList;
+  facetMesh.elementList = mesh.facetList;
+  facetMesh.buildConnectivity();
+}

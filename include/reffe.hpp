@@ -1095,6 +1095,18 @@ template <>
 struct FEDim<RefHexahedronQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 
 template <typename RefFE>
+static constexpr int feDimValue()
+{
+  if constexpr (FEDim<RefFE>::value == FEDimType::SCALAR)
+      return 1;
+  else if constexpr (FEDim<RefFE>::value == FEDimType::VECTOR)
+      return RefFE::dim;
+  else
+      abort();
+  return 0;
+}
+
+template <typename RefFE>
 struct MappingIsSeparate{ static constexpr bool value = false; };
 
 template <>

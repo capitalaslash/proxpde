@@ -47,7 +47,7 @@ struct FESpace
     // }
 
     FMat<RefFE_T::numFuns, dim> localValue;
-    FVec<RefFE_T::numFuns> phi;
+    FMat<RefFE_T::numFuns, feDimValue<RefFE_T>()> phi;
     for (uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
     {
       for (uint d=0; d<dim; ++d)
@@ -58,13 +58,31 @@ struct FESpace
       // TODO: jacPlus should be computed on the point
       // here we assume that jacPlus does not change on the element
       // (this is true only for linear mappings)
-      auto ptRef = this->curFE.jacPlus[QR_T::numPts/2] * pt;
-      // scalar functions do not change from reffe to curfe
-      phi[n] = RefFE_T::phiFun[n](ptRef);
+      auto const ptRef = this->curFE.jacPlus[QR_T::bestPt] * (pt - elem.origin());
+      // check that the approximated inverse mapping is close enough
+      assert((pt - (elem.origin() + this->curFE.jac[QR_T::bestPt] * ptRef)).norm() < 1.e-15);
+      if constexpr (Family<RefFE_T>::value == FamilyType::LAGRANGE)
+      {
+        // scalar functions do not change from reffe to curfe
+        phi[n] = RefFE_T::phiFun[n](ptRef);
+      }
+      else
+      {
+        abort();
+      }
       // instead of moving the point back to the ref element, we could
       // instead move the shape functions to the real element
     }
-    return localValue.transpose() * phi;
+    FVec<dim> value;
+    if constexpr (Family<RefFE_T>::value == FamilyType::LAGRANGE)
+    {
+      value = localValue.transpose() * phi;
+    }
+    else
+    {
+      abort();
+    }
+    return value;
   }
 
   Vec3 findCoords(DOFid_T const id)

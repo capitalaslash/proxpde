@@ -23,9 +23,7 @@ array<onedFun_T,RefPointP1::numFuns> const RefPointP1::dphiFun =
 array<onedFun_T,RefPointP1::numGeoFuns> const RefPointP1::mapping = RefPointP1::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefLineP0::numFuns;
-array<uint,4> constexpr RefLineP0::dofPlace;
-//array<array<uint,1>,2> constexpr RefLineP0::dofOnFacet;
+Vec1 const RefLineP0::refMidpoint = Vec1{0.};
 
 array<RefLineP0::Vec_T,RefLineP0::numFuns> const RefLineP0::points =
 {{
@@ -50,9 +48,7 @@ array<onedFun_T,RefLineP0::numGeoFuns> const RefLineP0::mapping =
 }};
 
 // ----------------------------------------------------------------------------
-uint constexpr RefLineP1::numFuns;
-array<uint,4> constexpr RefLineP1::dofPlace;
-array<array<uint,1>,2> constexpr RefLineP1::dofOnFacet;
+Vec1 const RefLineP1::refMidpoint = Vec1{0.};
 
 array<RefLineP1::Vec_T,RefLineP1::numFuns> const RefLineP1::points =
 {{
@@ -82,9 +78,7 @@ array<onedFun_T,RefLineP1::numFuns> const RefLineP1::mapping = RefLineP1::dphiFu
 //                        -0.5L,  0.5L ).finished();
 
 // ----------------------------------------------------------------------------
-uint constexpr RefLineP2::numFuns;
-array<uint,4> constexpr RefLineP2::dofPlace;
-array<array<uint,1>,2> constexpr RefLineP2::dofOnFacet;
+Vec1 const RefLineP2::refMidpoint = Vec1{0.};
 
 // static Point line_p0{-1., 0., 0.};
 // static Point line_p1{ 1., 0., 0.};
@@ -123,32 +117,7 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::mapping = RefLineP2::dphiFu
 //                        0., 0., 0. ).finished();
 
 // ----------------------------------------------------------------------------
-uint constexpr RefTriangleP0::numFuns;
-array<uint,4> constexpr RefTriangleP0::dofPlace;
-array<array<uint,0>,0> constexpr RefTriangleP0::dofOnFacet;
-
-array<scalarTwodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::phiFun =
-{{
-  [] (Vec_T const &) { return 1.; }
-}};
-
-array<twodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::dphiFun =
-{{
-  [] (Vec_T const &) { return Vec_T::Constant(0.); }
-}};
-
-// linear mapping
-array<twodFun_T,RefTriangleP0::numGeoFuns> const RefTriangleP0::mapping =
-{{
-   [] (Vec_T const & ) { return Vec_T(-1.L, -1.L); },
-   [] (Vec_T const & ) { return Vec_T( 1.L,  0.L); },
-   [] (Vec_T const & ) { return Vec_T( 0.L,  1.L); }
-}};
-
-// ----------------------------------------------------------------------------
-uint constexpr RefTriangleP1::numFuns;
-array<uint,4> constexpr RefTriangleP1::dofPlace;
-array<array<uint,2>,3> constexpr RefTriangleP1::dofOnFacet;
+Vec2 const RefTriangleP1::refMidpoint = Vec2{1./3, 1./3};
 
 array<scalarTwodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::phiFun =
 {{
@@ -167,9 +136,7 @@ array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::dphiFun =
 array<twodFun_T,RefTriangleP1::numFuns> const RefTriangleP1::mapping = RefTriangleP1::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefTriangleP2::numFuns;
-array<uint,4> constexpr RefTriangleP2::dofPlace;
-array<array<uint,3>,3> constexpr RefTriangleP2::dofOnFacet;
+Vec2 const RefTriangleP2::refMidpoint = Vec2{1./3, 1./3};
 
 array<scalarTwodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::phiFun =
 {{
@@ -200,9 +167,23 @@ array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::dphiFun =
 array<twodFun_T,RefTriangleP2::numFuns> const RefTriangleP2::mapping = RefTriangleP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefTriangleRT0::numFuns;
-array<uint,4> constexpr RefTriangleRT0::dofPlace;
-array<array<uint,1>,3> constexpr RefTriangleRT0::dofOnFacet;
+Vec2 const RefTriangleP0::refMidpoint = Vec2{1./3, 1./3};
+
+array<scalarTwodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::phiFun =
+{{
+  [] (Vec_T const &) { return 1.; }
+}};
+
+array<twodFun_T,RefTriangleP0::numFuns> const RefTriangleP0::dphiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.); }
+}};
+
+// linear mapping
+array<twodFun_T,RefTriangleP0::numGeoFuns> const RefTriangleP0::mapping = RefTriangleP1::mapping;
+
+// ----------------------------------------------------------------------------
+Vec2 const RefTriangleRT0::refMidpoint = Vec2{1./3, 1./3};
 
 array<twodFun_T,RefTriangleRT0::numFuns> const RefTriangleRT0::phiVectFun =
 {{
@@ -232,9 +213,7 @@ static array<feFun_T, 2> const dfunQ1 = {
   [](const double ) { return +0.5; },
 };
 
-uint constexpr RefQuadQ1::numFuns;
-array<uint,4> constexpr RefQuadQ1::dofPlace;
-array<array<uint,2>,4> constexpr RefQuadQ1::dofOnFacet;
+Vec2 const RefQuadQ1::refMidpoint = Vec2{0., 0.};
 
 array<scalarTwodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::phiFun =
 {{
@@ -255,9 +234,7 @@ array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::dphiFun =
 array<twodFun_T,RefQuadQ1::numFuns> const RefQuadQ1::mapping = RefQuadQ1::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefQuadP2::numFuns;
-array<uint,4> constexpr RefQuadP2::dofPlace;
-array<array<uint,3>,4> constexpr RefQuadP2::dofOnFacet;
+Vec2 const RefQuadP2::refMidpoint = Vec2{0., 0.};
 
 array<scalarTwodFun_T,RefQuadP2::numFuns> const RefQuadP2::phiFun =
 {{
@@ -306,9 +283,7 @@ static array<feFun_T, 3> const dfunQ2 = {
   [](const double x) { return -2. * x; },
 };
 
-uint constexpr RefQuadQ2::numFuns;
-array<uint,4> constexpr RefQuadQ2::dofPlace;
-array<array<uint,3>,4> constexpr RefQuadQ2::dofOnFacet;
+Vec2 const RefQuadQ2::refMidpoint = Vec2{0., 0.};
 
 array<scalarTwodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::phiFun =
 {{
@@ -339,9 +314,7 @@ array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::dphiFun =
 array<twodFun_T,RefQuadQ2::numFuns> const RefQuadQ2::mapping = RefQuadQ2::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefQuadP0::numFuns;
-array<uint,4> constexpr RefQuadP0::dofPlace;
-array<array<uint,0>,0> constexpr RefQuadP0::dofOnFacet;
+Vec2 const RefQuadP0::refMidpoint = Vec2{0., 0.};
 
 array<scalarTwodFun_T,RefQuadP0::numFuns> const RefQuadP0::phiFun =
 {{
@@ -357,9 +330,7 @@ array<twodFun_T,RefQuadP0::numFuns> const RefQuadP0::dphiFun =
 array<twodFun_T,RefQuadP0::numGeoFuns> const RefQuadP0::mapping = RefQuadQ1::mapping;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefQuadRT0::numFuns;
-array<uint,4> constexpr RefQuadRT0::dofPlace;
-array<array<uint,1>,4> constexpr RefQuadRT0::dofOnFacet;
+Vec2 const RefQuadRT0::refMidpoint = Vec2{0., 0.};
 
 array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::phiVectFun =
 {{
@@ -381,9 +352,7 @@ array<scalarTwodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::divphiFun =
 array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::mapping = RefQuadQ1::mapping;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefTetrahedronP1::numFuns;
-array<uint,4> constexpr RefTetrahedronP1::dofPlace;
-array<array<uint,3>,4> constexpr RefTetrahedronP1::dofOnFacet;
+Vec3 const RefTetrahedronP1::refMidpoint = Vec3{0.25, 0.25, 0.25};
 
 static double constexpr z0(double const x, double const y, double const z) { return 1. - x - y - z; }
 static array<double,3> constexpr dz0() { return {-1., -1., -1.}; }
@@ -412,9 +381,7 @@ array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::dphiFun =
 array<threedFun_T,RefTetrahedronP1::numFuns> const RefTetrahedronP1::mapping = RefTetrahedronP1::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefTetrahedronP2::numFuns;
-array<uint,4> constexpr RefTetrahedronP2::dofPlace;
-array<array<uint,6>,4> constexpr RefTetrahedronP2::dofOnFacet;
+Vec3 const RefTetrahedronP2::refMidpoint = Vec3{0.25, 0.25, 0.25};
 
 array<scalarThreedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::phiFun =
 {{
@@ -447,9 +414,6 @@ array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::dphiFun =
 array<threedFun_T,RefTetrahedronP2::numFuns> const RefTetrahedronP2::mapping = RefTetrahedronP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefHexahedronQ1::numFuns;
-array<uint,4> constexpr RefHexahedronQ1::dofPlace;
-array<array<uint,4>,6> constexpr RefHexahedronQ1::dofOnFacet;
 
 array<scalarThreedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::phiFun =
 {{
@@ -494,9 +458,7 @@ array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::dphiFun =
 array<threedFun_T,RefHexahedronQ1::numFuns> const RefHexahedronQ1::mapping = RefHexahedronQ1::dphiFun;
 
 // ----------------------------------------------------------------------------
-uint constexpr RefHexahedronQ2::numFuns;
-array<uint,4> constexpr RefHexahedronQ2::dofPlace;
-array<array<uint,9>,6> constexpr RefHexahedronQ2::dofOnFacet;
+Vec3 const RefHexahedronQ2::refMidpoint = Vec3{0., 0., 0.};
 
 array<scalarThreedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::phiFun =
 {{
@@ -629,6 +591,8 @@ array<threedFun_T,RefHexahedronQ2::numFuns> const RefHexahedronQ2::dphiFun =
 array<threedFun_T,RefHexahedronQ2::numGeoFuns> const RefHexahedronQ2::mapping = RefHexahedronQ2::dphiFun;
 
 // ----------------------------------------------------------------------------
+Vec3 const RefHexahedronP0::refMidpoint = Vec3{0., 0., 0.};
+
 array<scalarThreedFun_T,RefHexahedronP0::numFuns> const RefHexahedronP0::phiFun =
 {{
   [] (Vec_T const &) { return 1.; }

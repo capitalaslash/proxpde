@@ -103,6 +103,73 @@ struct CurFE
     // }
   }
 
+  Vec3 approxMap(FVec<RefFE::dim> const & pt)
+  {
+    // jac is constant on the element only for linear mappings (not for bi-linear)
+    return elem->origin() + jac[QR_T::bestPt] * pt;
+  }
+
+  Vec3 map(FVec<RefFE::dim> const & pt)
+  {
+    JacMat_T jac = JacMat_T::Zero();
+    auto const mappingPts = RefFE::mappingPts(*elem);
+    for(uint n=0; n<RefFE::numGeoFuns; ++n)
+    {
+      jac += mappingPts[n] * (RefFE::mapping[n](pt)).transpose();
+    }
+    return elem->origin() + jac * pt;
+  }
+
+  FVec<RefFE::dim> approxInverseMap(Vec3 const & pt)
+  {
+    // TODO: jacPlus should be computed on the point
+    // here we assume that jacPlus does not change on the element
+    // (this is true only for linear mappings)
+    FVec<RefFE::dim> const ptHat = jacPlus[QR_T::bestPt] * (pt - elem->origin());
+    // check that the approximate inverse mapping is close enough to the
+    // requested point
+    assert((pt - approxMap(ptHat)).norm() < 1.e-14);
+    return ptHat;
+  }
+
+  FVec<RefFE::dim> inverseMap(Vec3 const & pt)
+  {
+    FVec<RefFE::dim> approxPt = approxInverseMap(pt);
+    auto const mappingPts = RefFE::mappingPts(*elem);
+    auto const origin = elem->origin();
+    int iter = 0;
+    while (iter < 200)
+    {
+      JacMat_T jac = JacMat_T::Zero();
+      for(uint n=0; n<RefFE::numGeoFuns; ++n)
+      {
+        jac += mappingPts[n] * (RefFE::mapping[n](approxPt)).transpose();
+      }
+      auto const predictedPt = origin + jac * approxPt;
+      // filelog << iter << " " << std::setprecision(16) << approxPt.transpose() << " " << (pt - predictedPt).norm() << std::endl;
+      // TODO: this error is computed on the real elem, maybe move it to reference elem using detJac?
+      if (!RefFE_T::inside(approxPt) || (pt - predictedPt).norm() < 3.e-15)
+        break;
+      auto const jacPlus = (jac.transpose() * jac).inverse() * jac.transpose();
+      // fixed-point iteration
+      approxPt = jacPlus * (pt - origin);
+      iter++;
+    }
+    // if we reach the maximum number of iterations for a point inside the search failed
+    assert(iter != 200 || !RefFE_T::inside(approxPt));
+    return approxPt;
+  }
+
+  bool approxInside(Vec3 const & pt)
+  {
+    return RefFE_T::inside(approxInverseMap(pt));
+  }
+
+  bool inside(Vec3 const & pt)
+  {
+    return RefFE_T::inside(inverseMap(pt));
+  }
+
   GeoElem const * elem = nullptr;
   array<Vec3,RefFE::numFuns> dofPts;
   array<JacMat_T,QR::numPts> jac;

@@ -48,6 +48,11 @@ struct RefPointP1
     }};
     return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] == 0.;
+  }
 };
 
 struct RefLineP0
@@ -62,6 +67,7 @@ struct RefLineP0
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
 //  using LocalVec_T = FVec<2>;
 //  using LocalMat_T = FMat<2,2>;
@@ -90,6 +96,11 @@ struct RefLineP0
     }};
     return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16;
+  }
 };
 
 struct RefLineP1
@@ -105,6 +116,7 @@ struct RefLineP1
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
     {{0}}, {{1}}
   }};
+  static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<2>;
   using LocalMat_T = FMat<2,2>;
@@ -130,6 +142,11 @@ struct RefLineP1
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16;
+  }
 };
 
 struct RefLineP2
@@ -145,6 +162,7 @@ struct RefLineP2
   static array<array<uint,1>,2> constexpr dofOnFacet = {{
     {{0}}, {{1}}
   }};
+  static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -171,6 +189,11 @@ struct RefLineP2
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16;
+  }
 };
 
 struct RefTriangleP0
@@ -185,6 +208,7 @@ struct RefTriangleP0
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -211,6 +235,11 @@ struct RefTriangleP0
     }};
     return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefTriangleP1
@@ -226,6 +255,7 @@ struct RefTriangleP1
   static array<array<uint,2>,3> constexpr dofOnFacet = {{
     {{0,1}}, {{1,2}}, {{2,0}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -249,6 +279,11 @@ struct RefTriangleP1
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefTriangleP2
@@ -266,6 +301,7 @@ struct RefTriangleP2
   static array<array<uint,3>,3> constexpr dofOnFacet = {{
     {{0,1,3}}, {{1,2,4}}, {{2,0,5}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -292,6 +328,11 @@ struct RefTriangleP2
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefTriangleRT0
@@ -308,6 +349,7 @@ struct RefTriangleRT0
   static array<array<uint,1>,3> constexpr dofOnFacet = {{
     {{0}}, {{1}}, {{2}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -335,6 +377,11 @@ struct RefTriangleRT0
      }};
      return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefQuadP0
@@ -349,6 +396,7 @@ struct RefQuadP0
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -376,6 +424,13 @@ struct RefQuadP0
     }};
     return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefQuadQ1
@@ -391,6 +446,7 @@ struct RefQuadQ1
   static array<array<uint,2>,4> constexpr dofOnFacet = {{
     {{0,1}}, {{1,2}}, {{2,3}}, {{3,0}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -415,6 +471,13 @@ struct RefQuadQ1
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefQuadP2
@@ -430,6 +493,7 @@ struct RefQuadP2
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
     {{0,1,4}}, {{1,2,5}}, {{2,3,6}}, {{3,0,7}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -458,6 +522,13 @@ struct RefQuadP2
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefQuadQ2
@@ -473,6 +544,7 @@ struct RefQuadQ2
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
     {{0,1,4}}, {{1,2,5}}, {{2,3,6}}, {{3,0,7}}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -502,6 +574,13 @@ struct RefQuadQ2
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefQuadRT0
@@ -518,6 +597,7 @@ struct RefQuadRT0
   static array<array<uint,1>,4> constexpr dofOnFacet = {{
     {0}, {1}, {2}, {3}
   }};
+  static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -546,6 +626,13 @@ struct RefQuadRT0
          e.pointList[3]->coord,
      };
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16;
+  }
 };
 
 struct RefTetrahedronP1
@@ -561,6 +648,7 @@ struct RefTetrahedronP1
   static array<array<uint,3>,4> constexpr dofOnFacet = {{
     {{0,2,1}}, {{0,1,3}}, {{0,3,2}}, {{1,2,3}}
   }};
+  static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -585,6 +673,12 @@ struct RefTetrahedronP1
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[2] > 0. - 1.e-16 &&
+        p[0] + p[1] + p[2] < 1. + 1.e-16;
+  }
 };
 
 struct RefTetrahedronP2
@@ -600,6 +694,7 @@ struct RefTetrahedronP2
   static array<array<uint,6>,4> constexpr dofOnFacet = {{
     {{0,2,1,6,5,4}}, {{0,1,3,4,8,7}}, {{0,3,2,7,9,6}}, {{1,2,3,5,9,8}}
   }};
+  static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -631,6 +726,12 @@ struct RefTetrahedronP2
   {
     return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[2] > 0. - 1.e-16 &&
+        p[0] + p[1] + p[2] < 1. + 1.e-16;
+  }
 };
 
 struct RefHexahedronP0
@@ -645,6 +746,7 @@ struct RefHexahedronP0
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
   static uint constexpr dofPerFacet = 0U;
   static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -676,6 +778,14 @@ struct RefHexahedronP0
     }};
     return mappingPts;
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16 &&
+        p[2] > -1. - 1.e-16 && p[2] < 1. + 1.e-16;
+  }
 };
 
 struct RefHexahedronQ1
@@ -692,6 +802,7 @@ struct RefHexahedronQ1
   {{
      {{0,3,2,1}}, {{0,1,5,4}}, {{1,2,6,5}}, {{2,3,7,6}}, {{3,0,4,7}}, {{4,5,6,7}}
   }};
+  static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -721,6 +832,14 @@ struct RefHexahedronQ1
   {
      return dofPts(e);
   }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16 &&
+        p[2] > -1. - 1.e-16 && p[2] < 1. + 1.e-16;
+  }
 };
 
 struct RefHexahedronQ2
@@ -742,6 +861,7 @@ struct RefHexahedronQ2
      {{3,0,4,7,11,12,19,15,24}},
      {{4,5,6,7,16,17,18,19,25}}
   }};
+  static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
   using LocalMat_T = FMat<numFuns,numFuns>;
@@ -789,6 +909,14 @@ struct RefHexahedronQ2
   static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
   {
      return dofPts(e);
+  }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16 &&
+        p[2] > -1. - 1.e-16 && p[2] < 1. + 1.e-16;
   }
 };
 

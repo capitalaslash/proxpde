@@ -14,6 +14,7 @@ struct GaussQR
   // using Vec_T = Eigen::Matrix<long double, GeoElem::dim, 1>;
   // using Weights_T = Eigen::Matrix<long double, N, 1>;
   static int constexpr numPts = N;
+  static int const bestPt;
 
   static Weights_T const weight;
   static array<Vec_T,N> const node;
@@ -22,6 +23,7 @@ struct GaussQR
 // ----------------------------------------------------------------------------
 template<> GaussQR<NullElem, 0>::Weights_T const GaussQR<NullElem, 0>::weight = {};
 template<> array<GaussQR<NullElem, 0>::Vec_T, 0> const GaussQR<NullElem, 0>::node = {};
+template<> int const GaussQR<NullElem, 0>::bestPt = 0;
 
 // ----------------------------------------------------------------------------
 template<> GaussQR<Line, 1>::Weights_T const GaussQR<Line, 1>::weight =
@@ -30,6 +32,7 @@ template<> array<GaussQR<Line, 1>::Vec_T,1> const GaussQR<Line, 1>::node =
 {{
    GaussQR<Line, 1>::Vec_T::Constant(0.0L)
 }};
+template<> int const GaussQR<Line, 1>::bestPt = 0;
 
 static GaussQR<NullElem, 0>::Real_T constexpr sqrt13rd = 0.5773502691896258L;
 template<> GaussQR<Line, 2>::Weights_T const GaussQR<Line, 2>::weight = {1.L, 1.L};
@@ -38,6 +41,7 @@ template<> array<GaussQR<Line, 2>::Vec_T, 2> const GaussQR<Line, 2>::node =
    GaussQR<Line,2>::Vec_T::Constant(-sqrt13rd),
    GaussQR<Line,2>::Vec_T::Constant( sqrt13rd),
 }};
+template<> int const GaussQR<Line, 2>::bestPt = 0;
 
 static GaussQR<NullElem, 0>::Real_T constexpr sqrt35th = 0.774596669241483L;
 template<> GaussQR<Line, 3>::Weights_T const GaussQR<Line, 3>::weight = {5.L/9, 8.L/9, 5.L/9};
@@ -47,6 +51,7 @@ template<> array<GaussQR<Line,3>::Vec_T, 3> const GaussQR<Line, 3>::node =
    GaussQR<Line, 3>::Vec_T::Constant( 0.0L),
    GaussQR<Line, 3>::Vec_T::Constant( sqrt35th)
 }};
+template<> int const GaussQR<Line, 3>::bestPt = 1;
 
 static GaussQR<NullElem, 0>::Real_T constexpr sqrt37thm = 0.3399810435848563L; // sqrt((3.L - 2.L * sqrt(1.2L)) / 7);
 static GaussQR<NullElem, 0>::Real_T constexpr sqrt37thp = 0.8611363115940526L; // sqrt((3.L + 2.L * sqrt(1.2L)) / 7);
@@ -60,6 +65,7 @@ template<> array<GaussQR<Line, 4>::Vec_T, 4> const GaussQR<Line, 4>::node =
    GaussQR<Line, 4>::Vec_T::Constant( sqrt37thm),
    GaussQR<Line, 4>::Vec_T::Constant( sqrt37thp),
 }};
+template<> int const GaussQR<Line, 4>::bestPt = 1;
 
 // ----------------------------------------------------------------------------
 template<> GaussQR<Triangle, 1>::Weights_T const GaussQR<Triangle, 1>::weight =
@@ -68,6 +74,7 @@ template<> array<GaussQR<Triangle, 1>::Vec_T,1> const GaussQR<Triangle, 1>::node
 {{
    GaussQR<Triangle, 1>::Vec_T(1.L/3, 1.L/3)
 }};
+template<> int const GaussQR<Triangle, 1>::bestPt = 0;
 
 template<> GaussQR<Triangle, 3>::Weights_T const GaussQR<Triangle, 3>::weight =
     GaussQR<Triangle, 3>::Weights_T::Constant(1.L/6);
@@ -85,6 +92,7 @@ template<> array<GaussQR<Triangle, 3>::Vec_T, 3> const GaussQR<Triangle,3>::node
 //     GaussQR<Triangle, 3>::Vec_T(0.5L, 0.5L),
 //     GaussQR<Triangle, 3>::Vec_T(0.0L, 0.5L)
 // }};
+template<> int const GaussQR<Triangle, 3>::bestPt = 0;
 
 template<> GaussQR<Triangle, 4>::Weights_T const GaussQR<Triangle, 4>::weight =
     (GaussQR<Triangle, 4>::Weights_T() <<
@@ -96,6 +104,7 @@ template<> array<GaussQR<Triangle, 4>::Vec_T, 4> const GaussQR<Triangle, 4>::nod
    GaussQR<Triangle, 4>::Vec_T(0.2L, 0.6L),
    GaussQR<Triangle, 4>::Vec_T(1.L/3, 1.L/3)
  }};
+template<> int const GaussQR<Triangle, 4>::bestPt = 3;
 
 template<> GaussQR<Triangle, 6>::Weights_T const GaussQR<Triangle, 6>::weight = .5*
     (GaussQR<Triangle, 6>::Weights_T() <<
@@ -110,6 +119,7 @@ template<> array<GaussQR<Triangle, 6>::Vec_T, 6> const GaussQR<Triangle, 6>::nod
    GaussQR<Triangle, 6>::Vec_T(0.108103018168070L, 0.445948490915965L),
    GaussQR<Triangle, 6>::Vec_T(0.445948490915965L, 0.108103018168070L),
  }};
+template<> int const GaussQR<Triangle, 6>::bestPt = 3;
 
 template<> GaussQR<Triangle, 7>::Weights_T const GaussQR<Triangle, 7>::weight = .5*
     (GaussQR<Triangle, 7>::Weights_T() <<
@@ -125,7 +135,8 @@ template<> array<GaussQR<Triangle, 7>::Vec_T, 7> const GaussQR<Triangle, 7>::nod
    GaussQR<Triangle,7>::Vec_T(0.10128650732346L, 0.10128650732346L),
    GaussQR<Triangle,7>::Vec_T(0.10128650732346L, 0.79742698535309L),
    GaussQR<Triangle,7>::Vec_T(0.79742698535309L, 0.10128650732346L),
- }};
+}};
+template<> int const GaussQR<Triangle, 7>::bestPt = 0;
 
 // ----------------------------------------------------------------------------
 template<> GaussQR<Quad, 1>::Weights_T const GaussQR<Quad, 1>::weight =
@@ -134,6 +145,7 @@ template<> array<GaussQR<Quad, 1>::Vec_T, 1> const GaussQR<Quad, 1>::node =
 {{
    GaussQR<Quad, 1>::Vec_T(0.L, 0.L)
 }};
+template<> int const GaussQR<Quad, 1>::bestPt = 0;
 
 template<> GaussQR<Quad, 4>::Weights_T const GaussQR<Quad, 4>::weight =
     GaussQR<Quad, 4>::Weights_T::Constant(1.L);
@@ -144,6 +156,7 @@ template<> array<GaussQR<Quad, 4>::Vec_T, 4> const GaussQR<Quad, 4>::node =
    GaussQR<Quad, 4>::Vec_T(-sqrt13rd,  sqrt13rd),
    GaussQR<Quad, 4>::Vec_T( sqrt13rd,  sqrt13rd),
 }};
+template<> int const GaussQR<Quad, 4>::bestPt = 0;
 
 template<> GaussQR<Quad, 9>::Weights_T const GaussQR<Quad, 9>::weight =
     (GaussQR<Quad, 9>::Weights_T() <<
@@ -162,6 +175,7 @@ template<> array<GaussQR<Quad, 9>::Vec_T, 9> const GaussQR<Quad, 9>::node =
    GaussQR<Quad, 9>::Vec_T(       0.,  sqrt35th),
    GaussQR<Quad, 9>::Vec_T( sqrt35th,  sqrt35th)
 }};
+template<> int const GaussQR<Quad, 9>::bestPt = 4;
 
 // ----------------------------------------------------------------------------
 template<> GaussQR<Tetrahedron, 1>::Weights_T const GaussQR<Tetrahedron,1>::weight =
@@ -170,6 +184,7 @@ template<> array<GaussQR<Tetrahedron, 1>::Vec_T, 1> const GaussQR<Tetrahedron, 1
 {{
   GaussQR<Tetrahedron, 1>::Vec_T(.25L, .25L, .25L)
 }};
+template<> int const GaussQR<Tetrahedron, 1>::bestPt = 0;
 
 template<> GaussQR<Tetrahedron, 4>::Weights_T const GaussQR<Tetrahedron, 4>::weight =
     GaussQR<Tetrahedron, 4>::Weights_T::Constant(.25L/6);
@@ -180,6 +195,7 @@ template<> array<GaussQR<Tetrahedron, 4>::Vec_T, 4> const GaussQR<Tetrahedron, 4
    GaussQR<Tetrahedron, 4>::Vec_T(0.1381966011250105L, 0.5854101966249685L, 0.1381966011250105L),
    GaussQR<Tetrahedron, 4>::Vec_T(0.1381966011250105L, 0.1381966011250105L, 0.5854101966249685L)
 }};
+template<> int const GaussQR<Tetrahedron, 4>::bestPt = 0;
 
 template<> GaussQR<Tetrahedron, 11>::Weights_T const GaussQR<Tetrahedron, 11>::weight =
     (GaussQR<Tetrahedron, 11>::Weights_T() <<
@@ -201,6 +217,7 @@ template<> array<GaussQR<Tetrahedron, 11>::Vec_T, 11> const GaussQR<Tetrahedron,
    GaussQR<Tetrahedron, 11>::Vec_T(0.100596423833201L, 0.399403576166799L, 0.100596423833201L),
    GaussQR<Tetrahedron, 11>::Vec_T(0.100596423833201L, 0.100596423833201L, 0.399403576166799L),
 }};
+template<> int const GaussQR<Tetrahedron, 11>::bestPt = 0;
 
 // ----------------------------------------------------------------------------
 template<> GaussQR<Hexahedron, 1>::Weights_T const GaussQR<Hexahedron, 1>::weight =
@@ -209,6 +226,7 @@ template<> array<GaussQR<Hexahedron, 1>::Vec_T, 1> const GaussQR<Hexahedron, 1>:
 {{
    GaussQR<Hexahedron, 1>::Vec_T(0.L, 0.L, 0.L),
 }};
+template<> int const GaussQR<Hexahedron, 1>::bestPt = 0;
 
 template<> GaussQR<Hexahedron, 8>::Weights_T const GaussQR<Hexahedron, 8>::weight =
     GaussQR<Hexahedron, 8>::Weights_T::Constant(1.L);
@@ -223,6 +241,7 @@ template<> array<GaussQR<Hexahedron, 8>::Vec_T, 8> const GaussQR<Hexahedron, 8>:
    GaussQR<Hexahedron, 8>::Vec_T(-sqrt13rd,  sqrt13rd,  sqrt13rd),
    GaussQR<Hexahedron, 8>::Vec_T( sqrt13rd,  sqrt13rd,  sqrt13rd),
 }};
+template<> int const GaussQR<Hexahedron, 8>::bestPt = 0;
 
 template<> GaussQR<Hexahedron, 27>::Weights_T const GaussQR<Hexahedron, 27>::weight =
     (GaussQR<Hexahedron, 27>::Weights_T() <<
@@ -262,6 +281,7 @@ template<> array<GaussQR<Hexahedron, 27>::Vec_T, 27> const GaussQR<Hexahedron, 2
    GaussQR<Hexahedron, 27>::Vec_T(      0.L,  sqrt35th,  sqrt35th),
    GaussQR<Hexahedron, 27>::Vec_T( sqrt35th,  sqrt35th,  sqrt35th),
 }};
+template<> int const GaussQR<Hexahedron, 27>::bestPt = 13;
 
 // ----------------------------------------------------------------------------
 template <typename GeoElem>

@@ -30,13 +30,13 @@ static const std::unordered_map<XDMFNumberType, char const *> XDMFNumberTypeToSt
 enum class XDMFFormat : int8_t
 {
   HDF,
-  // INLINE
+  INLINE
 };
 
 static const std::unordered_map<XDMFFormat, char const *> XDMFFormatToString =
 {
   {XDMFFormat::HDF, "HDF"},
-  // {XDMFFormat::INLINE, "XML"},
+  {XDMFFormat::INLINE, "XML"},
 };
 
 enum class XDMFCenter : int8_t

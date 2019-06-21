@@ -32,7 +32,7 @@ public:
                    std::string_view meshS = "mesh",
                    std::string_view dataS = "",
                    XDMFGridType gridType = XDMFGridType::SINGLE):
-    filepath(std::move(fp)),
+    filePath(std::move(fp)),
     suffix(s),
     meshSuffix(meshS),
     dataSuffix(dataS)
@@ -76,7 +76,7 @@ public:
 
   ~XDMFDoc()
   {
-    auto xmlFilepath = filepath.c_str() + suffix + ".xmf";
+    auto xmlFilepath = filePath.c_str() + suffix + ".xmf";
     doc.save_file(xmlFilepath.c_str());
   }
 
@@ -93,8 +93,7 @@ public:
     topoNode.append_attribute("TopologyType") = XDMFTraits<RefFE>::shapeName;
     topoNode.append_attribute("Dimensions") = numElems;
 
-    auto const buf = "\n" + filepath.filename().string() + meshSuffix
-        + ".h5:/" + connName.data() + "\n";
+    auto const buf = filePath.filename().string() + meshSuffix + ".h5:/" + connName.data();
     createDataItem(
           topoNode,
           {numElems, RefFE::numGeoFuns},
@@ -110,8 +109,7 @@ public:
     auto geoNode = gridNode.append_child("Geometry");
     geoNode.append_attribute("GeometryType") = "XYZ";
 
-    auto const buf = "\n" + filepath.filename().string() + meshSuffix
-        + ".h5:/" + coordName.data() + "\n";
+    auto const buf = filePath.filename().string() + meshSuffix + ".h5:/" + coordName.data();
     createDataItem(
             geoNode,
             {mapSize, 3},
@@ -129,10 +127,8 @@ public:
     varNode.append_attribute("AttributeType") = "Scalar";
     varNode.append_attribute("Center") = XDMFCenterToString.at(var.center).data();
 
-    auto const buf = "\n" + filepath.filename().string() + dataSuffix
-        + ".h5:/" + var.name + "\n";
-    // auto const buf = "\n" + filepath.filename().string() + ".time.h5:/"
-    //     + name + "." + iter + "\n";
+    auto const buf = filePath.filename().string() + dataSuffix + ".h5:/" + var.name;
+    // auto const buf = filepath.filename().string() + ".time.h5:/" + name + "." + iter;
     createDataItem(
             varNode,
             {1, var.size},
@@ -142,12 +138,27 @@ public:
             buf);
   }
 
-  void appendTimeStep(std::pair<uint, double> const step)
+  void setTimeSeries(std::vector<std::pair<uint, double>> const timeSeries)
   {
-    auto stepNode = gridNode.append_child("xi:include");
-    stepNode.append_attribute("href") =
-        (filepath.filename().string() + "." + std::to_string(step.first) + ".xmf").data();
-    stepNode.append_attribute("xpointer") = "element(/1/1/1)";
+    std::string timesStr = "";
+    for (auto const & step: timeSeries)
+    {
+      timesStr += std::to_string(step.second) + " ";
+      auto stepNode = gridNode.append_child("xi:include");
+      stepNode.append_attribute("href") =
+          (filePath.filename().string() + "." + std::to_string(step.first) + ".xmf").data();
+      stepNode.append_attribute("xpointer") = "element(/1/1/1)";
+    }
+    auto timeNode = gridNode.append_child("Time");
+    timeNode.append_attribute("TimeType") = "List";
+    createDataItem(
+          timeNode,
+          {1, timeSeries.size()},
+          XDMFNumberType::FLOAT,
+          8,
+          XDMFFormat::INLINE,
+          timesStr
+    );
   }
 
 private:
@@ -157,18 +168,18 @@ private:
           XDMFNumberType const type,
           uint const precision,
           XDMFFormat const format,
-          std::string_view const content)
+          std::string const & content)
   {
     auto node = parent.append_child("DataItem");
     node.append_attribute("Dimensions") = join(dims).c_str();
     node.append_attribute("NumberType") = XDMFNumberTypeToString.at(type);
     node.append_attribute("Precision") = precision;
     node.append_attribute("Format") = XDMFFormatToString.at(format);
-    node.text() = content.data();
+    node.text() = ("\n" + content + "\n").data();
     return node;
   }
 
-  fs::path filepath;
+  fs::path filePath;
   std::string suffix;
   std::string meshSuffix;
   std::string dataSuffix;
@@ -203,50 +214,48 @@ class HDF5
 {
 public:
 
-  HDF5(fs::path const fn, HDF5FileMode const mode):
-    filepath(std::move(fn)),
+  HDF5(fs::path const fp, HDF5FileMode const mode):
+    filePath(std::move(fp)),
     status(0)
   {
     if (mode == HDF5FileMode::OVERWRITE)
     {
-      file_id = H5Fcreate(filepath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      fileId = H5Fcreate(filePath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     }
     else if (mode == HDF5FileMode::APPEND)
     {
-      file_id = H5Fopen(filepath.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+      fileId = H5Fopen(filePath.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
     }
   }
 
-  template <typename FESpace>
-  void print(Var const & var)
-  {
-    hsize_t dimsf[2] = {1, static_cast<hsize_t>(var.data.size())};
-    hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
-    hid_t dataset;
-    // for(uint v = 0; v < varNames.size(); v++)
-    {
-      dataset = H5Dcreate(file_id, var.name.c_str(), H5T_NATIVE_DOUBLE,
-                          dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-                        H5P_DEFAULT, var.data.data());
-      H5Dclose(dataset);
-    }
-    H5Sclose(dspace);
-  }
+  // template <typename FESpace>
+  // void print(Var const & var)
+  // {
+  //   print(var.data, var.name);
+  //   // hsize_t dimsf[2] = {1, static_cast<hsize_t>(var.data.size())};
+  //   // hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
+  //   // hid_t dataset;
+  //   // // for(uint v = 0; v < varNames.size(); v++)
+  //   // {
+  //   //   dataset = H5Dcreate(file_id, var.name.c_str(), H5T_NATIVE_DOUBLE,
+  //   //                       dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  //   //   status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
+  //   //                     H5P_DEFAULT, var.data.data());
+  //   //   H5Dclose(dataset);
+  //   // }
+  //   // H5Sclose(dspace);
+  // }
 
   void print(Vec const & vec, std::string_view const name)
   {
     hsize_t dimsf[2] = {1, static_cast<hsize_t>(vec.size())};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
-    // for(uint v = 0; v < varNames.size(); v++)
-    {
-      dataset = H5Dcreate(file_id, name.data(), H5T_NATIVE_DOUBLE,
-                          dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-                        H5P_DEFAULT, vec.data());
-      H5Dclose(dataset);
-    }
+    dataset = H5Dcreate(fileId, name.data(), H5T_NATIVE_DOUBLE,
+                        dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
+                      H5P_DEFAULT, vec.data());
+    H5Dclose(dataset);
     H5Sclose(dspace);
   }
 
@@ -256,7 +265,7 @@ public:
     hsize_t dimsf[2] = {static_cast<hsize_t>(tab.rows()), static_cast<hsize_t>(tab.cols())};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
-    dataset = H5Dcreate(file_id, name.data(), HDF5Var<T>::value,
+    dataset = H5Dcreate(fileId, name.data(), HDF5Var<T>::value,
                         dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Dwrite(dataset, HDF5Var<T>::value, H5S_ALL, H5S_ALL,
                       H5P_DEFAULT, tab.data());
@@ -266,12 +275,12 @@ public:
 
   ~HDF5()
   {
-    status = H5Fclose(file_id);
+    status = H5Fclose(fileId);
   }
 
 protected:
-  fs::path filepath;
-  hid_t file_id;
+  fs::path filePath;
+  hid_t fileId;
   herr_t status;
 };
 
@@ -290,13 +299,13 @@ struct IOManager
             uint const it = 0):
     feSpace{fe},
     feSpaceScalar{fe.mesh},
-    filepath(std::move(fp)),
+    filePath(std::move(fp)),
     // h5Time{fs::path{filepath} += ".time.h5"},
     iter(it)
   {
-    if (filepath.parent_path() != fs::path(""))
+    if (filePath.parent_path() != fs::path(""))
     {
-      fs::create_directories(filepath.parent_path());
+      fs::create_directories(filePath.parent_path());
     }
     printMeshData();
     if constexpr (Elem_T::dim > 1)
@@ -315,16 +324,13 @@ struct IOManager
 protected:
   void printTimeSeries()
   {
-    XDMFDoc<RefFE_T> doc{filepath, "time", "", "", XDMFGridType::COLLECTION};
-    for (auto const step: timeSeries)
-    {
-      doc.appendTimeStep(step);
-    }
+    XDMFDoc<RefFE_T> doc{filePath, "time", "", "", XDMFGridType::COLLECTION};
+    doc.setTimeSeries(timeSeries);
   }
 
   void printMeshData()
   {
-    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
+    HDF5 h5Mesh{fs::path{filePath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
     {
@@ -361,13 +367,13 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
 
     // we always use linear elements for boundary facets
-    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filepath, "boundary", "mesh", "mesh"};
+    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filePath, "boundary", "mesh", "mesh"};
     doc.setTopology(mesh.facetList.size(), "connectivity_bd");
     doc.setGeometry(mesh.pointList.size(), "coords_bd");
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
     doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
 
-    HDF5 h5Mesh{fs::path{filepath} += ".mesh.h5", HDF5FileMode::APPEND};
+    HDF5 h5Mesh{fs::path{filePath} += ".mesh.h5", HDF5FileMode::APPEND};
 
     Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
     for (auto const & f: mesh.facetList)
@@ -404,7 +410,7 @@ protected:
 public:
   FESpace_T const & feSpace;
   FESpaceScalar_T feSpaceScalar;
-  fs::path filepath;
+  fs::path filePath;
   // HDF5 h5Time;
   uint iter;
   std::vector<std::pair<uint, double>> timeSeries;
@@ -416,12 +422,12 @@ template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
 {
   timeSeries.push_back({iter, t});
-  XDMFDoc<typename FESpace::RefFE_T> doc{filepath, std::to_string(iter)};
+  XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
   doc.setTime(t);
   doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
-  HDF5 h5Iter{filepath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
   for (auto & v: data)
   {
     for (uint d=0; d<feSpace.dim; ++d)

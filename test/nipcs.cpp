@@ -22,12 +22,29 @@ int main(int argc, char* argv[])
 {
   MilliTimer t;
 
-  uint const numElemX = (argc == 3) ? std::atoi(argv[1]) : 4;
-  uint const numElemY = (argc == 3) ? std::atoi(argv[2]) : 8;
+  ParameterDict config;
+
+  if (argc > 1)
+  {
+    config = YAML::LoadFile(argv[1]);
+  }
+  else
+  {
+    config["nx"] = 4;
+    config["ny"] = 8;
+    config["dt"] = 0.1;
+    config["ntime"]= 50U;
+    config["nu"] = 0.1;
+    config["printStep"] = 1U;
+  }
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{numElemX, numElemY, 0}});
+  buildHyperCube(
+        *mesh,
+        Vec3{0., 0., 0.},
+        Vec3{1., 10., 0.},
+        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
   t.stop();
 
   t.start("fespace");
@@ -45,13 +62,13 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bc");
-  auto zeroS = [] (Vec3 const &) {return 0.;};
-  auto zeroV = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  // auto inlet = [] (Vec3 const &) {return Vec2(0.0, 1.0);};
-  auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 1.5 * (1. - p[0]*p[0]));};
-  auto inlet0 = [&inlet] (Vec3 const & p) {return inlet(p)[0];};
-  auto inlet1 = [&inlet] (Vec3 const & p) {return inlet(p)[1];};
-  // auto pIn = [] (Vec3 const &) {return 12.;};
+  auto const zeroS = [] (Vec3 const &) { return 0.; };
+  auto const zeroV = [] (Vec3 const &) { return Vec2{0., 0.}; };
+  // auto const inlet = [] (Vec3 const &) { return Vec2(0.0, 1.0); };
+  auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0]*p[0])}; };
+  auto const inlet0 = [&inlet] (Vec3 const & p) { return inlet(p)[0]; };
+  auto const inlet1 = [&inlet] (Vec3 const & p) { return inlet(p)[1]; };
+  // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
   BCList bcsVel{feSpaceVel};
   // last essential bc wins on corners
@@ -80,11 +97,8 @@ int main(int argc, char* argv[])
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
 
-  double time = 0.0;
-  double const dt = 5e-2;
-  uint const ntime = 100;
-  uint const printStep = 10;
-  double const nu = 1.e-1;
+  auto const dt = config["dt"].as<double>();
+  auto const nu = config["nu"].as<double>();
 
   Vec velOldMonolithic{2*dofU};
   AssemblyMass timeder(1./dt, feSpaceVel);
@@ -95,15 +109,18 @@ int main(int argc, char* argv[])
   AssemblyProjection timederRhs(1./dt, velOldMonolithic, feSpaceVel);
   // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
   // to apply bc on pressure
-  AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
+  // AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
 
-  Builder builderStatic{dofU*FESpaceVel_T::dim + dofP};
-  builderStatic.buildProblem(dummy, bcsP);
-  builderStatic.buildProblem(timeder, bcsVel);
-  builderStatic.buildProblem(stiffness, bcsVel);
-  builderStatic.buildProblem(grad, bcsVel, bcsP);
-  builderStatic.buildProblem(div, bcsP, bcsVel);
-  builderStatic.closeMatrix();
+  Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
+  // builderM.buildProblem(dummy, bcsP);
+  builderM.buildProblem(timeder, bcsVel);
+  builderM.buildProblem(stiffness, bcsVel);
+  builderM.buildProblem(grad, bcsVel, bcsP);
+  builderM.buildProblem(div, bcsP, bcsVel);
+  builderM.closeMatrix();
+  Mat<StorageType::RowMajor> matFixed = builderM.A;
+  Vec rhsFixed = builderM.b;
+  builderM.clear();
 
   Vec vel{2 * dofU};
   setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
@@ -176,11 +193,15 @@ int main(int argc, char* argv[])
   ioP.print({pM, eqnP.sol});
   t.stop();
 
-  Builder builderMonolithic{dofU*FESpaceVel_T::dim + dofP};
-  LUSolver solverMonolithic;
+  IterSolver solverM;
 
+  MilliTimer timerStep;
+  double time = 0.0;
+  auto const ntime = config["ntime"].as<uint>();
+  auto const printStep = config["printStep"].as<uint>();
   for (uint itime=0; itime<ntime; itime++)
   {
+    timerStep.start();
     time += dt;
     std::cout << "\n" << separator
               << "solving timestep " << itime+1
@@ -190,18 +211,17 @@ int main(int argc, char* argv[])
     t.start("monolithic build");
     velOldMonolithic = velM.data;
 
-    builderMonolithic.buildProblem(timederRhs, bcsVel);
-    builderMonolithic.buildProblem(advection, bcsVel);
-    builderMonolithic.closeMatrix();
-
-    Mat<StorageType::ClmMajor> const A = builderMonolithic.A + builderStatic.A;
-    Vec const b = builderMonolithic.b + builderStatic.b;
+    builderM.buildProblem(timederRhs, bcsVel);
+    builderM.buildProblem(advection, bcsVel);
+    builderM.closeMatrix();
+    builderM.A += matFixed;
+    builderM.b += rhsFixed;
     t.stop();
 
     t.start("monolithic solve");
-    solverMonolithic.compute(A);
-    velM.data = solverMonolithic.solve(b);
-    auto res = A * velM.data - b;
+    solverM.compute(builderM.A);
+    velM.data = solverM.solve(builderM.b);
+    auto res = builderM.A * velM.data - builderM.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
     t.stop();
 
@@ -245,7 +265,7 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("monolithic clear");
-    builderMonolithic.clear();
+    builderM.clear();
     t.stop();
 
     t.start("split clear");
@@ -268,6 +288,8 @@ int main(int argc, char* argv[])
       ioP.print({pM, eqnP.sol}, time);
     }
     t.stop();
+
+    std::cout << "time required: " << timerStep << " ms" << std::endl;
   }
   t.print();
 
@@ -282,9 +304,9 @@ int main(int argc, char* argv[])
   std::cout << "errorV: " << std::setprecision(16) << errorV.data.norm() << std::endl;
   std::cout << "errorP: " << std::setprecision(16) << errorP.data.norm() << std::endl;
 
-  if (std::fabs(errorU.data.norm() - 0.007214809990684357) > 1.e-12 ||
-      std::fabs(errorV.data.norm() - 0.1007968800021731) > 1.e-12 ||
-      std::fabs(errorP.data.norm() - 0.2134516643382494) > 1.e-12 )
+  if (std::fabs(errorU.data.norm() - 0.01275069338696843) > 1.e-12 ||
+      std::fabs(errorV.data.norm() - 0.1927239500306806) > 1.e-12 ||
+      std::fabs(errorP.data.norm() - 0.4196491952626098) > 1.e-11 )
   {
     std::cerr << "one of the error norms does not coincide with its expected value." << std::endl;
     return 1;

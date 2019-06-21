@@ -18,16 +18,58 @@ using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR, 2>;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 
+// struct EqnUstarData
+// {
+//   uint const component;
+//   double const dt;
+//   Vec const & vel;
+//   double const nu;
+//   Vec const & pOld;
+//   FESpaceP_T const & feSpaceP;
+// };
+//
+// struct EqnUstar: Eqn<FESpaceU_T>
+// {
+//   EqnUstar(std::string_view const name,
+//            FESpaceU_T const & fe,
+//            EqnUstarData const & data):
+//     Eqn<FESpaceU_T>(name, fe)
+//   {
+//     this->assemblyListLhs.emplace_back<std::unique_ptr<Diagonal<FESpaceU_T>>>(new AssemblyMass{1./data.dt, this->feSpace});
+//     this->assemblyListLhs.emplace_back<std::unique_ptr<Diagonal<FESpaceU_T>>>(new AssemblyAdvection{1.0, data.vel, this->feSpace, this->feSpace});
+//     this->assemblyListLhs.emplace_back<std::unique_ptr<Diagonal<FESpaceU_T>>>(new AssemblyStiffness{data.nu, this->feSpace});
+//     this->assemblyListRhs.emplace_back<std::unique_ptr<Diagonal<FESpaceU_T>>>(new AssemblyProjection{1./data.dt, this->sol.data, this->feSpace});
+//     this->assemblyListRhs.emplace_back<std::unique_ptr<Diagonal<FESpaceU_T>>>(new AssemblyGradRhs2{1.0, data.pOld, this->feSpace, data.feSpaceP, {data.component}});
+//   }
+// };
+
 int main(int argc, char* argv[])
 {
   MilliTimer t;
 
-  uint const numElemX = (argc == 3) ? std::atoi(argv[1]) : 4;
-  uint const numElemY = (argc == 3) ? std::atoi(argv[2]) : 8;
+  ParameterDict config;
+
+  if (argc > 1)
+  {
+    config = YAML::LoadFile(argv[1]);
+  }
+  else
+  {
+    config["nx"] = 4;
+    config["ny"] = 8;
+    config["dt"] = 0.1;
+    config["ntime"]= 50U;
+    config["nu"] = 0.1;
+    config["printStep"] = 1U;
+  }
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 10., 0.}, {{numElemX, numElemY, 0}});
+  buildHyperCube(
+        *mesh,
+        Vec3{0., 0., 0.},
+        Vec3{1., 10., 0.},
+        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
   t.stop();
 
   t.start("fespace");
@@ -45,13 +87,13 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bc");
-  auto zeroS = [] (Vec3 const &) {return 0.;};
-  auto zeroV = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  // auto inlet = [] (Vec3 const &) {return Vec2(0.0, 1.0);};
-  auto inlet = [] (Vec3 const &p) {return Vec2(0.0, 1.5 * (1. - p[0]*p[0]));};
-  auto inlet0 = [&inlet] (Vec3 const & p) {return inlet(p)[0];};
-  auto inlet1 = [&inlet] (Vec3 const & p) {return inlet(p)[1];};
-  // auto pIn = [] (Vec3 const &) {return 12.;};
+  auto const zeroS = [] (Vec3 const &) { return 0.; };
+  auto const zeroV = [] (Vec3 const &) { return Vec2{0., 0.}; };
+  // auto const inlet = [] (Vec3 const &) { return Vec2(0.0, 1.0); };
+  auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0]*p[0])}; };
+  auto const inlet0 = [&inlet] (Vec3 const & p) { return inlet(p)[0]; };
+  auto const inlet1 = [&inlet] (Vec3 const & p) { return inlet(p)[1]; };
+  // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
   BCList bcsVel{feSpaceVel};
   // last essential bc wins on corners
@@ -80,11 +122,8 @@ int main(int argc, char* argv[])
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
 
-  double time = 0.0;
-  double const dt = 5e-2;
-  uint const ntime = 100;
-  uint const printStep = 1;
-  double const nu = 1.e-1;
+  auto const dt = config["dt"].as<double>();
+  auto const nu = config["nu"].as<double>();
 
   Vec velOldMonolithic{2*dofU};
   AssemblyMass timeder(1./dt, feSpaceVel);
@@ -95,15 +134,18 @@ int main(int argc, char* argv[])
   AssemblyProjection timederRhs(1./dt, velOldMonolithic, feSpaceVel);
   // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
   // to apply bc on pressure
-  AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
+  // AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
 
-  Builder builderStatic{dofU*FESpaceVel_T::dim + dofP};
-  builderStatic.buildProblem(dummy, bcsP);
-  builderStatic.buildProblem(timeder, bcsVel);
-  builderStatic.buildProblem(stiffness, bcsVel);
-  builderStatic.buildProblem(grad, bcsVel, bcsP);
-  builderStatic.buildProblem(div, bcsP, bcsVel);
-  builderStatic.closeMatrix();
+  Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
+  // builderM.buildProblem(dummy, bcsP);
+  builderM.buildProblem(timeder, bcsVel);
+  builderM.buildProblem(stiffness, bcsVel);
+  builderM.buildProblem(grad, bcsVel, bcsP);
+  builderM.buildProblem(div, bcsP, bcsVel);
+  builderM.closeMatrix();
+  Mat<StorageType::RowMajor> matFixed = builderM.A;
+  Vec rhsFixed = builderM.b;
+  builderM.clear();
 
   Vec pOld = Vec::Zero(dofP);
   Vec vel{2 * dofU};
@@ -116,6 +158,7 @@ int main(int argc, char* argv[])
   eqnUstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
   eqnUstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnU.sol.data, feSpaceU});
   eqnUstar.assemblyListRhs.emplace_back(new AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpaceP, {0}});
+  // EqnUstar newEqnUstar{"uStar", feSpaceU, {0, dt, vel, nu, pOld, feSpaceP}};
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d pOld / dy
   eqnVstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
@@ -152,10 +195,11 @@ int main(int argc, char* argv[])
   eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
 
   Var velM{"velM", 2*dofU + dofP};
-  auto ic = [](Vec3 const &) {return Vec2(0., 1.);};
-  // auto ic = zero;
-  auto ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};
-  auto ic1 = [&ic] (Vec3 const & p) {return ic(p)[1];};
+  auto const ic = [](Vec3 const &) {return Vec2(0., 1.);};
+  // auto const ic = [](Vec3 const & p) {return Vec2{0., 1.5 * (1. - p(0)*p(0))};};
+  // auto const ic = zero;
+  auto const ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};
+  auto const ic1 = [&ic] (Vec3 const & p) {return ic(p)[1];};
   interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
   interpolateAnalyticFunction(ic0, eqnU.feSpace, eqnU.sol.data);
   interpolateAnalyticFunction(ic1, eqnV.feSpace, eqnV.sol.data);
@@ -170,17 +214,23 @@ int main(int argc, char* argv[])
   getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
   getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
   Var pM{"pM", velM.data.block(2*dofU, 0, dofP, 1)};
+  Var pSplit{"p"};
+  pSplit.data = Vec::Zero(eqnP.feSpace.dof.size);
   IOManager ioV{feSpaceU, "output_ipcs/sol_v"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_ipcs/sol_p"};
-  ioP.print({pM, eqnP.sol});
+  ioP.print({pM, pSplit});
   t.stop();
 
-  Builder builderMonolithic{dofU*FESpaceVel_T::dim + dofP};
-  LUSolver solverMonolithic;
+  IterSolver solverM;
 
+  MilliTimer timerStep;
+  double time = 0.0;
+  auto const ntime = config["ntime"].as<uint>();
+  auto const printStep = config["printStep"].as<uint>();
   for (uint itime=0; itime<ntime; itime++)
   {
+    timerStep.start();
     time += dt;
     std::cout << "\n" << separator
               << "solving timestep " << itime+1
@@ -189,26 +239,26 @@ int main(int argc, char* argv[])
 
     t.start("monolithic build");
     velOldMonolithic = velM.data;
-    pOld += eqnP.sol.data;
 
-    builderMonolithic.buildProblem(timederRhs, bcsVel);
-    builderMonolithic.buildProblem(advection, bcsVel);
-    builderMonolithic.closeMatrix();
+    builderM.buildProblem(timederRhs, bcsVel);
+    builderM.buildProblem(advection, bcsVel);
+    builderM.closeMatrix();
 
-    Mat<StorageType::ClmMajor> const A = builderMonolithic.A + builderStatic.A;
-    Vec const b = builderMonolithic.b + builderStatic.b;
+    builderM.A += matFixed;
+    builderM.b += rhsFixed;
     t.stop();
 
     t.start("monolithic solve");
-    solverMonolithic.compute(A);
-    velM.data = solverMonolithic.solve(b);
-    auto res = A * velM.data - b;
+    solverM.compute(builderM.A);
+    velM.data = solverM.solve(builderM.b);
+    auto res = builderM.A * velM.data - builderM.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
     t.stop();
 
     t.start("ustar build");
     setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
     setComponent(vel, feSpaceVel, eqnV.sol.data, eqnV.feSpace, 1);
+    pOld += eqnP.sol.data;
     eqnUstar.build();
     eqnVstar.build();
     t.stop();
@@ -246,7 +296,7 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("monolithic clear");
-    builderMonolithic.clear();
+    builderM.clear();
     t.stop();
 
     t.start("split clear");
@@ -258,6 +308,7 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("print");
+    pSplit.data += eqnP.sol.data;
     if ((itime+1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
@@ -266,9 +317,11 @@ int main(int argc, char* argv[])
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
       pM.data = velM.data.block(2*dofU, 0, dofP, 1);
-      ioP.print({pM, eqnP.sol}, time);
+      ioP.print({pM, pSplit}, time);
     }
     t.stop();
+
+    std::cout << "time required: " << timerStep << " ms" << std::endl;
   }
   t.print();
 
@@ -283,9 +336,9 @@ int main(int argc, char* argv[])
   std::cout << "errorV: " << std::setprecision(16) << errorV.data.norm() << std::endl;
   std::cout << "errorP: " << std::setprecision(16) << errorP.data.norm() << std::endl;
 
-  if (std::fabs(errorU.data.norm() - 1.663552566403615e-05) > 1.e-12 ||
-      std::fabs(errorV.data.norm() - 2.087262887058092e-05) > 1.e-12 ||
-      std::fabs(errorP.data.norm() - 2.477471412883698e-05) > 1.e-12 )
+  if (std::fabs(errorU.data.norm() - 5.511440044739265e-05) > 1.e-12 ||
+      std::fabs(errorV.data.norm() - 7.500752437417739e-05) > 1.e-12 ||
+      std::fabs(errorP.data.norm() - 6.141568682924751e-05) > 1.e-11 )
   {
     std::cerr << "one of the error norms does not coincide with its expected value." << std::endl;
     return 1;

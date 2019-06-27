@@ -9,19 +9,17 @@
 #include "assembler.hpp"
 #include "iomanager.hpp"
 
-#include <iostream>
-
-static constexpr uint dim = 2;
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T, dim>::RefFE_T;
-using LinearRefFE = FEType<Elem_T, 1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T, dim>::RecommendedQR;
-using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
-using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-
 int main(int argc, char* argv[])
 {
+  constexpr uint dim = 2;
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = FEType<Elem_T, dim>::RefFE_T;
+  using LinearRefFE = FEType<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = FEType<Elem_T, dim>::RecommendedQR;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+
   uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
   uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
 
@@ -29,10 +27,11 @@ int main(int argc, char* argv[])
   Vec3 const length{1., 1., 0.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
+  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
 
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh};
+  auto const dofVel = dim * feSpaceVel.dof.size;
+  FESpaceP_T feSpaceP{*mesh, dofVel};
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   BCList bcsVel{feSpaceVel};
@@ -48,17 +47,14 @@ int main(int argc, char* argv[])
   };
   bcsP.addBC(BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
 
-  auto const dofU = feSpaceVel.dof.size;
-  auto const dofP = feSpaceP.dof.size;
-  uint const numDOFs = dofU*dim + dofP;
-
-  AssemblyStiffness stiffness(1.0, feSpaceVel);
-  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, dofU*dim);
-  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, dofU*dim, 0);
+  AssemblyStiffness stiffness{1.0, feSpaceVel};
+  AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP};
+  AssemblyDiv div{-1.0, feSpaceP, feSpaceVel};
   // this is required to properly apply the pinning on the pressure
-  AssemblyMass dummy(0.0, feSpaceP, {0}, dofU*dim, dofU*dim);
+  AssemblyMass dummy{0.0, feSpaceP};
 
-  Builder<StorageType::RowMajor> builder{numDOFs};
+  auto const dofP = feSpaceP.dof.size;
+  Builder<StorageType::RowMajor> builder{dofVel + dofP};
   Var sol{"sol"};
   builder.buildProblem(stiffness, bcsVel);
   builder.buildProblem(grad, bcsVel, bcsP);
@@ -78,7 +74,7 @@ int main(int argc, char* argv[])
   Scalar_T<FESpaceVel_T> feSpaceScalar{*mesh};
   getComponent(u.data, feSpaceScalar, sol.data, feSpaceVel, 0);
   getComponent(v.data, feSpaceScalar, sol.data, feSpaceVel, 1);
-  Var p{"p", sol.data, dofU*dim, dofP};
+  Var p{"p", sol.data, dofVel, dofP};
 
   auto uNorm = u.data.norm();
   auto vNorm = v.data.norm();

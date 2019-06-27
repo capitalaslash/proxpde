@@ -22,9 +22,9 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static uint const dim = Dimension;
 
-  explicit FESpace(Mesh const & m):
+  explicit FESpace(Mesh const & m, uint offset = 0):
     mesh(m),
-    dof(m)
+    dof(m, offset)
   {
     static_assert (std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>, "mesh element and reference element are not compatible.");
     static_assert (std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>, "reference element and quad rule are not compatible.");

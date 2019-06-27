@@ -34,17 +34,17 @@ struct DOF
   using edgeIdList_T = std::set<id_T>;
   using faceIdList_T = std::set<id_T>;
 
-  explicit DOF(Mesh const & mesh):
+  explicit DOF(Mesh const & mesh, uint offset):
     rows{mesh.elementList.size()},
     elemMap(rows, clms*dim),
     ptMap(mesh.pointList.size(), dofIdNotSet),
     geoMap(rows, RefFE::numGeoFuns)
   {
-    setupElemMap(mesh);
-    setupGeoMap(mesh);
+    setupElemMap(mesh, offset);
+    setupGeoMap(mesh, offset);
   }
 
-  void setupElemMap(Mesh const & mesh)
+  void setupElemMap(Mesh const & mesh, uint offset)
   {
     std::vector<DOFid_T> elemDOFs;
     if constexpr (RefFE::dofPlace[0])
@@ -70,13 +70,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = size;
+              elemMap(e.id, localDofCount) = offset + size;
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = size*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + size*dim + d;
               }
             }
             ptMap[p->id] = size;
@@ -86,13 +86,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = ptMap[p->id];
+              elemMap(e.id, localDofCount) = offset + ptMap[p->id];
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = ptMap[p->id]*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + ptMap[p->id]*dim + d;
               }
             }
           }
@@ -117,13 +117,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = size;
+              elemMap(e.id, localDofCount) = offset + size;
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = size*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + size*dim + d;
               }
             }
             edgeDOFs[edgeIDs] = size;
@@ -133,13 +133,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = edgeDOFs[edgeIDs];
+              elemMap(e.id, localDofCount) = offset + edgeDOFs[edgeIDs];
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = edgeDOFs[edgeIDs]*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + edgeDOFs[edgeIDs]*dim + d;
               }
             }
           }
@@ -163,13 +163,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = size;
+              elemMap(e.id, localDofCount) = offset + size;
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = size*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + size*dim + d;
               }
             }
             faceDOFs[faceIDs] = size;
@@ -179,13 +179,13 @@ struct DOF
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
-              elemMap(e.id, localDofCount) = faceDOFs[faceIDs];
+              elemMap(e.id, localDofCount) = offset + faceDOFs[faceIDs];
             }
             else // ordering == DofOrdering::INTERLEAVED
             {
               for (uint d=0; d<dim; ++d)
               {
-                elemMap(e.id, localDofCount + d*clms) = faceDOFs[faceIDs]*dim + d;
+                elemMap(e.id, localDofCount + d*clms) = offset + faceDOFs[faceIDs]*dim + d;
               }
             }
           }
@@ -201,13 +201,13 @@ struct DOF
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
-            elemMap(e.id, localDofCount) = size;
+            elemMap(e.id, localDofCount) = offset + size;
           }
           else // ordering == DofOrdering::INTERLEAVED
           {
             for (uint d=0; d<dim; ++d)
             {
-              elemMap(e.id, localDofCount + d*clms) = size*dim + d;
+              elemMap(e.id, localDofCount + d*clms) = offset + size*dim + d;
             }
           }
           elemDOFs[e.id] = size;
@@ -217,13 +217,13 @@ struct DOF
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
-            elemMap(e.id, localDofCount) = elemDOFs[e.id];
+            elemMap(e.id, localDofCount) = offset + elemDOFs[e.id];
           }
           else // ordering == DofOrdering::INTERLEAVED
           {
             for (uint d=0; d<dim; ++d)
             {
-              elemMap(e.id, localDofCount + d*clms) = elemDOFs[e.id]*dim + d;
+              elemMap(e.id, localDofCount + d*clms) = offset + elemDOFs[e.id]*dim + d;
             }
           }
         }
@@ -236,21 +236,21 @@ struct DOF
     {
       for(uint d=0; d<dim-1; d++)
       {
-        elemMap.block(0, clms*(d+1), rows, clms).setConstant(size * (d+1));
+        elemMap.block(0, clms*(d+1), rows, clms).setConstant(offset + size * (d+1));
         elemMap.block(0, clms*(d+1), rows, clms) += elemMap.block(0, 0, rows, clms);
         // TODO: use eigen blocks
         // for(uint e=0; e<rows; ++e)
         // {
         //   for(uint i=0; i<clms; i++)
         //   {
-        //      elemMap(e, clms*(d+1)+i) = size * (d+1) + elemMap(e, i);
+        //      elemMap(e, clms*(d+1)+i) = offset + size * (d+1) + elemMap(e, i);
         //   }
         // }
       }
     }
   }
 
-  void setupGeoMap(Mesh const & mesh)
+  void setupGeoMap(Mesh const & mesh, uint offset)
   {
     PtMap_T geoPtMap;
     if constexpr (MappingIsSeparate<RefFE>::value)
@@ -290,7 +290,8 @@ struct DOF
     {
       if constexpr (ordering == DofOrdering::BLOCK)
       {
-        geoMap = elemMap.block(0, 0, rows, RefFE::numGeoFuns);
+        geoMap = elemMap.block(0, 0, rows, RefFE::numGeoFuns) -
+            Table<DOFid_T, RefFE::numGeoFuns>::Constant(rows, RefFE::numGeoFuns, offset);
       }
       else
       {
@@ -299,7 +300,7 @@ struct DOF
           for (uint c=0; c<geoMap.cols(); ++c)
           {
             // TODO: build it in a more eccifient way
-            geoMap(r, c) = this->getId(r, c) / dim;
+            geoMap(r, c) = this->getId(r, c) / dim - offset;
           }
         }
       }

@@ -238,6 +238,18 @@ inline constexpr T pow(T const & base, unsigned const exponent)
 
 using ParameterDict = YAML::Node;
 
+inline void validateConfig(ParameterDict const & c, std::vector<std::string> const & requiredPars)
+{
+  for (auto const & required: requiredPars)
+  {
+    if (!c[required])
+    {
+      std::cerr << "parameter file is missing option " << required << std::endl;
+      std::abort();
+    }
+  }
+}
+
 namespace YAML {
 template<>
 struct convert<Vec3> {

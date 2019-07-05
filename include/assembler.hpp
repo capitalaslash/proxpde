@@ -3,38 +3,14 @@
 #include "def.hpp"
 #include "blockmatrix.hpp"
 
-namespace utility
-{
-// ----------------------------------------------------------------------------
-// execute a function for every member of a tuple
-// from http://stackoverflow.com/questions/26902633/how-to-iterate-over-a-tuple-in-c-11
-namespace details
-{
-template<class F,
-         class...Ts,
-         std::size_t...Is>
-void for_each_in_tuple(
-    const std::tuple<Ts...> & tuple,
-    F func,
-    std::index_sequence<Is...>)
-{
-  using expander = int[];
-  (void)expander { 0, ((void)func(std::get<Is>(tuple)), 0)... };
-}
-}
-
-template<class F, class...Ts>
-void for_each_in_tuple(const std::tuple<Ts...> & tuple, F func)
-{
-  details::for_each_in_tuple(tuple, func, std::make_index_sequence<sizeof...(Ts)>());
-}
-}
-
 template <typename FESpaceTuple>
-uint computeDOFTotalNum(FESpaceTuple & list)
+constexpr uint computeDOFTotalNum(FESpaceTuple & list)
 {
   uint num = 0;
-  utility::for_each_in_tuple(list, [&num](auto const & feSpace){num += feSpace.dim*feSpace.dof.size;});
+  static_for(list, [&num] (auto /*id*/, auto const & feSpace)
+  {
+    num += feSpace.dim * feSpace.dof.size;
+  });
   return num;
 }
 

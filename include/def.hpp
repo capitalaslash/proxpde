@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <fstream>
 #include <vector>
+#include <tuple>
 #include <memory>
 #include <functional>
 #include <algorithm>
@@ -20,6 +21,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+// ----------------------------------------------------------------------------
 #ifdef NDEBUG
 static std::ofstream debug{"/dev/null"};
 #else
@@ -29,6 +31,7 @@ static std::ostream & debug = std::cout;
 static std::ofstream filelog{"minifem.log"};
 static const std::string separator = std::string(80, '=') + "\n";
 
+// ----------------------------------------------------------------------------
 using id_T = uint;
 using marker_T = short unsigned;
 using DOFid_T = uint;
@@ -36,6 +39,7 @@ id_T constexpr idNotSet = static_cast<id_T>(-1);
 DOFid_T constexpr dofIdNotSet = static_cast<DOFid_T>(-1);
 marker_T constexpr markerNotSet = static_cast<marker_T>(-1);
 
+// ----------------------------------------------------------------------------
 // TODO: maybe use an std::integer_sequence
 template <typename FESpace>
 std::vector<uint> allComp()
@@ -45,22 +49,21 @@ std::vector<uint> allComp()
   return comp;
 }
 
+// ----------------------------------------------------------------------------
 #include <array>
 template <typename T, std::size_t N>
 using array = std::array<T,N>;
 // #include "array.hpp"
 
-template <typename T, int N>
+template <int N, typename T>
 static constexpr array<T, N> fillArray(T const & t)
 {
   array<T, N> a;
-  for (int k=0; k<N; ++k)
-  {
-    a[k] = t;
-  }
+  a.fill(t);
   return a;
 }
 
+// ----------------------------------------------------------------------------
 // ColMajor is better for UMFPack
 // RowMajor is better for iterative solvers
 enum class StorageType: char
@@ -80,6 +83,7 @@ template <StorageType Storage = StorageType::ClmMajor>
 using Mat = Eigen::SparseMatrix<double, StorageToEigen<Storage>::value>;
 using Vec = Eigen::VectorXd;
 
+// ----------------------------------------------------------------------------
 // template <typename T, unsigned long I>
 // using Table = Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>;
 
@@ -130,6 +134,7 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
   }
 };
 
+// ----------------------------------------------------------------------------
 // using LUSolver = Eigen::SparseLU<Mat<StorageType::ClmMajor>, Eigen::COLAMDOrdering<int>>;
 using LUSolver = Eigen::UmfPackLU<Mat<StorageType::ClmMajor>>;
 // using IterSolver = Eigen::GMRES<Mat<StorageType::RowMajor, Eigen::IncompleteLUT<double>>;
@@ -146,6 +151,7 @@ struct RecommendedSolver<StorageType::ClmMajor> { using type = LUSolver; };
 template <StorageType Storage>
 using RecommendedSolverType = typename RecommendedSolver<Storage>::type;
 
+// ----------------------------------------------------------------------------
 template <int Size>
 using FVec = Eigen::Matrix<double,Size,1>;
 
@@ -226,8 +232,30 @@ using scalarOnedFun_T = ScalarFun<1>;
 using scalarTwodFun_T = ScalarFun<2>;
 using scalarThreedFun_T = ScalarFun<3>;
 
+// ----------------------------------------------------------------------------
 template<class T> struct dependent_false : std::false_type {};
 
+// ----------------------------------------------------------------------------
+// execute a function for every member of a tuple
+// based on
+// https://codereview.stackexchange.com/questions/173564/implementation-of-static-for-to-iterate-over-elements-of-stdtuple-using-c17
+
+template <class Tup, class Func, std::size_t... Is>
+constexpr void static_for_impl(Tup && t, Func && f, std::index_sequence<Is...>)
+{
+  ( f(std::integral_constant<std::size_t, Is>{}, std::get<Is>(t)),... );
+}
+
+template <class Tup, class Func>
+constexpr void static_for(Tup & t, Func && f)
+{
+  static_for_impl(
+        t,
+        std::forward<Func>(f),
+        std::make_index_sequence<std::tuple_size_v<Tup>>{});
+}
+
+// ----------------------------------------------------------------------------
 static constexpr int ERROR_GMSH = 1;
 
 template<class T>

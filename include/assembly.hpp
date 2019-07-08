@@ -1401,9 +1401,9 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using Facet_T = typename FESpace_T::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace_T::RefFE_T::RefFacet_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 
   AssemblyBCNatural(Fun<FESpace_T::dim, 3> const r,
                     marker_T const m,
@@ -1444,7 +1444,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
           auto const value = rhs(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
-            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+            for(uint i=0; i<FacetFE_T::numFuns; ++i)
             {
               auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
               Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value[d];
@@ -1469,9 +1469,9 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace::RefFE_T::RefFacet_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 
   AssemblyBCNormal(scalarFun_T const r,
                    marker_T const m,
@@ -1503,7 +1503,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
           for (auto const d: this->comp)
           {
             auto const value = rhs(facetCurFE.qpoint[q]);
-            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+            for(uint i=0; i<FacetFE_T::numFuns; ++i)
             {
               auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
               Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * value;
@@ -1528,9 +1528,9 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace::RefFE_T::RefFacet_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using FacetCurFE_T = CurFE<Facet_T, QR_T>;
+  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 
   AssemblyBCMixed(scalarFun_T const c,
                   marker_T const m,
@@ -1561,10 +1561,10 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
           auto const localCoef = coef(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
-            for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
+            for(uint i=0; i<FacetFE_T::numFuns; ++i)
             {
               auto const idI = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
-              for(uint j=0; j<BCNat<FESpace>::RefFE_T::numFuns; ++j)
+              for(uint j=0; j<FacetFE_T::numFuns; ++j)
               {
                 auto const idJ = CurFE_T::RefFE_T::dofOnFacet[facetCounter][j] + d*CurFE_T::numDOFs;
                 Ke(idI, idJ) +=

@@ -56,11 +56,6 @@ int test(YAML::Node const & config)
   t.start();
   BCList bcs{feSpace};
   bcs.addBC(BCEss{feSpace, side::LEFT, [temp0] (Vec3 const&) {return temp0;}});
-  // mixed bc: a u + \nabla u = b
-  // - \nabla u = hConv (u - tempA)
-  // -> a = hConv, b = hConv * tempA
-  // hConv -> 0: \nabla u = 0, Neumann homogeneous
-  // hConv -> inf: u = b / a = tempA, Dirichlet
   // bcs.addMixedBC(
   //       side::RIGHT,
   //       [hConv](Vec3 const &){return hConv;},
@@ -76,6 +71,17 @@ int test(YAML::Node const & config)
   builder.buildProblem(f, bcs);
   builder.buildProblem(AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}, bcs);
   builder.buildProblem(AssemblyBCNatural{[hConv, tempA](Vec3 const &){return hConv * tempA;}, side::RIGHT, feSpace}, bcs);
+  // mixed bc: a u + \nabla u = b
+  // - \lap u = f
+  // (\nabla u, \nabla v) - <\nabla u, v> = (f, v)
+  // (., .) == integration on volume
+  // <., .> == integration on boundary
+  // (\nabla u, \nabla v) + <a*u, v> = (f, v) + <b, v>
+  // a >= \eps > 0 cohercitivity to guarantee solution
+  // - \nabla u = hConv (u - tempA)
+  // -> a = hConv, b = hConv * tempA
+  // hConv -> 0: \nabla u = 0, Neumann homogeneous
+  // hConv -> inf: u = b / a = tempA, Dirichlet
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
 

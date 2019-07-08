@@ -80,7 +80,6 @@ int main(int argc, char* argv[])
     return v;
   };
   bcs.addBC(BCEss{feSpace, side::LEFT, bcValue});
-  bcs.addBC(BCNat<FESpace_T>{side::RIGHT, bcValue});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
 
@@ -93,6 +92,7 @@ int main(int argc, char* argv[])
   Builder builder{size};
   builder.buildProblem(stiffness, bcs);
   builder.buildProblem(f, bcs);
+  builder.buildRhs(AssemblyBCNatural{bcValue, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;
 

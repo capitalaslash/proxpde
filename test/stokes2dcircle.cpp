@@ -40,7 +40,6 @@ int main(int argc, char* argv[])
   BCList bcsU{feSpaceU};
   bcsU.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
   bcsU.addBC(BCEss{feSpaceU, side::TOP, zeroFun});
-  bcsU.addBC(BCNat<FESpaceU_T>{side::LEFT, oneFun});
   BCList bcsV{feSpaceU};
   bcsV.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
   bcsV.addBC(BCEss{feSpaceU, side::LEFT, zeroFun});
@@ -61,11 +60,12 @@ int main(int argc, char* argv[])
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
   builder.buildProblem(stiffnessU, bcsU);
-  builder.buildProblem(make_assemblyGrad(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
   builder.buildProblem(divU, bcsP, bcsU);
   builder.buildProblem(stiffnessV, bcsV);
   builder.buildProblem(gradV, bcsV, bcsP);
   builder.buildProblem(divV, bcsP, bcsV);
+  builder.buildCoupling(AssemblyGrad(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
+  builder.buildRhs(AssemblyBCNatural{oneFun, side::LEFT, feSpaceU}, bcsU);
   builder.closeMatrix();
 
   Vec sol{numDOFs};

@@ -236,75 +236,12 @@ public:
     {
       bcEssList.push_back(std::move(bc));
     }
-    else if constexpr (std::is_same_v<BC, BCNat<FESpace>>)
-    {
-      bcNatList.push_back(std::move(bc));
-    }
-    else if constexpr (std::is_same_v<BC, BCMixed<FESpace>>)
-    {
-      bcNatList.emplace_back(bc.marker, bc.b, bc.comp);
-      bcMixedList.push_back(std::move(bc));
-    }
     else
     {
       // this should never happen
       std::cerr << "a BC of type " << typeid(bc).name() << " has been added." << std::endl;
       std::abort();
     }
-  }
-
-  void addNaturalBC(
-      marker_T const m,
-      Fun<FESpace::dim,3> const f,
-      std::vector<uint> const comp = allComp<FESpace>())
-  {
-    if (checkMarkerFixed(m))
-    {
-      std::cerr << "the marker " << m << " has already been fixed." << std::endl;
-      abort();
-    }
-    bcNatList.emplace_back(m, std::move(f), std::move(comp));
-    fixedMarkers.insert(m);
-  }
-
-  // this overload works only when FESpace::dim == 1
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim == 1, bool> = true>
-  void addNaturalBC(
-      marker_T const m,
-      scalarFun_T const f,
-      std::vector<uint> const comp = allComp<FESpace>())
-  {
-    addNaturalBC(m, [f] (Vec3 const & p) {return Vec1(f(p));}, std::move(comp));
-  }
-
-  // otherwise, we should fail
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim != 1, bool> = true>
-  void addNaturalBC(
-      marker_T const,
-      scalarFun_T const,
-      std::vector<uint> const)
-  {
-    std::cerr << __FILE__ << ":" << __LINE__ << " > this funcytion only works with FESpace::dim == 1" << std::endl;
-    std::abort();
-  }
-
-  // mixed BC: a * u + \nabla u = b
-  // - \lap u = f
-  // (\nabla u, \nabla v) - <\nabla u, v> = (f, v)
-  // (., .) == integration on volume
-  // <., .> == integration on boundary
-  // (\nabla u, \nabla v) + <a*u, v> = (f, v) + <b, v>
-  // a >= \eps > 0 cohercitivity to guarantee solution
-  void addMixedBC(
-      marker_T const m,
-      scalarFun_T const a,
-      scalarFun_T const b,
-      std::vector<uint> const comp = allComp<FESpace>())
-  {
-    addNaturalBC(m, std::move(b), comp);
-    bcMixedList.emplace_back(m, [a] (Vec3 const & p) {return Vec1(a(p));}, std::move(comp));
   }
 
   bool checkMarkerFixed(marker_T const m) const
@@ -321,8 +258,6 @@ public:
   std::unordered_set<marker_T> fixedMarkers;
   // std::unordered_set<id_T> fixedDofs;
   std::list<BCEss<FESpace>> bcEssList;
-  std::list<BCNat<FESpace>> bcNatList;
-  std::list<BCMixed<FESpace>> bcMixedList;
 };
 
 template <typename FESpace>

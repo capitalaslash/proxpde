@@ -47,29 +47,21 @@ int test(YAML::Node const & config)
 
   uint const numElems = config["n"].as<uint>();
 
-  t.start();
+  t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(*mesh, {0., 0., 0.}, {1., 0., 0.}, {{numElems, 0, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
   RecFESpace_T feSpaceRec{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   BCList bcs{feSpace};
-  // bcs.addBC(BCEss{feSpace, side::LEFT, [temp0](Vec3 const &){return temp0;}});
-  // mixed bc: a u + \nabla u = b
-  // - \nabla u = hConv (u - tempA)
-  // -> a = hConv, b = hConv * tempA
-  // hConv -> 0: \nabla u = 0, Neumann homogeneous
-  // hConv -> inf: u = b / a = tempA, Dirichlet
-  // bcs.addMixedBC(
-  //       side::RIGHT,
-  //       [hConv] (Vec3 const &) { return hConv; },
-  //       [hConv, tempA] (Vec3 const &) { return hConv * tempA; });
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  // bcs.addBC(BCEss{feSpace, side::LEFT, [](Vec3 const &){return 4.;}});
+  // bcs.addBC(BCEss{feSpace, side::RIGHT, [](Vec3 const &){return 3.;}});
+  t.stop();
 
   uint const size = feSpace.dof.size;
   Var sol{"u"};
@@ -85,8 +77,21 @@ int test(YAML::Node const & config)
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};
   AssemblyProjection timeRhs{1. / dt, solOld, feSpace};
-  AssemblyBCMixed mixBC{[hConv] (Vec3 const &) { return hConv; }, side::RIGHT, feSpace};
-  AssemblyBCNatural natBC{[hConv, tempA] (Vec3 const &) { return hConv * tempA; }, side::RIGHT, feSpace};
+  // mixed bc: a u + \nabla u = b
+  // - \nabla u = hConv (u - tempA)
+  // -> a = hConv, b = hConv * tempA
+  // hConv -> 0: \nabla u = 0, Neumann homogeneous
+  // hConv -> inf: u = b / a = tempA, Dirichlet
+  // the matrix block and the rhs block must be added separatly
+  AssemblyBCMixed mixBC{
+    [hConv] (Vec3 const &) { return hConv; },
+    side::RIGHT,
+    feSpace};
+  AssemblyBCNatural natBC{
+    [hConv, tempA] (Vec3 const &) { return hConv * tempA;},
+    side::RIGHT,
+    feSpace
+  };
 
   Var flux{"flux", size};
 
@@ -96,7 +101,7 @@ int test(YAML::Node const & config)
     feSpace,
     fs::path{"output_fourier"} / config["filename"].as<std::string>()
   };
-  io.print({sol, flux});
+  io.print({sol, flux, exact});
   for (uint itime = 0; itime < steps; ++itime)
   {
     time += dt;
@@ -104,6 +109,7 @@ int test(YAML::Node const & config)
 
     solOld = sol.data;
 
+    t.start("build");
     builder.clear();
     builder.buildProblem(timeDer, bcs);
     builder.buildProblem(stiffness, bcs);
@@ -112,33 +118,33 @@ int test(YAML::Node const & config)
     builder.buildProblem(natBC, bcs);
     builder.buildProblem(mixBC, bcs);
     builder.closeMatrix();
+    t.stop();
     // std::cout << "A:\n" << builder.A << std::endl;
     // std::cout << "b:\n" << builder.b << std::endl;
 
+    t.start("solve");
     solver.analyzePattern(builder.A);
     solver.factorize(builder.A);
     sol.data = solver.solve(builder.b);
+    t.stop();
     // std::cout << "u:\n" << sol.data << std::endl;
 
+    t.start("gradient");
     reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
+    t.stop();
     std::cout << "u|1 = " << sol.data[size-1] << ", exact = " << exact.data[size-1] << std::endl;
     std::cout << "du / dx |1 = " << flux.data[size-1] << std::endl;
     std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size-1] - tempA) << std::endl;
 
-    io.print({sol, flux}, time);
+    t.start("print");
+    io.print({sol, flux, exact}, time);
+    t.stop();
   }
 
-  t.start();
-  std::cout << "fe build: " << t << " ms" << std::endl;
-
-  t.start();
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.print();
 
   Var error{"e"};
   error.data = sol.data - exact.data;
-
-  t.start();
-  std::cout << "output: " << t << " ms" << std::endl;
 
   auto const errorNorm = error.data.norm();
   std::cout << "the norm of the error is "<< std::setprecision(16) << errorNorm << std::endl;

@@ -632,18 +632,6 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
 };
 
 template <typename FESpace1, typename FESpace2>
-AssemblyGrad<FESpace1, FESpace2> make_assemblyGrad(
-    double const c,
-    FESpace1 & fe1,
-    FESpace2 & fe2,
-    std::vector<uint> cmp = allComp<FESpace1>(),
-    uint oRow = 0,
-    uint oClm = 0)
-{
-  return AssemblyGrad<FESpace1, FESpace2>(c, fe1, fe2, cmp, oRow, oClm);
-}
-
-template <typename FESpace1, typename FESpace2>
 struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
 {
   using FESpace1_T = FESpace1;
@@ -1409,23 +1397,33 @@ template <typename FESpace>
 struct AssemblyBCNatural: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
-  using Super_T = AssemblyVector<FESpace>;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using Facet_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = SideQR_T<typename FESpace::QR_T>;
+  using Facet_T = typename FESpace_T::RefFE_T::RefFacet_T;
+  using QR_T = SideQR_T<typename FESpace_T::QR_T>;
   using FacetCurFE_T = CurFE<Facet_T, QR_T>;
 
-  AssemblyBCNatural(scalarFun_T const r,
+  AssemblyBCNatural(Fun<FESpace_T::dim, 3> const r,
                     marker_T const m,
-                    FESpace & fe,
-                    AssemblyBase::CompList const cmp = allComp<FESpace>(),
+                    FESpace_T & fe,
+                    AssemblyBase::CompList const cmp = allComp<FESpace_T>(),
                     uint oRow = 0):
-    AssemblyVector<FESpace>(fe, oRow, std::move(cmp)),
+    AssemblyVector<FESpace_T>(fe, oRow, std::move(cmp)),
     rhs(std::move(r)),
     marker(m)
   {}
+
+  AssemblyBCNatural(scalarFun_T const r,
+                    marker_T const m,
+                    FESpace_T & fe,
+                    AssemblyBase::CompList const cmp = allComp<FESpace_T>(),
+                    uint oRow = 0):
+    AssemblyBCNatural<FESpace_T>([r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp, oRow)
+  {
+    static_assert(FESpace_T::dim == 1);
+  }
 
   void build(LVec_T & Fe) const override
   {
@@ -1449,7 +1447,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
             for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
             {
               auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
-              Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value;
+              Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value[d];
             }
           }
         }
@@ -1458,7 +1456,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
     }
   }
 
-  scalarFun_T const rhs;
+  Fun<FESpace_T::dim, 3> const rhs;
   marker_T const marker;
   FacetCurFE_T mutable facetCurFE;
 };

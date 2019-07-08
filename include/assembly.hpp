@@ -1532,14 +1532,14 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   using QR_T = SideQR_T<typename FESpace::QR_T>;
   using FacetCurFE_T = CurFE<Facet_T, QR_T>;
 
-  AssemblyBCMixed(scalarFun_T const r,
+  AssemblyBCMixed(scalarFun_T const c,
                   marker_T const m,
                   FESpace & fe,
                   AssemblyBase::CompList const cmp = allComp<FESpace>(),
                   uint oRow = 0,
                   uint oClm = 0):
     Diagonal<FESpace>(fe, oRow, oClm, std::move(cmp)),
-    rhs(std::move(r)),
+    coef(std::move(c)),
     marker(m)
   {}
 
@@ -1548,9 +1548,8 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     auto const & mesh = this->feSpace.mesh;
-    auto const & e = *this->feSpace.curFE.elem;
     uint facetCounter = 0;
-    for(auto const facetId: mesh.elemToFacet[e.id])
+    for(auto const facetId: mesh.elemToFacet[this->feSpace.curFE.elem->id])
     {
       if(facetId != dofIdNotSet &&
          mesh.facetList[facetId].marker == marker)
@@ -1559,7 +1558,7 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
         facetCurFE.reinit(facet);
         for(uint q=0; q<QR_T::numPts; ++q)
         {
-          auto const value = rhs(facetCurFE.qpoint[q]);
+          auto const localCoef = coef(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
             for(uint i=0; i<BCNat<FESpace>::RefFE_T::numFuns; ++i)
@@ -1569,7 +1568,9 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
               {
                 auto const idJ = CurFE_T::RefFE_T::dofOnFacet[facetCounter][j] + d*CurFE_T::numDOFs;
                 Ke(idI, idJ) +=
-                  facetCurFE.JxW[q] * value * facetCurFE.phi[q](i) * facetCurFE.phi[q](j);
+                    facetCurFE.JxW[q] * localCoef *
+                    facetCurFE.phi[q](i) *
+                    facetCurFE.phi[q](j);
               }
             }
           }
@@ -1579,7 +1580,7 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
     }
   }
 
-  scalarFun_T const rhs;
+  scalarFun_T const coef;
   marker_T const marker;
   FacetCurFE_T mutable facetCurFE;
 };

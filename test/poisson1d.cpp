@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
   // AssemblyProjection f(1.0, rhsProj, feSpace);
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(f, bcs);
+  builder.buildLhs(stiffness, bcs);
+  builder.buildRhs(f, bcs);
   builder.closeMatrix();
   t.stop();
 

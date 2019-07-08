@@ -163,9 +163,9 @@ int main(int argc, char* argv[])
     // central implicit
     t.start("p1 assemby");
     concP1Old = concP1.data;
-    builder.buildProblem(timeDer, bcsP1);
-    builder.buildProblem(timeDerRhs, bcsP1);
-    builder.buildProblem(advection, bcsP1);
+    builder.buildLhs(timeDer, bcsP1);
+    builder.buildRhs(timeDerRhs, bcsP1);
+    builder.buildLhs(advection, bcsP1);
     builder.closeMatrix();
     t.stop();
 

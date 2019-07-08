@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
   bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
-  builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
+  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   builder.closeMatrix();
 
   Var sol{"u"};

@@ -55,17 +55,13 @@ int main(int argc, char* argv[])
   AssemblyDiv divV(-1.0, feSpaceP, feSpaceU, {1}, 2*feSpaceU.dof.size, feSpaceU.dof.size);
 
   Builder builder{numDOFs};
-  // builder.assemblies[0].push_back(&stiffness0);
-  // builder.assemblies[1].push_back(&grad0);
-  // builder.assemblies[1].push_back(&div0);
-  // builder.assemblies[0].push_back(&stiffness1);
-  builder.buildProblem(stiffnessU, bcsU);
-  builder.buildProblem(divU, bcsP, bcsU);
-  builder.buildProblem(stiffnessV, bcsV);
-  builder.buildProblem(gradV, bcsV, bcsP);
-  builder.buildProblem(divV, bcsP, bcsV);
+  builder.buildLhs(stiffnessU, bcsU);
   builder.buildCoupling(AssemblyGrad(-1.0, feSpaceU, feSpaceP, {0}, 0, 2*feSpaceU.dof.size), bcsU, bcsP);
+  builder.buildCoupling(divU, bcsP, bcsU);
   builder.buildRhs(AssemblyBCNatural{oneFun, side::LEFT, feSpaceU}, bcsU);
+  builder.buildLhs(stiffnessV, bcsV);
+  builder.buildCoupling(gradV, bcsV, bcsP);
+  builder.buildCoupling(divV, bcsP, bcsV);
   builder.closeMatrix();
 
   Vec sol{numDOFs};

@@ -111,12 +111,12 @@ int test(YAML::Node const & config)
 
     t.start("build");
     builder.clear();
-    builder.buildProblem(timeDer, bcs);
-    builder.buildProblem(stiffness, bcs);
-    builder.buildProblem(timeRhs, bcs);
-    builder.buildProblem(f, bcs);
-    builder.buildProblem(natBC, bcs);
-    builder.buildProblem(mixBC, bcs);
+    builder.buildLhs(timeDer, bcs);
+    builder.buildLhs(stiffness, bcs);
+    builder.buildRhs(timeRhs, bcs);
+    builder.buildRhs(f, bcs);
+    builder.buildRhs(natBC, bcs);
+    builder.buildLhs(mixBC, bcs);
     builder.closeMatrix();
     t.stop();
     // std::cout << "A:\n" << builder.A << std::endl;

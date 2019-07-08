@@ -62,9 +62,9 @@ int main(int /*argc*/, char* /*argv*/[])
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
-  builder.buildProblem(stiffness, bcsVel);
-  builder.buildProblem(grad, bcsVel, bcsP);
-  builder.buildProblem(div, bcsP, bcsVel);
+  builder.buildLhs(stiffness, bcsVel);
+  builder.buildCoupling(grad, bcsVel, bcsP);
+  builder.buildCoupling(div, bcsP, bcsVel);
   builder.closeMatrix();
 
   Var sol("vel", numDOFs);

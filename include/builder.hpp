@@ -19,8 +19,8 @@ struct Builder
   }
 
   template <typename FESpace>
-  void buildProblem(Diagonal<FESpace> const & assembly,
-                    BCList<FESpace> & bcs)
+  void buildLhs(Diagonal<FESpace> const & assembly,
+                BCList<FESpace> & bcs)
   {
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename Diagonal<FESpace>::LMat_T;
@@ -128,9 +128,9 @@ struct Builder
   }
 
   template <typename FESpace1, typename FESpace2>
-  void buildProblem(Coupling<FESpace1, FESpace2> const & assembly,
-                    BCList<FESpace1> const & bcs1,
-                    BCList<FESpace2> const & bcs2)
+  void buildCoupling(Coupling<FESpace1, FESpace2> const & assembly,
+                     BCList<FESpace1> const & bcs1,
+                     BCList<FESpace2> const & bcs2)
   {
     using CurFE1_T = typename FESpace1::CurFE_T;
     using CurFE2_T = typename FESpace2::CurFE_T;
@@ -236,8 +236,8 @@ struct Builder
   }
 
   template <typename FESpace>
-  void buildProblem(AssemblyVector<FESpace> const & assembly,
-                    BCList<FESpace> const & bcs)
+  void buildRhs(AssemblyVector<FESpace> const & assembly,
+                BCList<FESpace> const & bcs)
   {
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename AssemblyVector<FESpace>::LMat_T;

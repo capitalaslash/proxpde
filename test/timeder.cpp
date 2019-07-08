@@ -87,8 +87,8 @@ int test(YAML::Node const & config)
   AssemblyProjection bdf2Rhs1{1.0 / dt, uOld, feSpace};
   AssemblyProjection bdf2Rhs2{-0.5 / dt, uOldOld, feSpace};
   Builder builder{feSpace.dof.size};
-  // builder.buildProblem(timeder, bcs);
-  // builder.buildProblem(mass, bcs);
+  // builder.buildLhs(timeder, bcs);
+  // builder.buildLhs(mass, bcs);
   // builder.closeMatrix();
   t.stop();
 
@@ -125,16 +125,16 @@ int test(YAML::Node const & config)
 
     uOldOld = uOld;
     uOld = u.data;
-    builder.buildProblem(bdf1Lhs, bcs);
-    builder.buildProblem(mass, bcs);
-    builder.buildProblem(bdf1Rhs, bcs);
+    builder.buildLhs(bdf1Lhs, bcs);
+    builder.buildLhs(mass, bcs);
+    builder.buildRhs(bdf1Rhs, bcs);
     if (method == TimeIntegrationMethod::BDF2 && itime > 1)
     {
-      builder.buildProblem(bdf2Lhs, bcs);
-      builder.buildProblem(bdf2Rhs1, bcs);
-      builder.buildProblem(bdf2Rhs2, bcs);
+      builder.buildLhs(bdf2Lhs, bcs);
+      builder.buildRhs(bdf2Rhs1, bcs);
+      builder.buildRhs(bdf2Rhs2, bcs);
     }
-    builder.buildProblem(AssemblyAnalyticRhs{[&rhs, time] (Vec3 const &) { return rhs(time); }, feSpace}, bcs);
+    builder.buildRhs(AssemblyAnalyticRhs{[&rhs, time] (Vec3 const &) { return rhs(time); }, feSpace}, bcs);
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);

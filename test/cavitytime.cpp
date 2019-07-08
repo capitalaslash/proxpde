@@ -95,11 +95,11 @@ int main(int argc, char* argv[])
   Builder<StorageType::RowMajor> builder{numDOFs};
 
   Builder<StorageType::RowMajor> fixedBuilder{numDOFs};
-  fixedBuilder.buildProblem(timeder, bcsVel);
-  fixedBuilder.buildProblem(stiffness, bcsVel);
-  fixedBuilder.buildProblem(grad, bcsVel, bcsP);
-  fixedBuilder.buildProblem(div, bcsP, bcsVel);
-  fixedBuilder.buildProblem(dummy, bcsP);
+  fixedBuilder.buildLhs(timeder, bcsVel);
+  fixedBuilder.buildLhs(stiffness, bcsVel);
+  fixedBuilder.buildCoupling(grad, bcsVel, bcsP);
+  fixedBuilder.buildCoupling(div, bcsP, bcsVel);
+  fixedBuilder.buildLhs(dummy, bcsP);
   fixedBuilder.closeMatrix();
   auto const fixedMat = fixedBuilder.A;
   auto const fixedRhs = fixedBuilder.b;
@@ -117,18 +117,18 @@ int main(int argc, char* argv[])
     velOld = sol.data;
 
     builder.clear();
-    builder.buildProblem(timeder_rhs, bcsVel);
-    builder.buildProblem(advection, bcsVel);
-    builder.buildProblem(timeder, bcsVel);
-    builder.buildProblem(stiffness, bcsVel);
-    builder.buildProblem(grad, bcsVel, bcsP);
-    builder.buildProblem(div, bcsP, bcsVel);
-    builder.buildProblem(dummy, bcsP);
+    builder.buildRhs(timeder_rhs, bcsVel);
+    builder.buildLhs(advection, bcsVel);
+    builder.buildLhs(timeder, bcsVel);
+    builder.buildLhs(stiffness, bcsVel);
+    builder.buildCoupling(grad, bcsVel, bcsP);
+    builder.buildCoupling(div, bcsP, bcsVel);
+    builder.buildLhs(dummy, bcsP);
     builder.closeMatrix();
 
     fixedBuilder.clear();
-    fixedBuilder.buildProblem(timeder_rhs, bcsVel);
-    fixedBuilder.buildProblem(advection, bcsVel);
+    fixedBuilder.buildRhs(timeder_rhs, bcsVel);
+    fixedBuilder.buildLhs(advection, bcsVel);
     fixedBuilder.closeMatrix();
     fixedBuilder.A += fixedMat;
     fixedBuilder.b += fixedRhs;

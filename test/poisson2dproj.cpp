@@ -42,15 +42,15 @@ int main(int argc, char* argv[])
   bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
   Var rhsVec{"rhs", feSpace.dof.size};
   interpolateAnalyticFunction(rhs, feSpace, rhsVec.data);
-  builder.buildProblem(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
+  builder.buildRhs(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
 
   Builder builderTest{feSpace.dof.size};
-  builderTest.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
-  builderTest.buildProblem(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
+  builderTest.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builderTest.buildRhs(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
   // std::cout << "b VecRhs:\n" << builder.b << "\nb Projection:\n" << builderTest.b << std::endl;
 

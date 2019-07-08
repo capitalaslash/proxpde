@@ -78,11 +78,11 @@ int test(YAML::Node const & config)
   uint const sizeW = feSpaceW.dof.size;
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
-  builder.buildProblem(AssemblyVectorMass(1.0, feSpaceW), bcsW);
-  builder.buildProblem(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
-  builder.buildProblem(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
+  builder.buildLhs(AssemblyVectorMass(1.0, feSpaceW), bcsW);
+  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
+  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
   // fixed u value
-  // builder.buildProblem(AssemblyBCNatural(
+  // builder.buildRhs(AssemblyBCNatural(
   //                        [] (Vec3 const & ) { return 1.; },
   //                      side::RIGHT,
   //                      feSpaceW), bcsW);
@@ -90,15 +90,15 @@ int test(YAML::Node const & config)
   BCList bcsDummy{feSpaceP0Vec};
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
-  // builder.buildProblem(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
+  // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
 
   // in order to apply essential bcs on U
-  // builder.buildProblem(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
+  // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
 
-  // builder.buildProblem(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
+  // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec rhsU;
   interpolateAnalyticFunction(rhs, feSpaceU, rhsU);
-  builder.buildProblem(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
+  builder.buildRhs(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -123,8 +123,8 @@ int test(YAML::Node const & config)
   ioP0.print({u, exactU, errorU});
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
-  builderRT0.buildProblem(AssemblyMass(1.0, feSpaceP0Vec), bcsDummy);
-  builderRT0.buildProblem(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
+  builderRT0.buildLhs(AssemblyMass(1.0, feSpaceP0Vec), bcsDummy);
+  builderRT0.buildRhs(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");
   LUSolver solverRT0;

@@ -97,9 +97,9 @@ int main(int argc, char* argv[])
   // AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(mass, bcs);
-  builder.buildProblem(f, bcs);
+  builder.buildLhs(stiffness, bcs);
+  builder.buildLhs(mass, bcs);
+  builder.buildRhs(f, bcs);
   builder.closeMatrix();
 
   Var sol{"u"};

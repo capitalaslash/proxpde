@@ -56,10 +56,10 @@ int main(int argc, char* argv[])
   Builder builder{feSpace.dof.size};
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  // builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
+  // builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   std::cout << tBuild << std::endl;
   tBuild.start();
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
+  builder.buildRhs(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
   builder.closeMatrix();

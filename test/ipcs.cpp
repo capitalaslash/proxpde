@@ -137,11 +137,11 @@ int main(int argc, char* argv[])
   // AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
 
   Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
-  // builderM.buildProblem(dummy, bcsP);
-  builderM.buildProblem(timeder, bcsVel);
-  builderM.buildProblem(stiffness, bcsVel);
-  builderM.buildProblem(grad, bcsVel, bcsP);
-  builderM.buildProblem(div, bcsP, bcsVel);
+  // builderM.buildLhs(dummy, bcsP);
+  builderM.buildLhs(timeder, bcsVel);
+  builderM.buildLhs(stiffness, bcsVel);
+  builderM.buildCoupling(grad, bcsVel, bcsP);
+  builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();
   Mat<StorageType::RowMajor> matFixed = builderM.A;
   Vec rhsFixed = builderM.b;
@@ -240,8 +240,8 @@ int main(int argc, char* argv[])
     t.start("monolithic build");
     velOldMonolithic = velM.data;
 
-    builderM.buildProblem(timederRhs, bcsVel);
-    builderM.buildProblem(advection, bcsVel);
+    builderM.buildRhs(timederRhs, bcsVel);
+    builderM.buildLhs(advection, bcsVel);
     builderM.closeMatrix();
 
     builderM.A += matFixed;

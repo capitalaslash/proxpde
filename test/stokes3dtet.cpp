@@ -64,9 +64,9 @@ int main(int argc, char* argv[])
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1,2}, pOffset, 0);
 
   Builder builder{numDOFs};
-  builder.buildProblem(stiffness, bcsVel);
-  builder.buildProblem(grad, bcsVel, bcsP);
-  builder.buildProblem(div, bcsP, bcsVel);
+  builder.buildLhs(stiffness, bcsVel);
+  builder.buildCoupling(grad, bcsVel, bcsP);
+  builder.buildCoupling(div, bcsP, bcsVel);
   builder.closeMatrix();
 
   Var sol("vel", numDOFs);

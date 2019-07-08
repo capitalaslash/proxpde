@@ -40,8 +40,8 @@ int main()
   AssemblyVectorMass massRT0(1.0, feSpaceRT0);
   AssemblyProjection projP1RT0(1.0, uP1.data, feSpaceRT0, feSpaceP1);
   Builder builderRT0{feSpaceRT0.dof.size};
-  builderRT0.buildProblem(massRT0, bcRT0);
-  builderRT0.buildProblem(projP1RT0, bcRT0);
+  builderRT0.buildLhs(massRT0, bcRT0);
+  builderRT0.buildRhs(projP1RT0, bcRT0);
   builderRT0.closeMatrix();
   // std::cout << "A:\n" << builderRT0.A << std::endl;
   // std::cout << "b:\n" << builderRT0.b << std::endl;
@@ -54,8 +54,8 @@ int main()
   AssemblyMass massP0(1.0, feSpaceP0);
   AssemblyProjection projRT0P0(1.0, uRT0.data, feSpaceP0, feSpaceRT0);
   Builder builderP0{feSpaceP0.dof.size * feSpaceP0.dim};
-  builderP0.buildProblem(massP0, bcP0);
-  builderP0.buildProblem(projRT0P0, bcP0);
+  builderP0.buildLhs(massP0, bcP0);
+  builderP0.buildRhs(projRT0P0, bcP0);
   builderP0.closeMatrix();
   // std::cout << "A:\n" << builderP0.A << std::endl;
   // std::cout << "b:\n" << builderP0.b << std::endl;

@@ -28,7 +28,7 @@ struct Eqn
   {
     for (auto & assembly: assemblyListLhs)
     {
-      builder.buildProblem(*assembly, bcList);
+      builder.buildLhs(*assembly, bcList);
     }
     builder.closeMatrix();
   }
@@ -37,7 +37,7 @@ struct Eqn
   {
     for (auto & assembly: assemblyListRhs)
     {
-      builder.buildProblem(*assembly, bcList);
+      builder.buildRhs(*assembly, bcList);
     }
   }
 

@@ -56,10 +56,10 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
   Builder<StorageType::RowMajor> builder{dofVel + dofP};
   Var sol{"sol"};
-  builder.buildProblem(stiffness, bcsVel);
-  builder.buildProblem(grad, bcsVel, bcsP);
-  builder.buildProblem(div, bcsP, bcsVel);
-  builder.buildProblem(dummy, bcsP);
+  builder.buildLhs(stiffness, bcsVel);
+  builder.buildCoupling(grad, bcsVel, bcsP);
+  builder.buildCoupling(div, bcsP, bcsVel);
+  builder.buildLhs(dummy, bcsP);
   builder.closeMatrix();
 
   IterSolver solver(builder.A);

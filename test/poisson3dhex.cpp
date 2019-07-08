@@ -55,12 +55,12 @@ int test(YAML::Node const & config)
 
   t.start("fe build");
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(AssemblyStiffness(1.0, feSpace), bcs);
-  builder.buildProblem(AssemblyAnalyticRhs(rhs, feSpace), bcs);
+  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   // `Vec rhsProj;
   // `interpolateAnalyticFunction(rhs, feSpace, rhsProj);
-  // `builder.buildProblem(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
+  // `builder.buildRhs(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
   builder.closeMatrix();
   t.stop();
 

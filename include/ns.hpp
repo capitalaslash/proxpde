@@ -131,11 +131,11 @@ struct NSSolverMonolithic
   {
     // TODO: assert that this comes after setting up bcs
     auto const dofU = feSpaceVel.dof.size;
-    builder.buildProblem(AssemblyMass{1. / parameters.dt, feSpaceVel}, bcsVel);
-    builder.buildProblem(AssemblyTensorStiffness{parameters.nu, feSpaceVel}, bcsVel);
-    builder.buildProblem(AssemblyGrad{-1.0, feSpaceVel, feSpaceP, allComp<FESpaceVel_T>(), 0, dofU*dim}, bcsVel, bcsP);
-    builder.buildProblem(AssemblyDiv{-1.0, feSpaceP, feSpaceVel, allComp<FESpaceVel_T>(), dofU*dim, 0}, bcsP, bcsVel);
-    builder.buildProblem(AssemblyMass{0., feSpaceP, {0}, dofU*dim, dofU*dim}, bcsP);
+    builder.buildLhs(AssemblyMass{1. / parameters.dt, feSpaceVel}, bcsVel);
+    builder.buildLhs(AssemblyTensorStiffness{parameters.nu, feSpaceVel}, bcsVel);
+    builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP, allComp<FESpaceVel_T>(), 0, dofU*dim}, bcsVel, bcsP);
+    builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel, allComp<FESpaceVel_T>(), dofU*dim, 0}, bcsP, bcsVel);
+    builder.buildLhs(AssemblyMass{0., feSpaceP, {0}, dofU*dim, dofU*dim}, bcsP);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
@@ -145,8 +145,8 @@ struct NSSolverMonolithic
   {
     velOld = sol.data;
     builder.clear();
-    builder.buildProblem(assemblyRhs, bcsVel);
-    builder.buildProblem(assemblyAdvection, bcsVel);
+    builder.buildRhs(assemblyRhs, bcsVel);
+    builder.buildLhs(assemblyAdvection, bcsVel);
     builder.closeMatrix();
     builder.A += matFixed;
     builder.b += rhsFixed;
@@ -322,18 +322,18 @@ struct NSSolverSplit2D
   void init()
   {
     // TODO: assert that this comes after setting up bcs
-    builderP.buildProblem(AssemblyStiffness{parameters.dt, feSpaceP}, bcsP);
+    builderP.buildLhs(AssemblyStiffness{parameters.dt, feSpaceP}, bcsP);
     builderP.closeMatrix();
     solverP.analyzePattern(builderP.A);
     solverP.factorize(builderP.A);
     rhsFixedP = builderP.b;
 
-    builderU.buildProblem(AssemblyMass{1.0, feSpaceU}, bcsU);
+    builderU.buildLhs(AssemblyMass{1.0, feSpaceU}, bcsU);
     builderU.closeMatrix();
     solverU.analyzePattern(builderU.A);
     solverU.factorize(builderU.A);
     rhsFixedVel[0] = builderU.b;
-    builderV.buildProblem(AssemblyMass{1.0, feSpaceU}, bcsV);
+    builderV.buildLhs(AssemblyMass{1.0, feSpaceU}, bcsV);
     builderV.closeMatrix();
     solverV.analyzePattern(builderV.A);
     solverV.factorize(builderV.A);
@@ -346,18 +346,18 @@ struct NSSolverSplit2D
     setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
     pOld += dp;
     builderUStar.clear();
-    builderUStar.buildProblem(assemblyMassUStar, bcsU);
-    builderUStar.buildProblem(assemblyAdvectionU, bcsU);
-    builderUStar.buildProblem(assemblyStiffnessUStar, bcsU);
-    builderUStar.buildProblem(assemblyURhs, bcsU);
-    builderUStar.buildProblem(assemblyPOldU, bcsU);
+    builderUStar.buildLhs(assemblyMassUStar, bcsU);
+    builderUStar.buildLhs(assemblyAdvectionU, bcsU);
+    builderUStar.buildLhs(assemblyStiffnessUStar, bcsU);
+    builderUStar.buildRhs(assemblyURhs, bcsU);
+    builderUStar.buildRhs(assemblyPOldU, bcsU);
     builderUStar.closeMatrix();
     builderVStar.clear();
-    builderVStar.buildProblem(assemblyMassVStar, bcsV);
-    builderVStar.buildProblem(assemblyAdvectionV, bcsV);
-    builderVStar.buildProblem(assemblyStiffnessVStar, bcsV);
-    builderVStar.buildProblem(assemblyVRhs, bcsV);
-    builderVStar.buildProblem(assemblyPOldV, bcsV);
+    builderVStar.buildLhs(assemblyMassVStar, bcsV);
+    builderVStar.buildLhs(assemblyAdvectionV, bcsV);
+    builderVStar.buildLhs(assemblyStiffnessVStar, bcsV);
+    builderVStar.buildRhs(assemblyVRhs, bcsV);
+    builderVStar.buildRhs(assemblyPOldV, bcsV);
     builderVStar.closeMatrix();
   }
 
@@ -380,7 +380,7 @@ struct NSSolverSplit2D
     setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
     setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
     builderP.clearRhs();
-    builderP.buildProblem(assemblyDivVelStar, bcsP);
+    builderP.buildRhs(assemblyDivVelStar, bcsP);
     builderP.b += rhsFixedP;
   }
 
@@ -393,12 +393,12 @@ struct NSSolverSplit2D
   void assemblyStepVel()
   {
     builderU.clearRhs();
-    builderU.buildProblem(assemblyUStarRhs, bcsU);
-    builderU.buildProblem(assemblyGradPRhsU, bcsU);
+    builderU.buildRhs(assemblyUStarRhs, bcsU);
+    builderU.buildRhs(assemblyGradPRhsU, bcsU);
     builderU.b += rhsFixedVel[0];
     builderV.clearRhs();
-    builderV.buildProblem(assemblyVStarRhs, bcsV);
-    builderV.buildProblem(assemblyGradPRhsV, bcsV);
+    builderV.buildRhs(assemblyVStarRhs, bcsV);
+    builderV.buildRhs(assemblyGradPRhsV, bcsV);
     builderV.b += rhsFixedVel[1];
   }
 

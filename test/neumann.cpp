@@ -20,9 +20,10 @@ void computeGradient(Vec & grad, Vec const & u, FESpaceOrig const & feSpaceOrig)
 
   GradFESpace_T feSpaceGrad{feSpaceOrig.mesh};
   BCList bcsGrad{feSpaceGrad};
+  // std::tuple<> bcTuple;
   Builder builderGrad{feSpaceGrad.dof.size * GradFESpace_T::dim};
-  builderGrad.buildProblem(AssemblyMass{1.0, feSpaceGrad}, bcsGrad);
-  builderGrad.buildProblem(AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}, bcsGrad);
+  builderGrad.buildLhs(AssemblyMass{1.0, feSpaceGrad}, bcsGrad);
+  builderGrad.buildRhs(AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}, bcsGrad);
   builderGrad.closeMatrix();
   Solver solverGrad;
   solverGrad.analyzePattern(builderGrad.A);
@@ -85,16 +86,18 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }});
+  auto const bcLeft = BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }};
+  bcs.addBC(bcLeft);
+  // std::tuple<BCEss<FESpace_T>> bcTuple = {bcLeft};
   // bcs.addBC(BCNat<FESpace_T>{side::RIGHT, [] (Vec3 const &) { return -M_PI; }});
   t.stop();
 
   t.start("assembly");
   auto const size = feSpace.dof.size;
   Builder builder{size};
-  builder.buildProblem(AssemblyStiffness{1.0, feSpace}, bcs);
-  builder.buildProblem(AssemblyAnalyticRhs{rhs, feSpace}, bcs);
-  builder.buildProblem(AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace}, bcs);
+  builder.buildLhs(AssemblyStiffness{1.0, feSpace}, bcs);
+  builder.buildRhs(AssemblyAnalyticRhs{rhs, feSpace}, bcs);
+  builder.buildRhs(AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();
   t.stop();
 

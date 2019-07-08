@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
   // AssemblyAnalyticRhs f(rotatedRhs, feSpace);
   AssemblyAnalyticRhs f(rhs, feSpace);
   Builder builder{size};
-  builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(f, bcs);
+  builder.buildLhs(stiffness, bcs);
+  builder.buildRhs(f, bcs);
   builder.buildRhs(AssemblyBCNatural{bcValue, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;

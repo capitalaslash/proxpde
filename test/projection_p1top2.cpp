@@ -36,8 +36,8 @@ int main()
   AssemblyMass mass2(1.0, feSpace2);
   AssemblyProjection mass1(1.0, u1.data, feSpace2, feSpace1);
   Builder builder{feSpace2.dof.size};
-  builder.buildProblem(mass2, bc2);
-  builder.buildProblem(mass1, bc2);
+  builder.buildLhs(mass2, bc2);
+  builder.buildRhs(mass1, bc2);
   builder.closeMatrix();
   std::cout << "A:\n" << builder.A << std::endl;
   std::cout << "b:\n" << builder.b << std::endl;

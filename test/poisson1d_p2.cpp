@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
 
   t.start();
   Builder builder{feSpace.dof.size};
-  builder.buildProblem(stiffness, bcs);
-  builder.buildProblem(f, bcs);
+  builder.buildLhs(stiffness, bcs);
+  builder.buildRhs(f, bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
 

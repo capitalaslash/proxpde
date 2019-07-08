@@ -64,9 +64,9 @@ int main(int argc, char* argv[])
   // builder.assemblies[1].push_back(&grad0);
   // builder.assemblies[1].push_back(&div0);
   // builder.assemblies[0].push_back(&stiffness1);
-  builder.buildProblem(stiffness, bcsVel);
-  builder.buildProblem(grad, bcsVel, bcsP);
-  builder.buildProblem(div, bcsP, bcsVel);
+  builder.buildLhs(stiffness, bcsVel);
+  builder.buildCoupling(grad, bcsVel, bcsP);
+  builder.buildCoupling(div, bcsP, bcsVel);
   builder.closeMatrix();
 
   Var sol("vel", numDOFs);
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
 
   // std::cout << "A:\n" << builder.A << std::endl;
-  // std::cout << "builder.b:\n" << builder.b << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
   Var exact{"exact", numDOFs};

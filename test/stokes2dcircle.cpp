@@ -93,40 +93,39 @@ int main(int argc, char* argv[])
 
   // integral on boundary
   t.start("boundary int");
-  using FacetFEP_T = FESpaceP_T::RefFE_T::FacetFE_T;
-  using FacetQR_T = SideQR_T<FESpaceP_T::QR_T>;
-  using facetCurFEP_T = CurFE<FacetFEP_T, FacetQR_T>;
-  facetCurFEP_T facetCurFEP;
-  using FacetFESpaceP_T = FESpace<Mesh_T, FESpaceP_T::RefFE_T, SideGaussQR<Elem_T, 3>>;
-  FacetFESpaceP_T facetFESpaceP{*mesh};
-  FEVar pFacet{"pFacet", facetFESpaceP};
-  pFacet.data() = p.data;
-
-  double pIntegralOnLeft = 0.;
-  for (auto & facet: mesh->facetList)
+  double pIntegral = 0.;
   {
-    if (facet.marker == side::LEFT)
+    using FacetFEP_T = FESpaceP_T::RefFE_T::FacetFE_T;
+    using FacetQR_T = SideQR_T<FESpaceP_T::QR_T>;
+    using facetCurFEP_T = CurFE<FacetFEP_T, FacetQR_T>;
+    using FacetFESpaceP_T =
+      FESpace<Mesh_T,
+              FESpaceP_T::RefFE_T,
+              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
+
+    facetCurFEP_T facetCurFEP;
+    FacetFESpaceP_T facetFESpaceP{*mesh};
+    FEVar pFacet{"pFacet", facetFESpaceP};
+    pFacet.data() = p.data;
+
+    for (auto & facet: mesh->facetList)
     {
-      // std::cout << "facet " << facet.id << std::endl;
-      facetCurFEP.reinit(facet);
-      auto elem = facet.facingElem[0].ptr;
-      u.reinit(*elem);
-      pFacet.reinit(*elem);
-      uint const side = facet.facingElem[0].side;
-      for(uint q=0; q<FacetQR_T::numPts; ++q)
+      if (facet.marker == side::LEFT)
       {
-        auto const value = pFacet.evaluate(side * 3 + q);
-        for(uint i=0; i<facetCurFEP_T::RefFE_T::numFuns; ++i)
+        // std::cout << "facet " << facet.id << std::endl;
+        facetCurFEP.reinit(facet);
+        auto elem = facet.facingElem[0].ptr;
+        pFacet.reinit(*elem);
+        uint const side = facet.facingElem[0].side;
+        for (uint q=0; q<FacetQR_T::numPts; ++q)
         {
-          pIntegralOnLeft +=
-              facetCurFEP.JxW[q] *
-              facetCurFEP.phi[q](i) *
-              value;
+          auto const pValue = pFacet.evaluate(side * FacetQR_T::numPts + q);
+          pIntegral += facetCurFEP.JxW[q] * pValue;
         }
       }
     }
+    std::cout << "integral of pressure on left face: " << std::setprecision(16) << pIntegral << std::endl;
   }
-  std::cout << "integral of pressure on left face: " << std::setprecision(16) << pIntegralOnLeft << std::endl;
   t.stop();
 
   // wall shear stress on circle
@@ -148,7 +147,7 @@ int main(int argc, char* argv[])
   // double norm = error.data.norm();
   // std::cout << "the norm of the error is " << norm << std::endl;
 
-  if (std::fabs(pIntegralOnLeft - 0.9800943987494872) > 1.e-12)
+  if (std::fabs(pIntegral - 0.9800943987494872) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

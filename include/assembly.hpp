@@ -1401,7 +1401,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using FacetFE_T = typename FESpace_T::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
   using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 
@@ -1469,7 +1469,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using FacetFE_T = typename FESpace::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
   using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 
@@ -1528,7 +1528,7 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  using FacetFE_T = typename FESpace::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
   using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
 

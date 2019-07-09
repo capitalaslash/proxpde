@@ -148,9 +148,9 @@ template <typename FESpace>
 struct BCNat
 {
   using FESpace_T = FESpace;
-  using RefFE_T = typename FESpace_T::RefFE_T::RefFacet_T;
+  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using CurFE_T = CurFE<RefFE_T, QR_T>;
+  using CurFE_T = CurFE<FacetFE_T, QR_T>;
 
   BCNat(marker_T const m,
         Fun<FESpace::dim,3> const f,
@@ -186,12 +186,13 @@ struct BCNat
 template <typename FESpace>
 struct BCMixed
 {
-  using Elem_T = typename FESpace::RefFE_T::RefFacet_T;
-  using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using CurFE_T = CurFE<Elem_T, QR_T>;
+  using FESpace_T = FESpace;
+  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
+  using QR_T = SideQR_T<typename FESpace_T::QR_T>;
+  using CurFE_T = CurFE<FacetFE_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCMixed(marker_T m, Fun<FESpace::dim,3> const f, std::vector<uint> const c = allComp<FESpace>()):
+  explicit BCMixed(marker_T m, Fun<FESpace_T::dim,3> const f, std::vector<uint> const c = allComp<FESpace>()):
     marker(m),
     coeff(std::move(f)),
     comp(std::move(c))
@@ -206,7 +207,7 @@ struct BCMixed
 
   CurFE_T curFE;
   marker_T marker;
-  Fun<FESpace::dim,3> const coeff;
+  Fun<FESpace_T::dim, 3> const coeff;
   std::vector<uint> const comp;
 };
 
@@ -214,6 +215,8 @@ template <typename FESpace>
 class BCList
 {
 public:
+  using FESpace_T = FESpace;
+
   explicit BCList(FESpace const & fe):
     feSpace(fe)
   {}

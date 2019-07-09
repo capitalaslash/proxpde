@@ -93,13 +93,13 @@ int main(int argc, char* argv[])
 
   // integral on boundary
   t.start("boundary int");
-  using FacetRefFE_T = FESpaceP_T::RefFE_T::RefFacet_T;
+  using FacetFEP_T = FESpaceP_T::RefFE_T::FacetFE_T;
   using FacetQR_T = SideQR_T<FESpaceP_T::QR_T>;
-  using FacetCurFE_T = CurFE<FacetRefFE_T, FacetQR_T>;
-  FacetCurFE_T facetCurFE;
-  using FacetFESpace_T = FESpace<Mesh_T, FESpaceP_T::RefFE_T, SideGaussQR<Elem_T, 3>>;
-  FacetFESpace_T facetFESpace{*mesh};
-  FEVar pFacet{"pFacet", facetFESpace};
+  using facetCurFEP_T = CurFE<FacetFEP_T, FacetQR_T>;
+  facetCurFEP_T facetCurFEP;
+  using FacetFESpaceP_T = FESpace<Mesh_T, FESpaceP_T::RefFE_T, SideGaussQR<Elem_T, 3>>;
+  FacetFESpaceP_T facetFESpaceP{*mesh};
+  FEVar pFacet{"pFacet", facetFESpaceP};
   pFacet.data() = p.data;
 
   double pIntegralOnLeft = 0.;
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     if (facet.marker == side::LEFT)
     {
       // std::cout << "facet " << facet.id << std::endl;
-      facetCurFE.reinit(facet);
+      facetCurFEP.reinit(facet);
       auto elem = facet.facingElem[0].ptr;
       u.reinit(*elem);
       pFacet.reinit(*elem);
@@ -116,11 +116,11 @@ int main(int argc, char* argv[])
       for(uint q=0; q<FacetQR_T::numPts; ++q)
       {
         auto const value = pFacet.evaluate(side * 3 + q);
-        for(uint i=0; i<FacetCurFE_T::RefFE_T::numFuns; ++i)
+        for(uint i=0; i<facetCurFEP_T::RefFE_T::numFuns; ++i)
         {
           pIntegralOnLeft +=
-              facetCurFE.JxW[q] *
-              facetCurFE.phi[q](i) *
+              facetCurFEP.JxW[q] *
+              facetCurFEP.phi[q](i) *
               value;
         }
       }

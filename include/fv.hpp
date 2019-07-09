@@ -76,13 +76,13 @@ static const std::unordered_map<std::string, LimiterType> stringToLimiter =
 // template <>
 // struct FacetRefFE<RefTriangleP0> { using type = RefTriangleE1; };
 
-template <typename FESpaceT, LimiterType L>
+template <typename FESpace, LimiterType L>
 struct FVSolver
 {
-  using Mesh_T = typename FESpaceT::Mesh_T;
+  using Mesh_T = typename FESpace::Mesh_T;
   using Elem_T = typename Mesh_T::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
-  using ElemRefFE_T = typename FESpaceT::RefFE_T;
+  using ElemRefFE_T = typename FESpace::RefFE_T;
   // using FacetFESpace_T = FESpace<Mesh_T,
   //                                typename FEType<Facet_T, 0>::RefFE_T,
   //                                typename FEType<Facet_T, 0>::RecommendedQR>;
@@ -91,7 +91,7 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpaceT const & fe, BCList<FESpaceT> const & bcList):
+  FVSolver(FESpace const & fe, BCList<FESpace> const & bcList):
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),
@@ -136,7 +136,7 @@ struct FVSolver
   void computeFluxes(Table<double, dim> const & vel, FESpaceVel const & feSpaceVel)
   {
     using RefFEVel_T = typename FESpaceVel::RefFE_T;
-    using FacetRefFEVel_T = typename RefFEVel_T::RefFacet_T;
+    using FacetRefFEVel_T = typename RefFEVel_T::FacetFE_T;
 
     // assert(static_cast<size_t>(vel.size() / dim) == feSpace.mesh.facetList.size());
     for (auto const & facet: feSpace.mesh.facetList)
@@ -256,8 +256,8 @@ struct FVSolver
     }
   }
 
-  FESpaceT const & feSpace;
-  BCList<FESpaceT> const & bcs;
+  FESpace const & feSpace;
+  BCList<FESpace> const & bcs;
   Vec uOld;
   Vec uJump;
   Vec fluxes;

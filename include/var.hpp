@@ -51,7 +51,7 @@ struct BlockVar: public Var
 template <typename FESpace>
 struct FEVar
 {
-  FEVar(std::string_view n, FESpace & fe):
+  FEVar(std::string_view n, FESpace const & fe):
     name(n),
     feSpace(fe),
     _data(fe.dof.size * FESpace::dim)
@@ -96,7 +96,7 @@ struct FEVar
   }
 
   std::string name;
-  FESpace & feSpace;
+  FESpace const & feSpace;
 
 private:
   Vec _data;

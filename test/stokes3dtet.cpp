@@ -8,38 +8,47 @@
 #include "builder.hpp"
 #include "assembler.hpp"
 #include "iomanager.hpp"
-
-using Elem_T = Tetrahedron;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
-using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
-using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,3>;
-using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+#include "timer.hpp"
 
 int main(int argc, char* argv[])
 {
+  using Elem_T = Tetrahedron;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = FEType<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = FEType<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = FEType<Elem_T, 2>::RecommendedQR;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 3>;
+  using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+
+  MilliTimer t;
+
+  t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-
-  uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 2 : std::stoi(argv[2]);
-  uint const numElemsZ = (argc < 3)? 2 : std::stoi(argv[3]);
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 1.};
-  buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, numElemsZ}});
-
+  double const ly = 2.;
+  uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
+  uint const numElemsZ = (argc < 3)? 4 : std::stoi(argv[3]);
+  buildHyperCube(
+        *mesh,
+        {0., 0., 0.},
+        {1., ly, 1.},
+        {numElemsX, numElemsY, numElemsZ});
   // readGMSH(*mesh, "cube_uns.msh");
+  t.stop();
 
+  t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh};
+  FESpaceP_T feSpaceP{*mesh, 3*feSpaceVel.dof.size};
   FESpaceComponent_T feSpaceComponent{*mesh};
+  t.stop();
   // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);
   auto assembler = make_assembler(feList);
   // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU, feSpaceP));
 
+  t.start("bcs");
   auto zero = [] (Vec3 const &) { return Vec3::Constant(0.); };
   auto inlet = [] (Vec3 const & p) { return Vec3(0., 0.5*(1.-p(0)*p(0)), 0.); };
   BCList bcsVel{feSpaceVel};
@@ -51,41 +60,41 @@ int main(int argc, char* argv[])
   bcsVel.addBC(BCEss{feSpaceVel, side::FRONT, zero, {2}});
   // bcsVel.addBC(BCNat<FESpaceVel_T>{side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);}});
   BCList bcsP{feSpaceP};
+  t.stop();
 
-  std::cout << bcsVel.bcEssList.back() << std::endl;
+  // std::cout << bcsVel.bcEssList.back() << std::endl;
 
+  t.start("assembly");
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
-  auto const pOffset = FESpaceVel_T::dim * dofU;
-  uint const numDOFs = pOffset + dofP;
-
-  AssemblyTensorStiffness stiffness(1.0, feSpaceVel);
-  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1,2}, 0, pOffset);
-  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1,2}, pOffset, 0);
-
+  uint const numDOFs = FESpaceVel_T::dim * dofU + dofP;
   Builder builder{numDOFs};
-  builder.buildLhs(stiffness, bcsVel);
-  builder.buildCoupling(grad, bcsVel, bcsP);
-  builder.buildCoupling(div, bcsP, bcsVel);
+  double const nu = 0.1;
+  builder.buildLhs(AssemblyTensorStiffness{nu, feSpaceVel}, bcsVel);
+  builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
+  builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
   builder.closeMatrix();
+  t.stop();
 
+  t.start("solve");
   Var sol("vel", numDOFs);
-  IterSolver solver(builder.A);
+  LUSolver solver(builder.A);
   sol.data = solver.solve(builder.b);
+  t.stop();
 
   // std::cout << "A:\n" << builder.A.block(2*dofU, 2*dofU, dofU, dofU).norm() << std::endl;
   // std::cout << "b:\n" << builder.b.block(2*dofU, 0, dofU, 1).norm() << std::endl;
   // std::cout << "sol:\n" << sol.data.block(2*dofU, 0, dofU, 1).transpose() << std::endl;
 
+  t.start("error");
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
   interpolateAnalyticFunction(
-        [](Vec3 const & p){ return 1. - p(1); },
+        [ly, nu](Vec3 const & p){ return nu * (ly - p(1)); },
         feSpaceP,
-        exact.data,
-        pOffset);
+        exact.data);
 
-  std::cout << sol.data.norm() << std::endl;
+  std::cout << "solution norm: " << sol.data.norm() << std::endl;
 
   Var u{"u"};
   Var v{"v"};
@@ -94,6 +103,7 @@ int main(int argc, char* argv[])
   getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
   getComponent(w.data, feSpaceComponent, sol.data, feSpaceVel, 2);
   Var p{"p", sol.data, 3*dofU, dofP};
+  // getComponent(p.data, feSpaceP, sol.data, feSpaceP, 0);
 
   Var ue{"ue"};
   Var ve{"ve"};
@@ -102,11 +112,16 @@ int main(int argc, char* argv[])
   getComponent(ve.data, feSpaceComponent, exact.data, feSpaceVel, 1);
   getComponent(we.data, feSpaceComponent, exact.data, feSpaceVel, 2);
   Var pe{"pe", exact.data, 3*dofU, dofP};
+  t.stop();
 
+  t.start("print");
   IOManager ioVel{feSpaceVel, "output_stokes3dtet/vel"};
   ioVel.print({sol, exact});
   IOManager ioP{feSpaceP, "output_stokes3dtet/p"};
   ioP.print({p, pe});
+  t.stop();
+
+  t.print();
 
   auto uError = (u.data - ue.data).norm();
   auto vError = (v.data - ve.data).norm();
@@ -118,10 +133,10 @@ int main(int argc, char* argv[])
   std::cout << "w error norm: " << std::setprecision(16) << wError << std::endl;
   std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
 
-  if ( (uError - 7.163490691351315e-06) > 1.e-12 ||
-       (vError - 1.083035964559222e-05) > 1.e-12 ||
-       (wError - 2.689732977272767e-06) > 1.e-12 ||
-       (pError - 0.0007046548064074682) > 1.e-12)
+  if (std::fabs(uError - 1.191610761242353e-15) > 1.e-12 ||
+      std::fabs(vError - 4.347071660478249e-15) > 1.e-12 ||
+      std::fabs(wError - 1.168951507916659e-15) > 1.e-12 ||
+      std::fabs(pError - 5.36156027085171e-14) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

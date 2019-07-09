@@ -284,6 +284,65 @@ template<> array<GaussQR<Hexahedron, 27>::Vec_T, 27> const GaussQR<Hexahedron, 2
 template<> int const GaussQR<Hexahedron, 27>::bestPt = 13;
 
 // ----------------------------------------------------------------------------
+template <typename GeoElem, int N>
+struct SideGaussQR
+{
+  using GeoElem_T = GeoElem;
+  using Vec_T = FVec<GeoElem_T::dim>;
+  static int constexpr numPts = N * GeoElem_T::numFacets;
+  using Weights_T = FVec<numPts>;
+
+  static Weights_T const weight;
+  static array<Vec_T, numPts> const node;
+};
+
+template<> SideGaussQR<Quad, 2>::Weights_T const SideGaussQR<Quad, 2>::weight =
+    (SideGaussQR<Quad, 2>::Weights_T{} <<
+     1.L, 1.L,
+     1.L, 1.L,
+     1.L, 1.L,
+     1.L, 1.L).finished();
+template<> array<SideGaussQR<Quad, 2>::Vec_T, 2 * 4> const SideGaussQR<Quad, 2>::node =
+{{
+   SideGaussQR<Quad, 2>::Vec_T{-sqrt13rd, -1.0},
+   SideGaussQR<Quad, 2>::Vec_T{ sqrt13rd, -1.0},
+
+   SideGaussQR<Quad, 2>::Vec_T{ 1.0, -sqrt13rd},
+   SideGaussQR<Quad, 2>::Vec_T{ 1.0,  sqrt13rd},
+
+   SideGaussQR<Quad, 2>::Vec_T{-sqrt13rd,  1.0},
+   SideGaussQR<Quad, 2>::Vec_T{ sqrt13rd,  1.0},
+
+   SideGaussQR<Quad, 2>::Vec_T{-1.0, -sqrt13rd},
+   SideGaussQR<Quad, 2>::Vec_T{-1.0,  sqrt13rd},
+}};
+
+template<> SideGaussQR<Quad, 3>::Weights_T const SideGaussQR<Quad, 3>::weight =
+    (SideGaussQR<Quad, 3>::Weights_T{} <<
+     5.L, 8.L, 5.L,
+     5.L, 8.L, 5.L,
+     5.L, 8.L, 5.L,
+     5.L, 8.L, 5.L).finished() / 9.L;
+template<> array<SideGaussQR<Quad, 3>::Vec_T, 3 * 4> const SideGaussQR<Quad, 3>::node =
+{{
+   SideGaussQR<Quad, 3>::Vec_T{-sqrt35th, -1.0},
+   SideGaussQR<Quad, 3>::Vec_T{     0.0L, -1.0},
+   SideGaussQR<Quad, 3>::Vec_T{ sqrt35th, -1.0},
+
+   SideGaussQR<Quad, 3>::Vec_T{ 1.0, -sqrt35th},
+   SideGaussQR<Quad, 3>::Vec_T{ 1.0,      0.0L},
+   SideGaussQR<Quad, 3>::Vec_T{ 1.0,  sqrt35th},
+
+   SideGaussQR<Quad, 3>::Vec_T{-sqrt35th,  1.0},
+   SideGaussQR<Quad, 3>::Vec_T{     0.0L,  1.0},
+   SideGaussQR<Quad, 3>::Vec_T{ sqrt35th,  1.0},
+
+   SideGaussQR<Quad, 3>::Vec_T{-1.0, -sqrt35th},
+   SideGaussQR<Quad, 3>::Vec_T{-1.0,      0.0L},
+   SideGaussQR<Quad, 3>::Vec_T{-1.0,  sqrt35th},
+}};
+
+// ----------------------------------------------------------------------------
 template <typename GeoElem>
 struct TrapQR
 {
@@ -336,6 +395,7 @@ template<> array<TrapQR<Hexahedron>::Vec_T,8> const TrapQR<Hexahedron>::node =
    TrapQR<Hexahedron>::Vec_T( 1., 1.,  1.)
 }};
 
+// ----------------------------------------------------------------------------
 template <typename GeoElem>
 struct SimpsonQR
 {

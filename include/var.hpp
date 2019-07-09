@@ -100,6 +100,12 @@ struct FEVar
     return feSpace.curFE.phi[q].dot(_localData);
   }
 
+  template <typename FESpaceVec>
+  void setFromComponent(Vec & v, FESpaceVec feSpaceVec, uint component)
+  {
+    getComponent(_data, feSpace, v, feSpaceVec, component);
+  }
+
   std::string name;
   FESpace const & feSpace;
 

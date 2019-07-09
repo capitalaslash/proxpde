@@ -100,6 +100,30 @@ struct FEVar
     return feSpace.curFE.phi[q].dot(_localData);
   }
 
+  // expensive version for points that are not the ones defined by the qr rule
+  double evaluateOnRef(FVec<FESpace::RefFE_T::dim> const & p) const
+  {
+    double value = 0.;
+    for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
+    {
+      value += _localData[k] * FESpace::RefFE_T::phiFun[k](p);
+    }
+    return value;
+  }
+
+  // super-expensive version for points that are not the ones defined by the qr rule
+  // and that we need to trace back to the ref element
+  double evaluateOnReal(Vec3 const & p) const
+  {
+    double value = 0.;
+    auto const pRef = feSpace.curFE.approxInverseMap(p);
+    for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
+    {
+      value += _localData[k] * FESpace::RefFE_T::phiFun[k](pRef);
+    }
+    return value;
+  }
+
   template <typename FESpaceVec>
   void setFromComponent(Vec & v, FESpaceVec feSpaceVec, uint component)
   {

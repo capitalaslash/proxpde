@@ -96,6 +96,7 @@ minifem_add_test(ns_test)
 
 # 3d stokes
 minifem_add_test(stokes3dtet)
+minifem_add_test(stokes3dhex)
 
 # bc
 minifem_add_test(robin_bc)

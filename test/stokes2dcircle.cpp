@@ -57,7 +57,8 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("assembly");
-  AssemblyStiffness stiffness(0.1, feSpaceU);
+  double const nu = 0.1;
+  AssemblyStiffness stiffness(nu, feSpaceU);
   AssemblyGrad grad(-1.0, feSpaceU, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceU);
   // this is required to properly apply the pinning on the pressure
@@ -129,6 +130,50 @@ int main(int argc, char* argv[])
   t.stop();
 
   // wall shear stress on circle
+  t.start("wss");
+  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, FEType<Elem_T, 0>::RecommendedQR> feSpaceWSS{*mesh};
+  Var wss{"wss"};
+  wss.data = Vec::Zero(feSpaceWSS.dof.size);
+  {
+    using FacetFEU_T = FESpaceU_T::RefFE_T::FacetFE_T;
+    using FacetQR_T = SideQR_T<FESpaceU_T::QR_T>;
+    using facetCurFEU_T = CurFE<FacetFEU_T, FacetQR_T>;
+    using FacetFESpaceU_T =
+      FESpace<Mesh_T,
+              FESpaceU_T::RefFE_T,
+              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
+
+    facetCurFEU_T facetCurFEU;
+    FacetFESpaceU_T facetFESpaceU{*mesh};
+    FEVar uFacet{"uFacet", facetFESpaceU};
+    uFacet.data() = u.data();
+    FEVar vFacet{"vFacet", facetFESpaceU};
+    vFacet.data() = v.data();
+
+    for (auto & facet: mesh->facetList)
+    {
+      if (facet.marker == side::CIRCLE)
+      {
+        // std::cout << "facet " << facet.id << std::endl;
+        Vec3 const normal = facet.normal();
+        facetCurFEU.reinit(facet);
+        auto elem = facet.facingElem[0].ptr;
+        auto const id = feSpaceWSS.dof.getId(elem->id);
+        u.reinit(*elem);
+        v.reinit(*elem);
+        for(uint q=0; q<FESpaceU_T::QR_T::numPts; ++q)
+        {
+          Vec3 const gradUValue = u.evaluateGrad(q);
+          Vec3 const gradVValue = v.evaluateGrad(q);
+          wss.data[id] += u.feSpace.curFE.JxW[q] * nu *
+              (gradUValue.dot(normal) * normal[0] + gradVValue.dot(normal) * normal[1]);
+        }
+        wss.data[id] /= facet.volume();
+      }
+    }
+    std::cout << "max wss on circle face: " << std::setprecision(16) << wss.data.maxCoeff() << std::endl;
+  }
+  t.stop();
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
@@ -140,6 +185,8 @@ int main(int argc, char* argv[])
   ioU.print({sol});
   IOManager ioP{feSpaceP, "output_stokes2dcircle/p"};
   ioP.print({p});
+  IOManager ioWSS{feSpaceWSS, "output_stokes2dcircle/wss"};
+  ioWSS.print({wss});
   t.stop();
 
   t.print();
@@ -147,7 +194,8 @@ int main(int argc, char* argv[])
   // double norm = error.data.norm();
   // std::cout << "the norm of the error is " << norm << std::endl;
 
-  if (std::fabs(pIntegral - 0.9800943987494872) > 1.e-12)
+  if (std::fabs(pIntegral - 0.9800943987494872) > 1.e-12 ||
+      std::fabs(wss.data.maxCoeff() - 3.603715559288087e-05) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

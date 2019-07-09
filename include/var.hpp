@@ -96,7 +96,7 @@ struct FEVar
   double evaluate(uint const q) const
   {
     // check that the qr is compatible
-    assert(q < FESpace::RefFE_T::numFuns);
+    assert(q < FESpace::QR_T::numPts);
     return feSpace.curFE.phi[q].dot(_localData);
   }
 

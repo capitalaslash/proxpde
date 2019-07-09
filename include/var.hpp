@@ -73,10 +73,15 @@ struct FEVar
     return _data;
   }
 
-  void setData(Vec const & data)
+  Vec & data()
   {
-    _data = data;
+    return _data;
   }
+
+  // void setData(Vec const & data)
+  // {
+  //   _data = data;
+  // }
 
   void reinit(GeoElem const & elem)
   {

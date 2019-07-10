@@ -1134,28 +1134,42 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs> localData;
+    FVec<CurFE2_T::numDOFs * FESpace2_T::dim> localData;
 
-    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    for (uint d2=0; d2<FESpace2_T::dim; ++d2)
     {
-      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n);
-      localData[n] = data[dofId];
+      for (uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n, d2);
+        localData[n + d2*CurFE2_T::numDOFs] = data[dofId];
+      }
     }
-    uint d = 0;
+
+    uint counter = 0;
     for (auto const c: this->comp)
     {
+      uint const d1 = c % FESpace1_T::Mesh_T::Elem_T::dim;
+      uint const d2 = c / FESpace1_T::Mesh_T::Elem_T::dim;
       for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
       {
-        Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
+        // d u_d2 / d x_d1
+        double const gradDataQ =
+            feSpace2.curFE.dphi[q].col(d1).dot(
+              localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
+        Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
             coeff * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
-            (feSpace2.curFE.dphi[q].col(c).dot(localData));
-        // Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
+            gradDataQ;
+        // // u_d2
+        // double const dataQ =
+        //     feSpace2.curFE.phi[q].dot(
+        //       localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
+        // Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
         //     coeff * this->feSpace.curFE.JxW[q] *
-        //     this->feSpace.curFE.dphi[q].col(c) *
-        //     (feSpace2.curFE.phi[q].dot(localData));
+        //     this->feSpace.curFE.dphi[q].col(d1) *
+        //     dataQ;
       }
-      d++;
+      counter++;
     }
   }
 
@@ -1202,28 +1216,42 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
   {
     using CurFE1_T = typename FESpace1_T::CurFE_T;
     using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs> localData;
+    FVec<CurFE2_T::numDOFs * FESpace2_T::dim> localData;
 
-    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    for (uint d2=0; d2<FESpace2_T::dim; ++d2)
     {
-      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n);
-      localData[n] = data[dofId];
+      for (uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      {
+        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n, d2);
+        localData[n + d2*CurFE2_T::numDOFs] = data[dofId];
+      }
     }
-    uint d = 0;
+
+    uint counter = 0;
     for (auto const c: this->comp)
     {
+      uint const d1 = c % FESpace2_T::dim;
+      uint const d2 = c / FESpace2_T::dim;
       for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
       {
-        // Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
+        // // d u_d2 / d x_d1
+        // double const gradDataQ =
+        //     feSpace2.curFE.dphi[q].col(d1).dot(
+        //       localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
+        // Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
         //     coeff * this->feSpace.curFE.JxW[q] *
         //     this->feSpace.curFE.phi[q] *
-        //     (feSpace2.curFE.dphi[q].col(c).dot(localData));
-        Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
+        //     gradDataQ;
+        // u_d2
+        double const dataQ =
+            feSpace2.curFE.phi[q].dot(
+              localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
+        Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
             coeff * this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.dphi[q].col(c) *
-            (feSpace2.curFE.phi[q].dot(localData));
+            this->feSpace.curFE.dphi[q].col(d1) *
+            dataQ;
       }
-      d++;
+      counter++;
     }
   }
 

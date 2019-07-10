@@ -100,6 +100,13 @@ struct FEVar
     return feSpace.curFE.phi[q].dot(_localData);
   }
 
+  Vec3 evaluateGrad(uint const q) const
+  {
+    // check that the qr is compatible
+    assert(q < FESpace::QR_T::numPts);
+    return feSpace.curFE.dphi[q].transpose() * _localData;
+  }
+
   // expensive version for points that are not the ones defined by the qr rule
   double evaluateOnRef(FVec<FESpace::RefFE_T::dim> const & p) const
   {

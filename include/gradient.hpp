@@ -1,0 +1,29 @@
+#pragma once
+
+#include "def.hpp"
+#include "fe.hpp"
+#include "builder.hpp"
+
+template <typename FESpaceT>
+using Grad_T =
+  FESpace<typename FESpaceT::Mesh_T,
+          typename FEType<typename FESpaceT::Mesh_T::Elem_T, Order<typename FESpaceT::RefFE_T>::value-1>::RefFE_T,
+          typename FESpaceT::QR_T,
+          FESpaceT::dim * FESpaceT::Mesh_T::Elem_T::dim>;
+
+template <typename FESpaceGrad, typename FESpaceOrig, typename Solver = LUSolver>
+void computeGradient(
+        Vec & grad, FESpaceGrad const & feSpaceGrad,
+        Vec const & u, FESpaceOrig const & feSpaceOrig)
+{
+  static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);
+
+  BCList bcsGrad{feSpaceGrad};
+  Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
+  builderGrad.buildLhs(AssemblyMass{1.0, feSpaceGrad}, bcsGrad);
+  builderGrad.buildRhs(AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}, bcsGrad);
+  builderGrad.closeMatrix();
+  Solver solverGrad;
+  solverGrad.compute(builderGrad.A);
+  grad = solverGrad.solve(builderGrad.b);
+}

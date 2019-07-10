@@ -7,29 +7,7 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
-
-template <typename FESpaceOrig, typename Solver = LUSolver>
-void computeGradient(Vec & grad, Vec const & u, FESpaceOrig const & feSpaceOrig)
-{
-  using Mesh_T = typename FESpaceOrig::Mesh_T;
-  using Elem_T = typename FESpaceOrig::Mesh_T::Elem_T;
-  using RefFEOrig_T = typename FESpaceOrig::RefFE_T;
-  using RefFE_T = typename FEType<Elem_T, Order<RefFEOrig_T>::value-1>::RefFE_T;
-  using QR_T = typename FESpaceOrig::QR_T;
-  using GradFESpace_T = FESpace<Mesh_T, RefFE_T, QR_T, Elem_T::dim>;
-
-  GradFESpace_T feSpaceGrad{feSpaceOrig.mesh};
-  BCList bcsGrad{feSpaceGrad};
-  // std::tuple<> bcTuple;
-  Builder builderGrad{feSpaceGrad.dof.size * GradFESpace_T::dim};
-  builderGrad.buildLhs(AssemblyMass{1.0, feSpaceGrad}, bcsGrad);
-  builderGrad.buildRhs(AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}, bcsGrad);
-  builderGrad.closeMatrix();
-  Solver solverGrad;
-  solverGrad.analyzePattern(builderGrad.A);
-  solverGrad.factorize(builderGrad.A);
-  grad = solverGrad.solve(builderGrad.b);
-}
+#include "gradient.hpp"
 
 template <typename Elem, uint order>
 int test(YAML::Node const & config)
@@ -89,7 +67,6 @@ int test(YAML::Node const & config)
   auto const bcLeft = BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }};
   bcs.addBC(bcLeft);
   // std::tuple<BCEss<FESpace_T>> bcTuple = {bcLeft};
-  // bcs.addBC(BCNat<FESpace_T>{side::RIGHT, [] (Vec3 const &) { return -M_PI; }});
   t.stop();
 
   t.start("assembly");
@@ -124,8 +101,9 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("gradient");
+  Grad_T<FESpace_T> feSpaceGrad{feSpace.mesh};
   Var grad{"grad"};
-  computeGradient(grad.data, sol.data, feSpace);
+  computeGradient(grad.data, feSpaceGrad, sol.data, feSpace);
   t.stop();
 
   t.start("error");
@@ -134,11 +112,6 @@ int test(YAML::Node const & config)
   Var error{"error"};
   error.data = sol.data - exact.data;
 
-  using GradFESpace_T =
-    FESpace<Mesh_T,
-            typename FEType<Elem_T, order-1>::RefFE_T,
-            typename FEType<Elem_T, order>::RecommendedQR, Elem_T::dim>;
-  GradFESpace_T feSpaceGrad{*mesh};
   Var eGrad{"exactGrad"};
   interpolateAnalyticFunction(exactGrad, feSpaceGrad, eGrad.data);
   Var errorGrad{"errorGrad"};

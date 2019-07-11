@@ -1230,8 +1230,8 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
     uint counter = 0;
     for (auto const c: this->comp)
     {
-      uint const d1 = c % FESpace2_T::dim;
-      uint const d2 = c / FESpace2_T::dim;
+      uint const d1 = c % FESpace1_T::Mesh_T::Elem_T::dim;
+      uint const d2 = c / FESpace1_T::Mesh_T::Elem_T::dim;
       for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
       {
         // // d u_d2 / d x_d1

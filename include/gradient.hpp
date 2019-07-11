@@ -13,7 +13,7 @@ using Grad_T =
 
 template <typename FESpaceGrad, typename FESpaceOrig, typename Solver = LUSolver>
 void computeGradient(
-        Vec & grad, FESpaceGrad const & feSpaceGrad,
+        Vec & grad, FESpaceGrad & feSpaceGrad,
         Vec const & u, FESpaceOrig const & feSpaceOrig)
 {
   static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);

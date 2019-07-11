@@ -321,6 +321,9 @@ struct IOManager
 
   void print(std::vector<Var> && data, double const t = 0.0);
 
+  template <typename... Vars>
+  void print(std::tuple<Vars...> && data, double const t = 0.0);
+
 protected:
   void printTimeSeries()
   {
@@ -456,5 +459,76 @@ void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
       // h5Time.print(compdata, name + "." + std::to_string(iter));
     }
   }
+  iter++;
+}
+
+template <typename VarT, typename FESpace>
+inline constexpr uint getDim()
+{
+  if constexpr (std::is_same_v<VarT, Var>)
+  {
+    return FESpace::dim;
+  }
+  else
+  {
+    return VarT::FESpace_T::dim;
+  }
+}
+
+template <typename FESpace>
+template <typename... Vars>
+void IOManager<FESpace>::print(std::tuple<Vars...> && data, double const t)
+{
+  timeSeries.push_back({iter, t});
+  XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
+  doc.setTime(t);
+  doc.setTopology(feSpace.mesh.elementList.size());
+  doc.setGeometry(feSpace.dof.mapSize);
+
+  HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  static_for(data, [&] (auto const /*i*/, auto & v)
+  {
+    using Var_T = std::decay_t<decltype(v)>;
+    constexpr uint dim = getDim<Var_T, FESpace>();
+    if constexpr (!std::is_same_v<Var_T, Var>)
+    {
+      // we need only the mesh and reffe to be the same, no need to check the qr
+      static_assert(std::is_same_v<typename Var_T::FESpace_T::Mesh_T, typename FESpace::Mesh_T>);
+      static_assert(std::is_same_v<typename Var_T::FESpace_T::RefFE_T, typename FESpace::RefFE_T>);
+    }
+
+    for (uint d=0; d<dim; ++d)
+    {
+      auto name = v.name;
+      if constexpr (dim > 1)
+      {
+        name += "_" + std::to_string(d);
+      }
+
+      doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
+
+      // this works only with Lagrange elements
+      Vec compData{feSpace.dof.size};
+      // TODO: pass data as const &
+      if constexpr (dim > 1)
+      {
+        // TODO: print vector variable as vector xdmf data
+        if constexpr (std::is_same_v<Var_T, Var>)
+        {
+          getComponent(compData, feSpaceScalar, v.data, feSpace, d);
+        }
+        else
+        {
+          getComponent(compData, feSpaceScalar, v.data, v.feSpace, d);
+        }
+      }
+      else
+      {
+        compData = v.data;
+      }
+      h5Iter.print(compData, name);
+      // h5Time.print(compdata, name + "." + std::to_string(iter));
+    }
+  });
   iter++;
 }

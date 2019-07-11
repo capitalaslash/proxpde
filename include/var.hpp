@@ -51,47 +51,34 @@ struct BlockVar: public Var
 template <typename FESpace>
 struct FEVar
 {
-  FEVar(std::string_view n, FESpace const & fe):
-    name(n),
+  using FESpace_T = FESpace;
+
+  FEVar(FESpace_T const & fe, std::string_view n = ""):
     feSpace(fe),
-    _data(fe.dof.size * FESpace::dim)
+    data(fe.dof.size * FESpace_T::dim),
+    name(n)
   {}
 
-  FEVar<FESpace> & operator<<(scalarFun_T const & f)
+  FEVar<FESpace_T> & operator<<(scalarFun_T const & f)
   {
-    interpolateAnalyticFunction(f, this->feSpace, this->_data);
+    interpolateAnalyticFunction(f, this->feSpace, this->data);
     return *this;
   }
 
   double operator[](id_T const id) const
   {
-    return _data[id];
+    return data[id];
   }
-
-  Vec const & data() const
-  {
-    return _data;
-  }
-
-  Vec & data()
-  {
-    return _data;
-  }
-
-  // void setData(Vec const & data)
-  // {
-  //   _data = data;
-  // }
 
   void reinit(GeoElem const & elem)
   {
     feSpace.curFE.reinit(elem);
-    for (uint d=0; d<FESpace::dim; ++d)
+    for (uint d=0; d<FESpace_T::dim; ++d)
     {
-      for (uint n=0; n<FESpace::RefFE_T::numFuns; ++n)
+      for (uint n=0; n<FESpace_T::RefFE_T::numFuns; ++n)
       {
         auto const id = feSpace.dof.getId(elem.id, n, d);
-        _localData(n, d) = _data[id];
+        _localData(n, d) = data[id];
       }
     }
   }
@@ -99,24 +86,24 @@ struct FEVar
   auto evaluate(uint const q) const
   {
     // check that the qr is compatible
-    assert(q < FESpace::QR_T::numPts);
+    assert(q < FESpace_T::QR_T::numPts);
     return feSpace.curFE.phi[q].transpose() * _localData;
   }
 
   auto evaluateGrad(uint const q) const
   {
     // check that the qr is compatible
-    assert(q < FESpace::QR_T::numPts);
+    assert(q < FESpace_T::QR_T::numPts);
     return feSpace.curFE.dphi[q].transpose() * _localData;
   }
 
   // expensive version for points that are not the ones defined by the qr rule
-  auto evaluateOnRef(FVec<FESpace::RefFE_T::dim> const & p) const
+  auto evaluateOnRef(FVec<FESpace_T::RefFE_T::dim> const & p) const
   {
-    FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
-    for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
+    FVec<FESpace_T::dim> value = FVec<FESpace_T::dim>::Zero();
+    for (uint k=0; k<FESpace_T::RefFE_T::numFuns; ++k)
     {
-      value += FESpace::RefFE_T::phiFun[k](p) * _localData.row(k);
+      value += FESpace_T::RefFE_T::phiFun[k](p) * _localData.row(k);
     }
     return value;
   }
@@ -132,30 +119,30 @@ struct FEVar
   template <typename FESpaceVec>
   void setFromComponent(Vec & v, FESpaceVec feSpaceVec, uint component)
   {
-    getComponent(_data, feSpace, v, feSpaceVec, component);
+    getComponent(data, feSpace, v, feSpaceVec, component);
   }
 
+  FESpace_T const & feSpace;
+  Vec data;
   std::string name;
-  FESpace const & feSpace;
 
 private:
-  Vec _data;
-  FMat<FESpace::RefFE_T::numFuns, FESpace::dim> _localData;
+  FMat<FESpace_T::RefFE_T::numFuns, FESpace_T::dim> _localData;
 };
 
 template <typename FEList>
 struct BlockFEVar
 {
-  BlockFEVar(std::string_view n, FEList & fe):
-    name{n},
-    feList{fe}
+  BlockFEVar(FEList & fe, std::string_view n = ""):
+    feList{fe},
+    name{n}
   {
-    double sum = 0;
+    uint sum = 0;
     std::apply([&sum](auto &&... x){((sum += std::forward<decltype(x)>(x).dof.size), ...);} , feList);
     data.resize(sum);
   }
 
-  std::string name;
   FEList & feList;
+  std::string name;
   Vec data;
 };

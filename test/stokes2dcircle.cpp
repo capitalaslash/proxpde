@@ -86,10 +86,6 @@ int main(int argc, char* argv[])
   // std::cout << "sol:\n" << sol.data << std::endl;
 
   t.start("postpro");
-  Scalar_T<FESpaceU_T> feSpaceUScalar{*mesh};
-  FEVar u{"u", feSpaceUScalar}, v{"v", feSpaceUScalar};
-  u.setFromComponent(sol.data, feSpaceU, 0);
-  v.setFromComponent(sol.data, feSpaceU, 1);
   Var p{"p", sol.data , 2*feSpaceU.dof.size, feSpaceP.dof.size};
   t.stop();
 
@@ -107,8 +103,8 @@ int main(int argc, char* argv[])
 
     facetCurFEP_T facetCurFEP;
     FacetFESpaceP_T facetFESpaceP{*mesh};
-    FEVar pFacet{"pFacet", facetFESpaceP};
-    pFacet.data() = p.data;
+    FEVar pFacet{facetFESpaceP};
+    pFacet.data = p.data;
 
     for (auto & facet: mesh->facetList)
     {

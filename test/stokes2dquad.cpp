@@ -145,11 +145,11 @@ int main(int argc, char* argv[])
   std::cout << "v error norm: " << vError << std::endl;
   std::cout << "p error norm: " << pError << std::endl;
 
-  if(std::fabs(uError) > 1.e-14 ||
-     std::fabs(vError) > 2.e-14 ||
-     std::fabs(pError) > 3.e-14 ||
-     std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
-     std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
+  if (std::fabs(uError) > 1.e-14 ||
+      std::fabs(vError) > 2.e-14 ||
+      std::fabs(pError) > 3.e-14 ||
+      std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
+      std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
   {
     std::cerr << "one of the norms of the error is not the prescribed value" << std::endl;
     return 1;

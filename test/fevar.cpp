@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
   t.start("fe build");
   // AssemblyStiffness stiffness(1.0, feSpace);
-  FEVar nu{"nu", feSpace};
+  FEVar nu{feSpace};
   nu << [] (Vec3 const & p) { return std::sin(0.5 * M_PI * p[0]); };
   // nu << [] (Vec3 const & ) { return 1.; };
   ScalarCoef one{1.};
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   // std::cout << "b:\n" << builder.b << std::endl;
 
   t.start("solve");
-  Var sol{"u"};
+  FEVar sol{feSpace, "u"};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
   t.start("output");
   IOManager io{feSpace, "output/sol_fevar"};
-  io.print({sol, exact, error});
+  io.print(std::make_tuple(sol, exact, error));
   t.stop();
 
   t.print();

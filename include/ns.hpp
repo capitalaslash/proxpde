@@ -486,8 +486,8 @@ void computeElemWSS(
 {
   int constexpr dim = FESpaceVel::dim;
   wss = Vec::Zero(feSpaceWSS.dof.size);
-  FEVar velFE{"vel", feSpaceVel};
-  velFE.data() = vel;
+  FEVar velFE{feSpaceVel};
+  velFE.data = vel;
 
   for (auto & facet: feSpaceWSS.mesh.facetList)
   {
@@ -535,8 +535,8 @@ void computeFEWSS(
   Vec grad;
   computeGradient(grad, feSpaceGrad, vel, feSpaceVel);
   Grad_T<FacetFESpaceVel_T> facetFESpaceGrad{feSpaceVel.mesh};
-  FEVar gradFacet{"grad", facetFESpaceGrad};
-  gradFacet.data() = grad;
+  FEVar gradFacet{facetFESpaceGrad};
+  gradFacet.data = grad;
 
   for (auto & facet: feSpaceWSS.mesh.facetList)
   {

@@ -7,6 +7,7 @@
 #include "builder.hpp"
 #include "var.hpp"
 #include "iomanager.hpp"
+#include "gradient.hpp"
 
 // #include <amgcl/backend/eigen.hpp>
 // #include <amgcl/make_solver.hpp>
@@ -475,3 +476,93 @@ struct NSSolverSplit2D
   IOManager<FESpaceU_T> ioVel;
   IOManager<FESpaceP_T> ioP;
 };
+
+template <typename FESpaceWSS, typename FESpaceVel>
+void computeElemWSS(
+    Vec & wss, FESpaceWSS const & feSpaceWSS,
+    Vec & vel, FESpaceVel const & feSpaceVel,
+    std::unordered_set<marker_T> const & markers,
+    double const nu)
+{
+  int constexpr dim = FESpaceVel::dim;
+  wss = Vec::Zero(feSpaceWSS.dof.size);
+  FEVar velFE{"vel", feSpaceVel};
+  velFE.data() = vel;
+
+  for (auto & facet: feSpaceWSS.mesh.facetList)
+  {
+    if (markers.find(facet.marker) != markers.end())
+    {
+      // std::cout << "facet " << facet.id << std::endl;
+      Vec3 const normal = facet.normal();
+      Vec3 const tangent = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      auto elem = facet.facingElem[0].ptr;
+      auto const id = feSpaceWSS.dof.getId(elem->id);
+      velFE.reinit(*elem);
+      for(uint q=0; q<FESpaceVel::QR_T::numPts; ++q)
+      {
+        FMat<3, 3> tau = FMat<3, 3>::Zero();
+        FMat<3, dim> const grad = velFE.evaluateGrad(q);
+        tau.template block<dim, 3>(0, 0) = nu * grad.transpose();
+        // minus sign due to the outwards normal
+        wss[id] -= velFE.feSpace.curFE.JxW[q] * (tau * normal).dot(tangent);
+      }
+      wss[id] /= elem->volume();
+    }
+  }
+}
+
+template <typename FESpaceWSS, typename FESpaceVel>
+void computeFEWSS(
+    Vec & wss, FESpaceWSS const & feSpaceWSS,
+    Vec & vel, FESpaceVel const & feSpaceVel,
+    std::unordered_set<marker_T> const & markers,
+    double const nu)
+{
+  uint constexpr dim = FESpaceVel::dim;
+  using FacetFEVel_T = typename FESpaceVel::RefFE_T::FacetFE_T;
+  using FacetQR_T = SideQR_T<typename FESpaceVel::QR_T>;
+  using FacetCurFEVel_T = CurFE<FacetFEVel_T, FacetQR_T>;
+  using FacetFESpaceVel_T =
+    FESpace<typename FESpaceVel::Mesh_T,
+            typename FESpaceVel::RefFE_T,
+            SideGaussQR<typename FESpaceVel::Mesh_T::Elem_T, FacetQR_T::numPts>, dim>;
+
+  wss = Vec::Zero(feSpaceWSS.dof.size);
+  FacetCurFEVel_T facetCurFEVel;
+
+  Grad_T<FESpaceVel> feSpaceGrad{feSpaceVel.mesh};
+  Vec grad;
+  computeGradient(grad, feSpaceGrad, vel, feSpaceVel);
+  Grad_T<FacetFESpaceVel_T> facetFESpaceGrad{feSpaceVel.mesh};
+  FEVar gradFacet{"grad", facetFESpaceGrad};
+  gradFacet.data() = grad;
+
+  for (auto & facet: feSpaceWSS.mesh.facetList)
+  {
+    if (markers.find(facet.marker) != markers.end())
+    {
+      // std::cout << "facet " << facet.id << std::endl;
+      Vec3 const normal = facet.normal();
+      Vec3 const tangent = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      facetCurFEVel.reinit(facet);
+      auto elem = facet.facingElem[0].ptr;
+      auto const side = facet.facingElem[0].side;
+      auto const id = feSpaceWSS.dof.getId(elem->id);
+      gradFacet.reinit(*elem);
+      for(uint q=0; q<FacetQR_T::numPts; ++q)
+      {
+        FMat<1, dim*dim> tauVec = nu * gradFacet.evaluate(side * FacetQR_T::numPts + q);
+        FMat<3, 3> tau = FMat<3, 3>::Zero();
+        for (uint i=0; i<dim; ++i)
+          for (uint j=0; j<dim; ++j)
+          {
+            tau(i, j) = tauVec[j + FESpaceVel::dim * i];
+          }
+        // minus sign due to the outwards normal
+        wss[id] -= facetCurFEVel.JxW[q] * (tau * normal).dot(tangent);
+      }
+      wss[id] /= facet.volume();
+    }
+  }
+}

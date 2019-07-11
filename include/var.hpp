@@ -86,21 +86,24 @@ struct FEVar
   void reinit(GeoElem const & elem)
   {
     feSpace.curFE.reinit(elem);
-    for (uint n=0; n<FESpace::RefFE_T::numFuns; ++n)
+    for (uint d=0; d<FESpace::dim; ++d)
     {
-      auto const id = feSpace.dof.getId(elem.id, n);
-      _localData[n] = _data[id];
+      for (uint n=0; n<FESpace::RefFE_T::numFuns; ++n)
+      {
+        auto const id = feSpace.dof.getId(elem.id, n, d);
+        _localData(n, d) = _data[id];
+      }
     }
   }
 
-  double evaluate(uint const q) const
+  auto evaluate(uint const q) const
   {
     // check that the qr is compatible
     assert(q < FESpace::QR_T::numPts);
-    return feSpace.curFE.phi[q].dot(_localData);
+    return feSpace.curFE.phi[q].transpose() * _localData;
   }
 
-  Vec3 evaluateGrad(uint const q) const
+  auto evaluateGrad(uint const q) const
   {
     // check that the qr is compatible
     assert(q < FESpace::QR_T::numPts);
@@ -108,27 +111,22 @@ struct FEVar
   }
 
   // expensive version for points that are not the ones defined by the qr rule
-  double evaluateOnRef(FVec<FESpace::RefFE_T::dim> const & p) const
+  auto evaluateOnRef(FVec<FESpace::RefFE_T::dim> const & p) const
   {
-    double value = 0.;
+    FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
     for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
     {
-      value += _localData[k] * FESpace::RefFE_T::phiFun[k](p);
+      value += FESpace::RefFE_T::phiFun[k](p) * _localData.row(k);
     }
     return value;
   }
 
   // super-expensive version for points that are not the ones defined by the qr rule
   // and that we need to trace back to the ref element
-  double evaluateOnReal(Vec3 const & p) const
+  auto evaluateOnReal(Vec3 const & p) const
   {
-    double value = 0.;
     auto const pRef = feSpace.curFE.approxInverseMap(p);
-    for (uint k=0; k<FESpace::RefFE_T::numFuns; ++k)
-    {
-      value += _localData[k] * FESpace::RefFE_T::phiFun[k](pRef);
-    }
-    return value;
+    return evaluateOnRef(pRef);
   }
 
   template <typename FESpaceVec>
@@ -142,7 +140,7 @@ struct FEVar
 
 private:
   Vec _data;
-  FVec<FESpace::RefFE_T::numFuns> _localData;
+  FMat<FESpace::RefFE_T::numFuns, FESpace::dim> _localData;
 };
 
 template <typename FEList>

@@ -193,7 +193,7 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      auto const coefQPoint = coef.evaluate(q);
+      double const coefQPoint = coef.evaluate(q);
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>
@@ -398,7 +398,7 @@ struct AssemblyMassFE: public Diagonal<FESpace>
 
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      auto const coefQPoint = coefFE.evaluate(q);
+      double const coefQPoint = coefFE.evaluate(q);
       for (auto const c: this->comp)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>

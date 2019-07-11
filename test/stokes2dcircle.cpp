@@ -8,6 +8,7 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
+#include "ns.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -116,11 +117,11 @@ int main(int argc, char* argv[])
         // std::cout << "facet " << facet.id << std::endl;
         facetCurFEP.reinit(facet);
         auto elem = facet.facingElem[0].ptr;
+        auto const side = facet.facingElem[0].side;
         pFacet.reinit(*elem);
-        uint const side = facet.facingElem[0].side;
         for (uint q=0; q<FacetQR_T::numPts; ++q)
         {
-          auto const pValue = pFacet.evaluate(side * FacetQR_T::numPts + q);
+          double const pValue = pFacet.evaluate(side * FacetQR_T::numPts + q);
           pIntegral += facetCurFEP.JxW[q] * pValue;
         }
       }
@@ -132,48 +133,12 @@ int main(int argc, char* argv[])
   // wall shear stress on circle
   t.start("wss");
   FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, FEType<Elem_T, 0>::RecommendedQR> feSpaceWSS{*mesh};
+  // mean cell value
   Var wss{"wss"};
-  wss.data = Vec::Zero(feSpaceWSS.dof.size);
-  {
-    using FacetFEU_T = FESpaceU_T::RefFE_T::FacetFE_T;
-    using FacetQR_T = SideQR_T<FESpaceU_T::QR_T>;
-    using facetCurFEU_T = CurFE<FacetFEU_T, FacetQR_T>;
-    using FacetFESpaceU_T =
-      FESpace<Mesh_T,
-              FESpaceU_T::RefFE_T,
-              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
-
-    facetCurFEU_T facetCurFEU;
-    FacetFESpaceU_T facetFESpaceU{*mesh};
-    FEVar uFacet{"uFacet", facetFESpaceU};
-    uFacet.data() = u.data();
-    FEVar vFacet{"vFacet", facetFESpaceU};
-    vFacet.data() = v.data();
-
-    for (auto & facet: mesh->facetList)
-    {
-      if (facet.marker == side::CIRCLE)
-      {
-        // std::cout << "facet " << facet.id << std::endl;
-        Vec3 const normal = facet.normal();
-        facetCurFEU.reinit(facet);
-        auto elem = facet.facingElem[0].ptr;
-        auto const id = feSpaceWSS.dof.getId(elem->id);
-        u.reinit(*elem);
-        v.reinit(*elem);
-        for(uint q=0; q<FESpaceU_T::QR_T::numPts; ++q)
-        {
-          Vec3 const gradUValue = u.evaluateGrad(q);
-          Vec3 const gradVValue = v.evaluateGrad(q);
-          wss.data[id] += u.feSpace.curFE.JxW[q] * nu *
-              (gradUValue.dot(normal) * normal[0] + gradVValue.dot(normal) * normal[1]);
-        }
-        wss.data[id] /= facet.volume();
-      }
-    }
-    std::cout << "max wss on circle face: " << std::setprecision(16) << wss.data.maxCoeff() << std::endl;
-  }
+  computeElemWSS(wss.data, feSpaceWSS, sol.data, feSpaceU, {side::CIRCLE}, nu);
   t.stop();
+  std::cout << "wss min: " << std::setprecision(16) << wss.data.minCoeff() << std::endl;
+  std::cout << "wss max: " << std::setprecision(16) << wss.data.maxCoeff() << std::endl;
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
@@ -195,7 +160,7 @@ int main(int argc, char* argv[])
   // std::cout << "the norm of the error is " << norm << std::endl;
 
   if (std::fabs(pIntegral - 0.9800943987494872) > 1.e-12 ||
-      std::fabs(wss.data.maxCoeff() - 3.603715559288087e-05) > 1.e-12)
+      std::fabs(wss.data.maxCoeff() - 0.3068317649009756) > 1.e-12)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

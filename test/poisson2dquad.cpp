@@ -45,9 +45,9 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bcs");
-  BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, [] (Vec3 const&) {return 0.;}});
-  bcs.addBC(BCEss{feSpace, side::BOTTOM, [] (Vec3 const&) {return 0.;}});
+  auto const bcs = std::make_tuple(
+        BCEss{feSpace, side::LEFT,   [] (Vec3 const &) { return 0.; }},
+        BCEss{feSpace, side::BOTTOM, [] (Vec3 const &) { return 0.; }});
   t.stop();
 
 

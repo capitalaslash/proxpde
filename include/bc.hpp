@@ -103,7 +103,7 @@ public:
     return constrainedDofSet.count(id + d * dofSize) > 0;
   }
 
-  FVec<FESpace_T::dim> evaluate(DOFid_T const & i) const
+  FVec<FESpace_T::dim> evaluate(DOFid_T const i) const
   {
     // curFE.reinit(e);
     if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::LAGRANGE)

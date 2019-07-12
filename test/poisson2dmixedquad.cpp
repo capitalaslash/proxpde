@@ -53,7 +53,7 @@ int test(YAML::Node const & config)
   FESpaceP0_T feSpaceU{*mesh};
   FESpaceRT0_T feSpaceW{*mesh};
 
-  BCList bcsU{feSpaceU};
+  auto const bcsU = std::make_tuple();
   // double const hx = 1. / n;
   // DOFCoordSet leftStrip{
   //   feSpaceU,
@@ -63,15 +63,16 @@ int test(YAML::Node const & config)
   //   feSpaceU,
   //   [length, hx](Vec3 const & p){return std::fabs(length[0] - p[0]) < hx;}
   // };
-  // bcsU.addBC(BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}});
-  // bcsU.addBC(BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
-  BCList bcsW{feSpaceW};
-  // the function must be the normal flux, positive if entrant
-  // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
-  bcsW.addBC(BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return .5*g; }});
-  // symmetry
-  // bcsW.addBC(BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }});
-  bcsW.addBC(BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
+  // auto const bcU = std::make_tuple(
+  //       BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}},
+  //       BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
+  auto const bcsW = std::make_tuple(
+        // the function must be the normal flux, positive if entrant
+        // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
+        BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return .5 * g; }},
+        // symmetry
+        // BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }},
+        BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
 
   uint const sizeU = feSpaceU.dof.size;
   Var u("u", sizeU);
@@ -87,7 +88,7 @@ int test(YAML::Node const & config)
   //                      side::RIGHT,
   //                      feSpaceW), bcsW);
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
-  BCList bcsDummy{feSpaceP0Vec};
+  auto const bcsDummy = std::make_tuple();
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
   // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);

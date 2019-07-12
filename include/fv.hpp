@@ -76,7 +76,7 @@ static const std::unordered_map<std::string, LimiterType> stringToLimiter =
 // template <>
 // struct FacetRefFE<RefTriangleP0> { using type = RefTriangleE1; };
 
-template <typename FESpace, LimiterType L>
+template <typename FESpace, typename BCS, LimiterType L>
 struct FVSolver
 {
   using Mesh_T = typename FESpace::Mesh_T;
@@ -91,7 +91,7 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpace const & fe, BCList<FESpace> const & bcList):
+  FVSolver(FESpace const & fe, BCS const & bcList):
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),
@@ -190,8 +190,7 @@ struct FVSolver
         // coming from outside
         else
         {
-          // TODO: compute from bc
-          for (auto const & bc: bcs.bcEssList)
+          static_for(bcs, [&] (auto const /*i*/, auto const & bc)
           {
             if (bc.marker == facet.marker)
             {
@@ -201,7 +200,18 @@ struct FVSolver
                   facet.volume() *
                   uLocal;
             }
-          }
+          });
+          // for (auto const & bc: bcs.bcEssList)
+          // {
+          //   if (bc.marker == facet.marker)
+          //   {
+          //     auto const uLocal = bc.evaluate(0)[0];
+          //     fluxes[facet.id] =
+          //         vNorm *
+          //         facet.volume() *
+          //         uLocal;
+          //   }
+          // }
         }
       }
       // the velocity normal to the facet is so small that the flux can be considered 0.
@@ -257,7 +267,7 @@ struct FVSolver
   }
 
   FESpace const & feSpace;
-  BCList<FESpace> const & bcs;
+  BCS const & bcs;
   Vec uOld;
   Vec uJump;
   Vec fluxes;

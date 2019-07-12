@@ -15,8 +15,6 @@ int main()
 
   FESpace_T feSpace{*mesh};
 
-  BCList bc{feSpace};
-
   Var u{"u"};
 
   interpolateAnalyticFunction([](Vec3 const & p){ return p(0)*p(0); }, feSpace, u.data);

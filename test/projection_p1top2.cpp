@@ -23,8 +23,7 @@ int main()
   FESpace1_T feSpace1{*mesh};
   FESpace2_T feSpace2{*mesh};
 
-  BCList bc1{feSpace1};
-  BCList bc2{feSpace2};
+  auto const bcs2 = std::make_tuple();
 
   Var u1{"u1"};
   Var u2{"u2"};
@@ -36,8 +35,8 @@ int main()
   AssemblyMass mass2(1.0, feSpace2);
   AssemblyProjection mass1(1.0, u1.data, feSpace2, feSpace1);
   Builder builder{feSpace2.dof.size};
-  builder.buildLhs(mass2, bc2);
-  builder.buildRhs(mass1, bc2);
+  builder.buildLhs(mass2, bcs2);
+  builder.buildRhs(mass1, bcs2);
   builder.closeMatrix();
   std::cout << "A:\n" << builder.A << std::endl;
   std::cout << "b:\n" << builder.b << std::endl;

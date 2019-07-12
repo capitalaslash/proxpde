@@ -34,18 +34,18 @@ int main(int argc, char* argv[])
   FESpaceP_T feSpaceP{*mesh, dofVel};
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
-  BCList bcsP{feSpaceP};
+  auto const bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::RIGHT, zero},
+        BCEss{feSpaceVel, side::LEFT, zero},
+        BCEss{feSpaceVel, side::BOTTOM, zero},
+        BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
   // select the point on the bottom boundary in the middle
   DOFCoordSet pinSet{
       feSpaceP,
       [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}
   };
-  bcsP.addBC(BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
+  auto const bcsP = std::make_tuple(
+        BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
 
   AssemblyStiffness stiffness{1.0, feSpaceVel};
   AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP};

@@ -143,24 +143,25 @@ int main(int argc, char* argv[])
   auto const one =    [] (Vec3 const &) {return 1.;};
   auto const zero2d = [] (Vec3 const &) {return Vec2{0., 0.};};
   auto const inlet =  [] (Vec3 const &) {return Vec2{1., 0.};};
-  BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT,  zero2d});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT,   zero2d});
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, zero2d});
-  bcsVel.addBC(BCEss{feSpaceVel, side::TOP,    inlet});
-  BCList bcsU{feSpaceU};
-  bcsU.addBC(BCEss{feSpaceU, side::RIGHT,  zero1d});
-  bcsU.addBC(BCEss{feSpaceU, side::LEFT,   zero1d});
-  bcsU.addBC(BCEss{feSpaceU, side::BOTTOM, zero1d});
-  bcsU.addBC(BCEss{feSpaceU, side::TOP,    one});
-  BCList bcsV{feSpaceV};
-  bcsV.addBC(BCEss{feSpaceV, side::RIGHT,  zero1d});
-  bcsV.addBC(BCEss{feSpaceV, side::LEFT,   zero1d});
-  bcsV.addBC(BCEss{feSpaceV, side::BOTTOM, zero1d});
-  bcsV.addBC(BCEss{feSpaceV, side::TOP,    zero1d});
-  BCList bcsP{feSpaceP};
+  auto const bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::RIGHT,  zero2d},
+        BCEss{feSpaceVel, side::LEFT,   zero2d},
+        BCEss{feSpaceVel, side::BOTTOM, zero2d},
+        BCEss{feSpaceVel, side::TOP,    inlet});
+  auto const bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::RIGHT,  zero1d},
+        BCEss{feSpaceU, side::LEFT,   zero1d},
+        BCEss{feSpaceU, side::BOTTOM, zero1d},
+        BCEss{feSpaceU, side::TOP,    one});
+  auto const bcsV = std::make_tuple(
+        BCEss{feSpaceV, side::RIGHT,  zero1d},
+        BCEss{feSpaceV, side::LEFT,   zero1d},
+        BCEss{feSpaceV, side::BOTTOM, zero1d},
+        BCEss{feSpaceV, side::TOP,    zero1d});
+  auto const bcsP = std::make_tuple();
   // DofSet_T pinSet = {1};
-  // bcsP.addBC(BCEss{feSpaceP, pinSet, zero});
+  // auto const bcsP = std::make_tuple(
+  //       BCEss{feSpaceP, pinSet, zero1d});
 
   Builder builder{numDOFs};
   builder.buildLhs(AssemblyStiffness{1.0, feSpaceVel}, bcsVel);

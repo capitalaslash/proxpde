@@ -43,18 +43,21 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   auto const zeroFun = [] (Vec3 const&) {return Vec2{0., 0.};};
-  BCList bcsU{feSpaceU};
-  bcsU.addBC(BCEss{feSpaceU, side::CIRCLE, zeroFun});
-  bcsU.addBC(BCEss{feSpaceU, side::TOP, zeroFun, {0}});
-  bcsU.addBC(BCEss{feSpaceU, side::LEFT, zeroFun, {1}});
-  // bcsU.addBC(BCEss{feSpaceU, side::LEFT, [] (Vec3 const&) {return Vec2{1., 0.};}});
-  BCList bcsP{feSpaceP};
+  auto const bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::CIRCLE, zeroFun},
+        BCEss{feSpaceU, side::TOP,    zeroFun, {0}},
+        BCEss{feSpaceU, side::LEFT,   zeroFun, {1}});
   DOFCoordSet pinSet
   {
     feSpaceP,
-    [](Vec3 const & p) { return std::fabs(p[0] - 1.0) < 1.e-6 && std::fabs(p[1] - 0.0) < 1.e-6;}
+    [](Vec3 const & p)
+    {
+      return std::fabs(p[0] - 1.0) < 1.e-6 &&
+          std::fabs(p[1] - 0.0) < 1.e-6;
+    }
   };
-  bcsP.addBC(BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
+  auto const bcsP = std::make_tuple(
+        BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
   t.stop();
 
   t.start("assembly");

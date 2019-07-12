@@ -2,9 +2,22 @@
 #include "ns.hpp"
 #include "timer.hpp"
 
-
 int main(int argc, char* argv[])
 {
+  uint constexpr dim = 2;
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpaceVel_T = FESpace<Mesh_T,
+                               typename FEType<Elem_T, 2>::RefFE_T,
+                               typename FEType<Elem_T, 2>::RecommendedQR,
+                               dim>;
+  using FESpaceU_T = FESpace<Mesh_T,
+                               typename FEType<Elem_T, 2>::RefFE_T,
+                               typename FEType<Elem_T, 2>::RecommendedQR,
+                               1>;
+  using FESpaceP_T = FESpace<Mesh_T,
+                             typename FEType<Elem_T, 1>::RefFE_T,
+                             typename FEType<Elem_T, 2>::RecommendedQR>;
   MilliTimer t;
 
   ParameterDict config;
@@ -30,7 +43,7 @@ int main(int argc, char* argv[])
   NSParameters parSplit{dt, nu, "output_ns/split"};
 
   t.start("mesh");
-  std::unique_ptr<Mesh<Quad>> mesh{new(Mesh<Quad>)};
+  std::unique_ptr<Mesh_T> mesh{new(Mesh_T)};
   buildHyperCube(
         *mesh,
         {0.0, 0.0, 0.0},
@@ -38,10 +51,9 @@ int main(int argc, char* argv[])
         {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
   t.stop();
 
-  t.start("monolithic ctor");
-  NSSolverMonolithic ns{*mesh, parMonolithic};
-  NSSolverSplit2D split{*mesh, parSplit};
-  t.stop();
+ FESpaceVel_T feSpaceVel{*mesh};
+ FESpaceU_T feSpaceU{*mesh};
+ FESpaceP_T feSpaceP{*mesh};
 
   t.start("monolithic bc");
   auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0)*p(0))}; };
@@ -50,21 +62,32 @@ int main(int argc, char* argv[])
   auto const inletX = [&inlet] (Vec3 const & p) { return inlet(p)[0];};
   auto const inletY = [&inlet] (Vec3 const & p) { return inlet(p)[1];};
   auto const zero = [] (Vec3 const & ) { return 0.0; };
-  ns.bcsVel.addBC(BCEss{ns.feSpaceVel, side::BOTTOM, inlet});
-  ns.bcsVel.addBC(BCEss{ns.feSpaceVel, side::RIGHT, zero2d});
-  ns.bcsVel.addBC(BCEss{ns.feSpaceVel, side::TOP, zero2d, uComp});
-  ns.bcsVel.addBC(BCEss{ns.feSpaceVel, side::LEFT, inlet, uComp});
-  // ns.bcsP.addBC(BCEss{ns.feSpaceP, side::TOP, [](Vec3 const &){return 0.;}});
+  auto const bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM, inlet},
+        BCEss{feSpaceVel, side::RIGHT,  zero2d},
+        BCEss{feSpaceVel, side::TOP,    zero2d, uComp},
+        BCEss{feSpaceVel, side::LEFT,   zero2d, uComp});
+  auto const bcsP = std::make_tuple();
+  // auto const bcsP = std::make_tuple(
+  //       BCEss{feSpaceP, side::TOP, zero});
   t.stop();
 
   t.start("split bc");
-  split.bcsU.addBC(BCEss{split.feSpaceU, side::BOTTOM, inletX});
-  split.bcsU.addBC(BCEss{split.feSpaceU, side::RIGHT, zero});
-  split.bcsU.addBC(BCEss{split.feSpaceU, side::TOP, zero});
-  split.bcsU.addBC(BCEss{split.feSpaceU, side::LEFT, zero});
-  split.bcsV.addBC(BCEss{split.feSpaceU, side::BOTTOM, inletY});
-  split.bcsV.addBC(BCEss{split.feSpaceU, side::RIGHT, zero});
-  split.bcsP.addBC(BCEss{split.feSpaceP, side::TOP, zero});
+  auto const bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM, inletX},
+        BCEss{feSpaceU, side::RIGHT,  zero},
+        BCEss{feSpaceU, side::TOP,    zero},
+        BCEss{feSpaceU, side::LEFT,   zero});
+  auto const bcsV = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM, inletY},
+        BCEss{feSpaceU, side::RIGHT,  zero});
+  auto const bcsPSplit = std::make_tuple(
+        BCEss{feSpaceP, side::TOP, zero});
+  t.stop();
+
+  t.start("monolithic ctor");
+  NSSolverMonolithic ns{feSpaceVel, feSpaceP, bcsVel, bcsP, parMonolithic};
+  NSSolverSplit2D split{feSpaceU, feSpaceP, bcsU, bcsV, bcsPSplit, parSplit};
   t.stop();
 
   t.start("init");
@@ -150,6 +173,11 @@ int main(int argc, char* argv[])
   errorV.data = v - split.v.data;
   Var errorP{"errorP"};
   errorP.data = ns.p.data - split.p.data;
+
+  IOManager ioErrorU{split.feSpaceU, "output_ns/eu"};
+  ioErrorU.print({errorU, errorV});
+  IOManager ioErrorP{split.feSpaceP, "output_ns/ep"};
+  ioErrorP.print({errorP});
 
   std::cout << "errorU: " << std::setprecision(16) << errorU.data.norm() << std::endl;
   std::cout << "errorV: " << std::setprecision(16) << errorV.data.norm() << std::endl;

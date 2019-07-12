@@ -41,13 +41,12 @@ int main(int /*argc*/, char* /*argv*/[])
 
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
   auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
-  BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, zero, {0}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero, {0}});
-  // bcsVel.addBC(BCNat<FESpaceVel_T>{side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);}});
-  BCList bcsP{feSpaceP};
+  auto const bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM, inlet},
+        BCEss{feSpaceVel, side::RIGHT,  zero},
+        BCEss{feSpaceVel, side::TOP,    zero, {0}},
+        BCEss{feSpaceVel, side::LEFT,   zero, {0}});
+  auto const bcsP = std::make_tuple();
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;

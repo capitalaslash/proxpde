@@ -69,7 +69,6 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList bcs{feSpace};
   auto bcValue = [](Vec3 const &)
   {
     FVec<dim> v;
@@ -79,7 +78,8 @@ int main(int argc, char* argv[])
     }
     return v;
   };
-  bcs.addBC(BCEss{feSpace, side::LEFT, bcValue});
+  auto const bcs = std::make_tuple(
+        BCEss{feSpace, side::LEFT, bcValue});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
 

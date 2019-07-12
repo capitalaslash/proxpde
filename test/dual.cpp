@@ -21,7 +21,6 @@ using FESpaceP1_T = FESpace<Mesh_T,
 using FESpaceP0_T = FESpace<Mesh_T,
                           FEType<Elem_T,0>::RefFE_T,
                           FEType<Elem_T,0>::RecommendedQR>;
-using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
 using FESpaceVel_T = FESpace<Mesh_T,
                              FEType<Elem_T,1>::RefFE_T,
                              FEType<Elem_T,1>::RecommendedQR, 2>;
@@ -76,6 +75,7 @@ int main(int argc, char* argv[])
   t.start("mesh build");
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+
   hexagonSquare(*mesh, true);
   addElemFacetList(*mesh);
 
@@ -129,10 +129,10 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   auto const leftBC = [](Vec3 const &){return 1.;};
-  BCList bcsP1{feSpaceP1};
-  bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, leftBC});
-  BCList bcsP0{feSpaceP0};
-  bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, leftBC});
+  auto const bcsP1 = std::make_tuple(
+        BCEss{feSpaceP1, side::LEFT, leftBC});
+  auto const bcsP0 = std::make_tuple(
+        BCEss{feSpaceP0, side::LEFT, leftBC});
   t.stop();
 
   t.start("fe builder");
@@ -156,6 +156,7 @@ int main(int argc, char* argv[])
   Var concP0{"concP0"};
   interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
 
+  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::SUPERBEE>;
   FVSolver_T fv{feSpaceP0, bcsP0};
   Table<double, 2> vel(sizeP1, 2);
   vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);

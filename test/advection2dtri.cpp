@@ -23,7 +23,6 @@ int main(int argc, char* argv[])
   using FESpaceP0_T = FESpace<Mesh_T,
                               FEType<Elem_T,0>::RefFE_T,
                               FEType<Elem_T,0>::RecommendedQR>;
-  using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
   // velocity field
   using FESpaceVel_T = FESpace<Mesh_T,
                                FEType<Elem_T,1>::RefFE_T,
@@ -79,18 +78,20 @@ int main(int argc, char* argv[])
   t.start("bcs");
   // auto const zero = [](Vec3 const & ){return 0.;};
   auto const one = [](Vec3 const & ){return 1.;};
-  BCList bcsP1{feSpaceP1};
-  bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, one});
-  // bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, zero});
-  // bcsP1.addBC(BCEss{feSpaceP1, side::BOTTOM, zero});
-  // bcsP1.addBC(BCEss{feSpaceP1, side::RIGHT, zero});
-  // bcsP1.addBC(BCEss{feSpaceP1, side::TOP, zero});
-  BCList bcsP0{feSpaceP0};
-  bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, one});
-  // bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, zero});
-  // bcsP0.addBC(BCEss{feSpaceP0, side::BOTTOM, zero});
-  // bcsP0.addBC(BCEss{feSpaceP0, side::RIGHT, zero});
-  // bcsP0.addBC(BCEss{feSpaceP0, side::TOP, zero});
+  auto const bcsP1 = std::make_tuple(
+        BCEss{feSpaceP1, side::LEFT, one});
+  // auto const bcsP1 = std::make_tuple(
+  //       BCEss{feSpaceP1, side::LEFT, zero},
+  //       BCEss{feSpaceP1, side::BOTTOM, zero},
+  //       BCEss{feSpaceP1, side::RIGHT, zero},
+  //       BCEss{feSpaceP1, side::TOP, zero});
+  auto const bcsP0 = std::make_tuple(
+        BCEss{feSpaceP0, side::LEFT, one});
+  // auto const bcsP0 = std::make_tuple(
+  //       BCEss{feSpaceP0, side::LEFT, zero},
+  //       BCEss{feSpaceP0, side::BOTTOM, zero},
+  //       BCEss{feSpaceP0, side::RIGHT, zero},
+  //       BCEss{feSpaceP0, side::TOP, zero});
   t.stop();
 
   t.start("velocity");
@@ -125,6 +126,7 @@ int main(int argc, char* argv[])
   flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);
   t.stop();
 
+  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::SUPERBEE>;
   FVSolver_T fv{feSpaceP0, bcsP0};
 
   auto const & sizeVel = feSpaceVel.dof.size;

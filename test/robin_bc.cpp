@@ -54,12 +54,8 @@ int test(YAML::Node const & config)
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, [temp0] (Vec3 const&) {return temp0;}});
-  // bcs.addMixedBC(
-  //       side::RIGHT,
-  //       [hConv](Vec3 const &){return hConv;},
-  //       [hConv, tempA](Vec3 const &){return hConv * tempA;});
+  auto const bcs = std::make_tuple(
+        BCEss{feSpace, side::LEFT, [temp0] (Vec3 const&) {return temp0;}});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   AssemblyStiffness stiffness{1.0, feSpace};

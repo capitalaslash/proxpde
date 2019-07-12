@@ -18,7 +18,7 @@ void computeGradient(
 {
   static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);
 
-  BCList bcsGrad{feSpaceGrad};
+  std::tuple<> bcsGrad;
   Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
   builderGrad.buildLhs(AssemblyMass{1.0, feSpaceGrad}, bcsGrad);
   builderGrad.buildRhs(AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}, bcsGrad);

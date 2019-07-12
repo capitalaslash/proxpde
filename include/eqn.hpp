@@ -11,15 +11,15 @@ struct Diagonal;
 template <typename FESpace>
 struct AssemblyVector;
 
-template <typename FESpace, StorageType Storage = StorageType::ClmMajor>
+template <typename FESpace, typename BCS, StorageType Storage = StorageType::ClmMajor>
 struct Eqn
 {
   using FESpace_T = FESpace;
   static uint const dim = FESpace_T::dim;
 
-  Eqn(std::string_view const name, FESpace_T const & fe):
+  Eqn(std::string_view const name, FESpace_T const & fe, BCS const & bcs):
     feSpace{fe},
-    bcList{feSpace},
+    bcList{bcs},
     sol{name, std::vector<uint>(dim, feSpace.dof.size)},
     builder{feSpace.dof.size*dim}
   {}
@@ -63,7 +63,7 @@ struct Eqn
   }
 
   FESpace_T const & feSpace;
-  BCList<FESpace_T> bcList;
+  BCS const & bcList;
   BlockVar sol;
   Builder<Storage> builder;
   std::vector<std::unique_ptr<Diagonal<FESpace_T>>> assemblyListLhs;

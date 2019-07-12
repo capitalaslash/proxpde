@@ -18,9 +18,9 @@ struct Builder
     std::cout << "new builder with " << size << " dofs" << std::endl;
   }
 
-  template <typename FESpace>
+  template <typename FESpace, typename BCs>
   void buildLhs(Diagonal<FESpace> const & assembly,
-                BCList<FESpace> & bcs)
+                BCs & bcs)
   {
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename Diagonal<FESpace>::LMat_T;
@@ -54,8 +54,13 @@ struct Builder
 
       LMat_T C = LMat_T ::Identity();
       LVec_T h = LVec_T::Zero();
-      for(auto const & bc: bcs.bcEssList)
+      static_for(bcs, [&] (auto const /*i*/, auto & bc)
       {
+        using BC_T = std::decay_t<decltype(bc)>;
+        static_assert(
+              std::is_same_v<std::remove_cv_t<FESpace>, typename BC_T::FESpace_T>,
+              "the fespace of the assembly and the one of the bc do not coincide");
+
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
           auto const localValue = bc.evaluate(i);
@@ -70,7 +75,24 @@ struct Builder
             }
           }
         }
-      }
+      });
+      // for(auto const & bc: bcs.bcEssList)
+      // {
+      //   for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      //   {
+      //     auto const localValue = bc.evaluate(i);
+      //     for (uint d=0; d<FESpace::dim; ++d)
+      //     {
+      //       auto const pos = i + d*FESpace::RefFE_T::numFuns;
+      //       DOFid_T const id = assembly.feSpace.dof.getId(e.id, i, d);
+      //       if (bc.isConstrained(id))
+      //       {
+      //         C(pos, pos) = 0.;
+      //         h[pos] = localValue[d];
+      //       }
+      //     }
+      //   }
+      // }
       Fe = C * (Fe - Ke * h);
       Ke = C * Ke * C;
 
@@ -81,7 +103,7 @@ struct Builder
           auto const pos = i + d*FESpace::RefFE_T::numFuns;
           DOFid_T const id = assembly.feSpace.dof.getId(e.id, i, d);
 
-          for(auto const & bc: bcs.bcEssList)
+          static_for(bcs, [&] (auto const /*i*/, auto & bc)
           {
             // dofs can be fixed with essential conditions only once!
             // all other bcs will be silently discarded
@@ -91,7 +113,18 @@ struct Builder
               Fe(pos) = h[pos];
               // bc.fixedDofs.insert(id);
             }
-          }
+          });
+          // for(auto const & bc: bcs.bcEssList)
+          // {
+          //   // dofs can be fixed with essential conditions only once!
+          //   // all other bcs will be silently discarded
+          //   if (bc.isConstrained(id))
+          //   {
+          //     Ke(pos, pos) = bc.diag;
+          //     Fe(pos) = h[pos];
+          //     // bc.fixedDofs.insert(id);
+          //   }
+          // }
         }
       }
 
@@ -127,10 +160,10 @@ struct Builder
     }
   }
 
-  template <typename FESpace1, typename FESpace2>
+  template <typename FESpace1, typename FESpace2, typename BCs1, typename BCs2>
   void buildCoupling(Coupling<FESpace1, FESpace2> const & assembly,
-                     BCList<FESpace1> const & bcs1,
-                     BCList<FESpace2> const & bcs2)
+                     BCs1 const & bcs1,
+                     BCs2 const & bcs2)
   {
     using CurFE1_T = typename FESpace1::CurFE_T;
     using CurFE2_T = typename FESpace2::CurFE_T;
@@ -170,8 +203,12 @@ struct Builder
       // h is the vector of local constraint values
 
       SquareMat1_T Crow = SquareMat1_T::Identity();
-      for(auto const & bc: bcs1.bcEssList)
+      static_for(bcs1, [&] (auto const /*i*/, auto & bc)
       {
+        using BC1_T = std::decay_t<decltype(bc)>;
+        static_assert(
+              std::is_same_v<std::remove_cv_t<FESpace1>, typename BC1_T::FESpace_T>,
+              "the fespace of the assembly and the one of the bc do not coincide");
         for (uint d=0; d<FESpace1::dim; ++d)
         {
           for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
@@ -184,11 +221,31 @@ struct Builder
             }
           }
         }
-      }
+      });
+      // for(auto const & bc: bcs1.bcEssList)
+      // {
+      //   for (uint d=0; d<FESpace1::dim; ++d)
+      //   {
+      //     for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
+      //     {
+      //       auto const pos = i+d*FESpace1::RefFE_T::numFuns;
+      //       DOFid_T const id = assembly.feSpace1.dof.getId(e.id, i ,d);
+      //       if (bc.isConstrained(id))
+      //       {
+      //         Crow(pos,pos) = 0.;
+      //       }
+      //     }
+      //   }
+      // }
       SquareMat2_T Cclm = SquareMat2_T::Identity();
       Vec2_T h = Vec2_T::Zero();
-      for(auto const & bc: bcs2.bcEssList)
+      static_for(bcs2, [&] (auto const /*i*/, auto & bc)
       {
+        using BC2_T = std::decay_t<decltype(bc)>;
+        static_assert(
+              std::is_same_v<std::remove_cv_t<FESpace2>, typename BC2_T::FESpace_T>,
+              "the fespace of the assembly and the one of the bc do not coincide");
+
         for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
         {
           auto const localValue = bc.evaluate(i);
@@ -203,7 +260,24 @@ struct Builder
             }
           }
         }
-      }
+      });
+      // for(auto const & bc: bcs2.bcEssList)
+      // {
+      //   for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
+      //   {
+      //     auto const localValue = bc.evaluate(i);
+      //     for (uint d=0; d<FESpace2::dim; ++d)
+      //     {
+      //       auto const pos = i+d*FESpace2::RefFE_T::numFuns;
+      //       DOFid_T const id = assembly.feSpace2.dof.getId(e.id, i ,d);
+      //       if (bc.isConstrained(id))
+      //       {
+      //         Cclm(pos, pos) = 0.;
+      //         h[pos] = localValue[d];
+      //       }
+      //     }
+      //   }
+      // }
       Fe = - Crow * Ke * h;
       Ke = Crow * Ke * Cclm;
 
@@ -235,9 +309,9 @@ struct Builder
     }
   }
 
-  template <typename FESpace>
+  template <typename FESpace, typename BC>
   void buildRhs(AssemblyVector<FESpace> const & assembly,
-                BCList<FESpace> const & bcs)
+                    BC const & bcs)
   {
     using CurFE_T = typename FESpace::CurFE_T;
     using LMat_T = typename AssemblyVector<FESpace>::LMat_T;
@@ -263,8 +337,13 @@ struct Builder
       // h is the vector of local constraint values
 
       LMat_T C = LMat_T::Identity();
-      for(auto const & bc: bcs.bcEssList)
+      static_for(bcs, [&] (auto const /*i*/, auto & bc)
       {
+        using BC_T = std::decay_t<decltype(bc)>;
+        static_assert(
+              std::is_same_v<std::remove_cv_t<FESpace>, typename BC_T::FESpace_T>,
+              "the fespace of the assembly and the one of the bc do not coincide");
+
         for (uint d=0; d<FESpace::dim; ++d)
         {
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
@@ -277,7 +356,22 @@ struct Builder
             }
           }
         }
-      }
+      });
+      // for(auto const & bc: bcs.bcEssList)
+      // {
+      //   for (uint d=0; d<FESpace::dim; ++d)
+      //   {
+      //     for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
+      //     {
+      //       auto const pos = i+d*FESpace::RefFE_T::numFuns;
+      //       DOFid_T const id = assembly.feSpace.dof.getId(e.id, i, d);
+      //       if (bc.isConstrained(id))
+      //       {
+      //         C(pos, pos) = 0.;
+      //       }
+      //     }
+      //   }
+      // }
       Fe = C * Fe;
 
       // filelog << "\nelement" << e.id << "\n---------------" << std::endl;

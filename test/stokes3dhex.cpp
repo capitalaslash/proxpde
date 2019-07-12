@@ -45,15 +45,14 @@ int main(int argc, char* argv[])
   t.start("bcs");
   auto zero = [] (Vec3 const &) { return Vec3::Constant(0.); };
   auto inlet = [] (Vec3 const & p) { return Vec3(0., 0.5*(1.-p(0)*p(0)), 0.); };
-  BCList bcsVel{feSpaceVel};
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zero});
-  bcsVel.addBC(BCEss{feSpaceVel, side::TOP, zero, {0, 2}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zero, {0, 2}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::BACK, zero, {2}});
-  bcsVel.addBC(BCEss{feSpaceVel, side::FRONT, zero, {2}});
-  // bcsVel.addBC(BCNat<FESpaceVel_T>{side::BOTTOM, [] (Point const &) {return Vec2(0.0, 1.0);}});
-  BCList bcsP{feSpaceP};
+  auto const bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM, inlet},
+        BCEss{feSpaceVel, side::RIGHT,  zero},
+        BCEss{feSpaceVel, side::TOP,    zero, {0, 2}},
+        BCEss{feSpaceVel, side::LEFT,   zero, {0, 2}},
+        BCEss{feSpaceVel, side::BACK,   zero, {2}},
+        BCEss{feSpaceVel, side::FRONT,  zero, {2}});
+  auto const bcsP = std::make_tuple();
   t.stop();
 
   t.start("assembly");

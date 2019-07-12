@@ -76,14 +76,6 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceU_T feSpaceU{*mesh};
   FESpaceP_T feSpaceP{*mesh};
-
-  Eqn<FESpaceU_T, StorageType::RowMajor> eqnUstar{"uStar", feSpaceU};
-  Eqn<FESpaceU_T, StorageType::RowMajor> eqnVstar{"vStar", feSpaceU};
-
-  Eqn eqnP{"p", feSpaceP};
-
-  Eqn eqnU{"u", feSpaceU};
-  Eqn eqnV{"v", feSpaceU};
   t.stop();
 
   t.start("bc");
@@ -95,27 +87,40 @@ int main(int argc, char* argv[])
   auto const inlet1 = [&inlet] (Vec3 const & p) { return inlet(p)[1]; };
   // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
-  BCList bcsVel{feSpaceVel};
-  // last essential bc wins on corners
-  bcsVel.addBC(BCEss{feSpaceVel, side::BOTTOM, inlet});
-  bcsVel.addBC(BCEss{feSpaceVel, side::RIGHT, zeroV});
-  bcsVel.addBC(BCEss{feSpaceVel, side::LEFT, zeroV, {0}});
+  auto const bcsVel = std::make_tuple(
+        // last essential bc wins on corners
+        BCEss{feSpaceVel, side::BOTTOM, inlet},
+        BCEss{feSpaceVel, side::RIGHT, zeroV},
+        BCEss{feSpaceVel, side::LEFT, zeroV, {0}});
 
-  BCList bcsP{feSpaceP};
-  bcsP.addBC(BCEss{feSpaceP, side::TOP, zeroS});
+  auto const bcsP = std::make_tuple(
+        BCEss{feSpaceP, side::TOP, zeroS});
   // DofSet_T pinSet = {1};
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
-  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::BOTTOM, inlet0});
-  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::RIGHT, zeroS});
-  eqnUstar.bcList.addBC(BCEss{eqnUstar.feSpace, side::LEFT, zeroS});
+  auto const bcsUstar = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM, inlet0},
+        BCEss{feSpaceU, side::RIGHT, zeroS},
+        BCEss{feSpaceU, side::LEFT, zeroS});
 
-  // last essential bc wins on corners
-  eqnVstar.bcList.addBC(BCEss{eqnVstar.feSpace, side::BOTTOM, inlet1});
-  eqnVstar.bcList.addBC(BCEss{eqnVstar.feSpace, side::RIGHT, zeroS});
+  auto const bcsVstar = std::make_tuple(
+        // last essential bc wins on corners
+        BCEss{feSpaceU, side::BOTTOM, inlet1},
+        BCEss{feSpaceU, side::RIGHT, zeroS});
 
-  eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::TOP, zeroS});
+  auto const bcsPSplit = std::make_tuple(
+        BCEss{feSpaceP, side::TOP, zeroS});
   // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
+  t.stop();
+
+  t.start("eqn");
+  Eqn<FESpaceU_T, decltype(bcsUstar), StorageType::RowMajor> eqnUstar{"uStar", feSpaceU, bcsUstar};
+  Eqn<FESpaceU_T, decltype(bcsVstar), StorageType::RowMajor> eqnVstar{"vStar", feSpaceU, bcsVstar};
+
+  Eqn eqnP{"p", feSpaceP, bcsP};
+
+  Eqn eqnU{"u", feSpaceU, std::make_tuple()};
+  Eqn eqnV{"v", feSpaceU, std::make_tuple()};
   t.stop();
 
   t.start("assembly");

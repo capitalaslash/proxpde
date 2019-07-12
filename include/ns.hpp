@@ -44,19 +44,17 @@ struct NSParameters
   // long const dummy = 0;
 };
 
-template <typename Mesh>
+template <typename FESpaceVel,
+          typename FESpaceP,
+          typename BCSVel,
+          typename BCSP>
 struct NSSolverMonolithic
 {
-  static int constexpr dim = Mesh::Elem_T::dim;
+  using FESpaceVel_T = FESpaceVel;
+  using FESpaceP_T = FESpaceP;
+  using Elem_T = typename FESpaceVel_T::Mesh_T::Elem_T;
+  static int constexpr dim = Elem_T::dim;
 
-  using Elem_T = typename Mesh::Elem_T;
-  using FESpaceVel_T = FESpace<Mesh,
-                               typename FEType<Elem_T, 2>::RefFE_T,
-                               typename FEType<Elem_T, 2>::RecommendedQR,
-                               dim>;
-  using FESpaceP_T = FESpace<Mesh,
-                             typename FEType<Elem_T, 1>::RefFE_T,
-                             typename FEType<Elem_T, 2>::RecommendedQR>;
   // using Backend = amgcl::backend::eigen<double>;
   // using USolver = amgcl::make_solver<
   //     amgcl::amg<
@@ -103,13 +101,17 @@ struct NSSolverMonolithic
   // using SolverParams = boost::property_tree::ptree;
   using SchurSolver = IterSolver;
 
-  explicit NSSolverMonolithic(Mesh const & m, NSParameters const & par):
-    mesh{m},
+  explicit NSSolverMonolithic(
+      FESpaceVel_T & feVel,
+      FESpaceP_T & feP,
+      BCSVel const & bcsVV,
+      BCSP const & bcsPP,
+      NSParameters const & par):
+    feSpaceVel{feVel},
+    feSpaceP{feP},
+    bcsVel{bcsVV},
+    bcsP{bcsPP},
     parameters{par},
-    feSpaceVel{m},
-    feSpaceP{m},
-    bcsVel{feSpaceVel},
-    bcsP{feSpaceP},
     builder{feSpaceVel.dof.size * dim + feSpaceP.dof.size},
     sol{"vel", feSpaceVel.dof.size * dim + feSpaceP.dof.size},
     p{"p", feSpaceP.dof.size},
@@ -226,12 +228,11 @@ struct NSSolverMonolithic
     ioP.print({p}, time);
   }
 
-  Mesh const & mesh;
+  FESpaceVel_T & feSpaceVel;
+  FESpaceP_T & feSpaceP;
+  BCSVel const & bcsVel;
+  BCSP const & bcsP;
   NSParameters parameters;
-  FESpaceVel_T feSpaceVel;
-  FESpaceP_T feSpaceP;
-  BCList<FESpaceVel_T> bcsVel;
-  BCList<FESpaceP_T> bcsP;
   Builder<StorageType::RowMajor> builder;
   Var sol;
   Var p;
@@ -247,21 +248,20 @@ struct NSSolverMonolithic
   IOManager<FESpaceP_T> ioP;
 };
 
-template <typename Mesh>
+template <typename FESpaceU,
+          typename FESpaceP,
+          typename BCSU,
+          typename BCSV,
+          typename BCSP>
 struct NSSolverSplit2D
 {
-  static int constexpr dim = Mesh::Elem_T::dim;
-
-  using Elem_T = typename Mesh::Elem_T;
-  using FESpaceU_T = FESpace<Mesh,
-                             typename FEType<Elem_T, 2>::RefFE_T,
-                             typename FEType<Elem_T, 2>::RecommendedQR>;
-  using FESpaceVel_T = FESpace<Mesh,
-                               typename FEType<Elem_T, 2>::RefFE_T,
-                               typename FEType<Elem_T, 2>::RecommendedQR, dim>;
-  using FESpaceP_T = FESpace<Mesh,
-                             typename FEType<Elem_T, 1>::RefFE_T,
-                             typename FEType<Elem_T, 2>::RecommendedQR>;
+  using FESpaceU_T = FESpaceU;
+  using FESpaceP_T = FESpaceP;
+  static int constexpr dim = FESpaceU_T::Mesh_T::Elem_T::dim;
+  using Elem_T = typename FESpaceU_T::Mesh_T::Elem_T;
+  using FESpaceVel_T = FESpace<typename FESpaceU_T::Mesh_T,
+                               typename FESpaceU_T::RefFE_T,
+                               typename FESpaceU_T::QR_T, dim>;
   using BuilderVel_T = Builder<StorageType::RowMajor>;
   using BuilderP_T = Builder<StorageType::ClmMajor>;
   // using Backend = amgcl::backend::eigen<double>;
@@ -278,15 +278,20 @@ struct NSSolverSplit2D
   // >;
   using Solver = IterSolver;
 
-  explicit NSSolverSplit2D(Mesh const & m, NSParameters const & par):
-    mesh{m},
+  explicit NSSolverSplit2D(
+      FESpaceU_T & feU,
+      FESpaceP_T & feP,
+      BCSU const & bcsUU,
+      BCSV const & bcsVV,
+      BCSP const & bcsPP,
+      NSParameters const & par):
+    feSpaceU{feU},
+    feSpaceP{feP},
+    feSpaceVel{feU.mesh},
+    bcsU{bcsUU},
+    bcsV{bcsVV},
+    bcsP{bcsPP},
     parameters{par},
-    feSpaceVel{m},
-    feSpaceU{m},
-    feSpaceP{m},
-    bcsU{feSpaceU},
-    bcsV{feSpaceU},
-    bcsP{feSpaceP},
     builderUStar{feSpaceU.dof.size},
     builderVStar{feSpaceU.dof.size},
     builderP{feSpaceP.dof.size},
@@ -427,14 +432,13 @@ struct NSSolverSplit2D
     ioP.print({p}, time);
   }
 
-  Mesh const & mesh;
-  NSParameters parameters;
+  FESpaceU_T & feSpaceU;
+  FESpaceP_T & feSpaceP;
   FESpaceVel_T feSpaceVel;
-  FESpaceU_T feSpaceU;
-  FESpaceP_T feSpaceP;
-  BCList<FESpaceU_T> bcsU;
-  BCList<FESpaceU_T> bcsV;
-  BCList<FESpaceP_T> bcsP;
+  BCSU const & bcsU;
+  BCSV const & bcsV;
+  BCSP const & bcsP;
+  NSParameters parameters;
   Builder<StorageType::RowMajor> builderUStar;
   Builder<StorageType::RowMajor> builderVStar;
   Builder<StorageType::ClmMajor> builderP;

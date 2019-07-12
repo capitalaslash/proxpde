@@ -25,7 +25,6 @@ int main(int argc, char* argv[])
   using FESpaceP0_T = FESpace<Mesh_T,
                               FEType<Elem_T, 0>::RefFE_T,
                               FEType<Elem_T, 0>::RecommendedQR>;
-  using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::UPWIND>;
   // velocity field
   using FESpaceVel_T = FESpaceP1_T;
 
@@ -69,10 +68,10 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   auto const one = [](Vec3 const & ){return 1.;};
-  BCList bcsP1{feSpaceP1};
-  bcsP1.addBC(BCEss{feSpaceP1, side::LEFT, one});
-  BCList bcsP0{feSpaceP0};
-  bcsP0.addBC(BCEss{feSpaceP0, side::LEFT, one});
+  auto const bcsP1 = std::make_tuple(
+        BCEss{feSpaceP1, side::LEFT, one});
+  auto const bcsP0 = std::make_tuple(
+        BCEss{feSpaceP0, side::LEFT, one});
   t.stop();
 
   auto const dt = config["dt"].as<double>();
@@ -92,7 +91,7 @@ int main(int argc, char* argv[])
   Vec concP1Old(feSpaceP1.dof.size);
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
 
-  // FEVar c{"conc", feSpace};
+  // FEVar c{feSpace, "conc"};
   // FEList feList{feSpace, feSpace};
   // auto fe1 = std::get<0>(feList);
   // BlockFEVar tmp{"tmp", feList};
@@ -114,6 +113,7 @@ int main(int argc, char* argv[])
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
   t.stop();
 
+  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::UPWIND>;
   FVSolver_T fv{feSpaceP0, bcsP0};
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);

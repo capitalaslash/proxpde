@@ -24,7 +24,6 @@ int main(/*int argc, char* argv[]*/)
   using FESpaceVel_T = FESpace<Mesh_T,
                                FEType<Elem_T, 1>::RefFE_T,
                                FEType<Elem_T, 1>::RecommendedQR, 2>;
-  using FVSolver_T = FVSolver<FESpaceP0_T, LimiterType::SUPERBEE>;
 
   scalarFun_T const ic = [] (Vec3 const& p)
   {
@@ -61,8 +60,8 @@ int main(/*int argc, char* argv[]*/)
 
   t.start("bcs");
   auto const one = [](Vec3 const & ){return 1.;};
-  BCList bcs{feSpace};
-  bcs.addBC(BCEss{feSpace, side::LEFT, one});
+  auto const bcs = std::make_tuple(
+        BCEss{feSpace, side::LEFT, one});
   t.stop();
 
   t.start("velocity");
@@ -81,6 +80,7 @@ int main(/*int argc, char* argv[]*/)
   integrateAnalyticFunction(ic, feSpaceIC, c.data);
   t.stop();
 
+  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcs), LimiterType::SUPERBEE>;
   FVSolver_T fv{feSpace, bcs};
 
   auto const & sizeVel = feSpaceVel.dof.size;

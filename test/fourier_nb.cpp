@@ -58,7 +58,7 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("bcs");
-  BCList bcs{feSpace};
+  auto const bcs = std::make_tuple();
   // bcs.addBC(BCEss{feSpace, side::LEFT, [](Vec3 const &){return 4.;}});
   // bcs.addBC(BCEss{feSpace, side::RIGHT, [](Vec3 const &){return 3.;}});
   t.stop();

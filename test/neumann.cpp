@@ -63,10 +63,8 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("bcs");
-  BCList bcs{feSpace};
-  auto const bcLeft = BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }};
-  bcs.addBC(bcLeft);
-  // std::tuple<BCEss<FESpace_T>> bcTuple = {bcLeft};
+  auto const bcs = std::make_tuple(
+        BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }});
   t.stop();
 
   t.start("assembly");

@@ -73,7 +73,8 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("bcs");
-  BCList bcs{feSpace};
+  // we don't need any boundary condition
+  auto const bcs = std::make_tuple();
   t.stop();
 
   t.start("fe build");

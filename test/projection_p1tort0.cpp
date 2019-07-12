@@ -26,8 +26,8 @@ int main()
 
   std::cout << "dofP0:\n" << feSpaceP0.dof << std::endl;
 
-  BCList bcRT0{feSpaceRT0};
-  BCList bcP0{feSpaceP0};
+  auto const bcRT0 = std::make_tuple();
+  auto const bcP0 = std::make_tuple();
 
   Var uP0{"uP0"};
   Var uP1{"uP1"};

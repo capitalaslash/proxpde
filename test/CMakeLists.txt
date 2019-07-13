@@ -82,7 +82,6 @@ minifem_add_test(poisson3dhex)
 minifem_add_test(poisson3dhex_q2)
 
 minifem_add_test(poisson2dproj)
-minifem_add_test(neumann)
 
 # 2d stokes
 minifem_add_test(stokes2dquad)
@@ -99,6 +98,7 @@ minifem_add_test(stokes3dtet)
 minifem_add_test(stokes3dhex)
 
 # bc
+minifem_add_test(neumann)
 minifem_add_test(robin_bc)
 minifem_add_test(fourier_nb)
 minifem_add_test(projection_p1top2)

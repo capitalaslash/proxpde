@@ -252,7 +252,7 @@ constexpr void static_for(Tup & t, Func && f)
   static_for_impl(
         t,
         std::forward<Func>(f),
-        std::make_index_sequence<std::tuple_size_v<Tup>>{});
+        std::make_index_sequence<std::tuple_size_v<std::decay_t<Tup>>>{});
 }
 
 // ----------------------------------------------------------------------------

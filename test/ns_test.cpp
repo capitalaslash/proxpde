@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
   }
   else
   {
+    config["origin"] = Vec3{0., 0., 0.};
+    config["length"] = Vec3{1., 10., 0.};
     config["nx"] = 4;
     config["ny"] = 8;
     config["dt"] = 0.1;
@@ -35,7 +37,7 @@ int main(int argc, char* argv[])
     config["nu"] = 0.1;
   }
 
-  validateConfig(config, {"nx", "ny", "dt", "ntime", "nu"});
+  validateConfig(config, {"origin", "length", "nx", "ny", "dt", "ntime", "nu"});
 
   auto const dt = config["dt"].as<double>();
   auto const nu = config["nu"].as<double>();
@@ -46,8 +48,8 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new(Mesh_T)};
   buildHyperCube(
         *mesh,
-        {0.0, 0.0, 0.0},
-        {1.0, 10.0, 0.0},
+        config["origin"].as<Vec3>(),
+        config["length"].as<Vec3>(),
         {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
   t.stop();
 

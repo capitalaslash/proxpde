@@ -1,4 +1,6 @@
 build*/*
 contrib/*
+stagit/*
+website/*
 *.gch
 

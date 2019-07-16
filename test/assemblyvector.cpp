@@ -164,16 +164,16 @@ int main(int argc, char* argv[])
   //       BCEss{feSpaceP, pinSet, zero1d});
 
   Builder builder{numDOFs};
-  builder.buildLhs(AssemblyStiffness{1.0, feSpaceVel}, bcsVel);
+  builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpaceVel}}, bcsVel);
   builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
   builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
   builder.closeMatrix();
 
   Builder builderS{numDOFs};
-  builderS.buildLhs(AssemblyStiffness{1.0, feSpaceU}, bcsU);
+  builderS.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpaceU}}, bcsU);
   builderS.buildCoupling(AssemblyGrad{-1.0, feSpaceU, feSpaceP, {0}}, bcsU, bcsP);
   builderS.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceU, {0}}, bcsP, bcsU);
-  builderS.buildLhs(AssemblyStiffness{1.0, feSpaceV, {1}}, bcsV);
+  builderS.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpaceV, {1}}}, bcsV);
   builderS.buildCoupling(AssemblyGrad{-1.0, feSpaceV, feSpaceP, {1}}, bcsV, bcsP);
   builderS.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceV, {1}}, bcsP, bcsV);
   builderS.closeMatrix();

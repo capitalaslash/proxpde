@@ -56,10 +56,10 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
   Builder<StorageType::RowMajor> builder{dofVel + dofP};
   Var sol{"sol"};
-  builder.buildLhs(stiffness, bcsVel);
+  builder.buildLhs(std::tuple{stiffness}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
-  builder.buildLhs(dummy, bcsP);
+  builder.buildLhs(std::tuple{dummy}, bcsP);
   builder.closeMatrix();
 
   IterSolver solver(builder.A);

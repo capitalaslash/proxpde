@@ -137,9 +137,8 @@ int main(int argc, char* argv[])
     // central implicit
     t.start("p1 assemby");
     concP1Old = concP1.data;
-    builder.buildLhs(timeDer, bcsP1);
+    builder.buildLhs(std::tuple{timeDer, advection}, bcsP1);
     builder.buildRhs(timeDerRhs, bcsP1);
-    builder.buildLhs(advection, bcsP1);
     builder.closeMatrix();
     t.stop();
 

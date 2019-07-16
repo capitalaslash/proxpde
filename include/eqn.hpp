@@ -11,34 +11,38 @@ struct Diagonal;
 template <typename FESpace>
 struct AssemblyVector;
 
-template <typename FESpace, typename BCS, StorageType Storage = StorageType::ClmMajor>
+template <typename LhsTup,
+          typename RhsTup,
+          typename BCS,
+          StorageType Storage = StorageType::ClmMajor>
 struct Eqn
 {
-  using FESpace_T = FESpace;
+  using FESpace_T = typename std::tuple_element_t<0, LhsTup>::FESpace_T;
   static uint const dim = FESpace_T::dim;
 
-  Eqn(std::string_view const name, FESpace_T const & fe, BCS const & bcs):
-    feSpace{fe},
+  Eqn(Var & s,
+      LhsTup const & lhs,
+      RhsTup const & rhs,
+      BCS const & bcs):
+    lhsAssemblies{lhs},
+    rhsAssemblies{rhs},
     bcList{bcs},
-    sol{name, std::vector<uint>(dim, feSpace.dof.size)},
-    builder{feSpace.dof.size*dim}
+    sol{s},
+    builder{s.data.size()}
   {}
 
   void buildLhs()
   {
-    for (auto & assembly: assemblyListLhs)
-    {
-      builder.buildLhs(*assembly, bcList);
-    }
+    builder.buildLhs(lhsAssemblies, bcList);
     builder.closeMatrix();
   }
 
   void buildRhs()
   {
-    for (auto & assembly: assemblyListRhs)
+    static_for(rhsAssemblies, [&] (auto const & /*i*/, auto & assembly)
     {
-      builder.buildRhs(*assembly, bcList);
-    }
+      builder.buildRhs(assembly, bcList);
+    });
   }
 
   void build()
@@ -62,11 +66,10 @@ struct Eqn
     return (builder.A * sol.data - builder.b).norm();
   }
 
-  FESpace_T const & feSpace;
+  LhsTup const & lhsAssemblies;
+  RhsTup const & rhsAssemblies;
   BCS const & bcList;
-  BlockVar sol;
+  Var & sol;
   Builder<Storage> builder;
-  std::vector<std::unique_ptr<Diagonal<FESpace_T>>> assemblyListLhs;
-  std::vector<std::unique_ptr<AssemblyVector<FESpace_T>>> assemblyListRhs;
   RecommendedSolverType<Storage> solver;
 };

@@ -63,8 +63,7 @@ int main(int argc, char* argv[])
   // AssemblyProjection f(1.0, rhsProj, feSpace);
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(mass, bcs);
-  builder.buildLhs(stiffness, bcs);
+  builder.buildLhs(std::tuple{mass, stiffness}, bcs);
   builder.buildRhs(f, bcs);
   builder.closeMatrix();
   t.stop();
@@ -96,7 +95,7 @@ int main(int argc, char* argv[])
 
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - 0.001115928841940259) > 1.e-15)
+  if(std::fabs(norm - 0.00111592884191975) > 1.e-13)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
     return 1;

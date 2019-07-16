@@ -179,9 +179,8 @@ int main(int argc, char* argv[])
     // central implicit
     concP1Old = concP1.data;
 
-    builder.buildLhs(timeder, bcsP1);
+    builder.buildLhs(std::tuple{timeder, advection}, bcsP1);
     builder.buildRhs(timeder_rhs, bcsP1);
-    builder.buildLhs(advection, bcsP1);
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);

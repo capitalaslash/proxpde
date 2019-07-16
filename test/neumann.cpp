@@ -70,7 +70,7 @@ int test(YAML::Node const & config)
   t.start("assembly");
   auto const size = feSpace.dof.size;
   Builder builder{size};
-  builder.buildLhs(AssemblyStiffness{1.0, feSpace}, bcs);
+  builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
   builder.buildRhs(AssemblyAnalyticRhs{rhs, feSpace}, bcs);
   builder.buildRhs(AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();

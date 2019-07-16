@@ -134,11 +134,10 @@ struct NSSolverMonolithic
   {
     // TODO: assert that this comes after setting up bcs
     auto const dofU = feSpaceVel.dof.size;
-    builder.buildLhs(AssemblyMass{1. / parameters.dt, feSpaceVel}, bcsVel);
-    builder.buildLhs(AssemblyTensorStiffness{parameters.nu, feSpaceVel}, bcsVel);
+    builder.buildLhs(std::tuple{AssemblyMass{1. / parameters.dt, feSpaceVel}, AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP, allComp<FESpaceVel_T>(), 0, dofU*dim}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel, allComp<FESpaceVel_T>(), dofU*dim, 0}, bcsP, bcsVel);
-    builder.buildLhs(AssemblyMass{0., feSpaceP, {0}, dofU*dim, dofU*dim}, bcsP);
+    builder.buildLhs(std::tuple{AssemblyMass{0., feSpaceP, {0}, dofU*dim, dofU*dim}}, bcsP);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
@@ -149,7 +148,7 @@ struct NSSolverMonolithic
     velOld = sol.data;
     builder.clear();
     builder.buildRhs(assemblyRhs, bcsVel);
-    builder.buildLhs(assemblyAdvection, bcsVel);
+    builder.buildLhs(std::tuple{assemblyAdvection}, bcsVel);
     builder.closeMatrix();
     builder.A += matFixed;
     builder.b += rhsFixed;
@@ -328,18 +327,18 @@ struct NSSolverSplit2D
   void init()
   {
     // TODO: assert that this comes after setting up bcs
-    builderP.buildLhs(AssemblyStiffness{parameters.dt, feSpaceP}, bcsP);
+    builderP.buildLhs(std::tuple{AssemblyStiffness{parameters.dt, feSpaceP}}, bcsP);
     builderP.closeMatrix();
     solverP.analyzePattern(builderP.A);
     solverP.factorize(builderP.A);
     rhsFixedP = builderP.b;
 
-    builderU.buildLhs(AssemblyMass{1.0, feSpaceU}, bcsU);
+    builderU.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, bcsU);
     builderU.closeMatrix();
     solverU.analyzePattern(builderU.A);
     solverU.factorize(builderU.A);
     rhsFixedVel[0] = builderU.b;
-    builderV.buildLhs(AssemblyMass{1.0, feSpaceU}, bcsV);
+    builderV.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, bcsV);
     builderV.closeMatrix();
     solverV.analyzePattern(builderV.A);
     solverV.factorize(builderV.A);
@@ -352,16 +351,12 @@ struct NSSolverSplit2D
     setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
     pOld += dp;
     builderUStar.clear();
-    builderUStar.buildLhs(assemblyMassUStar, bcsU);
-    builderUStar.buildLhs(assemblyAdvectionU, bcsU);
-    builderUStar.buildLhs(assemblyStiffnessUStar, bcsU);
+    builderUStar.buildLhs(std::tuple{assemblyMassUStar, assemblyAdvectionU, assemblyStiffnessUStar}, bcsU);
     builderUStar.buildRhs(assemblyURhs, bcsU);
     builderUStar.buildRhs(assemblyPOldU, bcsU);
     builderUStar.closeMatrix();
     builderVStar.clear();
-    builderVStar.buildLhs(assemblyMassVStar, bcsV);
-    builderVStar.buildLhs(assemblyAdvectionV, bcsV);
-    builderVStar.buildLhs(assemblyStiffnessVStar, bcsV);
+    builderVStar.buildLhs(std::tuple{assemblyMassVStar, assemblyAdvectionV, assemblyStiffnessVStar}, bcsV);
     builderVStar.buildRhs(assemblyVRhs, bcsV);
     builderVStar.buildRhs(assemblyPOldV, bcsV);
     builderVStar.closeMatrix();

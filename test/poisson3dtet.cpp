@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
   Builder builder{feSpace.dof.size};
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
   // builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);

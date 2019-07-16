@@ -97,8 +97,7 @@ int main(int argc, char* argv[])
   // AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(stiffness, bcs);
-  builder.buildLhs(mass, bcs);
+  builder.buildLhs(std::tuple{stiffness, mass}, bcs);
   builder.buildRhs(f, bcs);
   builder.closeMatrix();
 

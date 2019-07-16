@@ -56,7 +56,7 @@ int main()
   AssemblyAnalyticRhs f{exactSol, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(mass, bcs);
+  builder.buildLhs(std::tuple{mass}, bcs);
   builder.buildRhs(f, bcs);
   builder.closeMatrix();
 

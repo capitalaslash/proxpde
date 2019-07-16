@@ -73,7 +73,7 @@ int test(YAML::Node const & config)
   uint const sizeW = feSpaceW.dof.size;
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
-  builder.buildLhs(AssemblyVectorMass(1.0, feSpaceW), bcsW);
+  builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
   builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
   builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
   // fixed u value
@@ -118,7 +118,7 @@ int test(YAML::Node const & config)
   ioP0.print({u, exactU, errorU});
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
-  builderRT0.buildLhs(AssemblyMass(1.0, feSpaceP0Vec), bcsDummy);
+  builderRT0.buildLhs(std::tuple{AssemblyMass(1.0, feSpaceP0Vec)}, bcsDummy);
   builderRT0.buildRhs(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");

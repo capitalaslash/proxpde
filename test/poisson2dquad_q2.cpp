@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
         BCEss{feSpace, side::BOTTOM, [] (Vec3 const &) { return 0.; }});
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
   builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   builder.closeMatrix();
 

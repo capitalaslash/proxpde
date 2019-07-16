@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
   uint const numDOFs = FESpaceVel_T::dim * dofU + dofP;
   Builder builder{numDOFs};
   double const nu = 0.1;
-  builder.buildLhs(AssemblyTensorStiffness{nu, feSpaceVel}, bcsVel);
+  builder.buildLhs(std::tuple{AssemblyTensorStiffness{nu, feSpaceVel}}, bcsVel);
   builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
   builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
   builder.closeMatrix();

@@ -113,16 +113,6 @@ int main(int argc, char* argv[])
   // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
   t.stop();
 
-  t.start("eqn");
-  Eqn<FESpaceU_T, decltype(bcsUstar), StorageType::RowMajor> eqnUstar{"uStar", feSpaceU, bcsUstar};
-  Eqn<FESpaceU_T, decltype(bcsVstar), StorageType::RowMajor> eqnVstar{"vStar", feSpaceU, bcsVstar};
-
-  Eqn eqnP{"p", feSpaceP, bcsP};
-
-  Eqn eqnU{"u", feSpaceU, std::make_tuple()};
-  Eqn eqnV{"v", feSpaceU, std::make_tuple()};
-  t.stop();
-
   t.start("assembly");
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
@@ -143,8 +133,7 @@ int main(int argc, char* argv[])
 
   Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
   // builderM.buildLhs(dummy, bcsP);
-  builderM.buildLhs(timeder, bcsVel);
-  builderM.buildLhs(stiffness, bcsVel);
+  builderM.buildLhs(std::make_tuple(timeder, stiffness), bcsVel);
   builderM.buildCoupling(grad, bcsVel, bcsP);
   builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();
@@ -152,53 +141,73 @@ int main(int argc, char* argv[])
   Vec rhsFixed = builderM.b;
   builderM.clear();
 
+  Var uStar{"uStar", feSpaceU.dof.size};
+  Var vStar{"vStar", feSpaceU.dof.size};
+  Var p{"p", feSpaceP.dof.size};
+  Var u{"u", feSpaceU.dof.size};
+  Var v{"v", feSpaceU.dof.size};
+
+  Vec velStar{2 * dofU};
   Vec pOld = Vec::Zero(dofP);
   Vec vel{2 * dofU};
-  setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
-  setComponent(vel, feSpaceVel, eqnV.sol.data, eqnV.feSpace, 1);
 
   // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d pOld / dx
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU});
-  eqnUstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
-  eqnUstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnU.sol.data, feSpaceU});
-  eqnUstar.assemblyListRhs.emplace_back(new AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpaceP, {0}});
-  // EqnUstar newEqnUstar{"uStar", feSpaceU, {0, dt, vel, nu, pOld, feSpaceP}};
+  auto const uStarLhs = std::make_tuple(
+        AssemblyMass{1./dt, feSpaceU},
+        AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
+        AssemblyStiffness{nu, feSpaceU});
+  auto const uStarRhs = std::make_tuple(
+        AssemblyProjection{1./dt, u.data, feSpaceU},
+        AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpaceP, {0}});
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d pOld / dy
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyMass{1./dt, feSpaceU});
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU});
-  eqnVstar.assemblyListLhs.emplace_back(new AssemblyStiffness{nu, feSpaceU});
-  eqnVstar.assemblyListRhs.emplace_back(new AssemblyProjection{1./dt, eqnV.sol.data, feSpaceU});
-  eqnVstar.assemblyListRhs.emplace_back(new AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpaceP, {1}});
-  // eqnVelStar.assemblyListRhs.emplace_back(new AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
+  auto const vStarLhs = std::make_tuple(
+        AssemblyMass{1./dt, feSpaceU},
+        AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
+        AssemblyStiffness{nu, feSpaceU});
+  auto const vStarRhs = std::make_tuple(
+        AssemblyProjection{1./dt, v.data, feSpaceU},
+        AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpaceP, {1}});
+        // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
   // dt \nabla^2 \delta p = \nabla \cdot velStar
-  eqnP.assemblyListLhs.emplace_back(new AssemblyStiffness{dt, feSpaceP});
-  // eqnP lhs does not change in time, we can pre-compute and factorize it
-  eqnP.buildLhs();
-  eqnP.compute();
-  Vec velStar{2*dofU};
-  eqnP.assemblyListRhs.emplace_back(new AssemblyDivRhs{-1.0, velStar, feSpaceP, feSpaceVel});
-  // eqnP.assemblyListRhs.emplace_back(new AssemblyStiffnessRhs{-dt, pOld, feSpaceP, feSpaceP});
+  auto const pLhs = std::make_tuple(AssemblyStiffness{dt, feSpaceP});
+  auto const pRhs = std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpaceP, feSpaceVel});
+  // AssemblyStiffnessRhs{-dt, pOld, feSpaceP, feSpaceP});
 
   // pOld += \delta p
   // u = uStar - dt d \delta p / dx
-  eqnU.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  auto const uLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
+  auto const uRhs = std::make_tuple(
+        AssemblyProjection{1.0, uStar.data, feSpaceU},
+        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpaceP, {0}});
+
+  // v = vStar - dt d \delta p / dy
+  auto const vLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
+  auto const vRhs = std::make_tuple(
+        AssemblyProjection{1.0, vStar.data, feSpaceU},
+        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpaceP, {1}});
+
+  t.start("eqn");
+  Eqn<decltype(uStarLhs), decltype(uStarRhs), decltype(bcsUstar), StorageType::RowMajor> eqnUstar{uStar, uStarLhs, uStarRhs, bcsUstar};
+  Eqn<decltype(vStarLhs), decltype(vStarRhs), decltype(bcsVstar), StorageType::RowMajor> eqnVstar{vStar, vStarLhs, vStarRhs, bcsVstar};
+
+  Eqn eqnP{p, pLhs, pRhs, bcsP};
+  // eqnP lhs does not change in time, we can pre-compute and factorize it
+  eqnP.buildLhs();
+  eqnP.compute();
+
+  Eqn eqnU{u, uLhs, uRhs, std::make_tuple()};
   // eqnU lhs does not change in time, we can pre-compute and factorize it
   eqnU.buildLhs();
   eqnU.compute();
-  eqnU.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnUstar.sol.data, feSpaceU});
-  eqnU.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {0}});
-
-  // v = vStar - dt d \delta p / dy
-  eqnV.assemblyListLhs.emplace_back(new AssemblyMass{1.0, feSpaceU});
+  Eqn eqnV{v, vLhs, vRhs, std::make_tuple()};
   // eqnV lhs does not change in time, we can pre-compute and factorize it
   eqnV.buildLhs();
   eqnV.compute();
-  eqnV.assemblyListRhs.emplace_back(new AssemblyProjection{1.0, eqnVstar.sol.data, feSpaceU});
-  eqnV.assemblyListRhs.emplace_back(new AssemblyGradRhs{-dt, eqnP.sol.data, feSpaceU, feSpaceP, {1}});
+  t.stop();
 
+  t.start("ic");
   Var velM{"velM", 2*dofU + dofP};
   auto const ic = [](Vec3 const &) {return Vec2(0., 1.);};
   // auto const ic = [](Vec3 const & p) {return Vec2{0., 1.5 * (1. - p(0)*p(0))};};
@@ -206,11 +215,11 @@ int main(int argc, char* argv[])
   auto const ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};
   auto const ic1 = [&ic] (Vec3 const & p) {return ic(p)[1];};
   interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
-  interpolateAnalyticFunction(ic0, eqnU.feSpace, eqnU.sol.data);
-  interpolateAnalyticFunction(ic1, eqnV.feSpace, eqnV.sol.data);
+  interpolateAnalyticFunction(ic0, feSpaceU, u.data);
+  interpolateAnalyticFunction(ic1, feSpaceU, v.data);
 
-  eqnUstar.sol.data = eqnU.sol.data;
-  eqnVstar.sol.data = eqnV.sol.data;
+  uStar.data = u.data;
+  vStar.data = v.data;
   t.stop();
 
   t.start("print");
@@ -220,7 +229,7 @@ int main(int argc, char* argv[])
   getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
   Var pM{"pM", velM.data.block(2*dofU, 0, dofP, 1)};
   Var pSplit{"p"};
-  pSplit.data = Vec::Zero(eqnP.feSpace.dof.size);
+  pSplit.data = Vec::Zero(feSpaceP.dof.size);
   IOManager ioV{feSpaceU, "output_ipcs/sol_v"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_ipcs/sol_p"};
@@ -246,7 +255,7 @@ int main(int argc, char* argv[])
     velOldMonolithic = velM.data;
 
     builderM.buildRhs(timederRhs, bcsVel);
-    builderM.buildLhs(advection, bcsVel);
+    builderM.buildLhs(std::tuple(advection), bcsVel);
     builderM.closeMatrix();
 
     builderM.A += matFixed;
@@ -261,8 +270,8 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("ustar build");
-    setComponent(vel, feSpaceVel, eqnU.sol.data, eqnU.feSpace, 0);
-    setComponent(vel, feSpaceVel, eqnV.sol.data, eqnV.feSpace, 1);
+    setComponent(vel, feSpaceVel, u.data, feSpaceU, 0);
+    setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
     pOld += eqnP.sol.data;
     eqnUstar.build();
     eqnVstar.build();
@@ -278,8 +287,8 @@ int main(int argc, char* argv[])
     t.stop();
 
     t.start("p build");
-    setComponent(velStar, feSpaceVel, eqnUstar.sol.data, eqnUstar.feSpace, 0);
-    setComponent(velStar, feSpaceVel, eqnVstar.sol.data, eqnVstar.feSpace, 1);
+    setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
+    setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
     eqnP.buildRhs();
     t.stop();
 

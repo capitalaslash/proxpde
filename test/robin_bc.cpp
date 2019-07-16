@@ -63,7 +63,6 @@ int test(YAML::Node const & config)
 
   t.start();
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(stiffness, bcs);
   builder.buildRhs(f, bcs);
   // mixed bc: a u + \nabla u = b
   // - \lap u = f
@@ -76,7 +75,10 @@ int test(YAML::Node const & config)
   // -> a = hConv, b = hConv * tempA
   // hConv -> 0: \nabla u = 0, Neumann homogeneous
   // hConv -> inf: u = b / a = tempA, Dirichlet
-  builder.buildLhs(AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}, bcs);
+  auto const lhs = std::tuple{
+      stiffness,
+      AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}};
+  builder.buildLhs(lhs, bcs);
   builder.buildRhs(AssemblyBCNatural{[hConv, tempA](Vec3 const &){return hConv * tempA;}, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;

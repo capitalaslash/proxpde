@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
   // AssemblyAnalyticRhs f(rotatedRhs, feSpace);
   AssemblyAnalyticRhs f(rhs, feSpace);
   Builder builder{size};
-  builder.buildLhs(stiffness, bcs);
+  builder.buildLhs(std::tuple{stiffness}, bcs);
   builder.buildRhs(f, bcs);
   builder.buildRhs(AssemblyBCNatural{bcValue, side::RIGHT, feSpace}, bcs);
   builder.closeMatrix();

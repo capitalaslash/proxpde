@@ -42,14 +42,14 @@ int main(int argc, char* argv[])
         BCEss{feSpace, side::BOTTOM, [] (Vec3 const &) { return 0.; }});
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
   Var rhsVec{"rhs", feSpace.dof.size};
   interpolateAnalyticFunction(rhs, feSpace, rhsVec.data);
   builder.buildRhs(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
 
   Builder builderTest{feSpace.dof.size};
-  builderTest.buildLhs(AssemblyStiffness(1.0, feSpace), bcs);
+  builderTest.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
   builderTest.buildRhs(AssemblyProjection(1.0, rhsVec.data, feSpace), bcs);
   builder.closeMatrix();
   // std::cout << "b VecRhs:\n" << builder.b << "\nb Projection:\n" << builderTest.b << std::endl;

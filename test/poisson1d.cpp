@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   // AssemblyProjection f(1.0, rhsProj, feSpace);
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(stiffness, bcs);
+  builder.buildLhs(std::tuple{stiffness}, bcs);
   builder.buildRhs(f, bcs);
   builder.closeMatrix();
   t.stop();

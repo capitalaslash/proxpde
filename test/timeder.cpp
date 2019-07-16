@@ -126,12 +126,11 @@ int test(YAML::Node const & config)
 
     uOldOld = uOld;
     uOld = u.data;
-    builder.buildLhs(bdf1Lhs, bcs);
-    builder.buildLhs(mass, bcs);
+    builder.buildLhs(std::tuple{bdf1Lhs, mass}, bcs);
     builder.buildRhs(bdf1Rhs, bcs);
     if (method == TimeIntegrationMethod::BDF2 && itime > 1)
     {
-      builder.buildLhs(bdf2Lhs, bcs);
+      builder.buildLhs(std::tuple{bdf2Lhs}, bcs);
       builder.buildRhs(bdf2Rhs1, bcs);
       builder.buildRhs(bdf2Rhs2, bcs);
     }

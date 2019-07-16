@@ -96,11 +96,10 @@ int main(int argc, char* argv[])
   Builder<StorageType::RowMajor> builder{numDOFs};
 
   Builder<StorageType::RowMajor> fixedBuilder{numDOFs};
-  fixedBuilder.buildLhs(timeder, bcsVel);
-  fixedBuilder.buildLhs(stiffness, bcsVel);
+  fixedBuilder.buildLhs(std::tuple{timeder, stiffness}, bcsVel);
   fixedBuilder.buildCoupling(grad, bcsVel, bcsP);
   fixedBuilder.buildCoupling(div, bcsP, bcsVel);
-  fixedBuilder.buildLhs(dummy, bcsP);
+  fixedBuilder.buildLhs(std::tuple{dummy}, bcsP);
   fixedBuilder.closeMatrix();
   auto const fixedMat = fixedBuilder.A;
   auto const fixedRhs = fixedBuilder.b;
@@ -119,17 +118,15 @@ int main(int argc, char* argv[])
 
     builder.clear();
     builder.buildRhs(timeder_rhs, bcsVel);
-    builder.buildLhs(advection, bcsVel);
-    builder.buildLhs(timeder, bcsVel);
-    builder.buildLhs(stiffness, bcsVel);
+    builder.buildLhs(std::tuple{advection, timeder, stiffness}, bcsVel);
     builder.buildCoupling(grad, bcsVel, bcsP);
     builder.buildCoupling(div, bcsP, bcsVel);
-    builder.buildLhs(dummy, bcsP);
+    builder.buildLhs(std::tuple{dummy}, bcsP);
     builder.closeMatrix();
 
     fixedBuilder.clear();
     fixedBuilder.buildRhs(timeder_rhs, bcsVel);
-    fixedBuilder.buildLhs(advection, bcsVel);
+    fixedBuilder.buildLhs(std::tuple{advection}, bcsVel);
     fixedBuilder.closeMatrix();
     fixedBuilder.A += fixedMat;
     fixedBuilder.b += fixedRhs;

@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
 
   Builder builder{dofU*FESpaceVel_T::dim + dofP};
-  builder.buildLhs(stiffness, bcsVel);
+  builder.buildLhs(std::tuple{stiffness}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
   builder.closeMatrix();

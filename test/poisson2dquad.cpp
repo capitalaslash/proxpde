@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
   t.start("fe space");
   AssemblyStiffness stiffness(1.0, feSpace);
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(stiffness, bcs);
+  builder.buildLhs(std::tuple{stiffness}, bcs);
   builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
   builder.closeMatrix();
   t.stop();

@@ -21,7 +21,7 @@ int test(YAML::Node const & config)
             typename FEType<Elem_T, order>::RefFE_T,
             typename FEType<Elem_T, order>::RecommendedQR>;
 
-  scalarFun_T const rhs = [] (Vec3 const & p)
+  scalarFun_T const rhsFun = [] (Vec3 const & p)
   {
     return M_PI * M_PI * std::sin(M_PI * p(0));
     // return 6. * p(0);
@@ -71,8 +71,12 @@ int test(YAML::Node const & config)
   auto const size = feSpace.dof.size;
   Builder builder{size};
   builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
-  builder.buildRhs(AssemblyAnalyticRhs{rhs, feSpace}, bcs);
-  builder.buildRhs(AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace}, bcs);
+  auto const rhs = std::tuple
+  {
+      AssemblyAnalyticRhs{rhsFun, feSpace},
+      AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
+  };
+  builder.buildRhs(rhs, bcs);
   builder.closeMatrix();
   t.stop();
 

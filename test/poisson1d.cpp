@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{stiffness}, bcs);
-  builder.buildRhs(f, bcs);
+  builder.buildRhs(std::tuple{f}, bcs);
   builder.closeMatrix();
   t.stop();
 

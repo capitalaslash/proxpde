@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
     t.start("monolithic build");
     velOldMonolithic = velM.data;
 
-    builderM.buildRhs(timederRhs, bcsVel);
+    builderM.buildRhs(std::tuple{timederRhs}, bcsVel);
     builderM.buildLhs(std::tuple{advection}, bcsVel);
     builderM.closeMatrix();
     builderM.A += matFixed;

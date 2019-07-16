@@ -147,7 +147,7 @@ struct NSSolverMonolithic
   {
     velOld = sol.data;
     builder.clear();
-    builder.buildRhs(assemblyRhs, bcsVel);
+    builder.buildRhs(std::tuple{assemblyRhs}, bcsVel);
     builder.buildLhs(std::tuple{assemblyAdvection}, bcsVel);
     builder.closeMatrix();
     builder.A += matFixed;
@@ -352,13 +352,11 @@ struct NSSolverSplit2D
     pOld += dp;
     builderUStar.clear();
     builderUStar.buildLhs(std::tuple{assemblyMassUStar, assemblyAdvectionU, assemblyStiffnessUStar}, bcsU);
-    builderUStar.buildRhs(assemblyURhs, bcsU);
-    builderUStar.buildRhs(assemblyPOldU, bcsU);
+    builderUStar.buildRhs(std::tuple{assemblyURhs, assemblyPOldU}, bcsU);
     builderUStar.closeMatrix();
     builderVStar.clear();
     builderVStar.buildLhs(std::tuple{assemblyMassVStar, assemblyAdvectionV, assemblyStiffnessVStar}, bcsV);
-    builderVStar.buildRhs(assemblyVRhs, bcsV);
-    builderVStar.buildRhs(assemblyPOldV, bcsV);
+    builderVStar.buildRhs(std::tuple{assemblyVRhs, assemblyPOldV}, bcsV);
     builderVStar.closeMatrix();
   }
 
@@ -381,7 +379,7 @@ struct NSSolverSplit2D
     setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
     setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
     builderP.clearRhs();
-    builderP.buildRhs(assemblyDivVelStar, bcsP);
+    builderP.buildRhs(std::tuple{assemblyDivVelStar}, bcsP);
     builderP.b += rhsFixedP;
   }
 
@@ -394,12 +392,10 @@ struct NSSolverSplit2D
   void assemblyStepVel()
   {
     builderU.clearRhs();
-    builderU.buildRhs(assemblyUStarRhs, bcsU);
-    builderU.buildRhs(assemblyGradPRhsU, bcsU);
+    builderU.buildRhs(std::tuple{assemblyUStarRhs, assemblyGradPRhsU}, bcsU);
     builderU.b += rhsFixedVel[0];
     builderV.clearRhs();
-    builderV.buildRhs(assemblyVStarRhs, bcsV);
-    builderV.buildRhs(assemblyGradPRhsV, bcsV);
+    builderV.buildRhs(std::tuple{assemblyVStarRhs, assemblyGradPRhsV}, bcsV);
     builderV.b += rhsFixedVel[1];
   }
 

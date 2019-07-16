@@ -99,7 +99,7 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec rhsU;
   interpolateAnalyticFunction(rhs, feSpaceU, rhsU);
-  builder.buildRhs(AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW), bcsU);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW)}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -125,7 +125,7 @@ int test(YAML::Node const & config)
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
   builderRT0.buildLhs(std::tuple{AssemblyMass(1.0, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.buildRhs(AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW), bcsDummy);
+  builderRT0.buildRhs(std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW)}, bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");
   LUSolver solverRT0;

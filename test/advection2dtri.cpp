@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
     t.start("p1 assemby");
     concP1Old = concP1.data;
     builder.buildLhs(std::tuple{timeDer, advection}, bcsP1);
-    builder.buildRhs(timeDerRhs, bcsP1);
+    builder.buildRhs(std::tuple{timeDerRhs}, bcsP1);
     builder.closeMatrix();
     t.stop();
 

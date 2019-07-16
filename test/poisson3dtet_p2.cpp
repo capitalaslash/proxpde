@@ -64,7 +64,7 @@ int test(YAML::Node const & config)
   // using an interpolated rhs makes its quality independent of the chosen qr
   Vec rhsProj;
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);
-  builder.buildRhs(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhsProj, feSpace)}, bcs);
   builder.closeMatrix();
   t.stop();
 

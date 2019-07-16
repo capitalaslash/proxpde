@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
   AssemblyAnalyticRhs f{rhs, feSpace};
   Builder<StorageType::RowMajor> builderR{feSpace.dof.size};
   builderR.buildLhs(std::tuple{stiffness}, bcs);
-  builderR.buildRhs(f, bcs);
+  builderR.buildRhs(std::tuple{f}, bcs);
   builderR.closeMatrix();
   t.stop();
 

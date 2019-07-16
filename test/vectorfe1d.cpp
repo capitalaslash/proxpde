@@ -91,8 +91,7 @@ int main(int argc, char* argv[])
   AssemblyAnalyticRhs f(rhs, feSpace);
   Builder builder{size};
   builder.buildLhs(std::tuple{stiffness}, bcs);
-  builder.buildRhs(f, bcs);
-  builder.buildRhs(AssemblyBCNatural{bcValue, side::RIGHT, feSpace}, bcs);
+  builder.buildRhs(std::tuple{f, AssemblyBCNatural{bcValue, side::RIGHT, feSpace}}, bcs);
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;
 

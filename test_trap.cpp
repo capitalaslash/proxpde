@@ -57,7 +57,7 @@ int main()
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{mass}, bcs);
-  builder.buildRhs(f, bcs);
+  builder.buildRhs(std::tuple{f}, bcs);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;

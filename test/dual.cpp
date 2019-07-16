@@ -171,6 +171,8 @@ int main(int argc, char* argv[])
   ioP0.print({concP0});
 
   t.start("time iter");
+  auto const lhs = std::tuple{timeder, advection};
+  auto const rhs = std::tuple{timeder_rhs};
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
@@ -179,8 +181,8 @@ int main(int argc, char* argv[])
     // central implicit
     concP1Old = concP1.data;
 
-    builder.buildLhs(std::tuple{timeder, advection}, bcsP1);
-    builder.buildRhs(timeder_rhs, bcsP1);
+    builder.buildLhs(lhs, bcsP1);
+    builder.buildRhs(rhs, bcsP1);
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);

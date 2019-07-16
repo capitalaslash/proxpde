@@ -61,8 +61,8 @@ int main()
   AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(stiffness, bcs);
-  builder.buildRhs(f, bcs);
+  builder.buildLhs(std::tuple{stiffness}, bcs);
+  builder.buildRhs(std::tuple{f}, bcs);
   builder.closeMatrix();
 
   // std::cout << "builder.A:\n" << builder.A << std::endl;

@@ -203,21 +203,6 @@ struct Builder
           }
         }
       });
-      // for(auto const & bc: bcs1.bcEssList)
-      // {
-      //   for (uint d=0; d<FESpace1::dim; ++d)
-      //   {
-      //     for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
-      //     {
-      //       auto const pos = i+d*FESpace1::RefFE_T::numFuns;
-      //       DOFid_T const id = assembly.feSpace1.dof.getId(e.id, i ,d);
-      //       if (bc.isConstrained(id))
-      //       {
-      //         Crow(pos,pos) = 0.;
-      //       }
-      //     }
-      //   }
-      // }
       SquareMat2_T Cclm = SquareMat2_T::Identity();
       Vec2_T h = Vec2_T::Zero();
       static_for(bcs2, [&] (auto const /*i*/, auto & bc)
@@ -242,23 +227,6 @@ struct Builder
           }
         }
       });
-      // for(auto const & bc: bcs2.bcEssList)
-      // {
-      //   for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
-      //   {
-      //     auto const localValue = bc.evaluate(i);
-      //     for (uint d=0; d<FESpace2::dim; ++d)
-      //     {
-      //       auto const pos = i+d*FESpace2::RefFE_T::numFuns;
-      //       DOFid_T const id = assembly.feSpace2.dof.getId(e.id, i ,d);
-      //       if (bc.isConstrained(id))
-      //       {
-      //         Cclm(pos, pos) = 0.;
-      //         h[pos] = localValue[d];
-      //       }
-      //     }
-      //   }
-      // }
       Fe = - Crow * Ke * h;
       Ke = Crow * Ke * Cclm;
 
@@ -290,25 +258,34 @@ struct Builder
     }
   }
 
-  template <typename FESpace, typename BC>
-  void buildRhs(AssemblyVector<FESpace> const & assembly,
-                    BC const & bcs)
+  template <typename Assemblies, typename BCs>
+  void buildRhs(Assemblies const & assemblies, BCs const & bcs)
   {
-    using CurFE_T = typename FESpace::CurFE_T;
-    using LMat_T = typename AssemblyVector<FESpace>::LMat_T;
-    using LVec_T = typename AssemblyVector<FESpace>::LVec_T;
+    static_assert(std::tuple_size_v<Assemblies> > 0, "we need at least 1 assembly.");
+    using FESpace_T = typename std::tuple_element_t<0, Assemblies>::FESpace_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using LMat_T = typename Diagonal<FESpace_T>::LMat_T;
+    using LVec_T = typename Diagonal<FESpace_T>::LVec_T;
 
-    auto const & mesh = assembly.feSpace.mesh;
+    auto const & refAssembly = std::get<0>(assemblies);
+    auto const & mesh = refAssembly.feSpace.mesh;
 
     for (auto const & e: mesh.elementList)
     {
       LVec_T Fe = LVec_T::Zero();
 
-      // --- set current fe ---
-      assembly.reinit(e);
+      static_for(assemblies, [&e, &Fe] (auto const /*i*/, auto & assembly)
+      {
+        using Assembly_T = std::decay_t<decltype(assembly)>;
+        static_assert(std::is_base_of_v<AssemblyVector<FESpace_T>, Assembly_T>);
 
-      // --- build local matrix and rhs ---
-      assembly.build(Fe);
+        // --- set current fe ---
+        // TODO: isolate specific stuff in this method and move standard fe space reinit done outside loop
+        assembly.reinit(e);
+
+        // --- build local matrix and rhs ---
+        assembly.build(Fe);
+      });
 
       // --- apply Dirichlet bc ---
       // A_constrained = C^T A C
@@ -322,15 +299,15 @@ struct Builder
       {
         using BC_T = std::decay_t<decltype(bc)>;
         static_assert(
-              std::is_same_v<std::remove_cv_t<FESpace>, typename BC_T::FESpace_T>,
+              std::is_same_v<FESpace_T, typename BC_T::FESpace_T>,
               "the fespace of the assembly and the one of the bc do not coincide");
 
-        for (uint d=0; d<FESpace::dim; ++d)
+        for (uint d=0; d<FESpace_T::dim; ++d)
         {
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
-            auto const pos = i+d*FESpace::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace.dof.getId(e.id, i, d);
+            auto const pos = i+d*FESpace_T::RefFE_T::numFuns;
+            DOFid_T const id = refAssembly.feSpace.dof.getId(e.id, i, d);
             if (bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
@@ -338,21 +315,6 @@ struct Builder
           }
         }
       });
-      // for(auto const & bc: bcs.bcEssList)
-      // {
-      //   for (uint d=0; d<FESpace::dim; ++d)
-      //   {
-      //     for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
-      //     {
-      //       auto const pos = i+d*FESpace::RefFE_T::numFuns;
-      //       DOFid_T const id = assembly.feSpace.dof.getId(e.id, i, d);
-      //       if (bc.isConstrained(id))
-      //       {
-      //         C(pos, pos) = 0.;
-      //       }
-      //     }
-      //   }
-      // }
       Fe = C * Fe;
 
       // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
@@ -361,10 +323,10 @@ struct Builder
       // --- store local values in global matrix and rhs ---
       for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
       {
-        for (uint d=0; d<FESpace::dim; ++d)
+        for (uint d=0; d<FESpace_T::dim; ++d)
         {
-          DOFid_T const id_i = assembly.feSpace.dof.getId(e.id, i, d);
-          b(assembly.offsetRow + id_i) += Fe(i + d*FESpace::CurFE_T::numDOFs);
+          DOFid_T const id_i = refAssembly.feSpace.dof.getId(e.id, i, d);
+          b(refAssembly.offsetRow + id_i) += Fe(i + d*FESpace_T::CurFE_T::numDOFs);
         }
       }
     }

@@ -74,7 +74,13 @@ int main(int argc, char* argv[])
   builder.buildLhs(std::tuple{dummy}, bcsP);
   builder.buildCoupling(grad, bcsU, bcsP);
   builder.buildCoupling(div, bcsP, bcsU);
-  builder.buildRhs(AssemblyBCNatural{[](Vec3 const &){return Vec2{1., 0.};}, side::LEFT, feSpaceU}, bcsU);
+  builder.buildRhs(
+        std::tuple{
+          AssemblyBCNatural{
+            [] (Vec3 const &) { return Vec2{1., 0.}; },
+            side::LEFT,
+            feSpaceU}},
+        bcsU);
   builder.closeMatrix();
   t.stop();
 

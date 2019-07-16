@@ -108,6 +108,8 @@ int main(int argc, char* argv[])
   IterSolver fixedSolver;
   auto const ntime = config["numsteps"].as<uint>();
   double time = 0.0;
+  auto const lhs = std::tuple{advection, timeder, stiffness};
+  auto const rhs = std::tuple{timeder_rhs};
   for (uint itime=0; itime<ntime; itime++)
   {
     time += dt;
@@ -117,15 +119,15 @@ int main(int argc, char* argv[])
     velOld = sol.data;
 
     builder.clear();
-    builder.buildRhs(timeder_rhs, bcsVel);
-    builder.buildLhs(std::tuple{advection, timeder, stiffness}, bcsVel);
+    builder.buildRhs(rhs, bcsVel);
+    builder.buildLhs(lhs, bcsVel);
     builder.buildCoupling(grad, bcsVel, bcsP);
     builder.buildCoupling(div, bcsP, bcsVel);
     builder.buildLhs(std::tuple{dummy}, bcsP);
     builder.closeMatrix();
 
     fixedBuilder.clear();
-    fixedBuilder.buildRhs(timeder_rhs, bcsVel);
+    fixedBuilder.buildRhs(std::tuple{timeder_rhs}, bcsVel);
     fixedBuilder.buildLhs(std::tuple{advection}, bcsVel);
     fixedBuilder.closeMatrix();
     fixedBuilder.A += fixedMat;

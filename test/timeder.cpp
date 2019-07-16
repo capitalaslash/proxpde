@@ -127,14 +127,13 @@ int test(YAML::Node const & config)
     uOldOld = uOld;
     uOld = u.data;
     builder.buildLhs(std::tuple{bdf1Lhs, mass}, bcs);
-    builder.buildRhs(bdf1Rhs, bcs);
+    builder.buildRhs(std::tuple{bdf1Rhs}, bcs);
     if (method == TimeIntegrationMethod::BDF2 && itime > 1)
     {
       builder.buildLhs(std::tuple{bdf2Lhs}, bcs);
-      builder.buildRhs(bdf2Rhs1, bcs);
-      builder.buildRhs(bdf2Rhs2, bcs);
+      builder.buildRhs(std::tuple{bdf2Rhs1, bdf2Rhs2}, bcs);
     }
-    builder.buildRhs(AssemblyAnalyticRhs{[&rhs, time] (Vec3 const &) { return rhs(time); }, feSpace}, bcs);
+    builder.buildRhs(std::tuple{AssemblyAnalyticRhs{[&rhs, time] (Vec3 const &) { return rhs(time); }, feSpace}}, bcs);
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);

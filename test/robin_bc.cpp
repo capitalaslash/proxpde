@@ -29,7 +29,7 @@ int test(YAML::Node const & config)
             << "  - temp0 = " << temp0 << "\n"
             << "  - tempA = " << tempA << std::endl;
 
-  const scalarFun_T rhs = [] (Vec3 const& p)
+  const scalarFun_T rhsFun = [] (Vec3 const& p)
   {
     return M_PI*std::sin(M_PI*p(0));
   };
@@ -58,12 +58,11 @@ int test(YAML::Node const & config)
         BCEss{feSpace, side::LEFT, [temp0] (Vec3 const&) {return temp0;}});
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-  AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyAnalyticRhs f{rhs, feSpace};
-
   t.start();
+  AssemblyStiffness stiffness{1.0, feSpace};
+  AssemblyAnalyticRhs f{rhsFun, feSpace};
   Builder builder{feSpace.dof.size};
-  builder.buildRhs(f, bcs);
+
   // mixed bc: a u + \nabla u = b
   // - \lap u = f
   // (\nabla u, \nabla v) - <\nabla u, v> = (f, v)
@@ -75,11 +74,18 @@ int test(YAML::Node const & config)
   // -> a = hConv, b = hConv * tempA
   // hConv -> 0: \nabla u = 0, Neumann homogeneous
   // hConv -> inf: u = b / a = tempA, Dirichlet
-  auto const lhs = std::tuple{
+  auto const lhs = std::tuple
+  {
       stiffness,
-      AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}};
+      AssemblyBCMixed{[hConv](Vec3 const &){return hConv;}, side::RIGHT, feSpace}
+  };
   builder.buildLhs(lhs, bcs);
-  builder.buildRhs(AssemblyBCNatural{[hConv, tempA](Vec3 const &){return hConv * tempA;}, side::RIGHT, feSpace}, bcs);
+  auto const rhs = std::tuple
+  {
+      f,
+      AssemblyBCNatural{[hConv, tempA](Vec3 const &){ return hConv * tempA; }, side::RIGHT, feSpace}
+  };
+  builder.buildRhs(rhs, bcs);
   builder.closeMatrix();
   std::cout << "fe build: " << t << " ms" << std::endl;
 

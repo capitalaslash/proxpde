@@ -39,10 +39,7 @@ struct Eqn
 
   void buildRhs()
   {
-    static_for(rhsAssemblies, [&] (auto const & /*i*/, auto & assembly)
-    {
-      builder.buildRhs(assembly, bcList);
-    });
+    builder.buildRhs(rhsAssemblies, bcList);
   }
 
   void build()

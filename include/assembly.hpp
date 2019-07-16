@@ -1038,7 +1038,9 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   //   return LVec_T{};
   // }
 
-  std::unique_ptr<AssemblyVector<FESpace_T>> assembly;
+  // TODO: check own to avoid copies of the class
+  // that would be implicitly deleted by the use of a unique_ptr
+  std::shared_ptr<AssemblyVector<FESpace_T>> assembly;
 };
 
 template <typename FESpace1, typename FESpace2>

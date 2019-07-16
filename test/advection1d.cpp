@@ -129,6 +129,9 @@ int main(int argc, char* argv[])
   IOManager ioP0{feSpaceP0, "output_advection1d/solP0"};
   ioP0.print({concP0});
 
+  auto const lhs = std::tuple{timeDer, advection};
+  auto const rhs = std::tuple{timeDerRhs};
+
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
@@ -137,8 +140,8 @@ int main(int argc, char* argv[])
     // central implicit
     t.start("p1 assemby");
     concP1Old = concP1.data;
-    builder.buildLhs(std::tuple{timeDer, advection}, bcsP1);
-    builder.buildRhs(timeDerRhs, bcsP1);
+    builder.buildLhs(lhs, bcsP1);
+    builder.buildRhs(rhs, bcsP1);
     builder.closeMatrix();
     t.stop();
 

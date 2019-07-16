@@ -35,7 +35,7 @@ int main()
   AssemblyProjection proj2(1.0, u2.data, feSpace1, feSpace2);
   Builder builder{feSpace1.dof.size};
   builder.buildLhs(std::tuple{mass1}, bc1);
-  builder.buildRhs(proj2, bc1);
+  builder.buildRhs(std::tuple{proj2}, bc1);
   builder.closeMatrix();
   std::cout << "A:\n" << builder.A << std::endl;
   std::cout << "b:\n" << builder.b << std::endl;

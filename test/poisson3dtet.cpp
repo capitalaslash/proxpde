@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  builder.buildRhs(AssemblyProjection(1.0, rhsProj, feSpace), bcs);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhsProj, feSpace)}, bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
   builder.closeMatrix();

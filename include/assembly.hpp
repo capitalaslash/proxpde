@@ -935,7 +935,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
                               AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, cmp)
   {
-    if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR)
+    if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2SProjection<FESpace_T>>(
                 AssemblyS2SProjection<FESpace_T>{c, r, fe, cmp});
@@ -960,27 +960,27 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
           typename FESpaceRhs_T::CurFE_T::QR_T>::value,
           "the two quad rules are not the same");
 
-    if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR &&
-                  FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::SCALAR)
+    if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
+                  fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>>(
               AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, allComp<FESpace_T>()});
     }
-    else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::VECTOR &&
-                       FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::SCALAR)
+    else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
+                       fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>>(
               AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
     }
-    else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR &&
-                       FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::VECTOR)
+    else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
+                       fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
       // static_assert (dependent_false<FESpace>::value, "not yet implemented");
       assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
               AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
     }
-    else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::VECTOR &&
-                       FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::VECTOR)
+    else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
+                       fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
       // no support for vector -> vector projection
       static_assert (dependent_false<FESpace>::value, "vector -> vector projection not yet implemented");

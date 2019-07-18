@@ -99,7 +99,7 @@ struct FVSolver
     fluxes(Vec::Zero(fe.mesh.facetList.size())),
     normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
   {
-    static_assert (Order<ElemRefFE_T>::value == 0,
+    static_assert (order_v<ElemRefFE_T> == 0,
                    "finite volume solver works only on order 0.");
     assert((feSpace.mesh.flags & INTERNAL_FACETS).any());
     assert((feSpace.mesh.flags & NORMALS).any());

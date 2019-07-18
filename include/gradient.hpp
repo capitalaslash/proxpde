@@ -7,7 +7,7 @@
 template <typename FESpaceT>
 using Grad_T =
   FESpace<typename FESpaceT::Mesh_T,
-          typename FEType<typename FESpaceT::Mesh_T::Elem_T, Order<typename FESpaceT::RefFE_T>::value-1>::RefFE_T,
+          typename FEType<typename FESpaceT::Mesh_T::Elem_T, order_v<typename FESpaceT::RefFE_T>-1>::RefFE_T,
           typename FESpaceT::QR_T,
           FESpaceT::dim * FESpaceT::Mesh_T::Elem_T::dim>;
 

@@ -968,6 +968,7 @@ struct RefHexahedronQ2
   }
 };
 
+// ----------------------------------------------------------------------------
 template <typename RefFE>
 struct Order{ static constexpr uint value = 0; };
 
@@ -992,10 +993,16 @@ struct Order<RefQuadQ2>{ static constexpr uint value = 2; };
 template <>
 struct Order<RefTetrahedronP1>{ static constexpr uint value = 1; };
 template <>
+struct Order<RefTetrahedronP2>{ static constexpr uint value = 2; };
+template <>
 struct Order<RefHexahedronQ1>{ static constexpr uint value = 1; };
 template <>
 struct Order<RefHexahedronQ2>{ static constexpr uint value = 2; };
 
+template <typename RefFE>
+inline constexpr uint order_v = Order<RefFE>::value;
+
+// ----------------------------------------------------------------------------
 enum class FamilyType : int8_t
 {
   NONE=0,
@@ -1045,6 +1052,10 @@ struct Family<RefHexahedronQ1>{ static constexpr FamilyType value = FamilyType::
 template <>
 struct Family<RefHexahedronQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 
+template <typename RefFE>
+inline constexpr FamilyType family_v = Family<RefFE>::value;
+
+// ----------------------------------------------------------------------------
 enum class FEDimType : int8_t
 {
   NONE=0,
@@ -1095,17 +1106,21 @@ template <>
 struct FEDim<RefHexahedronQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 
 template <typename RefFE>
+inline constexpr FEDimType fedim_v = FEDim<RefFE>::value;
+
+template <typename RefFE>
 static constexpr int feDimValue()
 {
-  if constexpr (FEDim<RefFE>::value == FEDimType::SCALAR)
+  if constexpr (fedim_v<RefFE> == FEDimType::SCALAR)
       return 1;
-  else if constexpr (FEDim<RefFE>::value == FEDimType::VECTOR)
+  else if constexpr (fedim_v<RefFE> == FEDimType::VECTOR)
       return RefFE::dim;
   else
       abort();
   return 0;
 }
 
+// ----------------------------------------------------------------------------
 template <typename RefFE>
 struct MappingIsSeparate{ static constexpr bool value = false; };
 
@@ -1123,3 +1138,6 @@ template <>
 struct MappingIsSeparate<RefTetrahedronP0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefHexahedronP0>{ static constexpr bool value = true; };
+
+template <typename RefFE>
+inline constexpr bool mappingIsSeparate_v = MappingIsSeparate<RefFE>::value;

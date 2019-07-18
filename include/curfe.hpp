@@ -22,12 +22,12 @@ struct CurFE
     {
       for(uint i=0; i<RefFE::numFuns; ++i)
       {
-        if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
+        if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
         {
           phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
           dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
         }
-        else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+        else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
         {
           phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
           divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
@@ -72,14 +72,14 @@ struct CurFE
         // forward mapping on qpoint
         qpoint[q] = elem->origin() + jac[q] * QR::node[q];
 
-        if constexpr (FEDim<RefFE_T>::value == FEDimType::SCALAR)
+        if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
         {
           // TODO: phi values on qpoints are unaffected by the change of coords
           // this update can potentially be done in the constructor
           phi[q] = phiRef[q];
           dphi[q] = dphiRef[q] * jacPlus[q];
         }
-        else if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+        else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
         {
           // Piola transformation
           double detJInv = 1. / detJ[q];

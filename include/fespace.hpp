@@ -28,9 +28,9 @@ struct FESpace
   {
     static_assert (std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>, "mesh element and reference element are not compatible.");
     static_assert (std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>, "reference element and quad rule are not compatible.");
-    if constexpr (FEDim<RefFE_T>::value == FEDimType::VECTOR)
+    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
-      // vector fespace such as RT0 require internal facets and facet ptrs
+      // RT0 requires internal facets and facet ptrs
       assert ((mesh.flags & (INTERNAL_FACETS | FACET_PTRS)).count() == 2);
     }
   }
@@ -61,7 +61,7 @@ struct FESpace
       auto const ptRef = this->curFE.jacPlus[QR_T::bestPt] * (pt - elem.origin());
       // check that the approximated inverse mapping is close enough
       assert((pt - (elem.origin() + this->curFE.jac[QR_T::bestPt] * ptRef)).norm() < 1.e-15);
-      if constexpr (Family<RefFE_T>::value == FamilyType::LAGRANGE)
+      if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
       {
         // scalar functions do not change from reffe to curfe
         phi[n] = RefFE_T::phiFun[n](ptRef);
@@ -74,7 +74,7 @@ struct FESpace
       // instead move the shape functions to the real element
     }
     FVec<dim> value;
-    if constexpr (Family<RefFE_T>::value == FamilyType::LAGRANGE)
+    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       value = localValue.transpose() * phi;
     }
@@ -186,13 +186,13 @@ void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
       for (uint d=0; d<FESpace::dim; ++d)
       {
         auto const dofId = feSpace.dof.getId(e.id, i, d);
-        if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+        if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
         {
           // the value of the dof is the value of the function
           // u_k = u phi_k
           v[offset + dofId] = value[d];
         }
-        else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+        else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
         {
           // the value of the dof is the flux through the face
           // u_k = u.dot(n_k)
@@ -241,13 +241,13 @@ void reconstructGradient(
       {
         for (auto const d: comp)
         {
-          if constexpr (Family<typename FESpaceData::RefFE_T>::value == FamilyType::LAGRANGE)
+          if constexpr (family_v<typename FESpaceData::RefFE_T> == FamilyType::LAGRANGE)
           {
             // grad u (x_i) = sum_k u_k dphi_k (x_i)
             grad[offset + feSpaceGrad.dof.getId(elem.id, i, d)] +=
                 value * feSpaceGrad.curFE.dphi[i](k, d);
           }
-          else if constexpr (Family<typename FESpaceData::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
+          else if constexpr (family_v<typename FESpaceData::RefFE_T> == FamilyType::RAVIART_THOMAS)
           {
             abort();
             // the value of the dof is the flux through the face

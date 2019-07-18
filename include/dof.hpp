@@ -253,13 +253,13 @@ struct DOF
   void setupGeoMap(Mesh const & mesh, uint offset)
   {
     PtMap_T geoPtMap;
-    if constexpr (MappingIsSeparate<RefFE>::value)
+    if constexpr (mappingIsSeparate_v<RefFE>)
     {
       geoPtMap.resize(mesh.pointList.size(), dofIdNotSet);
     }
 
     mapSize = 0;
-    if constexpr (MappingIsSeparate<RefFE>::value)
+    if constexpr (mappingIsSeparate_v<RefFE>)
     {
       for(auto const & e: mesh.elementList)
       {
@@ -286,7 +286,7 @@ struct DOF
       }
     }
 
-    if constexpr (!MappingIsSeparate<RefFE>::value)
+    if constexpr (!mappingIsSeparate_v<RefFE>)
     {
       if constexpr (ordering == DofOrdering::BLOCK)
       {

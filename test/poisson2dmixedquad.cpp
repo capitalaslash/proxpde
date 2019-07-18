@@ -31,7 +31,7 @@ int test(YAML::Node const & config)
   // std::cout << "mesh: " << *mesh << std::endl;
 
   auto const g = config["g"].as<double>();
-  scalarFun_T rhs = [] (Vec3 const & p)
+  scalarFun_T rhsFun = [] (Vec3 const & p)
   {
     // return -2.;
     // return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
@@ -50,8 +50,8 @@ int test(YAML::Node const & config)
     return Vec2(0.5*M_PI*std::cos(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1)), 1.5*M_PI*std::sin(0.5*M_PI*p(0))*std::cos(1.5*M_PI*p(1)));
   };
 
-  FESpaceP0_T feSpaceU{*mesh};
   FESpaceRT0_T feSpaceW{*mesh};
+  FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
 
   auto const bcsU = std::make_tuple();
   // double const hx = 1. / n;
@@ -80,8 +80,8 @@ int test(YAML::Node const & config)
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
   builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
-  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
-  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
+  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU), bcsW, bcsU);
+  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW), bcsU, bcsW);
   // fixed u value
   // builder.buildRhs(AssemblyBCNatural(
   //                        [] (Vec3 const & ) { return 1.; },
@@ -97,9 +97,9 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
 
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
-  Vec rhsU;
-  interpolateAnalyticFunction(rhs, feSpaceU, rhsU);
-  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW)}, bcsU);
+  Vec rhs = Vec::Zero(sizeW + sizeU);
+  interpolateAnalyticFunction(rhsFun, feSpaceU, rhs);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhs, feSpaceU)}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -115,8 +115,10 @@ int test(YAML::Node const & config)
 
   // std::cout << "sol:\n" << sol << std::endl;
 
+  Vec exact = Vec::Zero(sizeW + sizeU);
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   Var exactU{"exactU"};
-  interpolateAnalyticFunction(exactSol, feSpaceU, exactU.data);
+  exactU.data = exact.block(sizeW, 0, sizeU, 1);
   Var errorU{"errorU"};
   errorU.data = u.data - exactU.data;
 

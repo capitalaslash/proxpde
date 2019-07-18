@@ -26,8 +26,6 @@ struct AssemblyBase
 {
   using CompList = std::vector<uint>;
 
-  uint const offsetRow = 0U;
-  uint const offsetClm = 0U;
   CompList const comp = {};
 
   bool hasComp(uint c) const
@@ -44,8 +42,8 @@ struct Diagonal: public AssemblyBase
   using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
   using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
 
-  explicit Diagonal(FESpace_T & fe, uint oRow, uint oClm, CompList const & cmp):
-    AssemblyBase{oRow, oClm, cmp},
+  explicit Diagonal(FESpace_T & fe, CompList const & cmp):
+    AssemblyBase{cmp},
     feSpace(fe)
   {}
 
@@ -76,10 +74,8 @@ struct Coupling: public AssemblyBase
 
   explicit Coupling(FESpace1_T & fe1,
                     FESpace2 & fe2,
-                    uint oRow,
-                    uint oClm,
                     CompList const & cmp):
-    AssemblyBase{oRow, oClm, cmp},
+    AssemblyBase{cmp},
     feSpace1(fe1),
     feSpace2(fe2)
   {}
@@ -106,8 +102,8 @@ struct AssemblyVector: public AssemblyBase
   using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
   using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
 
-  explicit AssemblyVector(FESpace_T & fe, uint oRow, CompList const & cmp):
-    AssemblyBase{oRow, 0, cmp},
+  explicit AssemblyVector(FESpace_T & fe, CompList const & cmp):
+    AssemblyBase{cmp},
     feSpace(fe)
   {}
 
@@ -133,10 +129,8 @@ struct AssemblyStiffness: public Diagonal<FESpace>
 
   AssemblyStiffness(double const c,
                     FESpace_T & fe,
-                    AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                    uint oRow = 0,
-                    uint oClm = 0):
-    Diagonal<FESpace_T>(fe, oRow, oClm, cmp),
+                    AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace_T>(fe, cmp),
     coeff(c)
   {}
 
@@ -175,10 +169,8 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
 
   AssemblyStiffnessFE(Coef & c,
                       FESpace_T & fe,
-                      AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                      uint oRow = 0,
-                      uint oClm = 0):
-    Diagonal<FESpace_T>(fe, oRow, oClm, cmp),
+                      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace_T>(fe, cmp),
     coef(c)
   {}
 
@@ -219,10 +211,8 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
 
   AssemblyTensorStiffness(double const c,
                     FESpace_T & fe,
-                    AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                    uint oRow = 0,
-                    uint oClm = 0):
-    Diagonal<FESpace_T>(fe, oRow, oClm, cmp),
+                    AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace_T>(fe, cmp),
     coeff(c)
   {}
 
@@ -280,9 +270,8 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
   AssemblyTensorStiffnessRhs(double const c,
                              Vec const & uOld,
                              FESpace_T & fe,
-                             AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                             uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, cmp),
+                             AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
     coeff(c),
     velOld(uOld)
   {}
@@ -334,10 +323,8 @@ struct AssemblyMass: public Diagonal<FESpace>
 
   explicit AssemblyMass(double const & c,
                         FESpace_T & fe,
-                        AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                        uint oRow = 0,
-                        uint oClm = 0):
-     Diagonal<FESpace>(fe, oRow, oClm, cmp),
+                        AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+     Diagonal<FESpace>(fe, cmp),
      coeff(c)
   {}
 
@@ -378,10 +365,8 @@ struct AssemblyMassFE: public Diagonal<FESpace>
   explicit AssemblyMassFE(double const c,
                           Coef & cFE,
                           FESpace_T & fe,
-                          AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                          uint oRow = 0,
-                          uint oClm = 0):
-     Diagonal<FESpace>(fe, oRow, oClm, cmp),
+                          AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+     Diagonal<FESpace>(fe, cmp),
      coef(c),
      coefFE(cFE)
   {}
@@ -427,10 +412,8 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
 
   explicit AssemblyVectorMass(double const & c,
                               FESpace_T & fe,
-                              AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                              uint oRow = 0,
-                              uint oClm = 0):
-     Diagonal<FESpace>(fe, oRow, oClm, cmp),
+                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+     Diagonal<FESpace>(fe, cmp),
      coeff(c)
   {}
 
@@ -470,9 +453,8 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 
   AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const r,
                       FESpace & fe,
-                      AssemblyBase::CompList const cmp = allComp<FESpace>(),
-                      uint oRow = 0):
-    AssemblyVector<FESpace>(fe, oRow, std::move(cmp)),
+                      AssemblyBase::CompList const cmp = allComp<FESpace>()):
+    AssemblyVector<FESpace>(fe, std::move(cmp)),
     rhs(std::move(r))
   {}
 
@@ -481,9 +463,8 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
             std::enable_if_t<FESpace1::dim == 1, bool> = true>
   AssemblyAnalyticRhs(scalarFun_T const r,
                       FESpace & fe,
-                      AssemblyBase::CompList const cmp = allComp<FESpace>(),
-                      uint oRow = 0):
-    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, std::move(cmp), oRow)
+                      AssemblyBase::CompList const cmp = allComp<FESpace>()):
+    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, std::move(cmp))
   {}
 
   // otherwise, we fail
@@ -491,9 +472,8 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
             std::enable_if_t<FESpace1::dim != 1, bool> = true>
   AssemblyAnalyticRhs(scalarFun_T const &,
                       FESpace & fe,
-                      AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                      uint oRow = 0):
-    AssemblyVector<FESpace>(fe, oRow, cmp)
+                      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    AssemblyVector<FESpace>(fe, cmp)
   {
     std::abort();
   }
@@ -529,10 +509,8 @@ struct AssemblyAdvection: public Diagonal<FESpace>
                              Vec const & u,
                              FESpaceVel & feVel,
                              FESpace_T & fe,
-                             AssemblyBase::CompList const & cmp = allComp<FESpace>(),
-                             uint oRow = 0,
-                             uint oClm = 0):
-    Diagonal<FESpace>(fe, oRow, oClm, cmp),
+                             AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace>(fe, cmp),
     coeff(c),
     vel(u),
     feSpaceVel(feVel)
@@ -596,10 +574,8 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
   explicit AssemblyGrad(double const c,
                         FESpace1_T & fe1,
                         FESpace2_T & fe2,
-                        std::vector<uint> cmp = allComp<FESpace1_T>(),
-                        uint oRow = 0,
-                        uint oClm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, oRow, oClm, cmp),
+                        AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
     coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -643,10 +619,8 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
   explicit AssemblyDiv(double const c,
                        FESpace1_T & fe1,
                        FESpace2_T & fe2,
-                       std::vector<uint> cmp = allComp<FESpace2_T>(),
-                       uint oRow = 0,
-                       uint oClm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, oRow, oClm, cmp),
+                       AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
     coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -690,10 +664,8 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
   explicit AssemblyVectorGrad(double const c,
                               FESpace1_T & fe1,
                               FESpace2_T & fe2,
-                              std::vector<uint> cmp = allComp<FESpace1_T>(),
-                              uint oRow = 0,
-                              uint oClm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, oRow, oClm, cmp),
+                              AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
     coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -731,10 +703,8 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
   explicit AssemblyVectorDiv(double const c,
                              FESpace1_T & fe1,
                              FESpace2_T & fe2,
-                             std::vector<uint> cmp = allComp<FESpace2_T>(),
-                             uint oRow = 0,
-                             uint oClm = 0):
-    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, oRow, oClm, cmp),
+                             AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
+    Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
     coeff(c)
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -771,9 +741,8 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
   explicit AssemblyS2SProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
-                              std::vector<uint> cmp = allComp<FESpace_T>(),
-                              uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, cmp),
+                              AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
     rhs(r),
     feSpaceRhs(fe)
@@ -783,9 +752,8 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
                                  Vec const & r,
                                  FESpace_T & fe,
                                  FESpaceRhs_T & feRhs,
-                                 std::vector<uint> cmp = allComp<FESpace_T>(),
-                                 uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, cmp),
+                                 AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
     rhs(r),
     feSpaceRhs(feRhs)
@@ -847,9 +815,8 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
   explicit AssemblyS2VProjection(double const c,
                                  Vec const & r,
                                  FESpace_T & fe,
-                                 FESpaceRhs_T & feRhs,
-                                 uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, {0}),
+                                 FESpaceRhs_T & feRhs):
+    AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
     feSpaceRhs(feRhs)
@@ -907,9 +874,8 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
   explicit AssemblyV2SProjection(double const c,
                                  Vec const & r,
                                  FESpace_T & fe,
-                                 FESpaceRhs_T & feRhs,
-                                 uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, {0}),
+                                 FESpaceRhs_T & feRhs):
+    AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
     feSpaceRhs(feRhs)
@@ -966,14 +932,13 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   explicit AssemblyProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
-                              std::vector<uint> cmp = allComp<FESpace_T>(),
-                              uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, cmp)
+                              AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp)
   {
     if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2SProjection<FESpace_T>>(
-                AssemblyS2SProjection<FESpace_T>{c, r, fe, cmp, oRow});
+                AssemblyS2SProjection<FESpace_T>{c, r, fe, cmp});
     }
     else
     {
@@ -985,9 +950,8 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   explicit AssemblyProjection(double const c,
                               Vec const & r,
                               FESpace_T & fe,
-                              FESpaceRhs_T & feRhs,
-                              uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, allComp<FESpace_T>())
+                              FESpaceRhs_T & feRhs):
+    AssemblyVector<FESpace_T>(fe, allComp<FESpace_T>())
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -1000,20 +964,20 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
                   FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, allComp<FESpace_T>(), oRow});
+              AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, allComp<FESpace_T>()});
     }
     else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::VECTOR &&
                        FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, oRow});
+              AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
     }
     else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::SCALAR &&
                        FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::VECTOR)
     {
       // static_assert (dependent_false<FESpace>::value, "not yet implemented");
       assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, oRow});
+              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
     }
     else if constexpr (FEDim<typename FESpace_T::RefFE_T>::value == FEDimType::VECTOR &&
                        FEDim<typename FESpaceRhs_T::RefFE_T>::value == FEDimType::VECTOR)
@@ -1056,9 +1020,8 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace1>
                           Vec const & vec,
                           FESpace1_T & fe1,
                           FESpace2_T & fe2,
-                          std::vector<uint> cmp = allComp<FESpace2_T>(),
-                          uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                          AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     feSpace2(fe2),
     data(vec)
@@ -1118,9 +1081,8 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
                           Vec const & vec,
                           FESpace1_T & fe1,
                           FESpace2_T const & fe2,
-                          std::vector<uint> cmp = allComp<FESpace1_T>(),
-                          uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                          AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     feSpace2(fe2),
     data(vec)
@@ -1200,9 +1162,8 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
                             Vec const & vec,
                             FESpace1_T & fe1,
                             FESpace2_T & fe2,
-                            std::vector<uint> cmp = allComp<FESpace1_T>(),
-                            uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                            AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     feSpace2(fe2),
     data(vec)
@@ -1282,9 +1243,8 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
                                 Vec const & vec,
                                 FESpace1_T & fe1,
                                 FESpace2_T & fe2,
-                                std::vector<uint> cmp = allComp<FESpace1_T>(),
-                                uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     feSpace2(fe2),
     data(vec)
@@ -1347,9 +1307,8 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
                                 Vec const & vec,
                                 FESpace1_T & fe1,
                                 FESpace2_T & fe2,
-                                std::vector<uint> cmp = allComp<FESpace1_T>(),
-                                uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     vel(u),
     feSpace2(fe2),
@@ -1360,9 +1319,8 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
                                 Vec const & u,
                                 Vec const & vec,
                                 FESpace1_T & fe1,
-                                std::vector<uint> cmp = allComp<FESpace1_T>(),
-                                uint oRow = 0):
-    AssemblyVector<FESpace1_T>(fe1, oRow, cmp),
+                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
+    AssemblyVector<FESpace1_T>(fe1, cmp),
     coeff(c),
     vel(u),
     feSpace2(fe1),
@@ -1438,9 +1396,8 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   AssemblyBCNatural(Fun<FESpace_T::dim, 3> const r,
                     marker_T const m,
                     FESpace_T & fe,
-                    AssemblyBase::CompList const cmp = allComp<FESpace_T>(),
-                    uint oRow = 0):
-    AssemblyVector<FESpace_T>(fe, oRow, std::move(cmp)),
+                    AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, std::move(cmp)),
     rhs(std::move(r)),
     marker(m)
   {}
@@ -1448,9 +1405,8 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   AssemblyBCNatural(scalarFun_T const r,
                     marker_T const m,
                     FESpace_T & fe,
-                    AssemblyBase::CompList const cmp = allComp<FESpace_T>(),
-                    uint oRow = 0):
-    AssemblyBCNatural<FESpace_T>([r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp, oRow)
+                    AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+    AssemblyBCNatural<FESpace_T>([r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
   {
     static_assert(FESpace_T::dim == 1);
   }
@@ -1506,9 +1462,8 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   AssemblyBCNormal(scalarFun_T const r,
                    marker_T const m,
                    FESpace & fe,
-                   AssemblyBase::CompList const cmp = allComp<FESpace>(),
-                   uint oRow = 0):
-    AssemblyVector<FESpace>(fe, oRow, std::move(cmp)),
+                   AssemblyBase::CompList const cmp = allComp<FESpace>()):
+    AssemblyVector<FESpace>(fe, std::move(cmp)),
     rhs(std::move(r)),
     marker(m)
   {}
@@ -1565,10 +1520,8 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   AssemblyBCMixed(scalarFun_T const c,
                   marker_T const m,
                   FESpace & fe,
-                  AssemblyBase::CompList const cmp = allComp<FESpace>(),
-                  uint oRow = 0,
-                  uint oClm = 0):
-    Diagonal<FESpace>(fe, oRow, oClm, std::move(cmp)),
+                  AssemblyBase::CompList const cmp = allComp<FESpace>()):
+    Diagonal<FESpace>(fe, std::move(cmp)),
     coef(std::move(c)),
     marker(m)
   {}

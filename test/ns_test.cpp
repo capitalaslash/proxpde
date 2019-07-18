@@ -54,8 +54,9 @@ int main(int argc, char* argv[])
   t.stop();
 
  FESpaceVel_T feSpaceVel{*mesh};
+ FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
  FESpaceU_T feSpaceU{*mesh};
- FESpaceP_T feSpaceP{*mesh};
+ FESpaceP_T feSpacePSplit{*mesh};
 
   t.start("monolithic bc");
   auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0)*p(0))}; };
@@ -84,12 +85,12 @@ int main(int argc, char* argv[])
         BCEss{feSpaceU, side::BOTTOM, inletY},
         BCEss{feSpaceU, side::RIGHT,  zero});
   auto const bcsPSplit = std::make_tuple(
-        BCEss{feSpaceP, side::TOP, zero});
+        BCEss{feSpacePSplit, side::TOP, zero});
   t.stop();
 
   t.start("monolithic ctor");
   NSSolverMonolithic ns{feSpaceVel, feSpaceP, bcsVel, bcsP, parMonolithic};
-  NSSolverSplit2D split{feSpaceU, feSpaceP, bcsU, bcsV, bcsPSplit, parSplit};
+  NSSolverSplit2D split{feSpaceU, feSpacePSplit, bcsU, bcsV, bcsPSplit, parSplit};
   t.stop();
 
   t.start("init");

@@ -133,11 +133,10 @@ struct NSSolverMonolithic
   void init()
   {
     // TODO: assert that this comes after setting up bcs
-    auto const dofU = feSpaceVel.dof.size;
     builder.buildLhs(std::tuple{AssemblyMass{1. / parameters.dt, feSpaceVel}, AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
-    builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP, allComp<FESpaceVel_T>(), 0, dofU*dim}, bcsVel, bcsP);
-    builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel, allComp<FESpaceVel_T>(), dofU*dim, 0}, bcsP, bcsVel);
-    builder.buildLhs(std::tuple{AssemblyMass{0., feSpaceP, {0}, dofU*dim, dofU*dim}}, bcsP);
+    builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
+    builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
+    builder.buildLhs(std::tuple{AssemblyMass{0., feSpaceP}}, bcsP);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;

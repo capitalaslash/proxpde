@@ -45,8 +45,8 @@ int test(YAML::Node const & config)
     return Vec2(2. + g - 2. * p(0), 0.);
   };
 
-  FESpaceP0_T feSpaceU{*mesh};
   FESpaceRT0_T feSpaceW{*mesh};
+  FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
 
   auto const bcsU = std::make_tuple();
   // double const hx = 1. / n;
@@ -74,8 +74,8 @@ int test(YAML::Node const & config)
   Var w("w", sizeW);
   Builder builder{sizeU + sizeW};
   builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
-  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU, {0}, 0, sizeW), bcsW, bcsU);
-  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW, {0}, sizeW, 0), bcsU, bcsW);
+  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU), bcsW, bcsU);
+  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW), bcsU, bcsW);
   // fixed u value
   // builder.buildProblem(AssemblyBCNatural(
   //                        [] (Vec3 const & ) { return 5.; },
@@ -91,9 +91,9 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
 
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
-  Vec rhsU;
-  interpolateAnalyticFunction(rhs, feSpaceU, rhsU);
-  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhsU, feSpaceU, {0}, sizeW)}, bcsU);
+  Vec f = Vec::Zero(sizeW + sizeU);
+  interpolateAnalyticFunction(rhs, feSpaceU, f);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, f, feSpaceU)}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -109,8 +109,10 @@ int test(YAML::Node const & config)
 
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
+  Vec exact = Vec::Zero(sizeW + sizeU);
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   Var exactU{"exactU"};
-  interpolateAnalyticFunction(exactSol, feSpaceU, exactU.data);
+  exactU.data = exact.block( sizeW, 0, sizeU, 1);
   Var errorU{"errorU"};
   errorU.data = u.data - exactU.data;
 

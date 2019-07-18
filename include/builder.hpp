@@ -118,21 +118,18 @@ struct Builder
       {
         for (uint d1=0; d1<FESpace_T::dim; ++d1)
         {
-          DOFid_T const id_i = refAssembly.feSpace.dof.getId(e.id, i, d1);
-          b(refAssembly.offsetRow + id_i) += Fe(i + d1*FESpace_T::CurFE_T::numDOFs);
+          DOFid_T const idI = refAssembly.feSpace.dof.getId(e.id, i, d1);
+          b[idI] += Fe[i + d1*FESpace_T::CurFE_T::numDOFs];
 
           for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace_T::dim; ++d2)
             {
-              DOFid_T const id_j = refAssembly.feSpace.dof.getId(e.id, j, d2);
+              DOFid_T const idJ = refAssembly.feSpace.dof.getId(e.id, j, d2);
               auto val = Ke(i + d1*FESpace_T::CurFE_T::numDOFs, j + d2*FESpace_T::CurFE_T::numDOFs);
               if (std::fabs(val) > 1.e-16)
               {
-                _triplets.emplace_back(
-                      refAssembly.offsetRow + id_i,
-                      refAssembly.offsetClm + id_j,
-                      val);
+                _triplets.emplace_back(idI, idJ, val);
               }
             }
           }
@@ -235,21 +232,18 @@ struct Builder
       {
         for (uint d1=0; d1<FESpace1::dim; ++d1)
         {
-          DOFid_T const id_i = assembly.feSpace1.dof.getId(e.id, i, d1);
-          b(assembly.offsetRow + id_i) += Fe(i + d1*FESpace1::CurFE_T::numDOFs);
+          DOFid_T const idI = assembly.feSpace1.dof.getId(e.id, i, d1);
+          b[idI] += Fe[i + d1*FESpace1::CurFE_T::numDOFs];
 
           for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace2::dim; ++d2)
             {
-              DOFid_T const id_j = assembly.feSpace2.dof.getId(e.id, j, d2);
+              DOFid_T const idJ = assembly.feSpace2.dof.getId(e.id, j, d2);
               auto val = Ke(i + d1*FESpace1::CurFE_T::numDOFs, j+d2*FESpace2::CurFE_T::numDOFs);
               if(std::fabs(val) > 1.e-16)
               {
-                _triplets.emplace_back(
-                      assembly.offsetRow + id_i,
-                      assembly.offsetClm + id_j,
-                      val);
+                _triplets.emplace_back(idI, idJ, val);
               }
             }
           }
@@ -325,8 +319,8 @@ struct Builder
       {
         for (uint d=0; d<FESpace_T::dim; ++d)
         {
-          DOFid_T const id_i = refAssembly.feSpace.dof.getId(e.id, i, d);
-          b(refAssembly.offsetRow + id_i) += Fe(i + d*FESpace_T::CurFE_T::numDOFs);
+          DOFid_T const idI = refAssembly.feSpace.dof.getId(e.id, i, d);
+          b[idI] += Fe[i + d*FESpace_T::CurFE_T::numDOFs];
         }
       }
     }
@@ -357,5 +351,4 @@ struct Builder
   Mat_T A;
   Vec b;
   std::vector<Triplet> _triplets;
-  // array<std::vector<AssemblyBase*>,3> assemblies;
 };

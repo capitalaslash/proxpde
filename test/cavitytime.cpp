@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
   t.start();
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh};
+  FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * dim};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
@@ -73,13 +73,13 @@ int main(int argc, char* argv[])
 
   AssemblyTensorStiffness stiffness(mu, feSpaceVel);
   // AssemblyStiffness stiffness(mu, feSpaceVel);
-  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, dofU*dim);
-  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, dofU*dim, 0);
+  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
+  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
   AssemblyMass timeder(1./dt, feSpaceVel);
   AssemblyProjection timeder_rhs(1./dt, velOld, feSpaceVel);
   AssemblyAdvection advection(1.0, velOld, feSpaceVel, feSpaceVel);
   // we need this in order to properly apply the pinning bc on the pressure
-  AssemblyMass dummy(0.0, feSpaceP, {0}, dofU*dim, dofU*dim);
+  AssemblyMass dummy(0.0, feSpaceP);
 
   Var sol{"vel", numDOFs};
   Var fixedSol{"vel", numDOFs};

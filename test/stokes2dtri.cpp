@@ -32,7 +32,7 @@ int main(int /*argc*/, char* /*argv*/[])
   readGMSH(*mesh, "square_uns.msh");
 
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh};
+  FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
   // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);
@@ -53,14 +53,10 @@ int main(int /*argc*/, char* /*argv*/[])
   uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
 
   AssemblyTensorStiffness stiffness(1.0, feSpaceVel);
-  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP, {0,1}, 0, 2*dofU);
-  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel, {0,1}, 2*dofU, 0);
+  AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
+  AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
 
   Builder builder{numDOFs};
-  // builder.assemblies[0].push_back(&stiffness0);
-  // builder.assemblies[1].push_back(&grad0);
-  // builder.assemblies[1].push_back(&div0);
-  // builder.assemblies[0].push_back(&stiffness1);
   builder.buildLhs(std::tuple{stiffness}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
@@ -76,7 +72,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
-  interpolateAnalyticFunction([](Vec3 const & p){return 1.-p(1);}, feSpaceP, exact.data, 2*dofU);
+  interpolateAnalyticFunction([](Vec3 const & p){return 1.-p(1);}, feSpaceP, exact.data);
 
   std::cout << sol.data.norm() << std::endl;
 

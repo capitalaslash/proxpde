@@ -135,15 +135,9 @@ int test(YAML::Node const & config)
   IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
   ioRT0.print({wP0, exactW, errorW});
 
-  double norm = errorU.data.norm();
+  double const norm = errorU.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({norm}, {config["expected_error"].as<double>()});
 }
 
 int main()

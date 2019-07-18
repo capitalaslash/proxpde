@@ -131,14 +131,6 @@ int test(YAML::Node const & config)
 
   t.print();
 
-  double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-13)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
   // DOFCoordSet fluxSet{
   //   feSpace,
   //   [](Vec const & p) { return std::fabs(p[0] - 1.0) < 1e-12; }
@@ -154,7 +146,9 @@ int test(YAML::Node const & config)
   //   }
   // }
 
-  return 0;
+  double norm = error.data.norm();
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  return checkError({norm}, {config["expected_error"].as<double>()});
 }
 
 int main()

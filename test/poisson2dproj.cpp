@@ -69,12 +69,6 @@ int main(int argc, char* argv[])
   io.print({sol, exact, error, rhsVec});
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << norm << std::endl;
-   if(std::fabs(norm - 0.141867) > 1.e-5)
-   {
-     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-     return 1;
-   }
-
-  return 0;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  return checkError({norm}, {0.141867443977535});
 }

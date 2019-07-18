@@ -90,13 +90,8 @@ int main(int argc, char* argv[])
   IOManager ioP{feSpaceP, "output_cavity/p"};
   ioP.print({p});
 
-  if(std::fabs(uNorm - 3.15947325663) > 1.e-10 ||
-     std::fabs(vNorm - 0.740498457205) > 1.e-10 ||
-     std::fabs(pNorm - 29.3541392171) > 1.e-10)
-  {
-    std::cerr << "one of the norms is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError(
+    {uNorm, vNorm, pNorm},
+    {3.15947325663, 0.740498457205, 29.3541392171},
+    1.e-10);
 }

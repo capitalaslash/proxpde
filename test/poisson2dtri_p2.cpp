@@ -66,11 +66,5 @@ int main(int argc, char* argv[])
 
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  if(std::fabs(norm - 0.004067660888944465) > 1.e-14)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({norm}, {0.004067660888944465});
 }

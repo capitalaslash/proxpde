@@ -258,12 +258,14 @@ constexpr void static_for(Tup & t, Func && f)
 // ----------------------------------------------------------------------------
 static constexpr int ERROR_GMSH = 1;
 
+// ----------------------------------------------------------------------------
 template<class T>
 inline constexpr T pow(T const & base, unsigned const exponent)
 {
   return exponent == 0 ? 1 : base * pow(base, exponent-1);
 }
 
+// ----------------------------------------------------------------------------
 using ParameterDict = YAML::Node;
 
 inline void validateConfig(ParameterDict const & c, std::vector<std::string> const & requiredPars)
@@ -300,4 +302,23 @@ struct convert<Vec3> {
     return true;
   }
 };
+}
+
+// ----------------------------------------------------------------------------
+inline bool checkError(
+    std::vector<double> const & error,
+    std::vector<double> const & ref,
+    double toll = 1.e-12)
+{
+  assert(error.size() == ref.size());
+  bool check = true;
+  for (uint i=0; i<error.size(); ++i)
+  {
+    check = check && std::fabs(error[i] - ref[i]) < toll && !std::isnan(error[i]);
+  }
+  if (!check)
+  {
+    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+  }
+  return !check;
 }

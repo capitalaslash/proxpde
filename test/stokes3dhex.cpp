@@ -123,14 +123,7 @@ int main(int argc, char* argv[])
   std::cout << "w error norm: " << std::setprecision(16) << wError << std::endl;
   std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
 
-  if (std::fabs(uError - 1.309442419567852e-15) > 1.e-12 ||
-      std::fabs(vError - 1.021847252919293e-14) > 1.e-12 ||
-      std::fabs(wError - 1.800953966048908e-15) > 1.e-12 ||
-      std::fabs(pError - 1.097009563518918e-14) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError(
+    {uError, vError, wError, pError},
+    {1.309442419567852e-15, 1.021847252919293e-14, 1.800953966048908e-15, 1.097009563518918e-14});
 }

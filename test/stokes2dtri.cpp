@@ -100,13 +100,5 @@ int main(int /*argc*/, char* /*argv*/[])
   std::cout << "v error norm: " << vError << std::endl;
   std::cout << "p error norm: " << pError << std::endl;
 
-  if (std::fabs(uError) > 1.e-13 ||
-      std::fabs(vError) > 1.e-13 ||
-      std::fabs(pError) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({uError, vError, pError}, {0., 0., 0.});
 }

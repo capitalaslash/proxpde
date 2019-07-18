@@ -129,11 +129,5 @@ int main(/*int argc, char* argv[]*/)
 
   double errorNorm = (c.data - oneField).norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm << std::endl;
-  if (std::fabs(errorNorm - 6.389801046171856e-05) > 1.e-10)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({errorNorm}, {6.389801046171856e-05});
 }

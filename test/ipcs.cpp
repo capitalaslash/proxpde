@@ -346,16 +346,15 @@ int main(int argc, char* argv[])
   Var errorP{"errorP"};
   errorP.data = pM.data - pOld;
 
-  std::cout << "errorU: " << std::setprecision(16) << errorU.data.norm() << std::endl;
-  std::cout << "errorV: " << std::setprecision(16) << errorV.data.norm() << std::endl;
-  std::cout << "errorP: " << std::setprecision(16) << errorP.data.norm() << std::endl;
+  double const errorNormU = errorU.data.norm();
+  double const errorNormV = errorV.data.norm();
+  double const errorNormP = errorP.data.norm();
+  std::cout << "errorU: " << std::setprecision(16) << errorNormU << std::endl;
+  std::cout << "errorV: " << std::setprecision(16) << errorNormV << std::endl;
+  std::cout << "errorP: " << std::setprecision(16) << errorNormP << std::endl;
 
-  if (std::fabs(errorU.data.norm() - 5.511440044739265e-05) > 1.e-12 ||
-      std::fabs(errorV.data.norm() - 7.500752437417739e-05) > 1.e-12 ||
-      std::fabs(errorP.data.norm() - 6.141568682924751e-05) > 1.e-11 )
-  {
-    std::cerr << "one of the error norms does not coincide with its expected value." << std::endl;
-    return 1;
-  }
-  return 0;
+  return checkError(
+    {errorNormU, errorNormV, errorNormP},
+    {5.511440044739265e-05, 7.500752437417739e-05, 6.141568682924751e-05},
+    1.e-11);
 }

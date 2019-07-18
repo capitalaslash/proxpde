@@ -95,11 +95,5 @@ int main(int argc, char* argv[])
 
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(12) << norm << std::endl;
-  if(std::fabs(norm - config["expected_error"].as<double>()) > 1.e-10)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({norm}, {config["expected_error"].as<double>()});
 }

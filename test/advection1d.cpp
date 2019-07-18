@@ -180,12 +180,5 @@ int main(int argc, char* argv[])
   std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1 << std::endl;
   double errorNormP0 = (concP0.data - oneFieldP0).norm();
   std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0 << std::endl;
-  if (std::fabs(errorNormP1 - 0.01153555695665251) > 1.e-10 ||
-      std::fabs(errorNormP0 - 0.0003358552892295136) > 1.e-10)
-  {
-     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-     return 1;
-  }
-
-  return 0;
+  return checkError({errorNormP1, errorNormP0}, {0.01153555695665251, 0.0003358552892295136});
 }

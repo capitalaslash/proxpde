@@ -114,12 +114,7 @@ int test(YAML::Node const & config)
 
   auto const errorNorm = error.data.norm();
   std::cout << "the norm of the error is "<< std::setprecision(16) << errorNorm << std::endl;
-  if(std::fabs(errorNorm - config["expected_error"].as<double>()) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-  return 0;
+  return checkError({errorNorm}, {config["expected_error"].as<double>()});
 }
 
 int main()

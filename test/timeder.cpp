@@ -162,13 +162,7 @@ int test(YAML::Node const & config)
   double norm = error.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
   std::cout << "the norm of the time error is " << std::setprecision(16) << (uTime - exactTime).norm() << std::endl;
-  if(std::fabs(norm - config["expected error"].as<double>()) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError({norm}, {config["expected error"].as<double>()});
 }
 
 int main()

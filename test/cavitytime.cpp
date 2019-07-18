@@ -157,13 +157,6 @@ int main(int argc, char* argv[])
 
   auto const solNorm = sol.data.norm();
   auto const targetNorm = 4.40937006291;
-  std::cout << "solution norm: " << std::setprecision(12) << solNorm << std::endl;
-  if (std::fabs(solNorm - targetNorm) > 1.e-10 * targetNorm)
-  {
-    std::cerr << "the solution norm is not the prescribed value, distance: "
-              << std::fabs(solNorm - targetNorm) << std::endl;
-    return 1;
-  }
-
-  return 0;
+  std::cout << "solution norm: " << std::setprecision(16) << solNorm << std::endl;
+  return checkError({solNorm}, {4.40937006291}, 1.e-10);
 }

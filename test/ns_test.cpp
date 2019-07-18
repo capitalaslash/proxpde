@@ -65,27 +65,38 @@ int main(int argc, char* argv[])
   auto const inletX = [&inlet] (Vec3 const & p) { return inlet(p)[0];};
   auto const inletY = [&inlet] (Vec3 const & p) { return inlet(p)[1];};
   auto const zero = [] (Vec3 const & ) { return 0.0; };
-  auto const bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM, inlet},
-        BCEss{feSpaceVel, side::RIGHT,  zero2d},
-        BCEss{feSpaceVel, side::TOP,    zero2d, uComp},
-        BCEss{feSpaceVel, side::LEFT,   zero2d, uComp});
+  auto bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM},
+        BCEss{feSpaceVel, side::RIGHT},
+        BCEss{feSpaceVel, side::TOP, uComp},
+        BCEss{feSpaceVel, side::LEFT, uComp});
+  std::get<0>(bcsVel) << inlet;
+  std::get<1>(bcsVel) << zero2d;
+  std::get<2>(bcsVel) << zero2d;
+  std::get<3>(bcsVel) << zero2d;
   auto const bcsP = std::make_tuple();
   // auto const bcsP = std::make_tuple(
   //       BCEss{feSpaceP, side::TOP, zero});
   t.stop();
 
   t.start("split bc");
-  auto const bcsU = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM, inletX},
-        BCEss{feSpaceU, side::RIGHT,  zero},
-        BCEss{feSpaceU, side::TOP,    zero},
-        BCEss{feSpaceU, side::LEFT,   zero});
-  auto const bcsV = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM, inletY},
-        BCEss{feSpaceU, side::RIGHT,  zero});
-  auto const bcsPSplit = std::make_tuple(
-        BCEss{feSpacePSplit, side::TOP, zero});
+  auto bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM},
+        BCEss{feSpaceU, side::RIGHT},
+        BCEss{feSpaceU, side::TOP, {0}},
+        BCEss{feSpaceU, side::LEFT, {0}});
+  std::get<0>(bcsU) << inletX;
+  std::get<1>(bcsU) << zero;
+  std::get<2>(bcsU) << zero;
+  std::get<3>(bcsU) << zero;
+  auto bcsV = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM},
+        BCEss{feSpaceU, side::RIGHT});
+  std::get<0>(bcsV) << inletY;
+  std::get<1>(bcsV) << zero;
+  auto bcTopP = BCEss{feSpacePSplit, side::TOP};
+  bcTopP << zero;
+  auto const bcsPSplit = std::make_tuple(bcTopP);
   t.stop();
 
   t.start("monolithic ctor");

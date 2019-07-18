@@ -128,11 +128,13 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bcs");
-  auto const leftBC = [](Vec3 const &){return 1.;};
-  auto const bcsP1 = std::make_tuple(
-        BCEss{feSpaceP1, side::LEFT, leftBC});
-  auto const bcsP0 = std::make_tuple(
-        BCEss{feSpaceP0, side::LEFT, leftBC});
+  auto const one = [] (Vec3 const &) { return 1.; };
+  auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
+  bcLeftP1 << one;
+  auto const bcsP1 = std::make_tuple(bcLeftP1);
+  auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
+  bcLeftP0 << one;
+  auto const bcsP0 = std::make_tuple(bcLeftP0);
   t.stop();
 
   t.start("fe builder");

@@ -78,20 +78,26 @@ int main(int argc, char* argv[])
   t.start("bcs");
   // auto const zero = [](Vec3 const & ){return 0.;};
   auto const one = [](Vec3 const & ){return 1.;};
-  auto const bcsP1 = std::make_tuple(
-        BCEss{feSpaceP1, side::LEFT, one});
-  // auto const bcsP1 = std::make_tuple(
-  //       BCEss{feSpaceP1, side::LEFT, zero},
-  //       BCEss{feSpaceP1, side::BOTTOM, zero},
-  //       BCEss{feSpaceP1, side::RIGHT, zero},
-  //       BCEss{feSpaceP1, side::TOP, zero});
-  auto const bcsP0 = std::make_tuple(
-        BCEss{feSpaceP0, side::LEFT, one});
-  // auto const bcsP0 = std::make_tuple(
-  //       BCEss{feSpaceP0, side::LEFT, zero},
-  //       BCEss{feSpaceP0, side::BOTTOM, zero},
-  //       BCEss{feSpaceP0, side::RIGHT, zero},
-  //       BCEss{feSpaceP0, side::TOP, zero});
+  auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
+  bcLeftP1 << one;
+  // bcLeftP1 << zero;
+  // auto bcBottomP1 = BCEss{feSpaceP1, side::BOTTOM};
+  // bcbottomP1 << zero;
+  // auto bcRightP1 = BCEss{feSpaceP1, side::RIGHT};
+  // bcRightP1 << zero;
+  // auto bcTopP1 = BCEss{feSpaceP1, side::TOP};
+  // bcTopP1 << zero;
+  auto const bcsP1 = std::make_tuple(bcLeftP1/*, bcBottomP1, bcRightP1, bcTopP1*/);
+  auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
+  bcLeftP0 << one;
+  // bcLeftP0 << zero;
+  // auto bcBottomP0 = BCEss{feSpaceP0, side::BOTTOM};
+  // bcBottomP0 << zero;
+  // auto bcRightP0 = BCEss{feSpaceP0, side::RIGHT};
+  // bcRightP0 << zero;
+  // auto bcTopP0 = BCEss{feSpaceP0, side::TOP};
+  // bcTopP0 << zero;
+  auto const bcsP0 = std::make_tuple(bcLeftP0/*, bcBottomP0, bcRightP0, bcTopP0*/);
   t.stop();
 
   t.start("velocity");

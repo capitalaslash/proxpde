@@ -194,7 +194,7 @@ struct FVSolver
           {
             if (bc.marker == facet.marker)
             {
-              auto const uLocal = bc.evaluate(0)[0];
+              auto const uLocal = bc.get(insideElemPtr->id);
               fluxes[facet.id] =
                   vNorm *
                   facet.volume() *
@@ -205,7 +205,7 @@ struct FVSolver
           // {
           //   if (bc.marker == facet.marker)
           //   {
-          //     auto const uLocal = bc.evaluate(0)[0];
+          //     auto const uLocal = bc.get(insideElemPtr->id);
           //     fluxes[facet.id] =
           //         vNorm *
           //         facet.volume() *
@@ -236,7 +236,7 @@ struct FVSolver
 //      {
 //        if (bc.isConstrained(id))
 //        {
-//          fluxes[facet.id] = bc.evaluate(*facet.facingElem[0].ptr, id)[0] * v;
+//          fluxes[facet.id] = bc.get(*facet.facingElem[0].ptr->id) * v;
 //        }
 //      }
 //    }

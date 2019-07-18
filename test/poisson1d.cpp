@@ -59,8 +59,9 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bcs");
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << [] (Vec3 const &) { return 0.; };
+  auto const bcs = std::tuple{bc};
   t.stop();
 
   t.start("fe build");

@@ -49,24 +49,18 @@ int test(YAML::Node const & config)
   FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
 
   auto const bcsU = std::make_tuple();
-  // double const hx = 1. / n;
-  // DOFCoordSet leftStrip{
-  //   feSpaceU,
-  //       [hx](Vec3 const & p){return std::fabs(p[0]) < .5 * hx;}
-  // };
-  // DOFCoordSet rightStrip{
-  //   feSpaceU,
-  //       [length, hx](Vec3 const & p){return std::fabs(length[0] - p[0]) < .5 * hx;}
-  // };
-  // auto const bcU = std::make_tuple(
-  //       BCEss{feSpaceU, leftStrip.ids, [] (Vec3 const&) {return 0.;}},
-  //       BCEss{feSpaceU, rightStrip.ids, [] (Vec3 const&) {return 1.;}});
-  auto const bcsW = std::make_tuple(
-        // the function must be the normal flux, positive if entrant
-        BCEss{feSpaceW, side::RIGHT, [g] (Vec3 const & ) { return g; }},
-        // symmetry
-        BCEss{feSpaceW, side::BOTTOM, [] (Vec3 const & ) { return 0.; }},
-        BCEss{feSpaceW, side::TOP, [] (Vec3 const & ) { return 0.; }});
+
+  // the function must be the normal flux, positive if entrant
+  auto bcWRight = BCEss{feSpaceW, side::RIGHT};
+  bcWRight << [g] (Vec3 const & ) { return g; };
+
+  // symmetry
+  auto bcWTop = BCEss{feSpaceW, side::TOP};
+  bcWTop << [] (Vec3 const & ) { return 0.; };
+  auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
+  bcWBottom << [] (Vec3 const & ) { return 0.; };
+
+  auto const bcsW = std::tuple{bcWRight, bcWBottom, bcWTop};
 
   uint const sizeU = feSpaceU.dof.size;
   Var u("u", sizeU);

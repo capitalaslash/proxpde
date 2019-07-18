@@ -48,18 +48,23 @@ int main(int argc, char* argv[])
 
   t.start();
   auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  auto const bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::RIGHT, zero},
-        BCEss{feSpaceVel, side::LEFT, zero},
-        BCEss{feSpaceVel, side::BOTTOM, zero},
-        BCEss{feSpaceVel, side::TOP, [] (Vec3 const &) {return Vec2(1.0, 0.0);}});
+  auto bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::RIGHT},
+        BCEss{feSpaceVel, side::LEFT},
+        BCEss{feSpaceVel, side::BOTTOM},
+        BCEss{feSpaceVel, side::TOP});
+  std::get<0>(bcsVel) << zero;
+  std::get<1>(bcsVel) << zero;
+  std::get<2>(bcsVel) << zero;
+  std::get<3>(bcsVel) << [] (Vec3 const &) { return Vec2(1.0, 0.0); };
   // select the point on the bottom boundary in the middle
   DOFCoordSet pinSet{
       feSpaceP,
       [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}
   };
-  auto const bcsP = std::make_tuple(
-        BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
+  auto bcPin = BCEss{feSpaceP, pinSet.ids};
+  bcPin << [] (Vec3 const &) { return 0.; };
+  auto const bcsP = std::tuple{bcPin};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // t.start();
@@ -156,7 +161,6 @@ int main(int argc, char* argv[])
   }
 
   auto const solNorm = sol.data.norm();
-  auto const targetNorm = 4.40937006291;
   std::cout << "solution norm: " << std::setprecision(16) << solNorm << std::endl;
   return checkError({solNorm}, {4.40937006291}, 1.e-10);
 }

@@ -59,10 +59,15 @@ struct FEVar
     name(n)
   {}
 
-  FEVar<FESpace_T> & operator<<(scalarFun_T const & f)
+  FEVar<FESpace_T> & operator<<(Fun<FESpace_T::dim, 3> const & f)
   {
     interpolateAnalyticFunction(f, this->feSpace, this->data);
     return *this;
+  }
+
+  FEVar<FESpace> & operator<<(scalarFun_T const & f)
+  {
+    return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
   double operator[](id_T const id) const

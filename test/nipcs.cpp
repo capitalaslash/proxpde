@@ -63,29 +63,39 @@ int main(int argc, char* argv[])
   auto const inlet1 = [&inlet] (Vec3 const & p) { return inlet(p)[1]; };
   // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
-  auto const bcsVel = std::make_tuple(
-        // last essential bc wins on corners
-        BCEss{feSpaceVel, side::BOTTOM, inlet},
-        BCEss{feSpaceVel, side::RIGHT, zeroV},
-        BCEss{feSpaceVel, side::LEFT, zeroV, {0}});
+  // last essential bc wins on corners
+  auto bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM},
+        BCEss{feSpaceVel, side::RIGHT},
+        BCEss{feSpaceVel, side::LEFT, {0}});
+  std::get<0>(bcsVel) << inlet;
+  std::get<1>(bcsVel) << zeroV;
+  std::get<2>(bcsVel) << zeroV;
 
-  auto const bcsP = std::make_tuple(
-        BCEss{feSpaceP, side::TOP, zeroS});
+  auto bcTopP = BCEss{feSpaceP, side::TOP};
+  bcTopP << zeroS;
+  auto const bcsP = std::tuple{bcTopP};
   // DofSet_T pinSet = {1};
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
-  auto const bcsUstar = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM, inlet0},
-        BCEss{feSpaceU, side::RIGHT, zeroS},
-        BCEss{feSpaceU, side::LEFT, zeroS});
+  auto bcsUStar = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM},
+        BCEss{feSpaceU, side::RIGHT},
+        BCEss{feSpaceU, side::LEFT});
+  std::get<0>(bcsUStar) << inlet0;
+  std::get<1>(bcsUStar) << zeroS;
+  std::get<2>(bcsUStar) << zeroS;
 
-  auto const bcsVstar = std::make_tuple(
-        // last essential bc wins on corners
-        BCEss{feSpaceU, side::BOTTOM, inlet1},
-        BCEss{feSpaceU, side::RIGHT, zeroS});
+  // last essential bc wins on corners
+  auto bcsVStar = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM},
+        BCEss{feSpaceU, side::RIGHT});
+  std::get<0>(bcsVStar) << inlet1;
+  std::get<1>(bcsVStar) << zeroS;
 
-  auto const bcsPSplit = std::make_tuple(
-        BCEss{feSpacePSplit, side::TOP, zeroS});
+  auto bcTopPSplit = BCEss{feSpacePSplit, side::TOP};
+  bcTopPSplit << zeroS;
+  auto const bcsPSplit = std::tuple{bcTopPSplit};
   // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
   t.stop();
 
@@ -166,8 +176,8 @@ int main(int argc, char* argv[])
         AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {1}});
 
   t.start("eqn");
-  Eqn<decltype(uStarLhs), decltype(uStarRhs), decltype(bcsUstar), StorageType::RowMajor> eqnUstar{uStar, uStarLhs, uStarRhs, bcsUstar};
-  Eqn<decltype(vStarLhs), decltype(vStarRhs), decltype(bcsVstar), StorageType::RowMajor> eqnVstar{vStar, vStarLhs, vStarRhs, bcsVstar};
+  Eqn<decltype(uStarLhs), decltype(uStarRhs), decltype(bcsUStar), StorageType::RowMajor> eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar};
+  Eqn<decltype(vStarLhs), decltype(vStarRhs), decltype(bcsVStar), StorageType::RowMajor> eqnVstar{vStar, vStarLhs, vStarRhs, bcsVStar};
 
   Eqn eqnP{p, pLhs, pRhs, bcsPSplit};
   // eqnP lhs does not change in time, we can pre-compute and factorize it
@@ -185,7 +195,8 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("ic");
-  Var velM{"velM", 2*dofU + dofP};
+  Var velM{"velM"};
+  velM.data = Vec::Zero( 2*dofU + dofP);
   auto ic = [](Vec3 const &) {return Vec2(0., 1.);};
   // auto ic = zero;
   auto ic0 = [&ic] (Vec3 const & p) {return ic(p)[0];};

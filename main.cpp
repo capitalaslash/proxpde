@@ -54,8 +54,9 @@ int main()
 
   FESpace_T feSpace{*mesh};
 
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << [] (Vec3 const &) { return 0.; };
+  auto const bcs = std::tuple{bc};
 
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};

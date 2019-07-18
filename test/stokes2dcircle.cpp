@@ -43,10 +43,13 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   auto const zeroFun = [] (Vec3 const&) {return Vec2{0., 0.};};
-  auto const bcsU = std::make_tuple(
-        BCEss{feSpaceU, side::CIRCLE, zeroFun},
-        BCEss{feSpaceU, side::TOP,    zeroFun, {0}},
-        BCEss{feSpaceU, side::LEFT,   zeroFun, {1}});
+  auto bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::CIRCLE},
+        BCEss{feSpaceU, side::TOP, {0}},
+        BCEss{feSpaceU, side::LEFT, {1}});
+  std::get<0>(bcsU) << zeroFun;
+  std::get<1>(bcsU) << zeroFun;
+  std::get<2>(bcsU) << zeroFun;
   DOFCoordSet pinSet
   {
     feSpaceP,
@@ -56,8 +59,9 @@ int main(int argc, char* argv[])
           std::fabs(p[1] - 0.0) < 1.e-6;
     }
   };
-  auto const bcsP = std::make_tuple(
-        BCEss{feSpaceP, pinSet.ids, [] (Vec3 const &) {return 0.;}});
+  auto bcPin = BCEss{feSpaceP, pinSet.ids};
+  bcPin << [] (Vec3 const &) { return 0.; };
+  auto const bcsP = std::tuple{bcPin};
   t.stop();
 
   t.start("assembly");

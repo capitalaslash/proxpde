@@ -37,9 +37,11 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace{*mesh};
 
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT,   [] (Vec3 const &) { return 0.; }},
-        BCEss{feSpace, side::BOTTOM, [] (Vec3 const &) { return 0.; }});
+  auto bcLeft = BCEss{feSpace, side::LEFT};
+  bcLeft << [] (Vec3 const &) { return 0.; };
+  auto bcBottom = BCEss{feSpace, side::BOTTOM};
+  bcBottom << [] (Vec3 const &) { return 0.; };
+  auto const bcs = std::tuple{bcLeft, bcBottom};
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);

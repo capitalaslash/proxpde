@@ -54,8 +54,9 @@ int test(YAML::Node const & config)
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, [temp0] (Vec3 const&) {return temp0;}});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << [temp0] (Vec3 const&) { return temp0; };
+  auto const bcs = std::tuple{bc};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();

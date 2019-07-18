@@ -9,39 +9,58 @@
 // TODO: add static map to set components via flags
 
 using DofSet_T = std::unordered_set<DOFid_T>;
+using DofMap_T = std::unordered_map<DOFid_T, id_T>;
 using BoolArray_T = Eigen::Array<bool,Eigen::Dynamic,1>;
 
 template <typename FESpace>
-DofSet_T fillDofSet(
+DofMap_T fillDofMap(
     FESpace const & feSpace,
     marker_T marker,
     std::vector<uint> const & comp)
 {
   using RefFE_T = typename FESpace::RefFE_T;
-  DofSet_T constrainedDofSet;
-  for(auto const & f: feSpace.mesh.facetList)
+  DofMap_T constrainedDofMap;
+  id_T counter = 0;
+  for (auto const & f: feSpace.mesh.facetList)
   {
-    if(f.marker == marker)
+    if (f.marker == marker)
     {
-      // TODO: assert that facingElem[1] is null, so the facet is on the boundary
       auto const & [elem, side] = f.facingElem[0];
-      for(uint i=0; i<RefFE_T::dofPerFacet; i++)
+      if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
       {
-        for(auto const c: comp)
+        for (uint i=0; i<RefFE_T::dofPerFacet; i++)
         {
-          DOFid_T const dofId = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i], c);
-          constrainedDofSet.insert(dofId);
+          for (auto const c: comp)
+          {
+            DOFid_T const dofId = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i], c);
+            [[maybe_unused]] auto const [ptr, inserted] = constrainedDofMap.insert({dofId, counter});
+            if (inserted)
+            {
+              counter++;
+            }
+          }
+        }
+      }
+      else // order_v<RefFE_T> == 0 && family_v<RefFE_T> == FamilyType::LAGRANGE
+      {
+        // P0 element do not have dofs on boundary, we set the element dof instead
+        for (auto const c: comp)
+        {
+          DOFid_T const dofId = feSpace.dof.getId(elem->id, 0, c);
+          // elements cannot be walked through multiple times, each insert() is successful
+          constrainedDofMap.insert({dofId, counter});
+          counter++;
         }
       }
       // std::cout << "current dof set: ";
-      // for (auto const & id: constrainedDOFset)
+      // for (auto const & id: constrainedDOFMap)
       // {
-      //     std::cout << id << " ";
+      //     std::cout << id.first << " ";
       // }
       // std::cout << std::endl;
     }
   }
-  return constrainedDofSet;
+  return constrainedDofMap;
 }
 
 template <typename FESpace>
@@ -50,98 +69,130 @@ class BCEss
 public:
   using FESpace_T = FESpace;
   using CurFE_T = typename FESpace_T::CurFE_T;
+  using RefFE_T = typename FESpace_T::RefFE_T;
 
   // use manual-provided set of DOFs
-  BCEss(FESpace_T const & feSpace,
-        DofSet_T const dofSet,
-        Fun<FESpace::dim,3> const v):
-    constrainedDofSet(std::move(dofSet)),
-    curFE(feSpace.curFE),
-    dofSize(feSpace.dof.size),
-    value(std::move(v))
+  // TODO: pass in a dofset anyway, the map is only needed internally
+  BCEss(FESpace_T const & fe,
+        DofMap_T const dofMap):
+    feSpace(fe),
+    _constrainedDofMap(std::move(dofMap)),
+    data{Vec::Zero(_constrainedDofMap.size())}
   {
-    std::cout << "new bc on dofset with " << constrainedDofSet.size() << " dofs" << std::endl;
+    std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs" << std::endl;
   }
 
-  // this can be used with scalar FESpaces only
-  BCEss(FESpace_T const & feSpace,
-        DofSet_T const dofSet,
-        scalarFun_T const & v):
-    BCEss(feSpace, std::move(dofSet), [v](Vec3 const & p){return Vec1{v(p)};})
-  {}
-
-  BCEss(FESpace_T const & feSpace,
+  BCEss(FESpace_T const & fe,
         marker_T const m,
-        Fun<FESpace_T::dim,3> const v,
-        std::vector<uint> const & comp = allComp<FESpace>()):
-    constrainedDofSet(fillDofSet(feSpace, m, comp)),
-    curFE(feSpace.curFE),
-    dofSize(feSpace.dof.size),
-    value(std::move(v)),
-    marker(m)
+        std::vector<uint> const & c = allComp<FESpace>()):
+    feSpace(fe),
+    marker(m),
+    comp(c),
+    _constrainedDofMap(fillDofMap(feSpace, m, c)),
+    data{Vec::Zero(_constrainedDofMap.size())}
   {
-    std::cout << "new bc on marker " << m << " with " << constrainedDofSet.size() << " dofs" << std::endl;
+    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size() << " dofs" << std::endl;
   }
 
-  // this can be used with scalar FESpaces only
-  BCEss(FESpace_T const & feSpace,
-        marker_T m,
-        scalarFun_T const & v,
-        std::vector<uint> const & comp = allComp<FESpace>()):
-    constrainedDofSet(fillDofSet(feSpace, m, comp)),
-    curFE(feSpace.curFE),
-    dofSize(feSpace.dof.size),
-    value([v](Vec3 const & p){return Vec1{v(p)};}),
-    marker(m)
+  BCEss<FESpace> & operator<<(Fun<FESpace_T::dim, 3> const & f)
   {
-    static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
-    std::cout << "new bc on marker " << m << " with " << constrainedDofSet.size() << " dofs" << std::endl;
+    if (marker != markerNotSet)
+    {
+      for (auto const & facet: feSpace.mesh.facetList)
+      {
+        if (facet.marker == marker)
+        {
+          auto const & [elem, side] = facet.facingElem[0];
+          feSpace.curFE.reinit(*elem);
+          if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+          {
+            for (uint i=0; i<RefFE_T::dofPerFacet; ++i)
+            {
+              auto const facetDof = RefFE_T::dofOnFacet[side][i];
+              auto const value = evaluateBoundaryValue(f, feSpace, facetDof);
+              for (auto const c: comp)
+              {
+                DOFid_T const dofId = feSpace.dof.getId(elem->id, facetDof, c);
+                data[_constrainedDofMap.at(dofId)] = value[c];
+                if (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+                {
+                  // value gives the entrant flux, it must be scaled to the facet size
+                  // ???
+                  data[_constrainedDofMap.at(dofId)] *= facet.volume();
+                }
+              }
+            }
+          }
+          else // order_v<RefFE_T> == 0 && family_v<RefFE_T> == FamilyType::LAGRANGE
+          {
+            auto const value = evaluateBoundaryValue(f, feSpace, 0);
+            for (auto const c: comp)
+            {
+              DOFid_T const dofId = feSpace.dof.getId(elem->id, 0, c);
+              data[_constrainedDofMap.at(dofId)] = value[c];
+            }
+          }
+        }
+      }
+    }
+    else // no marker, work on the dof set
+    {
+      auto const size = numDOFs<RefFE_T>();
+      for (auto const & elem: feSpace.mesh.elementList)
+      {
+        for (uint d=0; d<size * FESpace_T::dim; ++d)
+        {
+          auto const dof = feSpace.dof.elemMap(elem.id, d);
+          if (_constrainedDofMap.count(dof) > 1)
+          {
+            feSpace.curFE.reinit(elem);
+            auto const c = d / size;
+            data[_constrainedDofMap.at(dof)] = evaluateBoundaryValue(f, feSpace, dof)[c];
+          }
+        }
+      }
+    }
+    return *this;
+  }
+
+  BCEss<FESpace> & operator<<(scalarFun_T const & f)
+  {
+    static_assert(FESpace_T::dim == 1, "scalar functions can be used only on scalar fe spaces.");
+    return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
-    return constrainedDofSet.count(id + d * dofSize) > 0;
+    return _constrainedDofMap.count(id + d * feSpace.dof.size) > 0;
   }
 
-  FVec<FESpace_T::dim> evaluate(DOFid_T const i) const
+  double get(DOFid_T const id) const
   {
-    // curFE.reinit(e);
-    if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::LAGRANGE)
-    {
-      // TODO: this is a crude implementation that works only for Lagrange elements
-      return value(curFE.dofPts[i]);
-    }
-    else if constexpr (Family<typename FESpace_T::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
-    {
-      // std::abort();
-      return value(curFE.dofPts[i]) * curFE.elem->facetList[i]->volume(); // * curFE.elem->facetList[i]->normal();
-    }
-    else
-    {
-      std::abort();
-    }
+    return data[_constrainedDofMap.at(id)];
   }
 
   friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T> const & bc)
   {
     out << "constrainedDOFset: ";
-    for(auto const i: bc.constrainedDofSet)
+    for ([[maybe_unused]] auto const [dof, id]: bc._constrainedDofMap)
     {
-      out << i << " ";
+      out << dof << " ";
     }
     out << std::endl;
     return out;
   }
 
+public:
+  FESpace_T const & feSpace;
+  marker_T const marker = markerNotSet;
+  std::vector<uint> const comp = {};
+  double diag = 1.0;
+
 protected:
-  DofSet_T constrainedDofSet;
+  DofMap_T const _constrainedDofMap;
 
 public:
-  CurFE_T & curFE;
-  uint const dofSize;
-  Fun<FESpace::dim,3> const value;
-  marker_T marker = markerNotSet;
-  double diag = 1.0;
+  Vec data;
 };
 
 template <typename FESpace>
@@ -235,7 +286,7 @@ public:
       fixedMarkers.insert(bc.marker);
     }
 
-    if constexpr (std::is_same_v<BC, BCEss<FESpace>>)
+    if constexpr (std::is_same_v<typename BC::FESpace_T, FESpace>)
     {
       bcEssList.push_back(std::move(bc));
     }
@@ -266,9 +317,8 @@ public:
 template <typename FESpace>
 std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bcList)
 {
-  out << "bc list with " << bcList.bcEssList.size() << " essential bcs and "
-      << bcList.bcNatList.size() << " natural bcs" << std::endl;
-  for(auto & bc: bcList.bcEssList)
+  out << "bc list with " << bcList.bcEssList.size() << " essential bcs" << std::endl;
+  for (auto & bc: bcList.bcEssList)
   {
     out << bc << "\n";
   }
@@ -286,6 +336,7 @@ public:
     feSpace(fe),
     predicate(p)
   {
+    id_T counter = 0;
     for (auto const & e: feSpace.mesh.elementList)
     {
       feSpace.curFE.reinit(e);
@@ -293,7 +344,8 @@ public:
       {
         if (predicate(feSpace.curFE.dofPts[d]))
         {
-          ids.insert(feSpace.dof.getId(e.id, d));
+          ids.insert({feSpace.dof.getId(e.id, d), counter});
+          counter++;
         }
       }
     }
@@ -302,5 +354,5 @@ public:
 
   FESpace_T & feSpace;
   Predicate_T const & predicate;
-  DofSet_T ids;
+  DofMap_T ids;
 };

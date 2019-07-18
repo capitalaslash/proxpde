@@ -80,12 +80,16 @@ int main(int argc, char* argv[])
 
   FESpace_T feSpace{*mesh};
 
-  auto zeroFun = [] (Vec3 const&) {return 0.;};
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::RIGHT,  zeroFun},
-        BCEss{feSpace, side::LEFT,   zeroFun},
-        BCEss{feSpace, side::BOTTOM, zeroFun},
-        BCEss{feSpace, side::TOP,    zeroFun});
+  auto const zeroFun = [] (Vec3 const&) {return 0.;};
+  auto bcRight = BCEss{feSpace, side::RIGHT};
+  bcRight << zeroFun;
+  auto bcLeft = BCEss{feSpace, side::LEFT};
+  bcLeft << zeroFun;
+  auto bcBottom = BCEss{feSpace, side::BOTTOM};
+  bcBottom << zeroFun;
+  auto bcTop = BCEss{feSpace, side::TOP};
+  bcTop << zeroFun;
+  auto const bcs = std::tuple{bcRight, bcLeft, bcBottom, bcTop};
 
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyMass mass{1.0, feSpace};

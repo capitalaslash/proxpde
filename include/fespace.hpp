@@ -109,6 +109,42 @@ struct FESpace
 };
 
 template <typename FESpace>
+inline auto evaluateBoundaryValue(
+    Fun<FESpace::dim, 3> f,
+    FESpace const & feSpace,
+    DOFid_T const id)
+{
+  using FESpace_T = FESpace;
+  using RefFE_T = typename FESpace_T::RefFE_T;
+
+  // assume that the curFE has been properly updated by the caller
+  // feSpace.curFE.reinit(e);
+
+  auto const value = f(feSpace.curFE.dofPts[id]);
+  if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
+  {
+    // the value of the dof is the value of the function
+    // u_k = u phi_k
+    // for vector fespaces this is a vector
+    return value;
+  }
+  else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+  {
+    // the value of the dof is the flux through the face
+    // u_k = u.dot(n_k)
+    // TODO: this is always a scalar
+    // typename FESpace_T::Mesh_T::Facet_T const & facet =
+    //     feSpace.mesh.facetList[feSpace.mesh.elemToFacet[feSpace.curFE.elem->id][id]];
+    // return Vec1::Constant(value.dot(facet.normal()));
+    return value;
+  }
+  else
+  {
+    std::abort();
+  }
+}
+
+template <typename FESpace>
 void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
                                  FESpace & feSpace,
                                  Vec & v,
@@ -125,23 +161,37 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
     feSpace.curFE.reinit(e);
     for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
     {
-      auto const value = f(feSpace.curFE.dofPts[i]);
-      for (uint d=0; d<FESpace::dim; ++d)
+      if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
       {
-        auto const dofId = feSpace.dof.getId(e.id, i, d);
-        if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::LAGRANGE)
+        // the value of the dof is the value of the function
+        // u_k = u phi_k
+        // for vector fespaces this is a vector
+        auto const value = f(feSpace.curFE.dofPts[i]);
+        for (uint d=0; d<FESpace::dim; ++d)
         {
-          // the value of the dof is the value of the function
-          // u_k = u phi_k
+          auto const dofId = feSpace.dof.getId(e.id, i, d);
           v[offset + dofId] = value[d];
         }
-        else if constexpr (Family<typename FESpace::RefFE_T>::value == FamilyType::RAVIART_THOMAS)
-        {
-          // the value of the dof is the flux through the face
-          // u_k = u.dot(n_k)
-          v[offset + dofId] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
-        }
       }
+      else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        // the value of the dof is the flux through the face
+        // u_k = u.dot(n_k)
+        auto const value = evaluateOnFacet(f, feSpace, i);
+        auto const dofId = feSpace.dof.getId(e.id, i);
+        v[offset + dofId] = value;
+      }
+      else
+      {
+        std::abort();
+      }
+
+      // auto const value = evaluate(f, feSpace, i);
+      // for (uint d=0; d<FESpace::dim; ++d)
+      // {
+      //   auto const dofId = feSpace.dof.getId(e.id, i, d);
+      //   v[offset + dofId] = value[d];
+      // }
     }
   }
 }

@@ -143,21 +143,33 @@ int main(int argc, char* argv[])
   auto const one =    [] (Vec3 const &) {return 1.;};
   auto const zero2d = [] (Vec3 const &) {return Vec2{0., 0.};};
   auto const inlet =  [] (Vec3 const &) {return Vec2{1., 0.};};
-  auto const bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::RIGHT,  zero2d},
-        BCEss{feSpaceVel, side::LEFT,   zero2d},
-        BCEss{feSpaceVel, side::BOTTOM, zero2d},
-        BCEss{feSpaceVel, side::TOP,    inlet});
-  auto const bcsU = std::make_tuple(
-        BCEss{feSpaceU, side::RIGHT,  zero1d},
-        BCEss{feSpaceU, side::LEFT,   zero1d},
-        BCEss{feSpaceU, side::BOTTOM, zero1d},
-        BCEss{feSpaceU, side::TOP,    one});
-  auto const bcsV = std::make_tuple(
-        BCEss{feSpaceV, side::RIGHT,  zero1d},
-        BCEss{feSpaceV, side::LEFT,   zero1d},
-        BCEss{feSpaceV, side::BOTTOM, zero1d},
-        BCEss{feSpaceV, side::TOP,    zero1d});
+  auto bcsVel = std::make_tuple(
+        BCEss{feSpaceVel, side::BOTTOM},
+        BCEss{feSpaceVel, side::RIGHT},
+        BCEss{feSpaceVel, side::TOP},
+        BCEss{feSpaceVel, side::LEFT});
+  std::get<0>(bcsVel) << zero2d;
+  std::get<1>(bcsVel) << zero2d;
+  std::get<2>(bcsVel) << inlet;
+  std::get<3>(bcsVel) << zero2d;
+  auto bcsU = std::make_tuple(
+        BCEss{feSpaceU, side::BOTTOM},
+        BCEss{feSpaceU, side::RIGHT},
+        BCEss{feSpaceU, side::TOP},
+        BCEss{feSpaceU, side::LEFT});
+  std::get<0>(bcsU) << zero1d;
+  std::get<1>(bcsU) << zero1d;
+  std::get<2>(bcsU) << one;
+  std::get<3>(bcsU) << zero1d;
+  auto bcsV = std::make_tuple(
+        BCEss{feSpaceV, side::BOTTOM},
+        BCEss{feSpaceV, side::RIGHT},
+        BCEss{feSpaceV, side::TOP},
+        BCEss{feSpaceV, side::LEFT});
+  std::get<0>(bcsU) << zero1d;
+  std::get<1>(bcsU) << zero1d;
+  std::get<2>(bcsU) << zero1d;
+  std::get<3>(bcsU) << zero1d;
   auto const bcsP = std::make_tuple();
   // DofSet_T pinSet = {1};
   // auto const bcsP = std::make_tuple(

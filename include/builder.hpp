@@ -72,15 +72,15 @@ struct Builder
 
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
-          auto const localValue = bc.evaluate(i);
           for (uint d=0; d<FESpace_T::dim; ++d)
           {
             auto const pos = i + d*FESpace_T::RefFE_T::numFuns;
             DOFid_T const id = refAssembly.feSpace.dof.getId(e.id, i, d);
             if (bc.isConstrained(id))
             {
+              auto const localValue = bc.get(id);
               C(pos, pos) = 0.;
-              h[pos] = localValue[d];
+              h[pos] = localValue;
             }
           }
         }
@@ -208,15 +208,15 @@ struct Builder
 
         for(uint i=0; i<CurFE2_T::RefFE_T::numFuns; ++i)
         {
-          auto const localValue = bc.evaluate(i);
           for (uint d=0; d<FESpace2::dim; ++d)
           {
             auto const pos = i+d*FESpace2::RefFE_T::numFuns;
             DOFid_T const id = assembly.feSpace2.dof.getId(e.id, i ,d);
             if (bc.isConstrained(id))
             {
+              auto const localValue = bc.get(id);
               Cclm(pos, pos) = 0.;
-              h[pos] = localValue[d];
+              h[pos] = localValue;
             }
           }
         }

@@ -60,8 +60,9 @@ int main(/*int argc, char* argv[]*/)
 
   t.start("bcs");
   auto const one = [](Vec3 const & ){return 1.;};
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, one});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << one;
+  auto const bcs = std::tuple{bc};
   t.stop();
 
   t.start("velocity");

@@ -78,8 +78,9 @@ int main(int argc, char* argv[])
     }
     return v;
   };
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, bcValue});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << bcValue;
+  auto const bcs = std::tuple{bc};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
 

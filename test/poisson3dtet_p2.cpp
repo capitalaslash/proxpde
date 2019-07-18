@@ -42,9 +42,11 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT,   [] (Vec3 const &) { return 0.; }},
-        BCEss{feSpace, side::BOTTOM, [] (Vec3 const &) { return 0.; }});
+  auto bcLeft = BCEss{feSpace, side::LEFT};
+  bcLeft << [] (Vec3 const &) { return 0.; };
+  auto bcBottom = BCEss{feSpace, side::BOTTOM};
+  bcBottom << [] (Vec3 const &) { return 0.; };
+  auto const bcs = std::tuple{bcLeft, bcBottom};
   t.stop();
 
   // std::cout << bcs << std::endl;

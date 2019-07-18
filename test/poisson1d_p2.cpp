@@ -44,8 +44,9 @@ int main(int argc, char* argv[])
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
-  auto const bcs = std::make_tuple(
-        BCEss{feSpace, side::LEFT, [] (Vec3 const &) { return 0.; }});
+  auto bc = BCEss{feSpace, side::LEFT};
+  bc << [] (Vec3 const &) { return 0.; };
+  auto const bcs = std::tuple{bc};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   AssemblyStiffness stiffness(1.0, feSpace);

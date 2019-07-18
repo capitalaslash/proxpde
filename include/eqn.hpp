@@ -14,7 +14,7 @@ struct AssemblyVector;
 template <typename LhsTup,
           typename RhsTup,
           typename BCS,
-          StorageType Storage = StorageType::ClmMajor>
+          auto Storage = StorageType::ClmMajor>
 struct Eqn
 {
   using FESpace_T = typename std::tuple_element_t<0, LhsTup>::FESpace_T;
@@ -28,7 +28,7 @@ struct Eqn
     rhsAssemblies{rhs},
     bcList{bcs},
     sol{s},
-    builder{s.data.size()}
+    builder{static_cast<uint>(s.data.size())}
   {}
 
   void buildLhs()

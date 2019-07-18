@@ -127,10 +127,7 @@ struct Builder
             {
               DOFid_T const idJ = refAssembly.feSpace.dof.getId(e.id, j, d2);
               auto val = Ke(i + d1*FESpace_T::CurFE_T::numDOFs, j + d2*FESpace_T::CurFE_T::numDOFs);
-              if (std::fabs(val) > 1.e-16)
-              {
-                _triplets.emplace_back(idI, idJ, val);
-              }
+              _triplets.emplace_back(idI, idJ, val);
             }
           }
         }
@@ -241,10 +238,7 @@ struct Builder
             {
               DOFid_T const idJ = assembly.feSpace2.dof.getId(e.id, j, d2);
               auto val = Ke(i + d1*FESpace1::CurFE_T::numDOFs, j+d2*FESpace2::CurFE_T::numDOFs);
-              if(std::fabs(val) > 1.e-16)
-              {
-                _triplets.emplace_back(idI, idJ, val);
-              }
+              _triplets.emplace_back(idI, idJ, val);
             }
           }
         }
@@ -329,6 +323,7 @@ struct Builder
   void closeMatrix()
   {
     A.setFromTriplets(_triplets.begin(), _triplets.end());
+    A.prune(1., 1.e-16);
   }
 
   void clearRhs()

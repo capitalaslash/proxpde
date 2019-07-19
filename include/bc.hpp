@@ -23,16 +23,17 @@ DofMap_T fillDofMap(
   id_T counter = 0;
   for (auto const & f: feSpace.mesh.facetList)
   {
+    // TODO: store the list of facets with own marker
     if (f.marker == marker)
     {
       auto const & [elem, side] = f.facingElem[0];
       if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
       {
-        for (uint i=0; i<RefFE_T::dofPerFacet; i++)
+        for (auto const dofFacet: RefFE_T::dofOnFacet[side])
         {
           for (auto const c: comp)
           {
-            DOFid_T const dofId = feSpace.dof.getId(elem->id, RefFE_T::dofOnFacet[side][i], c);
+            DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
             [[maybe_unused]] auto const [ptr, inserted] = constrainedDofMap.insert({dofId, counter});
             if (inserted)
             {
@@ -70,6 +71,7 @@ public:
   using FESpace_T = FESpace;
   using CurFE_T = typename FESpace_T::CurFE_T;
   using RefFE_T = typename FESpace_T::RefFE_T;
+  static constexpr uint dim = FESpace_T::dim;
 
   // use manual-provided set of DOFs
   // TODO: pass in a dofset anyway, the map is only needed internally
@@ -106,13 +108,12 @@ public:
           feSpace.curFE.reinit(*elem);
           if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
           {
-            for (uint i=0; i<RefFE_T::dofPerFacet; ++i)
+            for (auto const dofFacet: RefFE_T::dofOnFacet[side])
             {
-              auto const facetDof = RefFE_T::dofOnFacet[side][i];
-              auto const value = evaluateBoundaryValue(f, feSpace, facetDof);
+              auto const value = evaluateBoundaryValue(f, feSpace, dofFacet);
               for (auto const c: comp)
               {
-                DOFid_T const dofId = feSpace.dof.getId(elem->id, facetDof, c);
+                DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
                 data[_constrainedDofMap.at(dofId)] = value[c];
                 if (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
                 {
@@ -161,6 +162,15 @@ public:
     return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
+  BCEss<FESpace> & operator<<(Vec const & v)
+  {
+    for (auto const & [dof, id]: _constrainedDofMap)
+    {
+      data[id] = v[dof];
+    }
+    return *this;
+  }
+
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
     return _constrainedDofMap.count(id + d * feSpace.dof.size) > 0;
@@ -169,6 +179,40 @@ public:
   double get(DOFid_T const id) const
   {
     return data[_constrainedDofMap.at(id)];
+  }
+
+  void makeTangent()
+  {
+    static_assert (dim > 1, "cannot make tangent a scalar field.");
+    for (auto const & facet: feSpace.mesh.facetList)
+    {
+      if (facet.marker == marker)
+      {
+        auto const normal = narrow<3, dim>(facet.normal());
+        auto const & [elem, side] = facet.facingElem[0];
+        feSpace.curFE.reinit(*elem);
+        for (auto const dofFacet: RefFE_T::dofOnFacet[side])
+        {
+          // get the vector value on the dof
+          FVec<dim> localValue;
+          for (uint d=0; d<dim; ++d)
+          {
+            id_T const dofId = feSpace.dof.getId(elem->id, dofFacet, d);
+            localValue[d] = data[_constrainedDofMap[dofId]];
+          }
+
+          // take the tangential component
+          localValue = (FMat<dim, dim>::Identity() - normal * normal.transpose()) * localValue;
+
+          // save back
+          for (uint d=0; d<dim; ++d)
+          {
+            id_T const dofId = feSpace.dof.getId(elem->id, dofFacet, d);
+            data[_constrainedDofMap[dofId]] = localValue[d];
+          }
+        }
+      }
+    }
   }
 
   friend std::ostream & operator<<(std::ostream & out, BCEss<FESpace_T> const & bc)
@@ -188,8 +232,8 @@ public:
   std::vector<uint> const comp = {};
   double diag = 1.0;
 
-protected:
-  DofMap_T const _constrainedDofMap;
+//protected:
+  DofMap_T _constrainedDofMap;
 
 public:
   Vec data;

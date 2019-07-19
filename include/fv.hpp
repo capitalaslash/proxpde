@@ -143,9 +143,9 @@ struct FVSolver
     {
       auto const [insideElemPtr, side] = facet.facingElem[0];
       FVec<dim> v = FVec<dim>::Zero();
-      for (uint f=0; f<FacetRefFEVel_T::numFuns; ++f)
+      for (auto const dofFacet: RefFEVel_T::dofOnFacet[side])
       {
-        auto const dofId = feSpaceVel.dof.getId(insideElemPtr->id, RefFEVel_T::dofOnFacet[side][f]);
+        auto const dofId = feSpaceVel.dof.getId(insideElemPtr->id, dofFacet);
         v += vel.row(dofId);
       }
       v /= FacetRefFEVel_T::numFuns;

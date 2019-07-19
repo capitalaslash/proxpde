@@ -104,39 +104,8 @@ int main(int argc, char* argv[])
 
   // integral on boundary
   t.start("boundary int");
-  double pIntegral = 0.;
-  {
-    using FacetFEP_T = FESpaceP_T::RefFE_T::FacetFE_T;
-    using FacetQR_T = SideQR_T<FESpaceP_T::QR_T>;
-    using facetCurFEP_T = CurFE<FacetFEP_T, FacetQR_T>;
-    using FacetFESpaceP_T =
-      FESpace<Mesh_T,
-              FESpaceP_T::RefFE_T,
-              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
-
-    facetCurFEP_T facetCurFEP;
-    FacetFESpaceP_T facetFESpaceP{*mesh};
-    FEVar pFacet{facetFESpaceP};
-    pFacet.data = p.data;
-
-    for (auto & facet: mesh->facetList)
-    {
-      if (facet.marker == side::LEFT)
-      {
-        // std::cout << "facet " << facet.id << std::endl;
-        facetCurFEP.reinit(facet);
-        auto elem = facet.facingElem[0].ptr;
-        auto const side = facet.facingElem[0].side;
-        pFacet.reinit(*elem);
-        for (uint q=0; q<FacetQR_T::numPts; ++q)
-        {
-          double const pValue = pFacet.evaluate(side * FacetQR_T::numPts + q);
-          pIntegral += facetCurFEP.JxW[q] * pValue;
-        }
-      }
-    }
-    std::cout << "integral of pressure on left face: " << std::setprecision(16) << pIntegral << std::endl;
-  }
+  double pIntegral = integrateOnBoundary(p.data, feSpaceP, side::LEFT);
+  std::cout << "integral of pressure on left face: " << std::setprecision(16) << pIntegral << std::endl;
   t.stop();
 
   // wall shear stress on circle

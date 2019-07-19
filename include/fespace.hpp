@@ -4,6 +4,9 @@
 #include "dof.hpp"
 #include "curfe.hpp"
 
+template <typename FESpace>
+struct FEVar;
+
 template <typename Mesh,
           typename RefFE,
           typename QR,
@@ -384,6 +387,45 @@ void setComponent(
       dest[k*dim + component] = orig[k];
     }
   }
+}
+
+template <typename FESpaceT>
+double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T const m)
+{
+  using FESpace_T = FESpaceT;
+  using Mesh_T = typename FESpace_T::Mesh_T;
+  using Elem_T = typename Mesh_T::Elem_T;
+  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
+  using FacetQR_T = SideQR_T<typename FESpace_T::QR_T>;
+  using FacetCurFE_T = CurFE<FacetFE_T, FacetQR_T>;
+  using FacetFESpace_T =
+      FESpace<Mesh_T,
+              typename FESpace_T::RefFE_T,
+              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
+
+  FacetCurFE_T facetCurFE;
+  FacetFESpace_T facetFESpace{feSpace.mesh};
+  FEVar uFacet{facetFESpace};
+  uFacet.data = u;
+
+  double integral = 0.;
+  for (auto & facet: feSpace.mesh.facetList)
+  {
+    if (facet.marker == m)
+    {
+      // std::cout << "facet " << facet.id << std::endl;
+      facetCurFE.reinit(facet);
+      auto elem = facet.facingElem[0].ptr;
+      auto const side = facet.facingElem[0].side;
+      uFacet.reinit(*elem);
+      for (uint q=0; q<FacetQR_T::numPts; ++q)
+      {
+        double const value = uFacet.evaluate(side * FacetQR_T::numPts + q);
+        integral += facetCurFE.JxW[q] * value;
+      }
+    }
+  }
+  return integral;
 }
 
 // template <typename Mesh, typename refFE, typename QR, uint dim>

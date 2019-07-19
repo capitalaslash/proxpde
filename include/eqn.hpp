@@ -1,10 +1,10 @@
 #pragma once
 
 #include "def.hpp"
-#include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
 #include "builder.hpp"
+
+template <auto Storage = StorageType::ClmMajor>
+struct EqnSolver {};
 
 template <typename FESpace>
 struct Diagonal;
@@ -23,7 +23,8 @@ struct Eqn
   Eqn(Var & s,
       LhsTup const & lhs,
       RhsTup const & rhs,
-      BCS const & bcs):
+      BCS const & bcs,
+      EqnSolver<Storage> /*solver*/ = EqnSolver<Storage>{}):
     lhsAssemblies{lhs},
     rhsAssemblies{rhs},
     bcList{bcs},

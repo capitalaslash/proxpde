@@ -175,10 +175,8 @@ int main(int argc, char* argv[])
         AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {1}});
 
   t.start("eqn");
-  Eqn<decltype(uStarLhs), decltype(uStarRhs), decltype(bcsUStar), StorageType::RowMajor>
-      eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar};
-  Eqn<decltype(vStarLhs), decltype(vStarRhs), decltype(bcsVStar), StorageType::RowMajor>
-      eqnVstar{vStar, vStarLhs, vStarRhs, bcsVStar};
+  Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::RowMajor>()};
+  Eqn eqnVstar{vStar, vStarLhs, vStarRhs, bcsVStar, EqnSolver<StorageType::RowMajor>()};
 
   Eqn eqnP{p, pLhs, pRhs, bcsPSplit};
   // eqnP lhs does not change in time, we can pre-compute and factorize it

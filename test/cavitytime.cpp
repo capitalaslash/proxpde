@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   AssemblyProjection timeder_rhs(1./dt, velOld, feSpaceVel);
   AssemblyAdvection advection(1.0, velOld, feSpaceVel, feSpaceVel);
   // we need this in order to properly apply the pinning bc on the pressure
-  AssemblyMass dummy(0.0, feSpaceP);
+  AssemblyDummy dummy{feSpaceP};
 
   Var sol{"vel", numDOFs};
   Var fixedSol{"vel", numDOFs};

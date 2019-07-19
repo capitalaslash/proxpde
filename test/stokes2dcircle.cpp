@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   AssemblyGrad grad(-1.0, feSpaceU, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceU);
   // this is required to properly apply the pinning on the pressure
-  AssemblyMass dummy{0.0, feSpaceP};
+  AssemblyDummy dummy{feSpaceP};
 
   uint const numDOFs = 2*feSpaceU.dof.size + feSpaceP.dof.size;
   Builder builder{numDOFs};

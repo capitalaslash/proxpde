@@ -314,6 +314,22 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
 };
 
 template <typename FESpace>
+struct AssemblyDummy: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyDummy(FESpace_T & fe,
+                         AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+     Diagonal<FESpace>(fe, cmp)
+  {}
+
+  void build(LMat_T & Ke) const override {}
+};
+
+template <typename FESpace>
 struct AssemblyMass: public Diagonal<FESpace>
 {
   using FESpace_T = FESpace;
@@ -1430,7 +1446,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
           auto const value = rhs(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
-            for(uint i=0; i<FacetFE_T::numFuns; ++i)
+            for (uint i=0; i<FacetFE_T::numFuns; ++i)
             {
               auto const id = CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d*CurFE_T::numDOFs;
               Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * value[d];

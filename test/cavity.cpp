@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP};
   AssemblyDiv div{-1.0, feSpaceP, feSpaceVel};
   // this is required to properly apply the pinning on the pressure
-  AssemblyMass dummy{0.0, feSpaceP};
+  AssemblyDummy dummy{feSpaceP};
 
   auto const dofP = feSpaceP.dof.size;
   Builder<StorageType::RowMajor> builder{dofVel + dofP};

@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
   AssemblyProjection timederRhs(1./dt, velOldMonolithic, feSpaceVel);
   // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
   // to apply bc on pressure
-  // AssemblyMass dummy{0.0, feSpaceP, {0}, 2*dofU, 2*dofU};
+  // AssemblyDummy dummy{feSpaceP};
 
   Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
   // builderM.buildLhs(dummy, bcsP);

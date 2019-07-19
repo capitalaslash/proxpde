@@ -1,7 +1,5 @@
 #include "def.hpp"
 
-#include <Eigen/Dense>
-
 int main()
 {
   Eigen::Vector3d a, b;

@@ -3,13 +3,6 @@
 #include "def.hpp"
 #include "geo.hpp"
 
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <fstream>
-
-#include <yaml-cpp/yaml.h>
-
 using MeshFlags = std::bitset<4>;
 static constexpr MeshFlags NONE = 0b00;
 static constexpr MeshFlags BOUNDARY_FACETS = 0b0001;

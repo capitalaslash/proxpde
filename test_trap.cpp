@@ -1,8 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <memory>
-
+#include "def.hpp"
 #include "geo.hpp"
 #include "fe.hpp"
 #include "bc.hpp"

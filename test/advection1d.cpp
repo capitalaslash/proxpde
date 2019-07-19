@@ -9,10 +9,6 @@
 #include "timer.hpp"
 #include "fv.hpp"
 
-#include <yaml-cpp/yaml.h>
-
-#include <iostream>
-
 int main(int argc, char* argv[])
 {
   using Elem_T = Line;

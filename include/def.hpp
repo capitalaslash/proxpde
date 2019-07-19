@@ -7,12 +7,16 @@
 #include <fstream>
 #include <vector>
 #include <tuple>
+#include <bitset>
+#include <set>
+#include <unordered_set>
+#include <map>
+
 #include <memory>
 #include <functional>
 #include <algorithm>
 #include <numeric>
 #include <cassert>
-#include <bitset>
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>

@@ -1,5 +1,5 @@
-#include <def.hpp>
-#include <qr.hpp>
+#include "def.hpp"
+#include "qr.hpp"
 
 template <uint N>
 struct Monomial

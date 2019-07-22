@@ -111,8 +111,7 @@ int main(int argc, char* argv[])
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
   t.stop();
 
-  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::UPWIND>;
-  FVSolver_T fv{feSpaceP0, bcsP0};
+  FVSolver fv{feSpaceP0, bcsP0, UpwindLimiter{}};
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
   for (uint k=0; k<FESpaceVel_T::dim; ++k)

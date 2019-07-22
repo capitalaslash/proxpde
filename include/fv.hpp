@@ -1,8 +1,6 @@
 #pragma once
 
 #include "def.hpp"
-#include "bc.hpp"
-#include "fespace.hpp"
 
 template <typename T> int sgn(T val)
 {
@@ -68,6 +66,13 @@ static const std::unordered_map<std::string, LimiterType> stringToLimiter =
   {"superbee", LimiterType::SUPERBEE},
 };
 
+template <auto L>
+struct Limiter {};
+
+using UpwindLimiter = Limiter<LimiterType::UPWIND>;
+using MinModLimiter = Limiter<LimiterType::MINMOD>;
+using SuperBEELimiter = Limiter<LimiterType::SUPERBEE>;
+
 // template <typename ElemRefFE>
 // struct FacetRefFE {};
 //
@@ -91,7 +96,10 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpace const & fe, BCS const & bcList):
+  FVSolver(
+      FESpace const & fe,
+      BCS const & bcList,
+      Limiter<L> /*l*/):
     feSpace(fe),
     bcs(bcList),
     uOld(fe.dof.size),

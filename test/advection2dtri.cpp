@@ -130,8 +130,7 @@ int main(int argc, char* argv[])
   flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);
   t.stop();
 
-  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::SUPERBEE>;
-  FVSolver_T fv{feSpaceP0, bcsP0};
+  FVSolver fv{feSpaceP0, bcsP0, SuperBEELimiter{}};
 
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);

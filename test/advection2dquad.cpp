@@ -79,8 +79,7 @@ int main(/*int argc, char* argv[]*/)
   integrateAnalyticFunction(ic, feSpaceIC, c.data);
   t.stop();
 
-  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcs), LimiterType::SUPERBEE>;
-  FVSolver_T fv{feSpace, bcs};
+  FVSolver fv{feSpace, bcs, SuperBEELimiter{}};
 
   auto const & sizeVel = feSpaceVel.dof.size;
   Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);

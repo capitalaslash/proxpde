@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     config["nu"] = 0.1;
   }
 
-  validateConfig(config, {"origin", "length", "nx", "ny", "dt", "ntime", "nu"});
+  config.validate({"origin", "length", "nx", "ny", "dt", "ntime", "nu"});
 
   auto const dt = config["dt"].as<double>();
   auto const nu = config["nu"].as<double>();

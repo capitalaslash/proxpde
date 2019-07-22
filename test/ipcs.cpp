@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
     config["printStep"] = 1U;
   }
 
+  config.validate({"nx", "ny", "dt", "ntime", "nu", "printStep"});
+
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+
 #include <vector>
 #include <tuple>
 #include <bitset>
@@ -270,19 +271,30 @@ inline constexpr T pow(T const & base, unsigned const exponent)
 }
 
 // ----------------------------------------------------------------------------
-using ParameterDict = YAML::Node;
-
-inline void validateConfig(ParameterDict const & c, std::vector<std::string> const & requiredPars)
+struct ParameterDict: public YAML::Node
 {
-  for (auto const & required: requiredPars)
+  ParameterDict():
+    YAML::Node{}
+  {}
+
+  ParameterDict(YAML::Node const & n):
+    YAML::Node{n}
+  {}
+
+  bool validate(std::vector<std::string> const & requiredPars)
   {
-    if (!c[required])
+    for (auto const & required: requiredPars)
     {
-      std::cerr << "parameter file is missing option " << required << std::endl;
-      std::abort();
+      if (!(*this)[required])
+      {
+        std::cerr << "parameter file is missing option " << required << std::endl;
+        std::abort();
+        return false;
+      }
     }
+    return true;
   }
-}
+};
 
 namespace YAML {
 template<>

@@ -26,20 +26,20 @@ int main(int argc, char* argv[])
 
   MilliTimer t;
 
-  YAML::Node config;
+  ParameterDict config;
   if (argc > 1)
   {
     config = YAML::LoadFile(argv[1]);
   }
   else
   {
-    config = YAML::LoadFile("advection1d.yaml");
-    // n: 10,
-    // dt: 0.1,
-    // velocity: 0.5,
-    // threshold: 0.37,
-    // final_time: 3.0,
+    config["n"] = 10U;
+    config["dt"] = 0.1;
+    config["velocity"] = 0.5;
+    config["threshold"] = 0.37;
+    config["final_time"] = 3.0;
   }
+  config.validate({"n", "dt", "velocity", "threshold", "final_time"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -76,23 +76,19 @@ int main(int argc, char* argv[])
   // the only 1D velocity that is divergence free is a constant one
   auto const velocity = config["velocity"].as<double>();
   FESpaceVel_T feSpaceVel{*mesh};
-  Var velFE{"velocity"};
-  interpolateAnalyticFunction(
-        [velocity] (Vec3 const &){ return velocity; }, feSpaceVel, velFE.data);
-  double const hinv = numElems;
-  std::cout << "cfl = " << velocity * dt * hinv << std::endl;
+  FEVar vel{feSpaceVel, "velocity"};
+  vel << velocity;
+  double const hInv = numElems;
+  std::cout << "cfl = " << velocity * dt * hInv << std::endl;
 
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;
-  AssemblyAdvection advection(1.0, velFE.data, feSpaceVel, feSpaceP1);
+  AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
   AssemblyMass timeDer(1./dt, feSpaceP1);
   Vec concP1Old(feSpaceP1.dof.size);
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
 
-  // FEVar c{feSpace, "conc"};
-  // FEList feList{feSpace, feSpace};
-  // auto fe1 = std::get<0>(feList);
-  // BlockFEVar tmp{"tmp", feList};
+  FEVar concP1{feSpaceP1, "conc"};
   auto const threshold = config["threshold"].as<double>();
   scalarFun_T ic = [threshold] (Vec3 const& p)
   {
@@ -100,11 +96,10 @@ int main(int argc, char* argv[])
     if(p(0) < threshold) return 1.;
     return 0.;
   };
-  Var concP1{"conc"};
-  interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
+  concP1 << ic;
 
   t.start("p0 ic");
-  Var concP0{"concP0"};
+  FEVar concP0{feSpaceP0, "concP0"};
   // we need to use the highest order available QR to integrate discontinuous functions
   // FESpace<Mesh_T, RefLineP0, GaussQR<Line, 4>> feSpaceIC{*mesh};
   FESpace<Mesh_T, RefLineP0, MiniQR<Line, 20>> feSpaceIC{*mesh};
@@ -112,19 +107,13 @@ int main(int argc, char* argv[])
   t.stop();
 
   FVSolver fv{feSpaceP0, bcsP0, UpwindLimiter{}};
-  auto const & sizeVel = feSpaceVel.dof.size;
-  Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
-  for (uint k=0; k<FESpaceVel_T::dim; ++k)
-  {
-    vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
-  }
 
   auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
   IOManager ioP1{feSpaceP1, "output_advection1d/solP1"};
-  ioP1.print({concP1});
+  ioP1.print(std::array{concP1});
   IOManager ioP0{feSpaceP0, "output_advection1d/solP0"};
-  ioP0.print({concP0});
+  ioP0.print(std::array{concP0});
 
   auto const lhs = std::tuple{timeDer, advection};
   auto const rhs = std::tuple{timeDerRhs};
@@ -155,14 +144,14 @@ int main(int argc, char* argv[])
     // explicit upwind
     t.start("p0 update");
     fv.update(concP0.data);
-    fv.computeFluxes(vel, feSpaceP1);
+    fv.computeFluxes(vel);
     fv.advance(concP0.data, dt);
     t.stop();
 
     // print
     t.start("print");
-    ioP1.print({concP1}, time);
-    ioP0.print({concP0}, time);
+    ioP1.print(std::array{concP1}, time);
+    ioP0.print(std::array{concP0}, time);
     t.stop();
   }
 

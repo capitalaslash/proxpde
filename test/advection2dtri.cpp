@@ -31,18 +31,29 @@ int main(int argc, char* argv[])
                                  FEType<Elem_T::Facet_T,0>::RefFE_T,
                                  FEType<Elem_T::Facet_T,0>::RecommendedQR>;
 
-  scalarFun_T const ic = [] (Vec3 const& p)
+  ParameterDict config;
+  if (argc > 1)
+  {
+    config = YAML::LoadFile(argv[1]);
+  }
+  else
+  {
+    config["nx"] = 10U;
+    config["ny"] = 10U;
+
+    config["velocity"] = Vec3{0.2, 0., 0.};
+    config["threshold"] = 0.37;
+
+    config["dt"] = 0.1;
+    config["ntime"] = 50U;
+  }
+  config.validate({"nx", "ny", "dt", "velocity", "threshold", "ntime"});
+
+  scalarFun_T const ic = [threshold = config["threshold"].as<double>()] (Vec3 const& p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50-(p(1)-0.7)*(p(1)-0.7)*50);
     if (p(0) < .37) return 1.;
     return 0.;
-  };
-
-  Fun<2, 3> const velFun = [] (Vec3 const & /*p*/)
-  {
-    // double const r = std::sqrt((p(0)-0.5)*(p(0)-0.5) + (p(1)-0.5)*(p(1)-0.5));
-    // return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
-    return Vec2{0.2, 0.};
   };
 
   MilliTimer t;
@@ -50,18 +61,16 @@ int main(int argc, char* argv[])
   t.start("mesh");
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  buildHyperCube(
+        *mesh,
+        {0., 0., 0.},
+        {1., 1., 0.},
+        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
+        INTERNAL_FACETS | NORMALS);
+  // readGMSH(*mesh, "square_uns.msh", INTERNAL_FACETS | NORMALS);
   // hexagonSquare(*mesh, true);
   // buildNormals(*mesh);
 
-  uint const numElemsX = (argc < 3)? 10 : std::stoul(argv[1]);
-  uint const numElemsY = (argc < 3)? 10 : std::stoul(argv[2]);
-  buildHyperCube(*mesh,
-            {0., 0., 0.},
-            {1., 1., 0.},
-            {{numElemsX, numElemsY, 0}},
-            INTERNAL_FACETS | NORMALS);
-
-  // readGMSH(*mesh, "square_uns.msh", INTERNAL_FACETS | NORMALS);
 
   std::unique_ptr<MeshFacet_T> facetMesh{new MeshFacet_T};
   buildFacetMesh(*facetMesh, *mesh);
@@ -70,6 +79,7 @@ int main(int argc, char* argv[])
   t.start("fespace");
   FESpaceP1_T feSpaceP1{*mesh};
   FESpaceP0_T feSpaceP0{*mesh};
+  FESpaceVel_T feSpaceVel{*mesh};
   FESpaceFacet_T feSpaceFacet{*facetMesh};
   t.stop();
 
@@ -99,11 +109,11 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("velocity");
-  FESpaceVel_T feSpaceVel{*mesh};
-  Var velFE{"velocity"};
-  interpolateAnalyticFunction(velFun, feSpaceVel, velFE.data);
-  double const dt = 0.1;
-  auto const cfl = computeMaxCFL(feSpaceVel, velFE.data, dt);
+  FEVar vel{feSpaceVel, "velocity"};
+  vel << narrow<3, Elem_T::dim>(config["velocity"].as<Vec3>());
+
+  double const dt = config["dt"].as<double>();
+  auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
   t.stop();
 
@@ -112,53 +122,35 @@ int main(int argc, char* argv[])
   Builder builder{sizeP1};
   LUSolver solver;
   AssemblyMass timeDer(1./dt, feSpaceP1);
-  AssemblyAdvection advection(1.0, velFE.data, feSpaceVel, feSpaceP1);
+  AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
   Vec concP1Old{sizeP1};
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
   t.stop();
 
   t.start("init");
-  Var concP1{"concP1"};
-  interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
-  Var concP0{"concP0"};
+  FEVar concP1{feSpaceP1, "concP1"};
+  concP1 << ic;
+  FEVar concP0{feSpaceP0, "concP0"};
   // we need to use the highest order available QR to integrate discontinuous functions
   // FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
   FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
-  // interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
   Var flux{"flux"};
   flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);
   t.stop();
 
   FVSolver fv{feSpaceP0, bcsP0, SuperBEELimiter{}};
 
-  auto const & sizeVel = feSpaceVel.dof.size;
-  Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
-  if (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
-  {
-    for (uint k=0; k<FESpaceVel_T::dim; ++k)
-    {
-      vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
-    }
-  }
-  else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
-  {
-    for (uint r=0; r<sizeVel; ++r)
-    {
-      vel.row(r) = velFE.data.block(r*FESpaceVel_T::dim, 0, FESpaceVel_T::dim, 1).transpose();
-    }
-  }
-
-  uint const ntime = 50;
+  uint const ntime = config["ntime"].as<uint>();
   double time = 0.0;
   IOManager ioP1{feSpaceP1, "output_advection2dtri/solP1"};
-  ioP1.print({concP1});
+  ioP1.print(std::array{concP1});
   IOManager ioP0{feSpaceP0, "output_advection2dtri/solP0"};
-  ioP0.print({concP0});
+  ioP0.print(std::array{concP0});
   IOManager ioFlux{feSpaceFacet, "output_advection2dtri/flux"};
   ioFlux.print({flux});
   IOManager ioVel{feSpaceVel, "output_advection2dtri/vel"};
-  ioVel.print({velFE});
+  ioVel.print(std::array{vel});
 
   for(uint itime=0; itime<ntime; itime++)
   {
@@ -187,14 +179,14 @@ int main(int argc, char* argv[])
     // explicit upwind
     t.start("p0 update");
     fv.update(concP0.data);
-    fv.computeFluxes(vel, feSpaceP1);
+    fv.computeFluxes(vel);
     fv.advance(concP0.data, dt);
     t.stop();
 
     // print
     t.start("print");
-    ioP1.print({concP1}, time);
-    ioP0.print({concP0}, time);
+    ioP1.print(std::array{concP1}, time);
+    ioP0.print(std::array{concP0}, time);
     flux.data = fv.fluxes;
     ioFlux.print({flux}, time);
     t.stop();

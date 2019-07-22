@@ -26,14 +26,8 @@ int main(/*int argc, char* argv[]*/)
   scalarFun_T const ic = [] (Vec3 const& p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-    if(p(0) < .37) return 1.;
+    if (p(0) < .37) return 1.;
     return 0.;
-  };
-
-  Fun<2, 3> const velFun = [] (Vec3 const & /*p*/)
-  {
-    return Vec2{0.1, 0.};
-    // return Vec2(.25*(p(1)-0.5), -.25*(p(0)-0.5));
   };
 
   MilliTimer t;
@@ -65,15 +59,16 @@ int main(/*int argc, char* argv[]*/)
 
   t.start("velocity");
   FESpaceVel_T feSpaceVel{*mesh};
-  Var velFE{"velocity"};
-  interpolateAnalyticFunction(velFun, feSpaceVel, velFE.data);
+  FEVar vel{feSpaceVel, "velocity"};
+  vel << Vec2{0.1, 0.};
+
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(feSpaceVel, velFE.data, dt);
+  auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
   t.stop();
 
   t.start("init");
-  Var c{"conc"};
+  FEVar c{feSpace, "conc"};
   Vec cOld(feSpace.dof.size);
   FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, c.data);
@@ -81,27 +76,10 @@ int main(/*int argc, char* argv[]*/)
 
   FVSolver fv{feSpace, bcs, SuperBEELimiter{}};
 
-  auto const & sizeVel = feSpaceVel.dof.size;
-  Table<double, FESpaceVel_T::dim> vel(sizeVel, FESpaceVel_T::dim);
-  if (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
-  {
-    for (uint k=0; k<FESpaceVel_T::dim; ++k)
-    {
-      vel.block(0, k, sizeVel, 1) = velFE.data.block(k*sizeVel, 0, sizeVel, 1);
-    }
-  }
-  else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
-  {
-    for (uint r=0; r<sizeVel; ++r)
-    {
-      vel.row(r) = velFE.data.block(r*FESpaceVel_T::dim, 0, FESpaceVel_T::dim, 1).transpose();
-    }
-  }
-
   uint const ntime = 200;
   double time = 0.0;
   IOManager io{feSpace, "output_advection2dquad/sol"};
-  io.print({c});
+  io.print(std::array{c});
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;
@@ -110,13 +88,13 @@ int main(/*int argc, char* argv[]*/)
     t.start("update");
     cOld = c.data;
     fv.update(c.data);
-    fv.computeFluxes(vel, feSpaceP1);
+    fv.computeFluxes(vel);
     fv.advance(c.data, dt);
     t.stop();
 
     // print
     t.start("print");
-    io.print({c}, time);
+    io.print(std::array{c}, time);
     t.stop();
   }
 

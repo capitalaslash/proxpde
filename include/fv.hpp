@@ -140,23 +140,14 @@ struct FVSolver
     }
   }
 
-  template <typename FESpaceVel>
-  void computeFluxes(Table<double, dim> const & vel, FESpaceVel const & feSpaceVel)
+  template <typename Vel>
+  void computeFluxes(Vel & vel)
   {
-    using RefFEVel_T = typename FESpaceVel::RefFE_T;
-    using FacetRefFEVel_T = typename RefFEVel_T::FacetFE_T;
-
-    // assert(static_cast<size_t>(vel.size() / dim) == feSpace.mesh.facetList.size());
     for (auto const & facet: feSpace.mesh.facetList)
     {
       auto const [insideElemPtr, side] = facet.facingElem[0];
-      FVec<dim> v = FVec<dim>::Zero();
-      for (auto const dofFacet: RefFEVel_T::dofOnFacet[side])
-      {
-        auto const dofId = feSpaceVel.dof.getId(insideElemPtr->id, dofFacet);
-        v += vel.row(dofId);
-      }
-      v /= FacetRefFEVel_T::numFuns;
+      vel.setLocalData(insideElemPtr->id);
+      typename Vel::Vec_T v = vel.getFacetMeanValue(side);
       Vec3 v3 = promote<dim, 3>(v);
       double const vNorm = v3.dot(facet._normal);
       if (std::fabs(vNorm) > 1.e-16)

@@ -52,6 +52,7 @@ template <typename FESpace>
 struct FEVar
 {
   using FESpace_T = FESpace;
+  using Vec_T = FVec<FESpace_T::dim>;
 
   FEVar(FESpace_T const & fe, std::string_view n = ""):
     feSpace(fe),
@@ -65,9 +66,21 @@ struct FEVar
     return *this;
   }
 
-  FEVar<FESpace> & operator<<(scalarFun_T const & f)
+  FEVar<FESpace_T> & operator<<(scalarFun_T const & f)
   {
+    static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
     return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
+  }
+
+  FEVar<FESpace_T> & operator <<(Vec_T const & v)
+  {
+    return operator<<([&v] (Vec3 const &) { return v; });
+  }
+
+  FEVar<FESpace_T> & operator <<(double const & v)
+  {
+    static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
+    return operator<<([&v] (Vec3 const &) { return Vec1::Constant(v); });
   }
 
   double operator[](id_T const id) const
@@ -78,14 +91,32 @@ struct FEVar
   void reinit(GeoElem const & elem)
   {
     feSpace.curFE.reinit(elem);
+    setLocalData(elem.id);
+  }
+
+  void setLocalData(id_T const elemId)
+  {
     for (uint d=0; d<FESpace_T::dim; ++d)
     {
       for (uint n=0; n<FESpace_T::RefFE_T::numFuns; ++n)
       {
-        auto const id = feSpace.dof.getId(elem.id, n, d);
+        auto const id = feSpace.dof.getId(elemId, n, d);
         _localData(n, d) = data[id];
       }
     }
+  }
+
+  auto getFacetMeanValue(uint const side)
+  {
+    using RefFE_T = typename FESpace_T::RefFE_T;
+    assert(side < FESpace_T::Mesh_T::Elem_T::numFacets);
+    Vec_T sum = Vec_T::Zero();
+    for (auto const dofFacet: RefFE_T::dofOnFacet[side])
+    {
+      sum += _localData.row(dofFacet).transpose();
+    }
+    sum /= RefFE_T::dofPerFacet;
+    return sum;
   }
 
   auto evaluate(uint const q) const
@@ -122,7 +153,13 @@ struct FEVar
   }
 
   template <typename FESpaceVec>
-  void setFromComponent(Vec & v, FESpaceVec feSpaceVec, uint component)
+  void setData(Vec const & v, FESpaceVec const & feSpaceVec, uint component)
+  {
+    setComponent(data, feSpace, v, feSpaceVec, component);
+  }
+
+  template <typename FESpaceVec>
+  void setFromComponent(Vec & v, FESpaceVec const & feSpaceVec, uint component)
   {
     getComponent(data, feSpace, v, feSpaceVec, component);
   }
@@ -143,7 +180,9 @@ struct BlockFEVar
     name{n}
   {
     uint sum = 0;
-    std::apply([&sum](auto &&... x){((sum += std::forward<decltype(x)>(x).dof.size), ...);} , feList);
+    static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
+      sum += feSpace.dof.size;
+    });
     data.resize(sum);
   }
 

@@ -139,16 +139,17 @@ int main(int argc, char* argv[])
 
   t.start("fe builder");
   FESpaceVel_T feSpaceVel{*mesh};
-  Var velFE{"velocity"};
-  interpolateAnalyticFunction(velFun, feSpaceVel, velFE.data);
+  FEVar vel{feSpaceVel, "velocity"};
+  interpolateAnalyticFunction(velFun, feSpaceVel, vel.data);
+  vel << Vec2{0.2, 0.0};
   double const dt = 0.1;
-  auto const cfl = computeMaxCFL(feSpaceVel, velFE.data, dt);
+  auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
   std::cout << "max cfl = " << cfl << std::endl;
 
   auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  AssemblyAdvection advection(1.0, velFE.data, feSpaceVel, feSpaceP1);
+  AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
   AssemblyMass timeder(1./dt, feSpaceP1);
   Vec concP1Old(sizeP1);
   AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
@@ -158,11 +159,7 @@ int main(int argc, char* argv[])
   Var concP0{"concP0"};
   interpolateAnalyticFunction(ic, feSpaceP0, concP0.data);
 
-  using FVSolver_T = FVSolver<FESpaceP0_T, decltype(bcsP0), LimiterType::SUPERBEE>;
-  FVSolver_T fv{feSpaceP0, bcsP0};
-  Table<double, 2> vel(sizeP1, 2);
-  vel.block(0, 0, sizeP1, 1) = velFE.data.block(0, 0, sizeP1, 1);
-  vel.block(0, 1, sizeP1, 1) = velFE.data.block(sizeP1, 0, sizeP1, 1);
+  FVSolver fv{feSpaceP0, bcsP0, SuperBEELimiter{}};
   t.stop();
 
   uint const ntime = 50;
@@ -198,7 +195,7 @@ int main(int argc, char* argv[])
 
     // explicit upwind
     fv.uOld = concP0.data;
-    fv.computeFluxes(vel, feSpaceP1);
+    fv.computeFluxes(vel);
     fv.advance(concP0.data, dt);
 
     // print

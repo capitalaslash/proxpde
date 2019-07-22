@@ -322,8 +322,8 @@ struct IOManager
 
   void print(std::vector<Var> && data, double const t = 0.0);
 
-  template <typename... Vars>
-  void print(std::tuple<Vars...> && data, double const t = 0.0);
+  template <typename VarTup>
+  void print(VarTup && data, double const t = 0.0);
 
 protected:
   void printTimeSeries()
@@ -477,8 +477,8 @@ inline constexpr uint getDim()
 }
 
 template <typename FESpace>
-template <typename... Vars>
-void IOManager<FESpace>::print(std::tuple<Vars...> && data, double const t)
+template <typename VarTup>
+void IOManager<FESpace>::print(VarTup && data, double const t)
 {
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};

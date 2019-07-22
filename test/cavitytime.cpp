@@ -10,8 +10,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <yaml-cpp/yaml.h>
-
 static constexpr uint dim = 2;
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;

@@ -9,8 +9,6 @@
 #include "timer.hpp"
 #include "fv.hpp"
 
-#include <iostream>
-
 int main(/*int argc, char* argv[]*/)
 {
   using Elem_T = Quad;

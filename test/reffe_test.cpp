@@ -8,8 +8,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <yaml-cpp/yaml.h>
-
 template <typename Elem, uint Order>
 int test()
 {

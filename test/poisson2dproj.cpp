@@ -7,8 +7,6 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 
-#include <iostream>
-
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,

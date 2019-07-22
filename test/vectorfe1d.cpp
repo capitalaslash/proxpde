@@ -8,8 +8,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <iostream>
-
 static const int dim = 2;
 
 std::vector<uint> const COMP_X {0};

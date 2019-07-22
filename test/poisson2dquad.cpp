@@ -8,8 +8,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <iostream>
-
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,

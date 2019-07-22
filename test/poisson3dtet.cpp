@@ -8,8 +8,6 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-#include <yaml-cpp/yaml.h>
-
 using Elem_T = Tetrahedron;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,

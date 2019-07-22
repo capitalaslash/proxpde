@@ -4,8 +4,6 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
-#include <set>
-
 enum class DofOrdering
 {
   BLOCK,

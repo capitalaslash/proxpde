@@ -332,16 +332,10 @@ struct NSSolverSplit2D
     solverP.factorize(builderP.A);
     rhsFixedP = builderP.b;
 
-    builderU.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, bcsU);
+    builderU.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, std::tuple{});
     builderU.closeMatrix();
     solverU.analyzePattern(builderU.A);
     solverU.factorize(builderU.A);
-    rhsFixedVel[0] = builderU.b;
-    builderV.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, bcsV);
-    builderV.closeMatrix();
-    solverV.analyzePattern(builderV.A);
-    solverV.factorize(builderV.A);
-    rhsFixedVel[1] = builderV.b;
   }
 
   void assemblyStepVelStar()
@@ -391,17 +385,15 @@ struct NSSolverSplit2D
   void assemblyStepVel()
   {
     builderU.clearRhs();
-    builderU.buildRhs(std::tuple{assemblyUStarRhs, assemblyGradPRhsU}, bcsU);
-    builderU.b += rhsFixedVel[0];
+    builderU.buildRhs(std::tuple{assemblyUStarRhs, assemblyGradPRhsU}, std::tuple{});
     builderV.clearRhs();
-    builderV.buildRhs(std::tuple{assemblyVStarRhs, assemblyGradPRhsV}, bcsV);
-    builderV.b += rhsFixedVel[1];
+    builderV.buildRhs(std::tuple{assemblyVStarRhs, assemblyGradPRhsV}, std::tuple{});
   }
 
   void solveVel()
   {
     u.data = solverU.solve(builderU.b);
-    v.data = solverV.solve(builderV.b);
+    v.data = solverU.solve(builderV.b);
   }
 
   void ic(std::function<FVec<dim> (Vec3 const &)> const & f)
@@ -438,7 +430,6 @@ struct NSSolverSplit2D
   Solver solverVStar;
   LUSolver solverP;
   LUSolver solverU;
-  LUSolver solverV;
   Var uStar;
   Var vStar;
   Var p;

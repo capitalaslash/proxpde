@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
   auto bcTopP = BCEss{feSpacePSplit, side::TOP};
   bcTopP << zero;
   auto const bcsPSplit = std::make_tuple(bcTopP);
+
   t.stop();
 
   t.start("monolithic ctor");
@@ -202,6 +203,6 @@ int main(int argc, char* argv[])
 
   return checkError(
     {errorNormU, errorNormV, errorNormP},
-    {5.188514402817515e-05, 7.581224214010845e-05,  5.278919058528884e-05},
+    {5.18337674567542e-05, 7.57375946701665e-05,  5.272719445641985e-05},
     1.e-11);
 }

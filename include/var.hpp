@@ -119,6 +119,22 @@ struct FEVar
     return sum;
   }
 
+  auto integrate()
+  {
+    using QR_T = typename FESpace_T::QR_T;
+
+    FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
+    for (auto const & elem: feSpace.mesh.elementList)
+    {
+      this->reinit(elem);
+      for (uint q=0; q<QR_T::numPts; ++q)
+      {
+        integral += feSpace.curFE.JxW[q] * this->evaluate(q);
+      }
+    }
+    return integral;
+  }
+
   auto evaluate(uint const q) const
   {
     // check that the qr is compatible

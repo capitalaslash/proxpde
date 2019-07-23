@@ -105,6 +105,7 @@ minifem_add_test(fourier_nb)
 minifem_add_test(projection_p1top2)
 minifem_add_test(projection_p2top1)
 minifem_add_test(projection_p1tort0)
+minifem_add_test(periodic)
 
 # io
 minifem_add_test(io)

@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
         AssemblyStiffness{nu, feSpaceU});
   auto const uStarRhs = std::make_tuple(
         AssemblyProjection{1./dt, u.data, feSpaceU},
-        AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpacePSplit, {0}});
+        AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}});
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d pOld / dy
   auto const vStarLhs = std::make_tuple(
@@ -155,26 +155,26 @@ int main(int argc, char* argv[])
         AssemblyStiffness{nu, feSpaceU});
   auto const vStarRhs = std::make_tuple(
         AssemblyProjection{1./dt, v.data, feSpaceU},
-        AssemblyGradRhs2{1.0, pOld, feSpaceU, feSpacePSplit, {1}});
+        AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {1}});
         // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
   // dt \nabla^2 \delta p = \nabla \cdot velStar
   auto const pLhs = std::make_tuple(AssemblyStiffness{dt, feSpacePSplit});
-  auto const pRhs = std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpacePSplit, feSpaceVel});
-  // AssemblyStiffnessRhs{-dt, pOld, feSpaceP, feSpaceP});
+  auto const pRhs = std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit});
+  // AssemblyStiffnessRhs{-dt, pOld, feSpaceP});
 
   // pOld += \delta p
   // u = uStar - dt d \delta p / dx
   auto const uLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
   auto const uRhs = std::make_tuple(
         AssemblyProjection{1.0, uStar.data, feSpaceU},
-        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {0}});
+        AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}});
 
   // v = vStar - dt d \delta p / dy
   auto const vLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
   auto const vRhs = std::make_tuple(
         AssemblyProjection{1.0, vStar.data, feSpaceU},
-        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {1}});
+        AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}});
 
   t.start("eqn");
   Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::RowMajor>()};

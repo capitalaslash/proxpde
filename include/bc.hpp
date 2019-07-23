@@ -268,7 +268,7 @@ struct BCMixed
 
   explicit BCMixed(marker_T m, Fun<FESpace_T::dim,3> const f, std::vector<uint> const c = allComp<FESpace>()):
     marker(m),
-    coeff(std::move(f)),
+    coef(std::move(f)),
     comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
@@ -281,7 +281,7 @@ struct BCMixed
 
   CurFE_T curFE;
   marker_T marker;
-  Fun<FESpace_T::dim, 3> const coeff;
+  Fun<FESpace_T::dim, 3> const coef;
   std::vector<uint> const comp;
 };
 

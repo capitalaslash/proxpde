@@ -42,7 +42,7 @@ struct Diagonal: public AssemblyBase
   using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
   using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
 
-  explicit Diagonal(FESpace_T & fe, CompList const & cmp):
+  explicit Diagonal(FESpace_T const & fe, CompList const & cmp):
     AssemblyBase{cmp},
     feSpace(fe)
   {}
@@ -57,9 +57,9 @@ struct Diagonal: public AssemblyBase
     feSpace.curFE.reinit(elem);
   }
 
-  FESpace_T & feSpace;
-  LMat_T mat;
-  LVec_T vec;
+  FESpace_T const & feSpace;
+  // LMat_T mat;
+  // LVec_T vec;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -72,8 +72,8 @@ struct Coupling: public AssemblyBase
   using LMat_T = FMat<FESpace1_T::dim*CurFE1_T::numDOFs, FESpace2_T::dim*CurFE2_T::numDOFs>;
   using LVec_T = FVec<FESpace1_T::dim*CurFE1_T::numDOFs>;
 
-  explicit Coupling(FESpace1_T & fe1,
-                    FESpace2 & fe2,
+  explicit Coupling(FESpace1_T const & fe1,
+                    FESpace2_T const & fe2,
                     CompList const & cmp):
     AssemblyBase{cmp},
     feSpace1(fe1),
@@ -90,8 +90,8 @@ struct Coupling: public AssemblyBase
     feSpace2.curFE.reinit(elem);
   }
 
-  FESpace1_T & feSpace1;
-  FESpace2_T & feSpace2;
+  FESpace1_T const & feSpace1;
+  FESpace2_T const & feSpace2;
 };
 
 template <typename FESpace>
@@ -102,7 +102,7 @@ struct AssemblyVector: public AssemblyBase
   using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
   using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
 
-  explicit AssemblyVector(FESpace_T & fe, CompList const & cmp):
+  explicit AssemblyVector(FESpace_T const & fe, CompList const & cmp):
     AssemblyBase{cmp},
     feSpace(fe)
   {}
@@ -116,7 +116,7 @@ struct AssemblyVector: public AssemblyBase
     feSpace.curFE.reinit(elem);
   }
 
-  FESpace_T & feSpace;
+  FESpace_T const & feSpace;
 };
 
 template <typename FESpace>
@@ -128,10 +128,10 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   AssemblyStiffness(double const c,
-                    FESpace_T & fe,
+                    FESpace_T const & fe,
                     AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     Diagonal<FESpace_T>(fe, cmp),
-    coeff(c)
+    coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -142,7 +142,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(d*CurFE_T::numDOFs, d*CurFE_T::numDOFs) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.dphi[q] *
             this->feSpace.curFE.dphi[q].transpose();
       }
@@ -156,7 +156,7 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double coeff;
+  double coef;
 };
 
 template <typename FESpace, typename Coef>
@@ -168,7 +168,7 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   AssemblyStiffnessFE(Coef & c,
-                      FESpace_T & fe,
+                      FESpace_T const & fe,
                       AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     Diagonal<FESpace_T>(fe, cmp),
     coef(c)
@@ -210,10 +210,10 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   AssemblyTensorStiffness(double const c,
-                    FESpace_T & fe,
-                    AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+                          FESpace_T const & fe,
+                          AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     Diagonal<FESpace_T>(fe, cmp),
-    coeff(c)
+    coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -225,14 +225,14 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
       {
         // d u_i / d x_j * d \phi_i / d x_j
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(di*CurFE_T::numDOFs, di*CurFE_T::numDOFs) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.dphi[q] *
             this->feSpace.curFE.dphi[q].transpose();
         for (uint dj=0; dj<FESpace_T::dim; ++dj)
         {
           // d u_j / d x_i * d \phi_i / d x_j
           Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(di*CurFE_T::numDOFs, dj*CurFE_T::numDOFs) +=
-              coeff * this->feSpace.curFE.JxW[q] *
+              coef * this->feSpace.curFE.JxW[q] *
               this->feSpace.curFE.dphi[q].col(di) *
               this->feSpace.curFE.dphi[q].col(dj).transpose();
 //          for (uint i=0; i<CurFE_T::numDOFs; ++i)
@@ -240,7 +240,7 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
 //            {
 //              // d u_j / d x_i * d \phi_i / d x_j
 //              Ke(i+di*CurFE_T::numDOFs, j+dj*CurFE_T::numDOFs) +=
-//                  coeff * this->feSpace.curFE.JxW[q] *
+//                  coef * this->feSpace.curFE.JxW[q] *
 //                  this->feSpace.curFE.dphi[q].row(j)(di) *
 //                  this->feSpace.curFE.dphi[q].row(i)(dj);
 //            }
@@ -256,7 +256,7 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double coeff;
+  double coef;
 };
 
 template <typename FESpace>
@@ -269,10 +269,10 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
 
   AssemblyTensorStiffnessRhs(double const c,
                              Vec const & uOld,
-                             FESpace_T & fe,
+                             FESpace_T const & fe,
                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     AssemblyVector<FESpace_T>(fe, cmp),
-    coeff(c),
+    coef(c),
     velOld(uOld)
   {}
 
@@ -285,14 +285,14 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
 //       {
 //         // d u_i / d x_j * d \phi_i / d x_j
 //         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(di*CurFE_T::numDOFs, di*CurFE_T::numDOFs) +=
-//             coeff * this->feSpace.curFE.JxW[q] *
+//             coef * this->feSpace.curFE.JxW[q] *
 //             this->feSpace.curFE.dphi[q] *
 //             this->feSpace.curFE.dphi[q].transpose();
 //         for (uint dj=0; dj<FESpace_T::dim; ++dj)
 //         {
 //           // d u_j / d x_i * d \phi_i / d x_j
 //           Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(di*CurFE_T::numDOFs, dj*CurFE_T::numDOFs) +=
-//               coeff * this->feSpace.curFE.JxW[q] *
+//               coef * this->feSpace.curFE.JxW[q] *
 //               this->feSpace.curFE.dphi[q].col(di) *
 //               this->feSpace.curFE.dphi[q].col(dj).transpose();
 // //          for (uint i=0; i<CurFE_T::numDOFs; ++i)
@@ -300,7 +300,7 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
 // //            {
 // //              // d u_j / d x_i * d \phi_i / d x_j
 // //              Ke(i+di*CurFE_T::numDOFs, j+dj*CurFE_T::numDOFs) +=
-// //                  coeff * this->feSpace.curFE.JxW[q] *
+// //                  coef * this->feSpace.curFE.JxW[q] *
 // //                  this->feSpace.curFE.dphi[q].row(j)(di) *
 // //                  this->feSpace.curFE.dphi[q].row(i)(dj);
 // //            }
@@ -309,7 +309,7 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
 //     }
   }
 
-  double coeff;
+  double coef;
   Vec const & velOld;
 };
 
@@ -321,7 +321,7 @@ struct AssemblyDummy: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyDummy(FESpace_T & fe,
+  explicit AssemblyDummy(FESpace_T const & fe,
                          AssemblyBase::CompList const & cmp = allComp<FESpace>()):
      Diagonal<FESpace>(fe, cmp)
   {}
@@ -338,10 +338,10 @@ struct AssemblyMass: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyMass(double const & c,
-                        FESpace_T & fe,
+                        FESpace_T const & fe,
                         AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-     Diagonal<FESpace>(fe, cmp),
-     coeff(c)
+     Diagonal<FESpace_T>(fe, cmp),
+     coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -353,7 +353,7 @@ struct AssemblyMass: public Diagonal<FESpace>
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(d*CurFE_T::numDOFs, d*CurFE_T::numDOFs) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
             this->feSpace.curFE.phi[q].transpose();
       }
@@ -367,7 +367,7 @@ struct AssemblyMass: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double coeff;
+  double coef;
 };
 
 template <typename FESpace, typename Coef>
@@ -380,7 +380,7 @@ struct AssemblyMassFE: public Diagonal<FESpace>
 
   explicit AssemblyMassFE(double const c,
                           Coef & cFE,
-                          FESpace_T & fe,
+                          FESpace_T const & fe,
                           AssemblyBase::CompList const & cmp = allComp<FESpace>()):
      Diagonal<FESpace>(fe, cmp),
      coef(c),
@@ -427,10 +427,10 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyVectorMass(double const & c,
-                              FESpace_T & fe,
+                              FESpace_T const & fe,
                               AssemblyBase::CompList const & cmp = allComp<FESpace>()):
      Diagonal<FESpace>(fe, cmp),
-     coeff(c)
+     coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -442,7 +442,7 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(d*CurFE_T::numDOFs, d*CurFE_T::numDOFs) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phiVect[q] *
             this->feSpace.curFE.phiVect[q].transpose();
       }
@@ -456,42 +456,30 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double coeff;
+  double coef;
 };
 
 template <typename FESpace>
 struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
-  using Super_T = AssemblyVector<FESpace>;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyAnalyticRhs(Fun<FESpace_T::dim,3> const r,
-                      FESpace & fe,
-                      AssemblyBase::CompList const cmp = allComp<FESpace>()):
-    AssemblyVector<FESpace>(fe, std::move(cmp)),
+  AssemblyAnalyticRhs(Fun<FESpace_T::dim, 3> const r,
+                      FESpace_T const & fe,
+                      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, std::move(cmp)),
     rhs(std::move(r))
   {}
 
-  // this constructor is available only when FESpace::dim == 1
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim == 1, bool> = true>
   AssemblyAnalyticRhs(scalarFun_T const r,
-                      FESpace & fe,
-                      AssemblyBase::CompList const cmp = allComp<FESpace>()):
-    AssemblyAnalyticRhs<FESpace>([r](Vec3 const & p) {return Vec1(r(p));}, fe, std::move(cmp))
-  {}
-
-  // otherwise, we fail
-  template <typename FESpace1 = FESpace,
-            std::enable_if_t<FESpace1::dim != 1, bool> = true>
-  AssemblyAnalyticRhs(scalarFun_T const &,
-                      FESpace & fe,
-                      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-    AssemblyVector<FESpace>(fe, cmp)
+                      FESpace_T const & fe,
+                      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+    AssemblyAnalyticRhs<FESpace_T>([r](Vec3 const & p) {return Vec1(r(p));}, fe, std::move(cmp))
   {
-    std::abort();
+    static_assert(FESpace_T::dim == 1, "this ctor is available only for scalar fe spaces.");
   }
 
   void build(LVec_T & Fe) const override
@@ -499,17 +487,18 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for (uint d=0; d<FESpace_T::dim; ++d)
+      FVec<FESpace_T::dim> localRhs = rhs(this->feSpace.curFE.qpoint[q]);
+      for (uint const c: this->comp)
       {
-        Fe.template block<CurFE_T::numDOFs, 1>(d*CurFE_T::numDOFs, 0) +=
+        Fe.template block<CurFE_T::numDOFs, 1>(c*CurFE_T::numDOFs, 0) +=
             this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
-            rhs(this->feSpace.curFE.qpoint[q])(d);
+            localRhs[c];
       }
     }
   }
 
-  Fun<FESpace_T::dim,3> const rhs;
+  Fun<FESpace_T::dim, 3> const rhs;
 };
 
 template <typename FESpace, typename FESpaceVel>
@@ -523,11 +512,11 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   explicit AssemblyAdvection(double const c,
                              Vec const & u,
-                             FESpaceVel & feVel,
-                             FESpace_T & fe,
+                             FESpaceVel const & feVel,
+                             FESpace_T const & fe,
                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     Diagonal<FESpace>(fe, cmp),
-    coeff(c),
+    coef(c),
     vel(u),
     feSpaceVel(feVel)
   {}
@@ -559,7 +548,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
             (this->feSpace.curFE.dphi[q] * localVel).transpose();
       }
@@ -573,9 +562,9 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double const coeff;
+  double const coef;
   Vec const & vel;
-  FESpaceVel & feSpaceVel;
+  FESpaceVel const & feSpaceVel;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -592,7 +581,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
                         FESpace2_T & fe2,
                         AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
-    coeff(c)
+    coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -612,7 +601,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
       auto Kec = Ke.template block<CurFE1_T::numDOFs,CurFE2_T::numDOFs>(d*CurFE1_T::numDOFs, 0);
       for(uint q=0; q<FESpace1_T::CurFE_T::QR_T::numPts; ++q)
       {
-        Kec += coeff * this->feSpace1.curFE.JxW[q] *
+        Kec += coef * this->feSpace1.curFE.JxW[q] *
                this->feSpace1.curFE.dphi[q].col(c)*
                this->feSpace2.curFE.phi[q].transpose();
       }
@@ -620,7 +609,7 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
     }
   }
 
-  double const coeff;
+  double const coef;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -637,7 +626,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
                        FESpace2_T & fe2,
                        AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
-    coeff(c)
+    coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -657,7 +646,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
       auto Kec = Ke.template block<CurFE1_T::numDOFs,CurFE2_T::numDOFs>(0, d*CurFE2_T::numDOFs);
       for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
       {
-        Kec += coeff * this->feSpace1.curFE.JxW[q] *
+        Kec += coef * this->feSpace1.curFE.JxW[q] *
                this->feSpace1.curFE.phi[q] *
                this->feSpace2.curFE.dphi[q].col(c).transpose();
       }
@@ -665,7 +654,7 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
     }
   }
 
-  double const coeff;
+  double const coef;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -682,7 +671,7 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
                               FESpace2_T & fe2,
                               AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
-    coeff(c)
+    coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -698,13 +687,13 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
     // using CurFE2_T = typename FESpace2_T::CurFE_T;
     for(uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
     {
-      Ke += coeff * this->feSpace1.curFE.JxW[q] *
+      Ke += coef * this->feSpace1.curFE.JxW[q] *
           this->feSpace1.curFE.divphi[q] *
           this->feSpace2.curFE.phi[q].transpose();
     }
   }
 
-  double const coeff;
+  double const coef;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -721,7 +710,7 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
                              FESpace2_T & fe2,
                              AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
     Coupling<FESpace1_T,FESpace2_T>(fe1, fe2, cmp),
-    coeff(c)
+    coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -737,13 +726,13 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
     // using CurFE2_T = typename FESpace2_T::CurFE_T;
     for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
     {
-      Ke += coeff * this->feSpace1.curFE.JxW[q] *
+      Ke += coef * this->feSpace1.curFE.JxW[q] *
           this->feSpace1.curFE.phi[q] *
           this->feSpace2.curFE.divphi[q].transpose();
     }
   }
 
-  double const coeff;
+  double const coef;
 };
 
 template <typename FESpace, typename FESpaceRhs = FESpace>
@@ -755,9 +744,9 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyS2SProjection(double const c,
-                              Vec const & r,
-                              FESpace_T & fe,
-                              AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+                                 Vec const & r,
+                                 FESpace_T const & fe,
+                                 AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
     rhs(r),
@@ -766,8 +755,8 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyS2SProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T & fe,
-                                 FESpaceRhs_T & feRhs,
+                                 FESpace_T const & fe,
+                                 FESpaceRhs_T const & feRhs,
                                  AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
@@ -817,7 +806,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
 
   double coef;
   Vec const & rhs;
-  FESpaceRhs_T & feSpaceRhs;
+  FESpaceRhs_T const & feSpaceRhs;
 };
 
 template <typename FESpace, typename FESpaceRhs>
@@ -830,8 +819,8 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyS2VProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T & fe,
-                                 FESpaceRhs_T & feRhs):
+                                 FESpace_T const & fe,
+                                 FESpaceRhs_T const & feRhs):
     AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
@@ -876,7 +865,7 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
 
   double const coef;
   Vec const & rhs;
-  FESpaceRhs_T & feSpaceRhs;
+  FESpaceRhs_T const & feSpaceRhs;
 };
 
 template <typename FESpace, typename FESpaceRhs>
@@ -889,8 +878,8 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyV2SProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T & fe,
-                                 FESpaceRhs_T & feRhs):
+                                 FESpace_T const & fe,
+                                 FESpaceRhs_T const & feRhs):
     AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
@@ -934,7 +923,7 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
 
   double const coef;
   Vec const & rhs;
-  FESpaceRhs_T & feSpaceRhs;
+  FESpaceRhs_T const & feSpaceRhs;
 };
 
 template <typename FESpace, typename FESpaceRhs = FESpace>
@@ -947,7 +936,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyProjection(double const c,
                               Vec const & r,
-                              FESpace_T & fe,
+                              FESpace_T const & fe,
                               AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, cmp)
   {
@@ -965,8 +954,8 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyProjection(double const c,
                               Vec const & r,
-                              FESpace_T & fe,
-                              FESpaceRhs_T & feRhs):
+                              FESpace_T const & fe,
+                              FESpaceRhs_T const & feRhs):
     AssemblyVector<FESpace_T>(fe, allComp<FESpace_T>())
   {
     // this works only if the same quad rule is defined on both CurFE
@@ -1023,51 +1012,58 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   std::shared_ptr<AssemblyVector<FESpace_T>> assembly;
 };
 
-template <typename FESpace1, typename FESpace2>
-struct AssemblyDivRhs: public AssemblyVector<FESpace1>
+template <typename FESpace, typename FESpaceData>
+struct AssemblyDivRhs: public AssemblyVector<FESpace>
 {
-  using FESpace1_T = FESpace1;
-  using FESpace2_T = FESpace2;
-  using Super_T = AssemblyVector<FESpace1_T>;
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyDivRhs(double const c,
                           Vec const & vec,
-                          FESpace1_T & fe1,
-                          FESpace2_T & fe2,
-                          AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
-    feSpace2(fe2),
-    data(vec)
-  {}
+                          FESpaceData_T const & feData,
+                          FESpace_T const & fe,
+                          AssemblyBase::CompList const & cmp = {}):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
+    data(vec),
+    feSpaceData(feData)
+  {
+    static_assert(FESpace_T::dim == 1, "this assembly wors only on scalar fe spaces");
+  }
 
   void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
-    feSpace2.curFE.reinit(elem);
+    feSpaceData.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs> localData;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFEData_T = typename FESpaceData_T::CurFE_T;
+    uint constexpr sizeData = CurFEData_T::numDOFs;
 
-    for (auto const c: this->comp)
+    FMat<FESpaceData_T::dim, sizeData> localData;
+    for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
     {
-      for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      for(uint n=0; n<sizeData; ++n)
       {
-        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n, c);
-        localData[n] = data[dofId];
+        id_T const dofId = feSpaceData.dof.getId(feSpaceData.curFE.elem->id, n, d2);
+        localData(d2, n) = data[dofId];
       }
+    }
 
-      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
       {
-        Fe += coeff * this->feSpace.curFE.JxW[q] *
+        double const localDataGradQ = localData.row(d2) * feSpaceData.curFE.dphi[q].col(d2);
+        Fe += coef * this->feSpace.curFE.JxW[q] *
               this->feSpace.curFE.phi[q] *
-              (feSpace2.curFE.dphi[q].col(c).dot(localData));
+              localDataGradQ;
       }
     }
   }
@@ -1079,77 +1075,80 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace1>
     return Fe;
   }
 
-  double const coeff;
-  FESpace2 & feSpace2;
+  double const coef;
   Vec const & data;
+  FESpaceData const & feSpaceData;
 };
 
-template <typename FESpace1, typename FESpace2>
-struct AssemblyGradRhs: public AssemblyVector<FESpace1>
+template <typename FESpace, typename FESpaceData>
+struct AssemblyGradRhs: public AssemblyVector<FESpace>
 {
-  using FESpace1_T = FESpace1;
-  using FESpace2_T = FESpace2;
-  using Super_T = AssemblyVector<FESpace1_T>;
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyGradRhs(double const c,
-                          Vec const & vec,
-                          FESpace1_T & fe1,
-                          FESpace2_T const & fe2,
-                          AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
-    feSpace2(fe2),
-    data(vec)
+                           Vec const & vec,
+                           FESpaceData_T const & feData,
+                           FESpace_T const & fe,
+                           AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
+    data(vec),
+    feSpaceData(feData)
   {}
 
   void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
-    feSpace2.curFE.reinit(elem);
+    feSpaceData.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs * FESpace2_T::dim> localData;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFEData_T = typename FESpaceData_T::CurFE_T;
+    uint constexpr size = CurFE_T::numDOFs;
+    uint constexpr sizeData = CurFEData_T::numDOFs;
+    FMat<FESpaceData_T::dim, sizeData> localData;
 
-    for (uint d2=0; d2<FESpace2_T::dim; ++d2)
+    uint const elemId = feSpaceData.curFE.elem->id;
+    for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
     {
-      for (uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      for (uint n=0; n<sizeData; ++n)
       {
-        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n, d2);
-        localData[n + d2*CurFE2_T::numDOFs] = data[dofId];
+        id_T const dofId = feSpaceData.dof.getId(elemId, n, d2);
+        localData(d2, n) = data[dofId];
       }
     }
 
-    uint counter = 0;
-    for (auto const c: this->comp)
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      uint const d1 = c % FESpace1_T::Mesh_T::Elem_T::dim;
-      uint const d2 = c / FESpace1_T::Mesh_T::Elem_T::dim;
-      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      FMat<FESpaceData_T::dim, 3> const localDataGradQ =
+          localData * feSpaceData.curFE.dphi[q];
+      // FVec<FESpaceData_T::dim> const localDataQ =
+      //     localData * feSpaceData.curFE.phi[q];
+
+      uint counter = 0;
+      for (auto const c: this->comp)
       {
+        uint const d1 = c % FESpace_T::Mesh_T::Elem_T::dim;
+        uint const d2 = c / FESpace_T::Mesh_T::Elem_T::dim;
+
         // d u_d2 / d x_d1
-        double const gradDataQ =
-            feSpace2.curFE.dphi[q].col(d1).dot(
-              localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
-        Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+        Fe.template block<size, 1>(counter * size, 0) +=
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
-            gradDataQ;
+            localDataGradQ(d2, d1);
         // // u_d2
-        // double const dataQ =
-        //     feSpace2.curFE.phi[q].dot(
-        //       localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
-        // Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
-        //     coeff * this->feSpace.curFE.JxW[q] *
+        // Fe.template block<size, 1>(counter * size, 0) +=
+        //     coef * this->feSpace.curFE.JxW[q] *
         //     this->feSpace.curFE.dphi[q].col(d1) *
-        //     dataQ;
+        //     localDataQ[d2];
+        counter++;
       }
-      counter++;
     }
   }
 
@@ -1160,77 +1159,80 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace1>
     return Fe;
   }
 
-  double const coeff;
-  FESpace2_T const & feSpace2;
+  double const coef;
   Vec const & data;
+  FESpaceData_T const & feSpaceData;
 };
 
-template <typename FESpace1, typename FESpace2>
-struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
+template <typename FESpace, typename FESpaceData>
+struct AssemblyGradRhs2: public AssemblyVector<FESpace>
 {
-  using FESpace1_T = FESpace1;
-  using FESpace2_T = FESpace2;
-  using Super_T = AssemblyVector<FESpace1_T>;
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyGradRhs2(double const c,
                             Vec const & vec,
-                            FESpace1_T & fe1,
-                            FESpace2_T & fe2,
-                            AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
-    feSpace2(fe2),
+                            FESpaceData_T const & feData,
+                            FESpace_T const & fe,
+                            AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
+    feSpaceData(feData),
     data(vec)
   {}
 
   void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
-    feSpace2.curFE.reinit(elem);
+    feSpaceData.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs * FESpace2_T::dim> localData;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFEData_T = typename FESpaceData_T::CurFE_T;
+    uint constexpr size = CurFE_T::numDOFs;
+    uint constexpr sizeData = CurFEData_T::numDOFs;
+    FMat<FESpaceData_T::dim, sizeData> localData;
 
-    for (uint d2=0; d2<FESpace2_T::dim; ++d2)
+    uint const elemId = feSpaceData.curFE.elem->id;
+    for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
     {
-      for (uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+      for (uint n=0; n<sizeData; ++n)
       {
-        id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n, d2);
-        localData[n + d2*CurFE2_T::numDOFs] = data[dofId];
+        id_T const dofId = feSpaceData.dof.getId(elemId, n, d2);
+        localData(d2, n) = data[dofId];
       }
     }
 
-    uint counter = 0;
-    for (auto const c: this->comp)
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      uint const d1 = c % FESpace1_T::Mesh_T::Elem_T::dim;
-      uint const d2 = c / FESpace1_T::Mesh_T::Elem_T::dim;
-      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      // FMat<FESpaceData_T::dim, 3> const localdataGradQ =
+      //     localData * feSpaceData.curFE.dphi[q];
+      FVec<FESpaceData_T::dim> const dataQ =
+          localData * feSpaceData.curFE.phi[q];
+
+      uint counter = 0;
+      for (auto const c: this->comp)
       {
+        uint const d1 = c % FESpace_T::Mesh_T::Elem_T::dim;
+        uint const d2 = c / FESpace_T::Mesh_T::Elem_T::dim;
+
         // // d u_d2 / d x_d1
-        // double const gradDataQ =
-        //     feSpace2.curFE.dphi[q].col(d1).dot(
-        //       localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
-        // Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
-        //     coeff * this->feSpace.curFE.JxW[q] *
+        // Fe.template block<size, 1>(counter * size, 0) +=
+        //     coef * this->feSpace.curFE.JxW[q] *
         //     this->feSpace.curFE.phi[q] *
-        //     gradDataQ;
+        //     localdataGradQ(d2, d1);
         // u_d2
-        double const dataQ =
-            feSpace2.curFE.phi[q].dot(
-              localData.template block<CurFE2_T::numDOFs, 1>(d2 * CurFE2_T::numDOFs, 0));
-        Fe.template block<CurFE1_T::numDOFs, 1>(counter * CurFE1_T::numDOFs, 0) +=
-            coeff * this->feSpace.curFE.JxW[q] *
+        Fe.template block<size, 1>(counter * size, 0) +=
+            coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.dphi[q].col(d1) *
-            dataQ;
+            dataQ[d2];
+        counter++;
       }
-      counter++;
     }
   }
 
@@ -1241,59 +1243,69 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace1>
     return Fe;
   }
 
-  double const coeff;
-  FESpace2_T & feSpace2;
+  double const coef;
+  FESpaceData_T const & feSpaceData;
   Vec const & data;
 };
 
-template <typename FESpace1, typename FESpace2 = FESpace1>
-struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
+template <typename FESpace, typename FESpaceData = FESpace>
+struct AssemblyStiffnessRhs: public AssemblyVector<FESpace>
 {
-  using FESpace1_T = FESpace1;
-  using FESpace2_T = FESpace2;
-  using Super_T = AssemblyVector<FESpace1_T>;
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyStiffnessRhs(double const c,
                                 Vec const & vec,
-                                FESpace1_T & fe1,
-                                FESpace2_T & fe2,
-                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
-    feSpace2(fe2),
-    data(vec)
+                                FESpaceData_T & feData,
+                                FESpace_T const & fe,
+                                AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
+    data(vec),
+    feSpaceData(feData)
   {}
 
   void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
-    feSpace2.curFE.reinit(elem);
+    feSpaceData.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs> localData;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFEData_T = typename FESpaceData_T::CurFE_T;
+    uint constexpr size = CurFE_T::numDOFs;
+    uint constexpr sizeData = CurFEData_T::numDOFs;
+    FMat<FESpaceData_T::dim, sizeData> localData;
 
-    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    uint const elemId = feSpaceData.curFE.elem->id;
+    for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
     {
-      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n);
-      localData[n] = data[dofId];
-    }
-    uint d = 0;
-    for (auto const c: this->comp)
-    {
-      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      for (uint n=0; n<sizeData; ++n)
       {
-        Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
-            coeff * this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.dphi[q].col(c) *
-            (feSpace2.curFE.dphi[q].col(c).dot(localData));
+        id_T const dofId = feSpaceData.dof.getId(elemId, n, d2);
+        localData(d2, n) = data[dofId];
       }
-      d++;
+    }
+
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      FMat<FESpaceData_T::dim, 3> const localDataGradQ =
+          localData * feSpaceData.curFE.dphi[q];
+
+      uint counter = 0;
+      for (auto const c: this->comp)
+      {
+        Fe.template block<size, 1>(counter*size, 0) +=
+            coef * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.dphi[q].col(c) *
+            localDataGradQ(c, c);
+        counter++;
+      }
     }
   }
 
@@ -1304,83 +1316,100 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace1>
     return Fe;
   }
 
-  double const coeff;
-  FESpace2_T & feSpace2;
+  double const coef;
+  FESpaceData_T & feSpaceData;
   Vec const & data;
 };
 
-template <typename FESpace1, typename FESpace2 = FESpace1>
-struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
+template <typename FESpace, typename FESpaceVel, typename FESpaceData = FESpace>
+struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
 {
-  using FESpace1_T = FESpace1;
-  using FESpace2_T = FESpace2;
-  using Super_T = AssemblyVector<FESpace1_T>;
+  using FESpace_T = FESpace;
+  using FESpaceVel_T = FESpaceVel;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyAdvectionRhs(double const c,
                                 Vec const & u,
-                                Vec const & vec,
-                                FESpace1_T & fe1,
-                                FESpace2_T & fe2,
-                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
+                                FESpaceVel_T const & feVel,
+                                Vec const & d,
+                                FESpaceData_T const & feData,
+                                FESpace_T & fe,
+                                AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
     vel(u),
-    feSpace2(fe2),
-    data(vec)
+    feSpaceVel(feVel),
+    data(d),
+    feSpaceData(feData)
   {}
 
   explicit AssemblyAdvectionRhs(double const c,
                                 Vec const & u,
+                                FESpaceVel_T const & feVel,
                                 Vec const & vec,
-                                FESpace1_T & fe1,
-                                AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-    AssemblyVector<FESpace1_T>(fe1, cmp),
-    coeff(c),
+                                FESpace_T & fe,
+                                AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    coef(c),
     vel(u),
-    feSpace2(fe1),
-    data(vec)
+    feSpaceVel(feVel),
+    data(vec),
+    feSpaceData(fe)
   {}
 
   void reinit(GeoElem const & elem) const override
   {
     this->feSpace.curFE.reinit(elem);
-    feSpace2.curFE.reinit(elem);
+    feSpaceData.curFE.reinit(elem);
+    feSpaceVel.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    using CurFE2_T = typename FESpace2_T::CurFE_T;
-    FVec<CurFE2_T::numDOFs> localData;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    using CurFEData_T = typename FESpaceData_T::CurFE_T;
+    using CurFEVel_T = typename FESpaceVel_T::CurFE_T;
 
-    for(uint n=0; n<CurFE2_T::RefFE_T::numFuns; ++n)
+    FMat<FESpaceData_T::dim, CurFEData_T::numDOFs> localData;
+    for(uint n=0; n<CurFEData_T::RefFE_T::numFuns; ++n)
     {
-      id_T const dofId = feSpace2.dof.getId(feSpace2.curFE.elem->id, n);
-      localData[n] = data[dofId];
-    }
-    uint d = 0;
-    for (auto const c: this->comp)
-    {
-      for (uint q=0; q<CurFE1_T::QR_T::numPts; ++q)
+      for (uint d2=0; d2<FESpaceData_T::dim; ++d2)
       {
-        FVec<3> localVel = FVec<3>::Zero();
-        for(uint n=0; n<CurFE1_T::RefFE_T::numFuns; ++n)
-        {
-          for (uint d=0; d<FESpace1_T::RefFE_T::dim; ++d)
-          {
-            id_T const dofId = this->feSpace.dof.getId(this->feSpace.curFE.elem->id, n, d);
-            localVel[d] += vel[dofId] * this->feSpace.curFE.phi[q](n);
-          }
-        }
-
-        Fe.template block<CurFE1_T::numDOFs,1>(d*CurFE1_T::numDOFs, 0) +=
-            coeff * this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.phi[q] *
-            (feSpace2.curFE.dphi[q].col(c).dot(localData)) * localVel[d];
+        id_T const dofId = feSpaceData.dof.getId(feSpaceData.curFE.elem->id, n, d2);
+        localData(d2, n) = data[dofId];
       }
-      d++;
+    }
+
+    FMat<3, CurFEVel_T::numDOFs> localVel = FVec<3>::Zero();
+    for(uint n=0; n<CurFEVel_T::numDOFs; ++n)
+    {
+      for (uint d3=0; d3<FESpaceVel_T::dim; ++d3)
+      {
+        id_T const dofId = feSpaceVel.dof.getId(feSpaceVel.curFE.elem->id, n, d3);
+        localVel(d3, n) = vel[dofId];
+      }
+    }
+
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      FVec<3> localVelQ = promote<FESpaceVel_T::dim, 3>(
+            localVel * feSpaceVel.curFE.phi[q]);
+
+      FMat<FESpaceData_T::dim, 3> const localDataGradQ =
+          localData * feSpaceData.curFE.dphi[q];
+
+      uint counter = 0;
+      for (auto const c: this->comp)
+      {
+        Fe.template block<CurFE_T::numDOFs, 1>(counter * CurFE_T::numDOFs, 0) +=
+            coef * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            (localDataGradQ * localVelQ)[c];
+        counter++;
+      }
     }
   }
 
@@ -1391,10 +1420,11 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace1>
     return Fe;
   }
 
-  double const coeff;
+  double const coef;
   Vec const & vel;
-  FESpace2_T & feSpace2;
+  FESpaceVel_T const & feSpaceVel;
   Vec const & data;
+  FESpaceData_T const & feSpaceData;
 };
 
 template <typename FESpace>
@@ -1411,7 +1441,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
 
   AssemblyBCNatural(Fun<FESpace_T::dim, 3> const r,
                     marker_T const m,
-                    FESpace_T & fe,
+                    FESpace_T const & fe,
                     AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, std::move(cmp)),
     rhs(std::move(r)),
@@ -1420,7 +1450,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
 
   AssemblyBCNatural(scalarFun_T const r,
                     marker_T const m,
-                    FESpace_T & fe,
+                    FESpace_T const & fe,
                     AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
     AssemblyBCNatural<FESpace_T>([r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
   {

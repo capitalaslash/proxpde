@@ -19,7 +19,7 @@ struct Builder
   }
 
   template <typename Assemblies, typename BCs>
-  void buildLhs(Assemblies const & assemblies, BCs & bcs)
+  void buildLhs(Assemblies const & assemblies, BCs const & bcs)
   {
     static_assert(std::tuple_size_v<Assemblies> > 0, "we need at least 1 assembly.");
     using FESpace_T = typename std::tuple_element_t<0, Assemblies>::FESpace_T;

@@ -102,8 +102,8 @@ struct NSSolverMonolithic
   using SchurSolver = IterSolver;
 
   explicit NSSolverMonolithic(
-      FESpaceVel_T & feVel,
-      FESpaceP_T & feP,
+      FESpaceVel_T const & feVel,
+      FESpaceP_T const & feP,
       BCSVel const & bcsVV,
       BCSP const & bcsPP,
       NSParameters const & par):
@@ -133,7 +133,9 @@ struct NSSolverMonolithic
   void init()
   {
     // TODO: assert that this comes after setting up bcs
-    builder.buildLhs(std::tuple{AssemblyMass{1. / parameters.dt, feSpaceVel}, AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
+    builder.buildLhs(std::tuple{
+                       AssemblyMass{1. / parameters.dt, feSpaceVel},
+                       AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
     builder.buildLhs(std::tuple{AssemblyMass{0., feSpaceP}}, bcsP);
@@ -226,8 +228,8 @@ struct NSSolverMonolithic
     ioP.print({p}, time);
   }
 
-  FESpaceVel_T & feSpaceVel;
-  FESpaceP_T & feSpaceP;
+  FESpaceVel_T const & feSpaceVel;
+  FESpaceP_T const & feSpaceP;
   BCSVel const & bcsVel;
   BCSP const & bcsP;
   NSParameters parameters;
@@ -277,8 +279,8 @@ struct NSSolverSplit2D
   using Solver = IterSolver;
 
   explicit NSSolverSplit2D(
-      FESpaceU_T & feU,
-      FESpaceP_T & feP,
+      FESpaceU_T const & feU,
+      FESpaceP_T const & feP,
       BCSU const & bcsUU,
       BCSV const & bcsVV,
       BCSP const & bcsPP,
@@ -312,13 +314,13 @@ struct NSSolverSplit2D
     assemblyVRhs{1. / par.dt, v.data, feSpaceU},
     assemblyAdvectionU{1.0, vel, feSpaceVel, feSpaceU},
     assemblyAdvectionV{1.0, vel, feSpaceVel, feSpaceU},
-    assemblyPOldU{1.0, pOld, feSpaceU, feSpaceP, {0}},
-    assemblyPOldV{1.0, pOld, feSpaceU, feSpaceP, {1}},
-    assemblyDivVelStar{-1.0, velStar, feSpaceP, feSpaceVel},
+    assemblyPOldU{1.0, pOld, feSpaceP, feSpaceU, {0}},
+    assemblyPOldV{1.0, pOld, feSpaceP, feSpaceU, {1}},
+    assemblyDivVelStar{-1.0, velStar, feSpaceVel, feSpaceP},
     assemblyUStarRhs{1.0, uStar.data, feSpaceU},
     assemblyVStarRhs{1.0, vStar.data, feSpaceU},
-    assemblyGradPRhsU{-par.dt, dp, feSpaceU, feSpaceP, {0}},
-    assemblyGradPRhsV{-par.dt, dp, feSpaceU, feSpaceP, {1}},
+    assemblyGradPRhsU{-par.dt, dp, feSpaceP, feSpaceU, {0}},
+    assemblyGradPRhsV{-par.dt, dp, feSpaceP, feSpaceU, {1}},
     ioVel{feSpaceU, par.outputDir / "vel"},
     ioP{feSpaceP, par.outputDir / "p"}
   {}
@@ -414,8 +416,8 @@ struct NSSolverSplit2D
     ioP.print({p}, time);
   }
 
-  FESpaceU_T & feSpaceU;
-  FESpaceP_T & feSpaceP;
+  FESpaceU_T const & feSpaceU;
+  FESpaceP_T const & feSpaceP;
   FESpaceVel_T feSpaceVel;
   BCSU const & bcsU;
   BCSV const & bcsV;
@@ -450,8 +452,8 @@ struct NSSolverSplit2D
   AssemblyGradRhs2<FESpaceU_T, FESpaceP_T> assemblyPOldU;
   AssemblyGradRhs2<FESpaceU_T, FESpaceP_T> assemblyPOldV;
   AssemblyDivRhs<FESpaceP_T, FESpaceVel_T> assemblyDivVelStar;
-  AssemblyS2SProjection<FESpaceU_T, FESpaceU_T> assemblyUStarRhs;
-  AssemblyS2SProjection<FESpaceU_T, FESpaceU_T> assemblyVStarRhs;
+  AssemblyS2SProjection<FESpaceU_T> assemblyUStarRhs;
+  AssemblyS2SProjection<FESpaceU_T> assemblyVStarRhs;
   AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsU;
   AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsV;
   array<typename Builder<StorageType::RowMajor>::Mat_T, dim> matFixedVelStar;

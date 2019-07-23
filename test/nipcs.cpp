@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
   // dt \nabla^2 p = \nabla \cdot velStar
   // dt (\nabla p, \nabla q) = - (\nabla \cdot velStar, q)
   auto const pLhs = std::make_tuple(AssemblyStiffness{dt, feSpacePSplit});
-  auto const pRhs = std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpacePSplit, feSpaceVel});
+  auto const pRhs = std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit});
   // eqnP lhs does not change in time, we can pre-compute and factorize it
 
   // u = uStar - dt dp / dx
@@ -168,14 +168,14 @@ int main(int argc, char* argv[])
   auto const uLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
   auto const uRhs = std::make_tuple(
         AssemblyProjection{1.0, uStar.data, feSpaceU},
-        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {0}});
+        AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}});
 
   // v = vStar - dt dp / dy
   // (v, \phi) = (vStar, \phi) - dt (dp / dy, \phi)
   auto const vLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
   auto const vRhs = std::make_tuple(
         AssemblyProjection{1.0, vStar.data, feSpaceU},
-        AssemblyGradRhs{-dt, p.data, feSpaceU, feSpacePSplit, {1}});
+        AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}});
 
   t.start("eqn");
   Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::RowMajor>()};

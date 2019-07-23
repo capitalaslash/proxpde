@@ -21,7 +21,7 @@ void computeGradient(
   std::tuple<> bcsGrad;
   Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
   builderGrad.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceGrad}}, bcsGrad);
-  builderGrad.buildRhs(std::tuple{AssemblyGradRhs{1.0, u, feSpaceGrad, feSpaceOrig}}, bcsGrad);
+  builderGrad.buildRhs(std::tuple{AssemblyGradRhs{1.0, u, feSpaceOrig, feSpaceGrad}}, bcsGrad);
   builderGrad.closeMatrix();
   Solver solverGrad;
   solverGrad.compute(builderGrad.A);

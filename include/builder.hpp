@@ -36,19 +36,21 @@ struct Builder
         pow(CurFE_T::numDOFs, 2)* FESpace_T::dim * mesh.elementList.size();
     _triplets.reserve(approxEntryNum);
 
-    for (auto const & e: mesh.elementList)
+    for (auto const & elem: mesh.elementList)
     {
+      refAssembly.feSpace.curFE.reinit(elem);
+
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
 
-      static_for(assemblies, [&e, &Ke] (auto const /*i*/, auto & assembly)
+      static_for(assemblies, [&elem, &Ke] (auto const /*i*/, auto & assembly)
       {
         using Assembly_T = std::decay_t<decltype(assembly)>;
         static_assert(std::is_base_of_v<Diagonal<FESpace_T>, Assembly_T>);
 
         // --- set current fe ---
         // TODO: isolate specific stuff in this method and move standard fe space reinit done outside loop
-        assembly.reinit(e);
+        assembly.reinit(elem);
 
         // --- build local matrix and rhs ---
         assembly.build(Ke);
@@ -75,7 +77,7 @@ struct Builder
           for (uint d=0; d<FESpace_T::dim; ++d)
           {
             auto const pos = i + d*FESpace_T::RefFE_T::numFuns;
-            DOFid_T const id = refAssembly.feSpace.dof.getId(e.id, i, d);
+            DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
             if (bc.isConstrained(id))
             {
               auto const localValue = bc.get(id);
@@ -93,7 +95,7 @@ struct Builder
         for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
         {
           auto const pos = i + d*FESpace_T::RefFE_T::numFuns;
-          DOFid_T const id = refAssembly.feSpace.dof.getId(e.id, i, d);
+          DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
 
           static_for(bcs, [&] (auto const /*i*/, auto & bc)
           {
@@ -118,14 +120,14 @@ struct Builder
       {
         for (uint d1=0; d1<FESpace_T::dim; ++d1)
         {
-          DOFid_T const idI = refAssembly.feSpace.dof.getId(e.id, i, d1);
+          DOFid_T const idI = refAssembly.feSpace.dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1*FESpace_T::CurFE_T::numDOFs];
 
           for(uint j=0; j<CurFE_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace_T::dim; ++d2)
             {
-              DOFid_T const idJ = refAssembly.feSpace.dof.getId(e.id, j, d2);
+              DOFid_T const idJ = refAssembly.feSpace.dof.getId(elem.id, j, d2);
               auto val = Ke(i + d1*FESpace_T::CurFE_T::numDOFs, j + d2*FESpace_T::CurFE_T::numDOFs);
               _triplets.emplace_back(idI, idJ, val);
             }
@@ -156,13 +158,13 @@ struct Builder
         assembly.feSpace1.mesh.elementList.size();
     _triplets.reserve(approxEntryNum);
 
-    for (auto const & e: assembly.feSpace1.mesh.elementList)
+    for (auto const & elem: assembly.feSpace1.mesh.elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
 
       // --- set current fe ---
-      assembly.reinit(e);
+      assembly.reinit(elem);
 
       // --- build local matrix and rhs ---
       assembly.build(Ke);
@@ -189,7 +191,7 @@ struct Builder
           for(uint i=0; i<CurFE1_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace1::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace1.dof.getId(e.id, i ,d);
+            DOFid_T const id = assembly.feSpace1.dof.getId(elem.id, i ,d);
             if (bc.isConstrained(id))
             {
               Crow(pos,pos) = 0.;
@@ -211,7 +213,7 @@ struct Builder
           for (uint d=0; d<FESpace2::dim; ++d)
           {
             auto const pos = i+d*FESpace2::RefFE_T::numFuns;
-            DOFid_T const id = assembly.feSpace2.dof.getId(e.id, i ,d);
+            DOFid_T const id = assembly.feSpace2.dof.getId(elem.id, i ,d);
             if (bc.isConstrained(id))
             {
               auto const localValue = bc.get(id);
@@ -229,14 +231,14 @@ struct Builder
       {
         for (uint d1=0; d1<FESpace1::dim; ++d1)
         {
-          DOFid_T const idI = assembly.feSpace1.dof.getId(e.id, i, d1);
+          DOFid_T const idI = assembly.feSpace1.dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1*FESpace1::CurFE_T::numDOFs];
 
           for(uint j=0; j<CurFE2_T::RefFE_T::numFuns; ++j)
           {
             for (uint d2=0; d2<FESpace2::dim; ++d2)
             {
-              DOFid_T const idJ = assembly.feSpace2.dof.getId(e.id, j, d2);
+              DOFid_T const idJ = assembly.feSpace2.dof.getId(elem.id, j, d2);
               auto val = Ke(i + d1*FESpace1::CurFE_T::numDOFs, j+d2*FESpace2::CurFE_T::numDOFs);
               _triplets.emplace_back(idI, idJ, val);
             }
@@ -258,18 +260,20 @@ struct Builder
     auto const & refAssembly = std::get<0>(assemblies);
     auto const & mesh = refAssembly.feSpace.mesh;
 
-    for (auto const & e: mesh.elementList)
+    for (auto const & elem: mesh.elementList)
     {
+      refAssembly.feSpace.curFE.reinit(elem);
+
       LVec_T Fe = LVec_T::Zero();
 
-      static_for(assemblies, [&e, &Fe] (auto const /*i*/, auto & assembly)
+      static_for(assemblies, [&elem, &Fe] (auto const /*i*/, auto & assembly)
       {
         using Assembly_T = std::decay_t<decltype(assembly)>;
         static_assert(std::is_base_of_v<AssemblyVector<FESpace_T>, Assembly_T>);
 
         // --- set current fe ---
         // TODO: isolate specific stuff in this method and move standard fe space reinit done outside loop
-        assembly.reinit(e);
+        assembly.reinit(elem);
 
         // --- build local matrix and rhs ---
         assembly.build(Fe);
@@ -295,7 +299,7 @@ struct Builder
           for(uint i=0; i<CurFE_T::RefFE_T::numFuns; ++i)
           {
             auto const pos = i+d*FESpace_T::RefFE_T::numFuns;
-            DOFid_T const id = refAssembly.feSpace.dof.getId(e.id, i, d);
+            DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
             if (bc.isConstrained(id))
             {
               C(pos, pos) = 0.;
@@ -313,7 +317,7 @@ struct Builder
       {
         for (uint d=0; d<FESpace_T::dim; ++d)
         {
-          DOFid_T const idI = refAssembly.feSpace.dof.getId(e.id, i, d);
+          DOFid_T const idI = refAssembly.feSpace.dof.getId(elem.id, i, d);
           b[idI] += Fe[i + d*FESpace_T::CurFE_T::numDOFs];
         }
       }

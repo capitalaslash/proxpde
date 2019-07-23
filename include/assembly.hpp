@@ -52,10 +52,7 @@ struct Diagonal: public AssemblyBase
   virtual void build(LMat_T & Ke) const = 0;
   // virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
-  virtual void reinit(GeoElem const & elem) const
-  {
-    feSpace.curFE.reinit(elem);
-  }
+  virtual void reinit(GeoElem const & /*elem*/) const {}
 
   FESpace_T const & feSpace;
   // LMat_T mat;
@@ -111,10 +108,7 @@ struct AssemblyVector: public AssemblyBase
 
   virtual void build(LVec_T & Fe) const = 0;
 
-  virtual void reinit(GeoElem const & elem) const
-  {
-    feSpace.curFE.reinit(elem);
-  }
+  virtual void reinit(GeoElem const & elem) const {}
 
   FESpace_T const & feSpace;
 };
@@ -176,7 +170,6 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     coef.reinit(elem);
   }
 
@@ -389,7 +382,6 @@ struct AssemblyMassFE: public Diagonal<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     coefFE.reinit(elem);
   }
 
@@ -523,11 +515,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
-    // if (&feSpaceVel != &this->feSpace)
-    {
-      feSpaceVel.curFE.reinit(elem);
-    }
+    feSpaceVel.curFE.reinit(elem);
   }
 
   void build(LMat_T & Ke) const override
@@ -773,11 +761,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
-    // if constexpr (!std::is_same<FESpace_T,FESpaceRhs_T>::value)
-    {
-      feSpaceRhs.curFE.reinit(elem);
-    }
+    feSpaceRhs.curFE.reinit(elem);
   }
 
   void build(LVec_T & Fe) const override
@@ -838,7 +822,6 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceRhs.curFE.reinit(elem);
   }
 
@@ -895,7 +878,6 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceRhs.curFE.reinit(elem);
   }
 
@@ -1036,7 +1018,6 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceData.curFE.reinit(elem);
   }
 
@@ -1102,7 +1083,6 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceData.curFE.reinit(elem);
   }
 
@@ -1186,7 +1166,6 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceData.curFE.reinit(elem);
   }
 
@@ -1270,7 +1249,6 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceData.curFE.reinit(elem);
   }
 
@@ -1362,7 +1340,6 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
     feSpaceData.curFE.reinit(elem);
     feSpaceVel.curFE.reinit(elem);
   }

@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
   auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  AssemblyMass timeDer(1./dt, feSpaceP1);
+  AssemblyScalarMass timeDer(1./dt, feSpaceP1);
   AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
   Vec concP1Old{sizeP1};
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);

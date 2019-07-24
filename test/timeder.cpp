@@ -81,9 +81,9 @@ int test(YAML::Node const & config)
   Vec uOld;
   Vec uOldOld;
   auto const dt = config["dt"].as<double>();
-  AssemblyMass bdf1Lhs{1.0 / dt, feSpace};
-  AssemblyMass bdf2Lhs{0.5 / dt, feSpace};
-  AssemblyMass mass{A, feSpace};
+  AssemblyScalarMass bdf1Lhs{1.0 / dt, feSpace};
+  AssemblyScalarMass bdf2Lhs{0.5 / dt, feSpace};
+  AssemblyScalarMass mass{A, feSpace};
   AssemblyProjection bdf1Rhs{1.0 / dt, uOld, feSpace};
   AssemblyProjection bdf2Rhs1{1.0 / dt, uOld, feSpace};
   AssemblyProjection bdf2Rhs2{-0.5 / dt, uOldOld, feSpace};

@@ -112,43 +112,7 @@ struct FESpace
 };
 
 template <typename FESpace>
-inline auto evaluateBoundaryValue(
-    Fun<FESpace::dim, 3> f,
-    FESpace const & feSpace,
-    DOFid_T const id)
-{
-  using FESpace_T = FESpace;
-  using RefFE_T = typename FESpace_T::RefFE_T;
-
-  // assume that the curFE has been properly updated by the caller
-  // feSpace.curFE.reinit(e);
-
-  auto const value = f(feSpace.curFE.dofPts[id]);
-  if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
-  {
-    // the value of the dof is the value of the function
-    // u_k = u phi_k
-    // for vector fespaces this is a vector
-    return value;
-  }
-  else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
-  {
-    // the value of the dof is the flux through the face
-    // u_k = u.dot(n_k)
-    // TODO: this is always a scalar
-    // typename FESpace_T::Mesh_T::Facet_T const & facet =
-    //     feSpace.mesh.facetList[feSpace.mesh.elemToFacet[feSpace.curFE.elem->id][id]];
-    // return Vec1::Constant(value.dot(facet.normal()));
-    return value;
-  }
-  else
-  {
-    std::abort();
-  }
-}
-
-template <typename FESpace>
-void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
+void interpolateAnalyticFunction(FEFun_T<FESpace> const & fun,
                                  FESpace & feSpace,
                                  Vec & v,
                                  uint const offset = 0)
@@ -159,30 +123,35 @@ void interpolateAnalyticFunction(Fun<FESpace::dim,3> const & f,
     v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
 
-  for(auto const & e: feSpace.mesh.elementList)
+  for(auto const & elem: feSpace.mesh.elementList)
   {
-    feSpace.curFE.reinit(e);
+    feSpace.curFE.reinit(elem);
     for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
     {
+      auto const value = fun(feSpace.curFE.dofPts[i]);
       if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
       {
         // the value of the dof is the value of the function
         // u_k = u phi_k
         // for vector fespaces this is a vector
-        auto const value = f(feSpace.curFE.dofPts[i]);
         for (uint d=0; d<FESpace::dim; ++d)
         {
-          auto const dofId = feSpace.dof.getId(e.id, i, d);
+          auto const dofId = feSpace.dof.getId(elem.id, i, d);
           v[offset + dofId] = value[d];
         }
       }
       else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
         // the value of the dof is the flux through the face
-        // u_k = u.dot(n_k)
-        auto const value = evaluateOnFacet(f, feSpace, i);
-        auto const dofId = feSpace.dof.getId(e.id, i);
-        v[offset + dofId] = value;
+        // u_k = \int_{f_k} u.dot(n_k)
+        // TODO: this should be an integral, we are taking the mean value
+        // at the center of facet (should work only for order 0)
+        uint constexpr dim = FESpace::Mesh_T::Elem_T::dim;
+        id_T const facetId = feSpace.mesh.elemToFacet[elem.id][i];
+        auto const & facet = feSpace.mesh.facetList[facetId];
+        FVec<dim> normal = narrow<dim>(facet._normal);
+        auto const dofId = feSpace.dof.getId(elem.id, i);
+        v[offset + dofId] = value.dot(normal) * facet.volume();
       }
       else
       {
@@ -264,7 +233,6 @@ void integrateAnalyticFunction(scalarFun_T const & f,
 {
   integrateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
 }
-
 
 template <typename FESpaceData, typename FESpaceGrad>
 void reconstructGradient(
@@ -420,7 +388,7 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
       uFacet.reinit(*elem);
       for (uint q=0; q<FacetQR_T::numPts; ++q)
       {
-        double const value = uFacet.evaluate(side * FacetQR_T::numPts + q);
+        double const value = uFacet.evaluate(side * FacetQR_T::numPts + q)[0];
         integral += facetCurFE.JxW[q] * value;
       }
     }

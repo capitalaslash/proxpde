@@ -323,14 +323,14 @@ struct AssemblyDummy: public Diagonal<FESpace>
 };
 
 template <typename FESpace>
-struct AssemblyMass: public Diagonal<FESpace>
+struct AssemblyScalarMass: public Diagonal<FESpace>
 {
   using FESpace_T = FESpace;
   using Super_T = Diagonal<FESpace>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyMass(double const & c,
+  explicit AssemblyScalarMass(double const & c,
                         FESpace_T const & fe,
                         AssemblyBase::CompList const & cmp = allComp<FESpace>()):
      Diagonal<FESpace_T>(fe, cmp),
@@ -418,9 +418,9 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  explicit AssemblyVectorMass(double const & c,
-                              FESpace_T const & fe,
-                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+  AssemblyVectorMass(double const & c,
+                     FESpace_T const & fe,
+                     AssemblyBase::CompList const & cmp = allComp<FESpace>()):
      Diagonal<FESpace>(fe, cmp),
      coef(c)
   {}
@@ -449,6 +449,47 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   // }
 
   double coef;
+};
+
+template <typename FESpace, FEDimType feDim>
+struct AssemblyMassSelector {};
+
+template <typename FESpace>
+struct AssemblyMassSelector<FESpace, FEDimType::SCALAR>
+{
+  using type = AssemblyScalarMass<FESpace>;
+};
+
+template <typename FESpace>
+struct AssemblyMassSelector<FESpace, FEDimType::VECTOR>
+{
+  using type = AssemblyVectorMass<FESpace>;
+};
+
+template <typename FESpace>
+using AssemblyMassSelector_T =
+  typename AssemblyMassSelector<FESpace, fedim_v<typename FESpace::RefFE_T>>::type;
+
+template <typename FESpace>
+struct AssemblyMass: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace_T>;
+  using LMat_T = typename Super_T::LMat_T;
+
+  AssemblyMass(double const & c,
+               FESpace_T const & fe,
+               AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace>(fe, cmp),
+    assembly{c, fe, cmp}
+  {}
+
+  void build(LMat_T & Ke) const
+  {
+    assembly.build(Ke);
+  }
+
+  AssemblyMassSelector_T<FESpace> assembly;
 };
 
 template <typename FESpace>

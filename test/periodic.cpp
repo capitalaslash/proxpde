@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
   t.start("assembly lhs");
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{
-                     AssemblyMass{1./dt, feSpace},
+                     AssemblyScalarMass{1./dt, feSpace},
                      AssemblyStiffness{nu, feSpace},
                      AssemblyAdvection{1.0, vel.data, feSpace, feSpace}},
                    bcs);

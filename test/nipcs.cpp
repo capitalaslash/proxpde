@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
   auto const nu = config["nu"].as<double>();
 
   Vec velOldMonolithic{2*dofU};
-  AssemblyMass timeder(1./dt, feSpaceVel);
+  AssemblyScalarMass timeder(1./dt, feSpaceVel);
   AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel, feSpaceVel);
   AssemblyTensorStiffness stiffness(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
   // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt
   // (uStar, \phi) / dt + ((vel \cdot \nabla) uStar, \phi) + nu (\nabla uStar, \nabla \phi) = (u, \phi) / dt
   auto const uStarLhs = std::make_tuple(
-        AssemblyMass{1./dt, feSpaceU},
+        AssemblyScalarMass{1./dt, feSpaceU},
         AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
         AssemblyStiffness{nu, feSpaceU});
   auto const uStarRhs = std::make_tuple(
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt
   // (vStar, \phi) / dt + ((vel \cdot \nabla) vStar, \phi) + nu (\nabla vStar, \nabla \phi) = (v, \phi) / dt
   auto const vStarLhs = std::make_tuple(
-        AssemblyMass{1./dt, feSpaceU},
+        AssemblyScalarMass{1./dt, feSpaceU},
         AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
         AssemblyStiffness{nu, feSpaceU});
   auto const vStarRhs = std::make_tuple(
@@ -165,14 +165,14 @@ int main(int argc, char* argv[])
   // u = uStar - dt dp / dx
   // (u, \phi) = (uStar, \phi) - dt (dp / dx, \phi)
   // (u, \phi) = (uStar, \phi) + dt (p, d \phi / dx)
-  auto const uLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
+  auto const uLhs = std::make_tuple(AssemblyScalarMass{1.0, feSpaceU});
   auto const uRhs = std::make_tuple(
         AssemblyProjection{1.0, uStar.data, feSpaceU},
         AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}});
 
   // v = vStar - dt dp / dy
   // (v, \phi) = (vStar, \phi) - dt (dp / dy, \phi)
-  auto const vLhs = std::make_tuple(AssemblyMass{1.0, feSpaceU});
+  auto const vLhs = std::make_tuple(AssemblyScalarMass{1.0, feSpaceU});
   auto const vRhs = std::make_tuple(
         AssemblyProjection{1.0, vStar.data, feSpaceU},
         AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}});

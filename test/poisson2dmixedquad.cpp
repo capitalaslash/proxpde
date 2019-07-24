@@ -85,7 +85,7 @@ int test(YAML::Node const & config)
   auto const bcsDummy = std::make_tuple();
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
-  // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceRT0, feSpaceP0Vec), bcsW);
+  // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceP0Vec, feSpaceRT0), bcsW);
 
   // in order to apply essential bcs on U
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
@@ -120,8 +120,8 @@ int test(YAML::Node const & config)
   ioP0.print({u, exactU, errorU});
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
-  builderRT0.buildLhs(std::tuple{AssemblyMass(1.0, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.buildRhs(std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceP0Vec, feSpaceW)}, bcsDummy);
+  builderRT0.buildLhs(std::tuple{AssemblyScalarMass(1.0, feSpaceP0Vec)}, bcsDummy);
+  builderRT0.buildRhs(std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceW, feSpaceP0Vec)}, bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");
   LUSolver solverRT0;

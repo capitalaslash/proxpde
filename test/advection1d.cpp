@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;
   AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
-  AssemblyMass timeDer(1./dt, feSpaceP1);
+  AssemblyScalarMass timeDer(1./dt, feSpaceP1);
   Vec concP1Old(feSpaceP1.dof.size);
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
 

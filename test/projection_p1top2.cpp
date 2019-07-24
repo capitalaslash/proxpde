@@ -32,8 +32,8 @@ int main()
 //  auto inputFun = [] (Vec3 const &) {return 1.;};
   interpolateAnalyticFunction(inputFun, feSpace1, u1.data);
 
-  AssemblyMass mass2(1.0, feSpace2);
-  AssemblyProjection mass1(1.0, u1.data, feSpace2, feSpace1);
+  AssemblyScalarMass mass2(1.0, feSpace2);
+  AssemblyProjection mass1(1.0, u1.data, feSpace1, feSpace2);
   Builder builder{feSpace2.dof.size};
   builder.buildLhs(std::tuple{mass2}, bcs2);
   builder.buildRhs(std::tuple{mass1}, bcs2);

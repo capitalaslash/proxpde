@@ -52,7 +52,8 @@ template <typename FESpace>
 struct FEVar
 {
   using FESpace_T = FESpace;
-  using Vec_T = FVec<FESpace_T::dim>;
+  using RefFE_T = typename FESpace_T::RefFE_T;
+  using Vec_T = FEVec_T<FESpace_T>;
 
   FEVar(FESpace_T const & fe, std::string_view n = ""):
     feSpace(fe),
@@ -60,7 +61,7 @@ struct FEVar
     name(n)
   {}
 
-  FEVar<FESpace_T> & operator<<(Fun<FESpace_T::dim, 3> const & f)
+  FEVar<FESpace_T> & operator<<(FEFun_T<FESpace_T> const & f)
   {
     interpolateAnalyticFunction(f, this->feSpace, this->data);
     return *this;
@@ -108,9 +109,8 @@ struct FEVar
 
   auto getFacetMeanValue(uint const side)
   {
-    using RefFE_T = typename FESpace_T::RefFE_T;
     assert(side < FESpace_T::Mesh_T::Elem_T::numFacets);
-    Vec_T sum = Vec_T::Zero();
+    FVec<FESpace_T::dim> sum = FVec<FESpace_T::dim>::Zero();
     for (auto const dofFacet: RefFE_T::dofOnFacet[side])
     {
       sum += _localData.row(dofFacet).transpose();
@@ -139,11 +139,23 @@ struct FEVar
   {
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
-    return feSpace.curFE.phi[q].transpose() * _localData;
+    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
+    {
+      FVec<FESpace_T::dim> dataQ = feSpace.curFE.phi[q].transpose() * _localData;
+      return dataQ;
+    }
+    else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      Vec3 const dataQ = feSpace.curFE.phiVect[q].transpose() * _localData;
+      return dataQ;
+    }
   }
 
   auto evaluateGrad(uint const q) const
   {
+    static_assert(
+          family_v<RefFE_T> == FamilyType::LAGRANGE,
+          "gradient is available only for Lagrange elements.");
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
     return feSpace.curFE.dphi[q].transpose() * _localData;

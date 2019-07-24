@@ -1,6 +1,7 @@
 #pragma once
 
 #include "def.hpp"
+#include "reffe.hpp"
 
 template <typename RefFE, typename QR>
 struct CurFE;
@@ -78,7 +79,7 @@ public:
     data = Vec::Zero(_constrainedDofMap.size());
   }
 
-  BCEss<FESpace> & operator<<(Fun<FESpace_T::dim, 3> const & f)
+  BCEss<FESpace> & operator<<(Fun<FESpace::dim, 3> const & fun)
   {
     if (marker != markerNotSet)
     {
@@ -86,12 +87,14 @@ public:
       {
         auto const & facet = feSpace.mesh.facetList[facetId];
         auto const & [elem, side] = facet.facingElem[0];
-            feSpace.curFE.reinit(*elem);
-            if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+        feSpace.curFE.reinit(*elem);
+        // this works for both Lagrange and RT elements because the function
+        // is the scalar flux in case of RT elements
+        if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
         {
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])
           {
-            auto const value = evaluateBoundaryValue(f, feSpace, dofFacet);
+            auto const value = fun(feSpace.curFE.dofPts[dofFacet]);
             for (auto const c: comp)
             {
               DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
@@ -107,7 +110,7 @@ public:
         }
         else // order_v<RefFE_T> == 0 && family_v<RefFE_T> == FamilyType::LAGRANGE
         {
-          auto const value = evaluateBoundaryValue(f, feSpace, 0);
+          auto const value = fun(feSpace.curFE.dofPts[0]);
           for (auto const c: comp)
           {
             DOFid_T const dofId = feSpace.dof.getId(elem->id, 0, c);
@@ -127,8 +130,9 @@ public:
           if (_constrainedDofMap.count(dof) > 1)
           {
             feSpace.curFE.reinit(elem);
+            auto const localDof = d % size;
             auto const c = d / size;
-            data[_constrainedDofMap.at(dof)] = evaluateBoundaryValue(f, feSpace, dof)[c];
+            data[_constrainedDofMap.at(dof)] = fun(feSpace.curFE.dofPts[localDof])[c];
           }
         }
       }
@@ -167,7 +171,7 @@ public:
     for (auto const facetId: facetIdList)
     {
       auto const & facet = feSpace.mesh.facetList[facetId];
-      auto const normal = narrow<3, dim>(facet.normal());
+      auto const normal = narrow<dim>(facet.normal());
       auto const & [elem, side] = facet.facingElem[0];
           feSpace.curFE.reinit(*elem);
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])

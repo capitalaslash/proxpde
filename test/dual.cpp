@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
   Builder builder{sizeP1};
   LUSolver solver;
   AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
-  AssemblyMass timeder(1./dt, feSpaceP1);
+  AssemblyScalarMass timeder(1./dt, feSpaceP1);
   Vec concP1Old(sizeP1);
   AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
 

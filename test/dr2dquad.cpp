@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   auto const bcs = std::tuple{bcRight, bcLeft, bcBottom, bcTop};
 
   AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyMass mass{1.0, feSpace};
+  AssemblyScalarMass mass{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) { return rhs(Rt * p); };
   auto modifiedRhs = [&rhs, &mesh_mod_inv] (Vec3 const& p) { return rhs(mesh_mod_inv(p)); };
   AssemblyAnalyticRhs f{modifiedRhs, feSpace};

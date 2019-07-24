@@ -7,7 +7,7 @@
 #include "builder.hpp"
 #include "var.hpp"
 #include "iomanager.hpp"
-#include "gradient.hpp"
+#include "feutils.hpp"
 
 // #include <amgcl/backend/eigen.hpp>
 // #include <amgcl/make_solver.hpp>
@@ -134,11 +134,11 @@ struct NSSolverMonolithic
   {
     // TODO: assert that this comes after setting up bcs
     builder.buildLhs(std::tuple{
-                       AssemblyMass{1. / parameters.dt, feSpaceVel},
+                       AssemblyScalarMass{1. / parameters.dt, feSpaceVel},
                        AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
-    builder.buildLhs(std::tuple{AssemblyMass{0., feSpaceP}}, bcsP);
+    builder.buildLhs(std::tuple{AssemblyScalarMass{0., feSpaceP}}, bcsP);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
@@ -334,7 +334,7 @@ struct NSSolverSplit2D
     solverP.factorize(builderP.A);
     rhsFixedP = builderP.b;
 
-    builderU.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceU}}, std::tuple{});
+    builderU.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceU}}, std::tuple{});
     builderU.closeMatrix();
     solverU.analyzePattern(builderU.A);
     solverU.factorize(builderU.A);
@@ -441,8 +441,8 @@ struct NSSolverSplit2D
   Vec pOld;
   Vec dp;
   Vec vel;
-  AssemblyMass<FESpaceU_T> assemblyMassUStar;
-  AssemblyMass<FESpaceU_T> assemblyMassVStar;
+  AssemblyScalarMass<FESpaceU_T> assemblyMassUStar;
+  AssemblyScalarMass<FESpaceU_T> assemblyMassVStar;
   AssemblyStiffness<FESpaceU_T> assemblyStiffnessUStar;
   AssemblyStiffness<FESpaceU_T> assemblyStiffnessVStar;
   AssemblyS2SProjection<FESpaceU_T> assemblyURhs;

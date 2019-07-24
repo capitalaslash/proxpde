@@ -47,7 +47,7 @@ int main()
   // bc setup
   auto const bcs = std::make_tuple();
 
-  AssemblyMass mass{1.0, feSpace};
+  AssemblyScalarMass mass{1.0, feSpace};
 
   AssemblyAnalyticRhs f{exactSol, feSpace};
 

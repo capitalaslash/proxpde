@@ -7,7 +7,7 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 #include "timer.hpp"
-#include "gradient.hpp"
+#include "feutils.hpp"
 
 template <typename Elem, uint order>
 int test(YAML::Node const & config)

@@ -71,7 +71,7 @@ int test(YAML::Node const & config)
   double const steps = 10;
   double const dt = 2.0;
 
-  AssemblyMass timeDer{1. / dt, feSpace};
+  AssemblyScalarMass timeDer{1. / dt, feSpace};
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};
   AssemblyProjection timeRhs{1. / dt, solOld, feSpace};

@@ -8,6 +8,13 @@ template <typename Elem, uint order>
 struct FEType {};
 
 template <>
+struct FEType<PointElem,0>
+{
+  using RefFE_T = RefPointP1;
+  using RecommendedQR = GaussQR<PointElem,1>;
+};
+
+template <>
 struct FEType<Line,0>
 {
   using RefFE_T = RefLineP0;

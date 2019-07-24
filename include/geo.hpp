@@ -2,8 +2,6 @@
 
 #include "def.hpp"
 
-#include <algorithm>
-
 class Point
 {
 public:
@@ -69,6 +67,7 @@ struct GeoElem
   virtual double volume() const = 0;
   virtual void buildNormal() = 0;
   virtual Vec3 normal() const = 0;
+  virtual double hMin() const = 0;
 
   virtual std::tuple<Vec3, Vec3> bbox() const final
   {
@@ -166,18 +165,20 @@ struct PointElem: public GeoElem
 
   ~PointElem() override = default;
 
-  Vec3 midpoint() const final {return pointList[0]->coord;}
-  Vec3 origin() const final {return pointList[0]->coord;}
-  double volume() const final {return 1.;}
+  Vec3 midpoint() const final { return pointList[0]->coord; }
+
+  Vec3 origin() const final { return pointList[0]->coord; }
+
+  double volume() const final { return 1.; }
+
   void buildNormal() final
   {
     _normal = Vec3{1.0, 0.0, 0.0};
   }
 
-  Vec3 normal() const final
-  {
-    return Vec3{1.0, 0.0, 0.0};
-  }
+  Vec3 normal() const final { return Vec3{1.0, 0.0, 0.0}; }
+
+  double hMin() const final { return 1.; }
 };
 
 class Line: public GeoElem
@@ -244,6 +245,11 @@ public:
     auto n = Vec3{length[1], -length[0], 0.0};
     n.normalize();
     return n;
+  }
+
+  double hMin() const final
+  {
+    return this->volume();
   }
 };
 
@@ -319,7 +325,7 @@ public:
     return n;
   }
 
-  double h_min() const
+  double hMin() const final
   {
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[2]->coord - pointList[1]->coord;
@@ -406,7 +412,7 @@ public:
     return n;
   }
 
-  double h_min() const
+  double hMin() const final
   {
     auto const d1 = pointList[2]->coord - pointList[0]->coord;
     auto const d2 = pointList[3]->coord - pointList[1]->coord;
@@ -480,6 +486,12 @@ public:
   {
     std::abort();
   }
+
+  double hMin() const final
+  {
+    std::abort();
+    return 1.;
+  }
 };
 
 class Hexahedron: public GeoElem
@@ -551,6 +563,12 @@ public:
   Vec3 normal() const final
   {
     std::abort();
+  }
+
+  double hMin() const final
+  {
+    std::abort();
+    return 1.;
   }
 };
 

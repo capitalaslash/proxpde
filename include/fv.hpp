@@ -27,7 +27,7 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
       }
       localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
 
-    cfl = std::max(cfl, localVel.norm() * dt / elem.h_min());
+    cfl = std::max(cfl, localVel.norm() * dt / elem.hMin());
   }
   return cfl;
 }

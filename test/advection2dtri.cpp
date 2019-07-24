@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
   t.start("velocity");
   FEVar vel{feSpaceVel, "velocity"};
-  vel << narrow<3, Elem_T::dim>(config["velocity"].as<Vec3>());
+  vel << narrow<Elem_T::dim>(config["velocity"].as<Vec3>());
 
   double const dt = config["dt"].as<double>();
   auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);

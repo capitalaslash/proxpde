@@ -179,39 +179,27 @@ using Vec3 = FVec<3>;
 // using Vec3 = Eigen::Vector4d // this one is vectorizable
 
 template <int dim1, int dim2>
-FVec<dim2> promote(FVec<dim1> const & v1)
+FVec<dim1> promote(FVec<dim2> const & v2)
 {
-  static_assert (dim2 >= dim1, "promoting to shorter vector");
-  FVec<dim2> v2 = FVec<dim2>::Zero();
-  for (uint i=0; i<dim1; ++i)
+  static_assert (dim1 >= dim2, "promoting to shorter vector");
+  FVec<dim1> v1 = FVec<dim1>::Zero();
+  for (uint i=0; i<dim2; ++i)
   {
-    v2[i] = v1[i];
+    v1[i] = v2[i];
   }
-  return v2;
-}
-
-template <int dim>
-FVec<dim> promote(FVec<dim> const & v)
-{
-  return v;
+  return v1;
 }
 
 template <int dim1, int dim2>
-FVec<dim2> narrow(FVec<dim1> const & v1)
+FVec<dim1> narrow(FVec<dim2> const & v2)
 {
-  static_assert (dim2 <= dim1, "narrowing to longer vector");
-  FVec<dim2> v2;
-  for (uint i=0; i<dim2; ++i)
+  static_assert (dim1 <= dim2, "narrowing to longer vector");
+  FVec<dim1> v1;
+  for (uint i=0; i<dim1; ++i)
   {
-    v2[i] = v1[i];
+    v1[i] = v2[i];
   }
-  return v2;
-}
-
-template <int dim>
-FVec<dim> narrow(FVec<dim> const & v)
-{
-  return v;
+  return v1;
 }
 
 template <int dim>

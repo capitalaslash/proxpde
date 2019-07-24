@@ -30,7 +30,7 @@ struct BCEssNormal: public BCEss<FESpace>
     {
       if (facet.marker == this->marker)
       {
-        auto const normal = narrow<3, dim>(facet.normal());
+        auto const normal = narrow<dim>(facet.normal());
         auto const & [elem, side] = facet.facingElem[0];
         this->feSpace.curFE.reinit(*elem);
         if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
@@ -146,11 +146,11 @@ int main(int argc, char* argv[])
   // auto const oneY = [] (Point const &) { return Vec2{0.0, 1.0}; };
   // auto const inlet = [&R] (Vec3 const & p)
   // {
-  //   return narrow<3, 2>(R * Vec3{0., 5 * p[0] * (1. - p[0]), 0.});
+  //   return narrow<2>(R * Vec3{0., 5 * p[0] * (1. - p[0]), 0.});
   // };
-  // auto const inlet = [&R] (Vec3 const & ) { return narrow<3, 2>(R * Vec3{0., 1., 0.}); };
+  // auto const inlet = [&R] (Vec3 const & ) { return narrow<2>(R * Vec3{0., 1., 0.}); };
   // auto const inlet = [&R] (Vec3 const & p) {
-  //   return narrow<3, 2>(R * Vec3{0., (2. - p[0]), 0.});
+  //   return narrow<2>(R * Vec3{0., (2. - p[0]), 0.});
   // };
   auto bcBottom = BCEssNormal{feSpaceVel, side::BOTTOM};
   // bcBottom << inlet;

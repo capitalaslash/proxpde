@@ -30,10 +30,10 @@ int test()
   {
     for (uint j=0; j<size; ++j)
     {
-      matPhi(i, j) = RefFE_T::phiFun[j](narrow<3, Elem::dim>(cfe.dofPts[i]));
+      matPhi(i, j) = RefFE_T::phiFun[j](narrow<Elem::dim>(cfe.dofPts[i]));
       for (uint d=0; d<Elem::dim; ++d)
       {
-        matDPhi(i, d) += RefFE_T::dphiFun[j](narrow<3, Elem::dim>(cfe.dofPts[i]))[d];
+        matDPhi(i, d) += RefFE_T::dphiFun[j](narrow<Elem::dim>(cfe.dofPts[i]))[d];
       }
     }
   }

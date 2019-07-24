@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
   {
     config["n"] = 10U;
     config["dt"] = 0.1;
+    config["final_time"] = 3.0;
     config["velocity"] = 0.5;
     config["threshold"] = 0.37;
-    config["final_time"] = 3.0;
   }
   config.validate({"n", "dt", "velocity", "threshold", "final_time"});
 
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
   scalarFun_T ic = [threshold] (Vec3 const& p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-    if(p(0) < threshold) return 1.;
+    if (p(0) < threshold) return 1.;
     return 0.;
   };
   concP1 << ic;
@@ -108,8 +108,6 @@ int main(int argc, char* argv[])
 
   FVSolver fv{feSpaceP0, bcsP0, UpwindLimiter{}};
 
-  auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
-  double time = 0.0;
   IOManager ioP1{feSpaceP1, "output_advection1d/solP1"};
   ioP1.print(std::array{concP1});
   IOManager ioP0{feSpaceP0, "output_advection1d/solP0"};
@@ -118,6 +116,8 @@ int main(int argc, char* argv[])
   auto const lhs = std::tuple{timeDer, advection};
   auto const rhs = std::tuple{timeDerRhs};
 
+  auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
+  double time = 0.0;
   for(uint itime=0; itime<ntime; itime++)
   {
     time += dt;

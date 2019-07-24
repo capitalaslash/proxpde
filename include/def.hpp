@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include <vector>
+#include <array>
 #include <tuple>
 #include <bitset>
 #include <set>
@@ -55,7 +56,7 @@ std::vector<uint> allComp()
 }
 
 // ----------------------------------------------------------------------------
-#include <array>
+// #include <array>
 template <typename T, std::size_t N>
 using array = std::array<T,N>;
 // #include "array.hpp"
@@ -84,8 +85,11 @@ struct StorageToEigen<StorageType::RowMajor> { static Eigen::StorageOptions cons
 template <>
 struct StorageToEigen<StorageType::ClmMajor> { static Eigen::StorageOptions constexpr value = Eigen::ColMajor; };
 
+template <StorageType Storage>
+Eigen::StorageOptions constexpr StorageToEigen_V = StorageToEigen<Storage>::value;
+
 template <StorageType Storage = StorageType::ClmMajor>
-using Mat = Eigen::SparseMatrix<double, StorageToEigen<Storage>::value>;
+using Mat = Eigen::SparseMatrix<double, StorageToEigen_V<Storage>>;
 using Vec = Eigen::VectorXd;
 
 // ----------------------------------------------------------------------------
@@ -226,7 +230,10 @@ using scalarTwodFun_T = ScalarFun<2>;
 using scalarThreedFun_T = ScalarFun<3>;
 
 // ----------------------------------------------------------------------------
-template<class T> struct dependent_false : std::false_type {};
+template <class T> struct dependent_false: std::false_type {};
+
+template <class T>
+static constexpr bool dependent_false_v = dependent_false<T>::value;
 
 // ----------------------------------------------------------------------------
 // execute a function for every member of a tuple

@@ -541,7 +541,6 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   using FESpaceVel_T = FESpaceVel;
   using Super_T = Diagonal<FESpace>;
   using LMat_T = typename Super_T::LMat_T;
-  using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyAdvection(double const c,
                              Vec const & u,
@@ -661,9 +660,9 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace1_T::CurFE_T::QR_T,
-          typename FESpace2_T::CurFE_T::QR_T>::value,
+          typename FESpace2_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -706,9 +705,9 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace1_T::CurFE_T::QR_T,
-          typename FESpace2_T::CurFE_T::QR_T>::value,
+          typename FESpace2_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -751,9 +750,9 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace1_T::CurFE_T::QR_T,
-          typename FESpace2_T::CurFE_T::QR_T>::value,
+          typename FESpace2_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -790,9 +789,9 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace1_T::CurFE_T::QR_T,
-          typename FESpace2_T::CurFE_T::QR_T>::value,
+          typename FESpace2_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -841,14 +840,15 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace_T::CurFE_T::QR_T,
-          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          typename FESpaceRhs_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
   void reinit(GeoElem const & elem) const override
   {
+    // if constexpr (!std::is_same_v<FESpace_T,FESpaceRhs_T>)
     feSpaceRhs.curFE.reinit(elem);
   }
 
@@ -902,9 +902,9 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
                   "the two fespaces are not of the same dimension");
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace_T::CurFE_T::QR_T,
-          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          typename FESpaceRhs_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -961,9 +961,9 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
 
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace_T::CurFE_T::QR_T,
-          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          typename FESpaceRhs_T::CurFE_T::QR_T>,
           "the two quad rule are not the same");
   }
 
@@ -1024,7 +1024,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     else
     {
       // no support for vector -> vector projection
-      static_assert (dependent_false<FESpace>::value, "vector -> vector projection not yet implemented");
+      static_assert (dependent_false_v<FESpace>, "vector -> vector projection not yet implemented");
     }
   }
 
@@ -1056,7 +1056,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
-      // static_assert (dependent_false<FESpace>::value, "not yet implemented");
+      // static_assert (dependent_false_v<FESpace>, "not yet implemented");
       assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
               AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe});
     }
@@ -1064,7 +1064,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
       // no support for vector -> vector projection
-      static_assert (dependent_false<FESpace>::value, "vector -> vector projection not yet implemented");
+      static_assert (dependent_false_v<FESpace>, "vector -> vector projection not yet implemented");
     }
   }
 

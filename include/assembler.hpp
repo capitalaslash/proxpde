@@ -16,12 +16,12 @@ constexpr uint computeDOFTotalNum(FESpaceTuple & list)
 
 namespace utility
 {
-template <typename FESpaceTuple, std::size_t remaining = std::tuple_size<FESpaceTuple>::value>
+template <typename FESpaceTuple, std::size_t remaining = std::tuple_size_v<FESpaceTuple>>
 struct ComputeDOFLocal
 {
   static uint constexpr sum()
   {
-    using FESpaceT = std::tuple_element_t<std::tuple_size<FESpaceTuple>::value-remaining, FESpaceTuple>;
+    using FESpaceT = std::tuple_element_t<std::tuple_size_v<FESpaceTuple>-remaining, FESpaceTuple>;
     return FESpaceT::RefFE_T::numFuns * FESpaceT::dim +
         ComputeDOFLocal<FESpaceTuple, remaining - 1>::sum();
   }
@@ -48,7 +48,7 @@ template<int... Is>
 struct gen_seq<0, Is...> : seq<Is...> {};
 
 template <typename FESpaceTuple, int... Is>
-static array<uint, std::tuple_size<FESpaceTuple>::value> constexpr
+static array<uint, std::tuple_size_v<FESpaceTuple>> constexpr
 getBlockStructure(seq<Is...>)
 {
   return {{
@@ -58,10 +58,10 @@ getBlockStructure(seq<Is...>)
 }
 
 template <typename FESpaceTuple>
-static array<uint, std::tuple_size<FESpaceTuple>::value> constexpr getBlockStructure()
+static array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure()
 {
   return utility::details::getBlockStructure<FESpaceTuple>(
-        utility::details::gen_seq<std::tuple_size<FESpaceTuple>::value>{});
+        utility::details::gen_seq<std::tuple_size_v<FESpaceTuple>>{});
 }
 }
 

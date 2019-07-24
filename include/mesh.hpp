@@ -272,7 +272,7 @@ void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
 template <typename Elem>
 void referenceMesh(Mesh<Elem> & mesh)
 {
-  if constexpr (std::is_same<Elem, Line>::value)
+  if constexpr (std::is_same_v<Elem, Line>)
   {
     buildHyperCube(
       mesh,
@@ -280,7 +280,7 @@ void referenceMesh(Mesh<Elem> & mesh)
       {2., 0., 0.},
       {1, 0, 0});
   }
-  else if constexpr (std::is_same<Elem, Quad>::value)
+  else if constexpr (std::is_same_v<Elem, Quad>)
   {
     buildHyperCube(
       mesh,
@@ -288,7 +288,7 @@ void referenceMesh(Mesh<Elem> & mesh)
       {2., 2., 0.},
       {1, 1, 0});
   }
-  else if constexpr (std::is_same<Elem, Hexahedron>::value)
+  else if constexpr (std::is_same_v<Elem, Hexahedron>)
   {
     buildHyperCube(
       mesh,
@@ -296,11 +296,11 @@ void referenceMesh(Mesh<Elem> & mesh)
       {2., 2., 2.},
       {1, 1, 1});
   }
-  else if constexpr (std::is_same<Elem, Triangle>::value)
+  else if constexpr (std::is_same_v<Elem, Triangle>)
   {
     refTriangleMesh(mesh);
   }
-  else if constexpr (std::is_same<Elem, Tetrahedron>::value)
+  else if constexpr (std::is_same_v<Elem, Tetrahedron>)
   {
     refTetrahedronMesh(mesh);
   }

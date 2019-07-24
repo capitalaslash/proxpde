@@ -58,6 +58,7 @@ minifem_add_test(timeder)
 minifem_add_test(poisson1d)
 minifem_add_test(poisson1d_p2)
 minifem_add_test(advection1d DATA advection1d.yaml)
+minifem_add_test(supg1d)
 
 # 2d tri
 minifem_add_test(poisson2dtri)

@@ -43,21 +43,12 @@ int main(int argc, char* argv[])
   {
     return p;
   };
-
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
   uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
-
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
-
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(*mesh, origin, length, {{numElemsX, numElemsY, 0}});
-
-  // mesh modifier
-  for (auto & p: mesh->pointList)
-  {
-    p.coord = mesh_mod(p.coord);
-  }
 
   // // rotation matrix
   // double thetay = M_PI / 4.;
@@ -77,6 +68,22 @@ int main(int argc, char* argv[])
   // {
   //   p.coord = R * p.coord;
   // }
+
+  vectorFun_T meshMod = [] (Vec3 const & p)
+  {
+    return p;
+  };
+
+  vectorFun_T meshModInv = [] (Vec3 const & p)
+  {
+    return p;
+  };
+
+  // mesh modifier
+  for (auto & p: mesh->pointList)
+  {
+    p.coord = meshMod(p.coord);
+  }
 
   FESpace_T feSpace{*mesh};
 
@@ -110,7 +117,7 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
 
   Var exact{"exact"};
-  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
+  // auto rotatedESol = [&Rt] (Vec3 const& p) { return exact_sol(Rt * p); };
   auto modifiedESol = [&exactSol, &mesh_mod_inv] (Vec3 const& p) { return exactSol(mesh_mod_inv(p)); };
   interpolateAnalyticFunction(modifiedESol, feSpace, exact.data);
   // interpolateAnalyticFunction(exact_sol, feSpace, exact.data);

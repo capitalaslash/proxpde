@@ -1,6 +1,8 @@
 #pragma once
 
 #include "def.hpp"
+#include "geo.hpp"
+#include "reffe.hpp"
 
 template <typename T> int sgn(T val)
 {
@@ -17,7 +19,7 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
       FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
       for(uint n=0; n<FESpace::CurFE_T::RefFE_T::numFuns; ++n)
       {
-        for (uint d=0; d<FESpace::RefFE_T::dim; ++d)
+        for (uint d=0; d<FESpace::dim; ++d)
         {
           id_T const dofId = feSpace.dof.getId(elem.id, n, d);
           localVel[d] += vel[dofId];
@@ -127,6 +129,9 @@ struct FVSolver
   void update(Vec const & u)
   {
     uOld = u;
+    // TODO: uJump is defined only on internal facets.
+    // shrink its size and offset calls with numBdFacets
+    // since bd facets are always at the beginning
     for (auto const & facet: feSpace.mesh.facetList)
     {
       auto const * insideElem = facet.facingElem[0].ptr;
@@ -147,9 +152,18 @@ struct FVSolver
     {
       auto const [insideElemPtr, side] = facet.facingElem[0];
       vel.setLocalData(insideElemPtr->id);
-      typename Vel::Vec_T v = vel.getFacetMeanValue(side);
-      Vec3 v3 = promote<dim, 3>(v);
-      double const vNorm = v3.dot(facet._normal);
+      double vNorm;
+      FVec<Vel::FESpace_T::dim> v = vel.getFacetMeanValue(side);
+      if constexpr (family_v<typename Vel::FESpace_T::RefFE_T> == FamilyType::LAGRANGE)
+      {
+        Vec3 v3 = promote<3>(v);
+        vNorm = v3.dot(facet._normal) * facet.volume();
+      }
+      else if constexpr (family_v<typename Vel::FESpace_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        // for RT fe spaces the dof is already a flux
+        vNorm = v[0];
+      }
       if (std::fabs(vNorm) > 1.e-16)
       {
         uint const upwindDir = (vNorm > 0.) ? 0 : 1;
@@ -182,21 +196,19 @@ struct FVSolver
           }
           fluxes[facet.id] =
               vNorm *
-              facet.volume() *
               uLimited;
         }
         // no upwind element means that we are on a boundary and the flux is
         // coming from outside
         else
         {
-          static_for(bcs, [&] (auto const /*i*/, auto const & bc)
+          static_for(bcs, [&, elemId = insideElemPtr->id] (auto const /*i*/, auto const & bc)
           {
             if (bc.marker == facet.marker)
             {
-              auto const uLocal = bc.get(insideElemPtr->id);
+              auto const uLocal = bc.get(elemId);
               fluxes[facet.id] =
                   vNorm *
-                  facet.volume() *
                   uLocal;
             }
           });
@@ -255,10 +267,10 @@ struct FVSolver
       // fluxes sign must be adjusted wrt the normal pointing outside the element
       for (uint f=0; f<Elem_T::numFacets; ++f)
       {
-        auto const & facet = feSpace.mesh.facetList[facetIds[f]];
+        auto const facetId = feSpace.mesh.facetList[facetIds[f]].id;
         u[id] += dt *
             normalSgn(elem.id, f) *
-            fluxes[facet.id] *
+            fluxes[facetId] *
             hinv;
         // std::cout << normalSgn(elem.id, f) << " " << fluxes[feSpace.mesh.facetList[facetIds[f]].id] << std::endl;
       }

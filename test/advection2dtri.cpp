@@ -8,6 +8,7 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 #include "fv.hpp"
+#include "feutils.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -22,9 +23,15 @@ int main(int argc, char* argv[])
                               FEType<Elem_T,0>::RefFE_T,
                               FEType<Elem_T,0>::RecommendedQR>;
   // velocity field
+  // using FESpaceVel_T = FESpace<Mesh_T,
+  //                              FEType<Elem_T,1>::RefFE_T,
+  //                              FEType<Elem_T,1>::RecommendedQR, Elem_T::dim>;
   using FESpaceVel_T = FESpace<Mesh_T,
-                               FEType<Elem_T,1>::RefFE_T,
-                               FEType<Elem_T,1>::RecommendedQR, Elem_T::dim>;
+                               RefTriangleRT0,
+                               GaussQR<Triangle, 3>>;
+  using FESpaceVelP0_T = FESpace<Mesh_T,
+                                 RefTriangleP0,
+                                 GaussQR<Triangle, 3>, 2>;
   // flux feSpace
   using MeshFacet_T = Mesh<Elem_T::Facet_T>;
   using FESpaceFacet_T = FESpace<MeshFacet_T,
@@ -66,7 +73,7 @@ int main(int argc, char* argv[])
         {0., 0., 0.},
         {1., 1., 0.},
         {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
-        INTERNAL_FACETS | NORMALS);
+        INTERNAL_FACETS | NORMALS | FACET_PTRS);
   // readGMSH(*mesh, "square_uns.msh", INTERNAL_FACETS | NORMALS);
   // hexagonSquare(*mesh, true);
   // buildNormals(*mesh);
@@ -80,6 +87,7 @@ int main(int argc, char* argv[])
   FESpaceP1_T feSpaceP1{*mesh};
   FESpaceP0_T feSpaceP0{*mesh};
   FESpaceVel_T feSpaceVel{*mesh};
+  FESpaceVelP0_T feSpaceVelP0{*mesh};
   FESpaceFacet_T feSpaceFacet{*facetMesh};
   t.stop();
 
@@ -122,7 +130,7 @@ int main(int argc, char* argv[])
   Builder builder{sizeP1};
   LUSolver solver;
   AssemblyScalarMass timeDer(1./dt, feSpaceP1);
-  AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
+  AssemblyAdvectionFE advection(1.0, vel, feSpaceP1);
   Vec concP1Old{sizeP1};
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
   t.stop();
@@ -149,8 +157,10 @@ int main(int argc, char* argv[])
   ioP0.print(std::array{concP0});
   IOManager ioFlux{feSpaceFacet, "output_advection2dtri/flux"};
   ioFlux.print({flux});
-  IOManager ioVel{feSpaceVel, "output_advection2dtri/vel"};
-  ioVel.print(std::array{vel});
+  Var velP0{"velP0", feSpaceVelP0.dof.size * FESpaceVelP0_T::dim};
+  l2Projection(velP0.data, feSpaceVelP0, vel.data, feSpaceVel);
+  IOManager ioVel{feSpaceVelP0, "output_advection2dtri/vel"};
+  ioVel.print(std::array{velP0});
 
   for(uint itime=0; itime<ntime; itime++)
   {
@@ -203,9 +213,7 @@ int main(int argc, char* argv[])
   std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1 << std::endl;
   double errorNormP0 = (concP0.data - oneFieldP0).norm();
   std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0 << std::endl;
-  return checkError({errorNormP1, errorNormP0}, {0.2572474581492306, 0.03789136711107713});
-  // if (std::fabs(errorNormP1 - 0.5313772283037004) > 1.e-10 ||
-  //     std::fabs(errorNormP0 - 0.01568656361986407) > 1.e-10 ||
-  //     std::isnan(errorNormP1) ||
-  //     std::isnan(errorNormP0))
+  return checkError(
+    {errorNormP1, errorNormP0},
+    {0.2572474581492306, 0.03789136711107713});
 }

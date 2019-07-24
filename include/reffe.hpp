@@ -362,9 +362,9 @@ struct RefTriangleRT0
   static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {
     return array<Vec3,numFuns>{
-      e.pointList[0]->coord + e.pointList[1]->coord,
-      e.pointList[1]->coord + e.pointList[2]->coord,
-      e.pointList[2]->coord + e.pointList[0]->coord,
+      0.5*(e.pointList[0]->coord + e.pointList[1]->coord),
+      0.5*(e.pointList[1]->coord + e.pointList[2]->coord),
+      0.5*(e.pointList[2]->coord + e.pointList[0]->coord)
     };
   }
 
@@ -610,10 +610,10 @@ struct RefQuadRT0
   static array<Vec3,numFuns> dofPts(GeoElem const & e)
   {
     return array<Vec3,numFuns>{
-      e.pointList[0]->coord + e.pointList[1]->coord,
-      e.pointList[1]->coord + e.pointList[2]->coord,
-      e.pointList[2]->coord + e.pointList[3]->coord,
-      e.pointList[3]->coord + e.pointList[0]->coord,
+      0.5*(e.pointList[0]->coord + e.pointList[1]->coord),
+      0.5*(e.pointList[1]->coord + e.pointList[2]->coord),
+      0.5*(e.pointList[2]->coord + e.pointList[3]->coord),
+      0.5*(e.pointList[3]->coord + e.pointList[0]->coord),
     };
   }
 

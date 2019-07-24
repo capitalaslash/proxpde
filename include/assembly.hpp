@@ -178,7 +178,7 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      double const coefQPoint = coef.evaluate(q);
+      double const coefQPoint = coef.evaluate(q)[0];
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>
@@ -538,21 +538,25 @@ template <typename FESpace, typename FESpaceVel>
 struct AssemblyAdvection: public Diagonal<FESpace>
 {
   using FESpace_T = FESpace;
+  using FESpaceVel_T = FESpaceVel;
   using Super_T = Diagonal<FESpace>;
-  using VelVec_T = Eigen::Matrix<double, Eigen::Dynamic, FESpace_T::RefFE_T::dim>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyAdvection(double const c,
                              Vec const & u,
-                             FESpaceVel const & feVel,
+                             FESpaceVel_T const & feVel,
                              FESpace_T const & fe,
                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
     Diagonal<FESpace>(fe, cmp),
     coef(c),
     vel(u),
     feSpaceVel(feVel)
-  {}
+  {
+    static_assert(
+          family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::LAGRANGE,
+          "this implementation requires Lagrange discretization for the velocity");
+  }
 
   void reinit(GeoElem const & elem) const override
   {
@@ -564,11 +568,10 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      //TODO: the velocity should have its own fe space
       FVec<3> localVel = FVec<3>::Zero();
       for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
       {
-        for (uint d=0; d<FESpaceVel::RefFE_T::dim; ++d)
+        for (uint d=0; d<FESpaceVel_T::dim; ++d)
         {
           id_T const dofId = feSpaceVel.dof.getId(this->feSpace.curFE.elem->id, n, d);
           localVel[d] += vel[dofId] * this->feSpace.curFE.phi[q](n);
@@ -593,7 +596,51 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
   double const coef;
   Vec const & vel;
-  FESpaceVel const & feSpaceVel;
+  FESpaceVel_T const & feSpaceVel;
+};
+
+template <typename FESpace, typename Vel>
+struct AssemblyAdvectionFE: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  explicit AssemblyAdvectionFE(double const c,
+                               Vel & u,
+                               FESpace_T const & fe,
+                               AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace>(fe, cmp),
+    coef(c),
+    vel(u)
+  {}
+
+  void reinit(GeoElem const & elem) const override
+  {
+    vel.reinit(elem);
+  }
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+    uint constexpr size = CurFE_T::numDOFs;
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const localV = vel.evaluate(q);
+      FVec<3> const localVel = promote<3>(localV);
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<size, size>(d * size, d * size) +=
+            coef * this->feSpace.curFE.JxW[q] *
+            this->feSpace.curFE.phi[q] *
+            (this->feSpace.curFE.dphi[q] * localVel).transpose();
+      }
+    }
+  }
+
+  double const coef;
+  Vel & vel;
 };
 
 template <typename FESpace1, typename FESpace2>
@@ -784,8 +831,8 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyS2SProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T const & fe,
                                  FESpaceRhs_T const & feRhs,
+                                 FESpace_T const & fe,
                                  AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
@@ -844,8 +891,8 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyS2VProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T const & fe,
-                                 FESpaceRhs_T const & feRhs):
+                                 FESpaceRhs_T const & feRhs,
+                                 FESpace_T const & fe):
     AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
@@ -902,13 +949,16 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyV2SProjection(double const c,
                                  Vec const & r,
-                                 FESpace_T const & fe,
-                                 FESpaceRhs_T const & feRhs):
+                                 FESpaceRhs_T const & feRhs,
+                                 FESpace_T const & fe):
     AssemblyVector<FESpace_T>(fe, {0}),
     coef(c),
     rhs(r),
     feSpaceRhs(feRhs)
   {
+    static_assert(FESpace_T::dim == FESpaceRhs_T::RefFE_T::dim,
+                  "the two fespaces are not of the same dimension");
+
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
           std::is_same<
@@ -936,10 +986,13 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
     {
       for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
       {
-        Fe.template block<CurFE_T::numDOFs,1>(d*CurFE_T::numDOFs, 0) +=
+        // u*[q] = sum_k u*_k vec{psi}_k[q]
+        double rhsQ = feSpaceRhs.curFE.phiVect[q].col(d).dot(localRhs);
+
+        Fe.template block<CurFE_T::numDOFs, 1>(d*CurFE_T::numDOFs, 0) +=
             coef * this->feSpace.curFE.JxW[q] *
             this->feSpace.curFE.phi[q] *
-            (feSpaceRhs.curFE.phiVect[q].col(d).dot(localRhs)); // u*[q] = sum_k u*_k vec{psi}_k[q]
+            rhsQ;
       }
     }
   }
@@ -977,35 +1030,35 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
 
   explicit AssemblyProjection(double const c,
                               Vec const & r,
-                              FESpace_T const & fe,
-                              FESpaceRhs_T const & feRhs):
+                              FESpaceRhs_T const & feRhs,
+                              FESpace_T const & fe):
     AssemblyVector<FESpace_T>(fe, allComp<FESpace_T>())
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
-          std::is_same<
+          std::is_same_v<
           typename FESpace_T::CurFE_T::QR_T,
-          typename FESpaceRhs_T::CurFE_T::QR_T>::value,
+          typename FESpaceRhs_T::CurFE_T::QR_T>,
           "the two quad rules are not the same");
 
     if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
                   fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs, allComp<FESpace_T>()});
+              AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe, allComp<FESpace_T>()});
     }
     else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
       assembly = std::make_unique<AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
+              AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe});
     }
     else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
       // static_assert (dependent_false<FESpace>::value, "not yet implemented");
       assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, fe, feRhs});
+              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe});
     }
     else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
@@ -1413,8 +1466,7 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
 
     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      FVec<3> localVelQ = promote<FESpaceVel_T::dim, 3>(
-            localVel * feSpaceVel.curFE.phi[q]);
+      FVec<3> localVelQ = promote<3>(localVel * feSpaceVel.curFE.phi[q]);
 
       FMat<FESpaceData_T::dim, 3> const localDataGradQ =
           localData * feSpaceData.curFE.dphi[q];

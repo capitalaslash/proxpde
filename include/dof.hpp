@@ -248,7 +248,7 @@ struct DOF
     }
   }
 
-  void setupGeoMap(Mesh const & mesh, uint offset)
+  void setupGeoMap(Mesh const & mesh, [[maybe_unused]] uint offset)
   {
     PtMap_T geoPtMap;
     if constexpr (mappingIsSeparate_v<RefFE>)

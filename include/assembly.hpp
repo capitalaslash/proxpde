@@ -52,7 +52,7 @@ struct Diagonal: public AssemblyBase
   virtual void build(LMat_T & Ke) const = 0;
   // virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
-  virtual void reinit(GeoElem const & /*elem*/) const {}
+  virtual void reinit(GeoElem const & ) const {}
 
   FESpace_T const & feSpace;
   // LMat_T mat;
@@ -108,7 +108,7 @@ struct AssemblyVector: public AssemblyBase
 
   virtual void build(LVec_T & Fe) const = 0;
 
-  virtual void reinit(GeoElem const & elem) const {}
+  virtual void reinit(GeoElem const &) const {}
 
   FESpace_T const & feSpace;
 };
@@ -269,7 +269,7 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
     velOld(uOld)
   {}
 
-  void build(LVec_T & Fe) const override
+  void build(LVec_T & /*Fe*/) const override
   {
 //     using CurFE_T = typename FESpace_T::CurFE_T;
 //     for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
@@ -319,7 +319,7 @@ struct AssemblyDummy: public Diagonal<FESpace>
      Diagonal<FESpace>(fe, cmp)
   {}
 
-  void build(LMat_T & Ke) const override {}
+  void build(LMat_T &) const override {}
 };
 
 template <typename FESpace>

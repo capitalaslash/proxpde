@@ -294,7 +294,7 @@ void getComponent(
     Vec & dest,
     FESpaceDest const & feSpaceDest,
     Vec & orig,
-    FESpaceOrig const & feSpaceOrig,
+    [[maybe_unused]] FESpaceOrig const & feSpaceOrig,
     uint component)
 {
   static_assert(FESpaceOrig::dim > 1, "should not be used on scalar fespaces");
@@ -334,7 +334,7 @@ void getComponents(
 template <typename FESpaceDest, typename FESpaceOrig>
 void setComponent(
     Vec & dest,
-    FESpaceDest const & feSpaceDest,
+    [[maybe_unused]] FESpaceDest const & feSpaceDest,
     Vec const & orig,
     FESpaceOrig const & feSpaceOrig,
     uint component)

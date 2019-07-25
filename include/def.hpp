@@ -24,6 +24,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
 #include <unsupported/Eigen/IterativeSolvers>
+#include <unsupported/Eigen/SparseExtra>
 
 #include <yaml-cpp/yaml.h>
 

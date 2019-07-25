@@ -26,7 +26,12 @@ macro(minifem_add_test name)
   # TODO: support COMPONENTS
   target_link_libraries(${name} MiniFEM::minifem)
   # TODO: manage optional compile flags
-  target_compile_options(${name} PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic>)
+  target_compile_options(${name}
+    PRIVATE ${MINIFEM_COMPILE_FLAGS}
+  )
+  target_link_options(${name}
+    PRIVATE ${MINIFEM_LINK_FLAGS}
+  )
   add_test(
     NAME MiniFEM.${name}
     COMMAND ${name}

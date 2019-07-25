@@ -16,7 +16,7 @@ endif()
 #set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_DEBUG_POSTFIX "-dbg")
+# set(CMAKE_DEBUG_POSTFIX "-dbg")
 
 include(FeatureSummary)
 
@@ -30,6 +30,8 @@ write_compiler_detection_header(
     # cxx_if_constexpr
 )
 
+string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
+string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
 #add_compile_options(-Wall -Wpedantic)
 # set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 # set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
@@ -45,7 +47,8 @@ message(STATUS "=== COMPILER OPTIONS ===========================================
 message(STATUS "compiler id     : ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
-message(STATUS "c++ flags       : ${${BUILD_FLAGS}}")
+message(STATUS "compile flags   : ${MINIFEM_COMPILE_FLAGS}")
+message(STATUS "link flags      : ${MINIFEM_LINK_FLAGS}")
 
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
 
@@ -69,7 +72,7 @@ add_library(MiniFEM::minifem ALIAS minifem)
 
 target_include_directories(minifem PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  # $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
   ${HDF5_INCLUDE_DIRS}
 )
@@ -78,7 +81,8 @@ target_include_directories(minifem PUBLIC
 target_compile_features(minifem PUBLIC cxx_std_17)
 
 target_compile_options(minifem
-  PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic -Wextra>
+  # PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic -Wextra -flto>
+  PRIVATE ${MINIFEM_COMPILE_FLAGS}
 )
 
 target_link_libraries(minifem PUBLIC
@@ -89,6 +93,10 @@ target_link_libraries(minifem PUBLIC
   ${HDF5_LIBRARIES}
   OpenMP::OpenMP_CXX
   stdc++fs
+)
+
+target_link_options(minifem
+  PRIVATE ${MINIFEM_LINK_FLAGS}
 )
 
 add_executable(main EXCLUDE_FROM_ALL main.cpp)

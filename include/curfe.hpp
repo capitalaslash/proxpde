@@ -132,32 +132,34 @@ struct CurFE
     return ptHat;
   }
 
-  FVec<RefFE::dim> inverseMap(Vec3 const & pt)
+  std::tuple<FVec<RefFE::dim>, int> inverseMap(Vec3 const & pt, double const toll = 1.e-4)
   {
     FVec<RefFE::dim> approxPt = approxInverseMap(pt);
     auto const mappingPts = RefFE::mappingPts(*elem);
     auto const origin = elem->origin();
     int iter = 0;
-    while (iter < 200)
+    static constexpr int maxIter = 30;
+    while (iter < maxIter)
     {
       JacMat_T jac = JacMat_T::Zero();
       for(uint n=0; n<RefFE::numGeoFuns; ++n)
       {
         jac += mappingPts[n] * (RefFE::mapping[n](approxPt)).transpose();
       }
-      auto const predictedPt = origin + jac * approxPt;
+      Vec3 const predictedPt = origin + jac * approxPt;
       // filelog << iter << " " << std::setprecision(16) << approxPt.transpose() << " " << (pt - predictedPt).norm() << std::endl;
-      // TODO: this error is computed on the real elem, maybe move it to reference elem using detJac?
-      if (!RefFE_T::inside(approxPt) || (pt - predictedPt).norm() < 3.e-15)
-        break;
+      Vec3 const deltaReal = pt - predictedPt;
       auto const jacPlus = (jac.transpose() * jac).inverse() * jac.transpose();
-      // fixed-point iteration
-      approxPt = jacPlus * (pt - origin);
+      // Newton iteration
+      FVec<RefFE_T::dim> deltaRef = jacPlus * deltaReal;
+      approxPt += deltaRef;
       iter++;
+      if (!RefFE_T::inside(approxPt) || deltaRef.norm() < toll)
+        break;
     }
     // if we reach the maximum number of iterations for a point inside the search failed
-    assert(iter != 200 || !RefFE_T::inside(approxPt));
-    return approxPt;
+    assert(iter < maxIter || !RefFE_T::inside(approxPt));
+    return std::tie(approxPt, iter);
   }
 
   bool approxInside(Vec3 const & pt)

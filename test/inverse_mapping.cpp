@@ -2,18 +2,13 @@
 #include "mesh.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
+#include "curfe.hpp"
 #include "timer.hpp"
 
 #include <random>
 
-static auto constexpr numTests = 1 << 13;
-
 template <typename RandomEngine, typename Elem, uint Order>
-int test(RandomEngine & gen)
+int test(RandomEngine & gen, int const numTests, double const expectedError)
 {
   MilliTimer t;
 
@@ -130,10 +125,11 @@ int test(RandomEngine & gen)
   std::uniform_real_distribution<> disX(min[0], max[0]);
   std::uniform_real_distribution<> disY(min[1], max[1]);
   std::uniform_real_distribution<> disZ(min[2], max[2]);
-  double approxMax = 0.;
-  double iterMax = 0.;
+  double errorApproxMax = 0.;
+  double errorIterMax = 0.;
   int insideCount = 0;
-  for( uint n=0; n<numTests; ++n)
+  int totalNumIter = 0;
+  for (int n=0; n<numTests; ++n)
   {
     Vec3 const pt{disX(gen), disY(gen), disZ(gen)};
 
@@ -146,16 +142,16 @@ int test(RandomEngine & gen)
       auto const approxError = (pt - approxPtNew).norm();
       auto const approxInside = cfe.approxInside(pt);
       if (approxInside)
-        approxMax = std::max(approxMax, approxError);
+        errorApproxMax = std::max(errorApproxMax, approxError);
       t.stop();
 
       t.start("iterative mapping");
-      auto const iterPtHat = cfe.inverseMap(pt);
+      auto const [iterPtHat, numIter] = cfe.inverseMap(pt);
       auto const iterPtNew = cfe.map(iterPtHat);
       auto const iterError = (pt - iterPtNew).norm();
       // auto const iterInside = cfe.inside(pt);
       if (approxInside)
-        iterMax = std::max(iterMax, iterError);
+        errorIterMax = std::max(errorIterMax, iterError);
       // assert (iterError < 1.e4 * approxError + 2 * std::numeric_limits<double>::epsilon() || !approxInside);
       t.stop();
 
@@ -168,10 +164,12 @@ int test(RandomEngine & gen)
         //  return 1;
       }
       insideCount++;
+      totalNumIter += numIter;
     }
   }
-  std::cout << "approxMax: " << approxMax << std::endl;
-  std::cout << "iterMax: " << iterMax << std::endl;
+  std::cout << "errorApproxMax: " << errorApproxMax << std::endl
+            << "errorIterMax:   " << errorIterMax << std::endl
+            << "meanNumIter:    " << static_cast<double>(totalNumIter) / insideCount << std::endl;
 
   double bboxVolume = (max[0] - min[0]);
   if constexpr(RefFE_T::dim > 1)
@@ -183,44 +181,85 @@ int test(RandomEngine & gen)
     bboxVolume *= (max[2] - min[2]);
   }
 
-  std::cout << "inside area: "
-            << elem.volume() / bboxVolume << std::endl
-            << "inside frac: "
-            << static_cast<double>(insideCount) / numTests << std::endl;
-
   t.print();
 
-  return 0;
+  double const insideArea = elem.volume() / bboxVolume;
+  double const insideFrac = static_cast<double>(insideCount) / numTests;
+  double const error = std::fabs(insideArea - insideFrac);
+
+  std::cout << std::setprecision(16)
+            << "inside area: " << insideArea << std::endl
+            << "inside frac: " << insideFrac << std::endl
+            << "error:       " << error << std::endl;
+
+  return checkError({error}, {expectedError});
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+  int const exp = (argc > 1)? std::atoi(argv[1]) : 13;
+  int numTests = 1 << exp;
+
   std::bitset<10> tests;
 
   // std::random_device rd;
   // std::mt19937 gen(rd());
   std::mt19937 gen(19800513);
 
+  MilliTimer t;
+
   std::cout << separator << "Line - order 1\n" << separator;
-  tests[0] = test<std::mt19937, Line, 1>(gen);
+  t.start("line - 1");
+  tests[0] = test<std::mt19937, Line, 1>(gen, numTests, 1.e-16);
+  t.stop();
+
   std::cout << separator << "Line - order 2\n" << separator;
-  tests[1] = test<std::mt19937, Line, 2>(gen);
+  t.start("line - 2");
+  tests[1] = test<std::mt19937, Line, 2>(gen, numTests, 1.e-16);
+  t.stop();
+
   std::cout << separator << "Triangle - order 1\n" << separator;
-  tests[2] = test<std::mt19937, Triangle, 1>(gen);
+  t.start("tri - 1");
+  tests[2] = test<std::mt19937, Triangle, 1>(gen, numTests, 0.001871744791666685);
+  t.stop();
+
   std::cout << separator << "Triangle - order 2\n" << separator;
-  tests[3] = test<std::mt19937, Triangle, 2>(gen);
+  t.start("tri - 2");
+  tests[3] = test<std::mt19937, Triangle, 2>(gen, numTests, 0.003458658854166685);
+  t.stop();
+
   std::cout << separator << "Quad - order 1\n" << separator;
-  tests[4] = test<std::mt19937, Quad, 1>(gen);
+  t.start("quad - 1");
+  tests[4] = test<std::mt19937, Quad, 1>(gen, numTests, 0.00472005208333337);
+  t.stop();
+
   std::cout << separator << "Quad - order 2\n" << separator;
-  tests[5] = test<std::mt19937, Quad, 2>(gen);
+  t.start("quad - 2");
+  tests[5] = test<std::mt19937, Quad, 2>(gen, numTests, 0.00358072916666663);
+  t.stop();
+
   std::cout << separator << "Tetrahedron - order 1\n" << separator;
-  tests[6] = test<std::mt19937, Tetrahedron, 1>(gen);
+  t.start("tet - 1");
+  tests[6] = test<std::mt19937, Tetrahedron, 1>(gen, numTests, 0.00389811197916666);
+  t.stop();
+
   std::cout << separator << "Tetrahedron - order 2\n" << separator;
-  tests[7] = test<std::mt19937, Tetrahedron, 2>(gen);
-  // std::cout << separator << "Hexahedron - order 1\n" << separator;
-  // tests[8] = test<std::mt19937, Hexahedron, 1>(gen);
-  // std::cout << separator << "Hexahedron - order 2\n" << separator;
-  // tests[9] = test<std::mt19937, Hexahedron, 2>(gen);
+  t.start("tet - 2");
+  tests[7] = test<std::mt19937, Tetrahedron, 2>(gen, numTests, 0.00402018229166666);
+  t.stop();
+
+  std::cout << separator << "Hexahedron - order 1\n" << separator;
+  t.start("hex - 1");
+  tests[8] = test<std::mt19937, Hexahedron, 1>(gen, numTests, 0.005234375000000013);
+  t.stop();
+
+  std::cout << separator << "Hexahedron - order 2\n" << separator;
+  t.start("hex - 2");
+  tests[9] = test<std::mt19937, Hexahedron, 2>(gen, numTests, 0.006088867187500013);
+  t.stop();
+
+  t.print();
+
   std::cout << tests << std::endl;
   return tests.any();
 }

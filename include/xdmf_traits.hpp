@@ -80,7 +80,7 @@ struct XDMFTraits<RefLineP1>
 template <>
 struct XDMFTraits<RefLineP2>
 {
-  static constexpr char const * shapeName = "Polyline";
+  static constexpr char const * shapeName = "Edge_3";
   static constexpr XDMFCenter attributeType = XDMFCenter::NODE;
   static constexpr bool needsMapping = false;
 };

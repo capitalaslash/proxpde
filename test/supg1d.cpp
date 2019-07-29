@@ -9,6 +9,8 @@
 #include "timer.hpp"
 #include "fv.hpp"
 
+int constexpr orderCG = 1;
+
 template <typename FESpace, typename Vel>
 struct AssemblyLhsSUPG: public Diagonal<FESpace>
 {
@@ -49,10 +51,11 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel.evaluate(q));
+      double const iVelNorm = 1. / velQPoint.norm();
 
       FVec<RefFE_T::numFuns> phiSUPG =
           curFE.phi[q] +
-          0.5 * curFE.elem->hMin() * (curFE.dphi[q] * velQPoint);
+          0.5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint);
 
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
@@ -120,10 +123,11 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
     {
       auto const uOldQPoint = uOld.evaluate(q);
       auto const velQPoint = promote<3>(vel.evaluate(q));
+      double const iVelNorm = 1. / velQPoint.norm();
 
       FVec<RefFE_T::numFuns> phiSUPG =
           curFE.phi[q] +
-          0.5 * curFE.elem->hMin() * (curFE.dphi[q] * velQPoint);
+          0.5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint);
 
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
@@ -145,15 +149,15 @@ int main(int argc, char* argv[])
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
-  using FESpaceP1_T = FESpace<Mesh_T,
-                              FEType<Elem_T, 1>::RefFE_T,
-                              FEType<Elem_T, 1>::RecommendedQR>;
+  using FESpaceCG_T = FESpace<Mesh_T,
+                              FEType<Elem_T, orderCG>::RefFE_T,
+                              FEType<Elem_T, orderCG>::RecommendedQR>;
   // explicit finite volume upwind
-  using FESpaceP0_T = FESpace<Mesh_T,
+  using FESpaceFV_T = FESpace<Mesh_T,
                               FEType<Elem_T, 0>::RefFE_T,
                               FEType<Elem_T, 0>::RecommendedQR>;
   // velocity field
-  using FESpaceVel_T = FESpaceP1_T;
+  using FESpaceVel_T = FESpaceCG_T;
 
   MilliTimer t;
 
@@ -166,7 +170,7 @@ int main(int argc, char* argv[])
   {
     config["n"] = 10U;
     config["dt"] = 0.1;
-    config["final_time"] = 3.0;
+    config["final_time"] = 3.;
     config["velocity"] = 0.5;
     config["threshold"] = 0.37;
   }
@@ -188,18 +192,19 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("fespace");
-  FESpaceP1_T feSpaceP1{*mesh};
-  FESpaceP0_T feSpaceP0{*mesh};
+  FESpaceCG_T feSpaceCG{*mesh};
+  FESpaceFV_T feSpaceFV{*mesh};
   t.stop();
 
   t.start("bcs");
-  auto const one = [](Vec3 const & ){return 1.;};
-  auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
-  bcLeftP1 << one;
-  auto const bcsP1 = std::make_tuple(bcLeftP1);
-  auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
-  bcLeftP0 << one;
-  auto const bcsP0 = std::make_tuple(bcLeftP0);
+  auto const one = [] (Vec3 const & ) { return 1.; };
+  // auto const zero = [] (Vec3 const & ) { return 0.; };
+  auto bcLeftCG = BCEss{feSpaceCG, side::LEFT};
+  bcLeftCG << one;
+  auto const bcsCG = std::make_tuple(bcLeftCG);
+  auto bcLeftFV = BCEss{feSpaceFV, side::LEFT};
+  bcLeftFV << one;
+  auto const bcsFV = std::make_tuple(bcLeftFV);
   t.stop();
 
   auto const dt = config["dt"].as<double>();
@@ -208,15 +213,16 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{*mesh};
   FEVar vel{feSpaceVel};
   vel << velocity;
-  double const hinv = numElems;
-  std::cout << "cfl = " << velocity * dt * hinv << std::endl;
+  double const cfl = velocity * dt * numElems;
+  std::cout << "cfl = " << cfl << std::endl;
+  assert(cfl < 1. - 1.e-8);
 
-  Builder builder{feSpaceP1.dof.size};
+  Builder builder{feSpaceCG.dof.size};
   LUSolver solver;
-  AssemblyLhsSUPG advection(1./dt, vel, feSpaceP1);
-  // AssemblyStiffness artificialDiff(0.5 * velocity / numElems, feSpaceP1);
-  FEVar concP1Old{feSpaceP1};
-  AssemblyRhsSUPG timeDerRhs(1./dt, concP1Old, vel, feSpaceP1);
+  AssemblyLhsSUPG lhsSUPG{1./dt, vel, feSpaceCG};
+  // AssemblyStiffness artificialDiff(0.5 * velocity / numElems, feSpaceCG);
+  FEVar uCGOld{feSpaceCG};
+  AssemblyRhsSUPG rhsSUPG{1./dt, uCGOld, vel, feSpaceCG};
 
   // FEVar c{feSpace, "conc"};
   // FEList feList{feSpace, feSpace};
@@ -229,26 +235,35 @@ int main(int argc, char* argv[])
     if (p(0) < threshold) return 1.;
     return 0.;
   };
-  Var concP1{"conc"};
-  interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
+  // scalarFun_T ic = [] (Vec3 const& p)
+  // {
+  //   if (p(0) > 0.25 && p(0) < 0.5) return 1.;
+  //   return 0.;
+  // };
+  FEVar uCG{feSpaceCG, "uCG"};
+  uCG << ic;
+  // uCG.data[8] = 0.8;
 
   t.start("p0 ic");
-  Var concP0{"concP0"};
+  Var uFV{"uFV"};
   // we need to use the highest order available QR to integrate discontinuous functions
   // FESpace<Mesh_T, RefLineP0, GaussQR<Line, 4>> feSpaceIC{*mesh};
   FESpace<Mesh_T, RefLineP0, MiniQR<Line, 20>> feSpaceIC{*mesh};
-  integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
+  integrateAnalyticFunction(ic, feSpaceIC, uFV.data);
   t.stop();
 
-  FVSolver fv{feSpaceP0, bcsP0, MinModLimiter{}};
+  FVSolver fv{feSpaceFV, bcsFV, MinModLimiter{}};
 
-  IOManager ioP1{feSpaceP1, "output_supg1d/solP1"};
-  ioP1.print({concP1});
-  IOManager ioP0{feSpaceP0, "output_supg1d/solP0"};
-  ioP0.print({concP0});
+  IOManager ioCG{feSpaceCG, "output_supg1d/cg"};
+  ioCG.print(std::tuple{uCG});
+  IOManager ioFV{feSpaceFV, "output_supg1d/fv"};
+  ioFV.print({uFV});
 
-  auto const lhs = std::tuple{advection};
-  auto const rhs = std::tuple{timeDerRhs};
+  auto const lhs = std::tuple{lhsSUPG};
+  auto const rhs = std::tuple{rhsSUPG};
+
+  double maxFV = 0.;
+  double maxCG = 0.;
 
   auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
@@ -259,17 +274,18 @@ int main(int argc, char* argv[])
 
     // central implicit
     t.start("p1 assemby");
-    concP1Old.data = concP1.data;
-    builder.buildLhs(lhs, bcsP1);
-    builder.buildRhs(rhs, bcsP1);
+    uCGOld.data = uCG.data;
+    builder.buildLhs(lhs, bcsCG);
+    builder.buildRhs(rhs, bcsCG);
     builder.closeMatrix();
     t.stop();
 
     t.start("p1 solve");
     solver.compute(builder.A);
-    concP1.data = solver.solve(builder.b);
+    uCG.data = solver.solve(builder.b);
     builder.clear();
     t.stop();
+    maxCG = std::max(maxCG, uCG.data.maxCoeff());
 
     // std::cout << "A:\n" << builder.A << std::endl;
     // std::cout << "b:\n" << builder.b << std::endl;
@@ -277,28 +293,32 @@ int main(int argc, char* argv[])
 
     // explicit upwind
     t.start("p0 update");
-    fv.update(concP0.data);
+    fv.update(uFV.data);
     fv.computeFluxes(vel);
-    fv.advance(concP0.data, dt);
+    fv.advance(uFV.data, dt);
     t.stop();
+    maxFV = std::max(maxFV, uFV.data.maxCoeff());
 
     // print
     t.start("print");
-    ioP1.print({concP1}, time);
-    ioP0.print({concP0}, time);
+    ioCG.print(std::tuple{uCG}, time);
+    ioFV.print({uFV}, time);
     t.stop();
   }
 
   t.print();
 
-  Vec oneFieldP1;
-  interpolateAnalyticFunction(one, feSpaceP1, oneFieldP1);
-  Vec oneFieldP0;
-  interpolateAnalyticFunction(one, feSpaceP0, oneFieldP0);
+  std::cout << "maxFV:    " << maxFV << std::endl;
+  std::cout << "maxCG:    " << maxCG << std::endl;
 
-  double errorNormP1 = (concP1.data - oneFieldP1).norm();
-  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1 << std::endl;
-  double errorNormP0 = (concP0.data - oneFieldP0).norm();
-  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0 << std::endl;
-  return checkError({errorNormP1, errorNormP0}, {0.0005419506968368649, 2.68467866957268e-06});
+  Vec oneFieldCG;
+  interpolateAnalyticFunction(one, feSpaceCG, oneFieldCG);
+  Vec oneFieldFV;
+  interpolateAnalyticFunction(one, feSpaceFV, oneFieldFV);
+
+  double errorNormCG = (uCG.data - oneFieldCG).norm();
+  std::cout << "the norm of the CG error is " << std::setprecision(16) << errorNormCG << std::endl;
+  double errorNormFV = (uFV.data - oneFieldFV).norm();
+  std::cout << "the norm of the FV error is " << std::setprecision(16) << errorNormFV << std::endl;
+  return checkError({errorNormCG, errorNormFV}, {0.0007185655616791794, 2.68467866957268e-06});
 }

@@ -75,6 +75,7 @@ struct RefLineP0
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
   static array<onedFun_T,numFuns> const dphiFun;
+  static array<onedFun_T,numFuns * dim> const d2phiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   // static LocalMat_T const massMat;
   // static LocalMat_T const gradMat;
@@ -124,6 +125,7 @@ struct RefLineP1
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
   static array<onedFun_T,numFuns> const dphiFun;
+  static array<onedFun_T,numFuns * dim> const d2phiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   // static LocalMat_T const massMat;
   // static LocalMat_T const gradMat;
@@ -170,6 +172,7 @@ struct RefLineP2
   static array<Vec_T,numFuns> const points;
   static array<scalarOnedFun_T,numFuns> const phiFun;
   static array<onedFun_T,numFuns> const dphiFun;
+  static array<onedFun_T,numFuns * dim> const d2phiFun;
   static array<onedFun_T,numGeoFuns> const mapping;
   static LocalMat_T const massMat;
   static LocalMat_T const gradMat;
@@ -1168,3 +1171,27 @@ using FEVec_T = FVec<fevecdim_v<FESpace>>;
 
 template <typename FESpace>
 using FEFun_T = Fun<fevecdim_v<FESpace>, 3>;
+
+// ----------------------------------------------------------------------------
+template <typename RefFE>
+struct EnableSecondDeriv
+{
+  bool static constexpr value = false;
+};
+
+#ifdef ENABLE_SECONDDERIV
+template <>
+struct EnableSecondDeriv<RefLineP1>
+{
+  bool static constexpr value = true;
+};
+
+template <>
+struct EnableSecondDeriv<RefLineP2>
+{
+  bool static constexpr value = true;
+};
+#endif
+
+template <typename RefFE>
+inline bool static constexpr enableSecondDeriv_v = EnableSecondDeriv<RefFE>::value;

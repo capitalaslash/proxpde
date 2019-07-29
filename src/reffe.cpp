@@ -40,6 +40,11 @@ array<onedFun_T,RefLineP0::numFuns> const RefLineP0::dphiFun =
   [] (Vec_T const &) { return Vec_T::Constant(0.L); }
 }};
 
+array<onedFun_T, RefLineP0::numFuns * RefLineP0::dim> const RefLineP0::d2phiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.L); },
+}};
+
 // linear mapping
 array<onedFun_T,RefLineP0::numGeoFuns> const RefLineP0::mapping =
 {{
@@ -66,6 +71,12 @@ array<onedFun_T,RefLineP1::numFuns> const RefLineP1::dphiFun =
 {{
   [] (Vec_T const &) { return Vec_T::Constant(-0.5L); },
   [] (Vec_T const &) { return Vec_T::Constant(+0.5L); }
+}};
+
+array<onedFun_T, RefLineP1::numFuns * RefLineP1::dim> const RefLineP1::d2phiFun =
+{{
+  [] (Vec_T const &) { return Vec_T::Constant(0.L); },
+  [] (Vec_T const &) { return Vec_T::Constant(0.L); }
 }};
 
 array<onedFun_T,RefLineP1::numFuns> const RefLineP1::mapping = RefLineP1::dphiFun;
@@ -103,6 +114,13 @@ array<onedFun_T,RefLineP2::numFuns> const RefLineP2::dphiFun =
   [] (Vec_T const & p) { return Vec_T::Constant(p(0)-0.5); },
   [] (Vec_T const & p) { return Vec_T::Constant(p(0)+0.5); },
   [] (Vec_T const & p) { return Vec_T::Constant(-2.*p(0)); }
+}};
+
+array<onedFun_T,RefLineP2::numFuns * RefLineP2::dim> const RefLineP2::d2phiFun =
+{{
+  [] (Vec_T const & ) { return Vec_T::Constant(1.); },
+  [] (Vec_T const & ) { return Vec_T::Constant(1.); },
+  [] (Vec_T const & ) { return Vec_T::Constant(-2.); }
 }};
 
 array<onedFun_T,RefLineP2::numFuns> const RefLineP2::mapping = RefLineP2::dphiFun;

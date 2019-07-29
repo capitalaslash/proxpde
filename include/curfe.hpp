@@ -9,23 +9,34 @@ struct CurFE
 {
   using RefFE_T = RefFE;
   using QR_T = QR;
-  static uint constexpr numDOFs = RefFE::numFuns;
+  static uint constexpr numDOFs = RefFE_T::numFuns;
+  static uint constexpr dim = RefFE_T::dim;
   using LocalMat_T = FMat<numDOFs,numDOFs>;
   using LocalVec_T = FVec<numDOFs>;
-  using JacMat_T = FMat<3,RefFE::dim>;
-  using JacTMat_T = FMat<RefFE::dim,3>;
+  using JacMat_T = FMat<3, dim>;
+  using JacTMat_T = FMat<dim, 3>;
   using RefVec_T = typename RefFE_T::Vec_T;
 
   CurFE()
   {
-    for(uint q=0; q<QR::numPts; ++q)
+    for (uint q=0; q<QR::numPts; ++q)
     {
-      for(uint i=0; i<RefFE::numFuns; ++i)
+      for (uint i=0; i<numDOFs; ++i)
       {
         if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
         {
           phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
           dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
+
+#ifdef ENABLE_SECONDDERIV
+          if constexpr (enableSecondDeriv_v<RefFE_T>)
+          {
+            for (uint d=0; d<dim; ++d)
+            {
+              d2phiRef[q].row(i + d*numDOFs) = RefFE::d2phiFun[i + d*numDOFs](QR::node[q]);
+            }
+          }
+#endif
         }
         else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
         {
@@ -33,7 +44,7 @@ struct CurFE
           divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
         }
       }
-      for(uint i=0; i<RefFE::numGeoFuns; ++i)
+      for (uint i=0; i<RefFE::numGeoFuns; ++i)
       {
         mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
       }
@@ -78,6 +89,23 @@ struct CurFE
           // this update can potentially be done in the constructor
           phi[q] = phiRef[q];
           dphi[q] = dphiRef[q] * jacPlus[q];
+
+#ifdef ENABLE_SECONDDERIV
+          if constexpr (enableSecondDeriv_v<RefFE_T>)
+          {
+            d2phi[q] = FMat<numDOFs * 3, 3>::Zero();
+            for (uint d1=0; d1<3; ++d1)
+            {
+              for (uint d2=0; d2<dim; ++d2)
+              {
+                d2phi[q].template block<numDOFs, 3>(d1 * numDOFs, 0) +=
+                    jacPlus[q](d2, d1) *
+                    d2phiRef[q].template block<numDOFs, dim>(d2 * numDOFs, 0) *
+                    jacPlus[q];
+              }
+            }
+          }
+#endif
         }
         else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
         {
@@ -103,13 +131,13 @@ struct CurFE
     // }
   }
 
-  Vec3 approxMap(FVec<RefFE::dim> const & pt)
+  Vec3 approxMap(FVec<dim> const & pt)
   {
     // jac is constant on the element only for linear mappings (not for bi-linear)
     return elem->origin() + jac[QR_T::bestPt] * pt;
   }
 
-  Vec3 map(FVec<RefFE::dim> const & pt)
+  Vec3 map(FVec<dim> const & pt)
   {
     JacMat_T jac = JacMat_T::Zero();
     auto const mappingPts = RefFE::mappingPts(*elem);
@@ -120,21 +148,21 @@ struct CurFE
     return elem->origin() + jac * pt;
   }
 
-  FVec<RefFE::dim> approxInverseMap(Vec3 const & pt)
+  FVec<dim> approxInverseMap(Vec3 const & pt)
   {
     // TODO: jacPlus should be computed on the point
     // here we assume that jacPlus does not change on the element
     // (this is true only for linear mappings)
-    FVec<RefFE::dim> const ptHat = jacPlus[QR_T::bestPt] * (pt - elem->origin());
+    FVec<dim> const ptHat = jacPlus[QR_T::bestPt] * (pt - elem->origin());
     // check that the approximate inverse mapping is close enough to the
     // requested point
     assert((pt - approxMap(ptHat)).norm() < 1.e-14);
     return ptHat;
   }
 
-  std::tuple<FVec<RefFE::dim>, int> inverseMap(Vec3 const & pt, double const toll = 1.e-4)
+  std::tuple<FVec<dim>, int> inverseMap(Vec3 const & pt, double const toll = 1.e-4)
   {
-    FVec<RefFE::dim> approxPt = approxInverseMap(pt);
+    FVec<dim> approxPt = approxInverseMap(pt);
     auto const mappingPts = RefFE::mappingPts(*elem);
     auto const origin = elem->origin();
     int iter = 0;
@@ -151,7 +179,7 @@ struct CurFE
       Vec3 const deltaReal = pt - predictedPt;
       auto const jacPlus = (jac.transpose() * jac).inverse() * jac.transpose();
       // Newton iteration
-      FVec<RefFE_T::dim> deltaRef = jacPlus * deltaReal;
+      FVec<dim> deltaRef = jacPlus * deltaReal;
       approxPt += deltaRef;
       iter++;
       if (!RefFE_T::inside(approxPt) || deltaRef.norm() < toll)
@@ -173,27 +201,30 @@ struct CurFE
   }
 
   GeoElem const * elem = nullptr;
-  array<Vec3,RefFE::numFuns> dofPts;
-  array<JacMat_T,QR::numPts> jac;
-  array<JacTMat_T,QR::numPts> jacPlus;
-  array<double,QR::numPts> detJ;
-  array<double,QR::numPts> JxW;
-  array<Vec3,QR::numPts> qpoint;
-  array<FVec<RefFE::numFuns>,QR::numPts> phiRef;
-  array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> dphiRef;
-  array<FMat<RefFE::numFuns,RefFE::dim>,QR::numPts> phiVectRef;
-  array<FVec<RefFE::numFuns>,QR::numPts> divphiRef;
-  array<FMat<RefFE::numGeoFuns,RefFE::dim>,QR::numPts> mapping;
-  // vectorFun_T inverseMapping;
-  array<FVec<RefFE::numFuns>,QR::numPts> phi;
-  array<FMat<RefFE::numFuns,3>,QR::numPts> dphi;
+  array<Vec3, numDOFs> dofPts;
+  array<JacMat_T, QR::numPts> jac;
+  array<JacTMat_T, QR::numPts> jacPlus;
+  array<double, QR::numPts> detJ;
+  array<double, QR::numPts> JxW;
+  array<Vec3, QR::numPts> qpoint;
+  array<FVec<numDOFs>, QR::numPts> phiRef;
+  array<FVec<numDOFs>, QR::numPts> phi;
+  array<FMat<numDOFs, dim>, QR::numPts> dphiRef;
+  array<FMat<numDOFs, 3>, QR::numPts> dphi;
+#ifdef ENABLE_SECONDDERIV
+  array<FMat<numDOFs * dim, dim>, QR::numPts> d2phiRef;
+  array<FMat<numDOFs * 3, 3>, QR::numPts> d2phi;
+#endif
+  array<FMat<numDOFs, dim>, QR::numPts> phiVectRef;
   // TODO: box phiVect in external data struct that is specialized on the FEDimType
-  array<FMat<RefFE::numFuns,3>,QR::numPts> phiVect;
-  array<FVec<RefFE::numFuns>,QR::numPts> divphi;
+  array<FMat<numDOFs, 3>, QR::numPts> phiVect;
+  array<FVec<numDOFs>, QR::numPts> divphiRef;
+  array<FVec<numDOFs>, QR::numPts> divphi;
+  array<FMat<RefFE::numGeoFuns, dim>, QR::numPts> mapping;
 };
 
 template <typename QR>
-struct CurFE<RefPointP1,QR>
+struct CurFE<RefPointP1, QR>
 {
   using RefFE_T = RefPointP1;
 
@@ -206,8 +237,8 @@ struct CurFE<RefPointP1,QR>
   }
 
   GeoElem const * elem;
-  array<Vec3,RefFE_T::numFuns> dofPts;
-  array<double,QR::numPts> JxW = {{1.L}};
-  array<Vec3,QR::numPts> qpoint;
-  array<FVec<1>,QR::numPts> phi = {{FVec<1>(1.L)}};
+  array<Vec3, RefFE_T::numFuns> dofPts;
+  array<double, QR::numPts> JxW = {{1.L}};
+  array<Vec3, QR::numPts> qpoint;
+  array<FVec<1>, QR::numPts> phi = {{FVec<1>(1.L)}};
 };

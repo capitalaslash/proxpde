@@ -78,8 +78,9 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{*mesh};
   FEVar vel{feSpaceVel, "velocity"};
   vel << velocity;
-  double const hInv = numElems;
-  std::cout << "cfl = " << velocity * dt * hInv << std::endl;
+  double const cfl = velocity * dt * numElems;
+  std::cout << "cfl = " << cfl << std::endl;
+  assert(cfl < 1. - 1.e-8);
 
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;

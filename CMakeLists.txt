@@ -51,9 +51,11 @@ message(STATUS "compile flags   : ${MINIFEM_COMPILE_FLAGS}")
 message(STATUS "link flags      : ${MINIFEM_LINK_FLAGS}")
 
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
+option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
 
 message(STATUS "=== CONFIG OPTIONS =============================================")
-message(STATUS "DOF_INTERLEAVED: ${DOF_INTERLEAVED}")
+message(STATUS "DOF_INTERLEAVED:    ${DOF_INTERLEAVED}")
+message(STATUS "ENABLE_SECONDDERIV: ${ENABLE_SECONDDERIV}")
 
 message(STATUS "================================================================")
 

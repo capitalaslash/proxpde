@@ -68,6 +68,7 @@ struct GeoElem
   virtual void buildNormal() = 0;
   virtual Vec3 normal() const = 0;
   virtual double hMin() const = 0;
+  virtual double hMax() const = 0;
 
   virtual std::tuple<Vec3, Vec3> bbox() const final
   {
@@ -179,6 +180,8 @@ struct PointElem: public GeoElem
   Vec3 normal() const final { return Vec3{1.0, 0.0, 0.0}; }
 
   double hMin() const final { return 1.; }
+
+  double hMax() const final { return 1.; }
 };
 
 class Line: public GeoElem
@@ -248,6 +251,11 @@ public:
   }
 
   double hMin() const final
+  {
+    return this->volume();
+  }
+
+  double hMax() const final
   {
     return this->volume();
   }
@@ -325,14 +333,29 @@ public:
     return n;
   }
 
-  double hMin() const final
+  double perimeter() const
   {
     auto const v1 = pointList[1]->coord - pointList[0]->coord;
     auto const v2 = pointList[2]->coord - pointList[1]->coord;
     auto const v3 = pointList[0]->coord - pointList[2]->coord;
 
-    // triangle size based on diameter of the inscribed circle
-    return 4 * volume() / (v1.norm() + v2.norm() + v3.norm());
+    return v1.norm() + v2.norm() + v3.norm();
+  }
+
+  double hMin() const final
+  {
+    // diameter of the inscribed circle
+    return 4. * volume() / perimeter();
+  }
+
+  double hMax() const final
+  {
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[1]->coord;
+    auto const v3 = pointList[0]->coord - pointList[2]->coord;
+
+    // diameter of the circumscribed circle
+    return v1.norm() * v2.norm() * v3.norm() / (v2.cross(v3).norm());
   }
 };
 
@@ -412,11 +435,33 @@ public:
     return n;
   }
 
+  double perimeter() const
+  {
+    auto const v1 = pointList[1]->coord - pointList[0]->coord;
+    auto const v2 = pointList[2]->coord - pointList[1]->coord;
+    auto const v3 = pointList[3]->coord - pointList[2]->coord;
+    auto const v4 = pointList[0]->coord - pointList[3]->coord;
+
+    return v1.norm() + v2.norm() + v3.norm() + v4.norm();
+  }
+
   double hMin() const final
   {
+    return 4. * volume() / perimeter();
+    // auto const d1 = pointList[2]->coord - pointList[0]->coord;
+    // auto const d2 = pointList[3]->coord - pointList[1]->coord;
+    // return std::min(d1.norm(), d2.norm());
+  }
+
+  double hMax() const final
+  {
+    // this holds only for cyclic quads
     auto const d1 = pointList[2]->coord - pointList[0]->coord;
     auto const d2 = pointList[3]->coord - pointList[1]->coord;
-    return std::min(d1.norm(), d2.norm());
+    auto const m1 = 0.5 * (pointList[2]->coord + pointList[0]->coord);
+    auto const m2 = 0.5 * (pointList[3]->coord + pointList[1]->coord);
+    auto const x = m1 - m2;
+    return std::sqrt(0.5 * (d1.squaredNorm() + d2.squaredNorm() + x.squaredNorm()));
   }
 };
 
@@ -491,6 +536,12 @@ public:
   {
     std::abort();
     return 1.;
+  }
+
+  double hMax() const final
+  {
+    std::abort();
+    return 0;
   }
 };
 
@@ -570,6 +621,12 @@ public:
     std::abort();
     return 1.;
   }
+
+  double hMax() const final
+  {
+    std::abort();
+    return 0;
+  }
 };
 
 
@@ -605,7 +662,9 @@ public:
     skew <<       0., -axis[2],  axis[1],
              axis[2],       0., -axis[0],
             -axis[1],  axis[0],       0.;
-    _m = std::cos(angle)*Mat_T::Identity() + std::sin(angle) * skew + (1.-std::cos(angle)) * (axis * axis.transpose());
+    _m = std::cos(angle) * Mat_T::Identity() +
+        std::sin(angle) * skew +
+        (1. - std::cos(angle)) * (axis * axis.transpose());
     _mi = _m.inverse();
   }
 

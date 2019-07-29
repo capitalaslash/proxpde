@@ -9,6 +9,11 @@
 #include "timer.hpp"
 #include "fv.hpp"
 
+// sigma = +1 MS
+// sigma =  0 SUPG
+// sigma = -1 GLS
+int constexpr sigma = 0;
+
 int constexpr orderCG = 1;
 
 template <typename FESpace, typename Vel>
@@ -144,6 +149,163 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
   Vel & vel;
 };
 
+
+template <typename FESpace, typename Vel>
+struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = Diagonal<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+
+  explicit AssemblyLhsSUPGRes(double const c,
+                              Vel & u,
+                              double const e,
+                              FESpace_T & fe,
+                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+    Diagonal<FESpace>(fe, cmp),
+    idt(c),
+    vel(u),
+    eps(e)
+  {
+    // this works only if the same quad rule is defined on all fe spaces
+    static_assert(
+          std::is_same_v<
+          typename FESpace_T::QR_T,
+          typename Vel::FESpace_T::QR_T>,
+          "the two quad rule are not the same");
+  }
+
+  void reinit(GeoElem const & elem) const override
+  {
+    this->feSpace.curFE.reinit(elem);
+    vel.reinit(elem);
+  }
+
+  void build(LMat_T & Ke) const override
+  {
+    using RefFE_T = typename FESpace_T::RefFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    uint constexpr size = CurFE_T::numDOFs;
+    CurFE_T const & curFE = this->feSpace.curFE;
+
+    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const velQPoint = promote<3>(vel.evaluate(q));
+      double const iVelNorm = 1. / velQPoint.norm();
+
+      FVec<RefFE_T::numFuns> phiSUPG =
+          .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
+    #ifdef ENABLE_SECONDDERIV
+          + sigma * eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
+    #endif
+          ;
+
+      auto const res =
+          idt * curFE.phi[q] +
+          curFE.dphi[q] * velQPoint
+    #ifdef ENABLE_SECONDDERIV
+          + eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                   curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                   curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
+    #endif
+          ;
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Ke.template block<size, size>(d * size, d * size) +=
+            curFE.JxW[q] *
+            phiSUPG *
+            res.transpose();
+      }
+    }
+  }
+
+  double const idt;
+  Vel & vel;
+  double const eps;
+};
+
+template <typename FESpace,
+          typename Rhs,
+          typename Vel>
+struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using Super_T = AssemblyVector<FESpace>;
+  using LVec_T = typename Super_T::LVec_T;
+
+  AssemblyRhsSUPGRes(double const c,
+                     Rhs & u,
+                     Vel & v,
+                     double const e,
+                     FESpace_T & fe,
+                     AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
+    idt(c),
+    uOld(u),
+    vel(v),
+    eps(e)
+  {
+    // this works only if the same quad rule is defined on all fe spaces
+    static_assert(
+          std::is_same_v<
+          typename FESpace_T::QR_T,
+          typename Rhs::FESpace_T::QR_T>,
+          "the two quad rule are not the same");
+    static_assert(
+          std::is_same_v<
+          typename FESpace_T::QR_T,
+          typename Vel::FESpace_T::QR_T>,
+          "the two quad rule are not the same");
+  }
+
+  void reinit(GeoElem const & elem) const override
+  {
+    this->feSpace.curFE.reinit(elem);
+    uOld.reinit(elem);
+    vel.reinit(elem);
+  }
+
+  void build(LVec_T & Fe) const override
+  {
+    using RefFE_T = typename FESpace_T::RefFE_T;
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    uint constexpr size = CurFE_T::numDOFs;
+    CurFE_T const & curFE = this->feSpace.curFE;
+
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const uOldQPoint = uOld.evaluate(q);
+      auto const velQPoint = promote<3>(vel.evaluate(q));
+      double const iVelNorm = 1. / velQPoint.norm();
+
+      FVec<RefFE_T::numFuns> phiSUPG =
+          .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
+    #ifdef ENABLE_SECONDDERIV
+          + sigma * eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
+    #endif
+          ;
+      for (uint d=0; d<FESpace_T::dim; ++d)
+      {
+        Fe.template block<size, 1>(d* size, 0) +=
+            curFE.JxW[q] *
+            phiSUPG *
+            (idt * uOldQPoint[d]);
+      }
+    }
+  }
+
+  double idt;
+  Rhs & uOld;
+  Vel & vel;
+  double eps;
+};
+
 int main(int argc, char* argv[])
 {
   using Elem_T = Line;
@@ -224,6 +386,17 @@ int main(int argc, char* argv[])
   FEVar uCGOld{feSpaceCG};
   AssemblyRhsSUPG rhsSUPG{1./dt, uCGOld, vel, feSpaceCG};
 
+  Builder builderRes{feSpaceCG.dof.size};
+  LUSolver solverRes;
+  AssemblyMass timeDer{1./dt, feSpaceCG};
+  AssemblyAdvection advection{1.0, vel.data, vel.feSpace, feSpaceCG};
+  double const eps = 0.001;
+  AssemblyStiffness diffusion{eps, feSpaceCG};
+  AssemblyLhsSUPGRes lhsSUPGRes{1./dt, vel, eps, feSpaceCG};
+  FEVar uCGOldRes{feSpaceCG};
+  AssemblyProjection timeDerRhs{1./dt, uCGOldRes.data, uCGOldRes.feSpace, feSpaceCG};
+  AssemblyRhsSUPGRes rhsSUPGRes{1./dt, uCGOldRes, vel, eps, feSpaceCG};
+
   // FEVar c{feSpace, "conc"};
   // FEList feList{feSpace, feSpace};
   // auto fe1 = std::get<0>(feList);
@@ -243,6 +416,11 @@ int main(int argc, char* argv[])
   FEVar uCG{feSpaceCG, "uCG"};
   uCG << ic;
   // uCG.data[8] = 0.8;
+  // integrateAnalyticFunction(ic, feSpaceCG, uCG.data);
+  FEVar uCGRes{feSpaceCG, "uCGres"};
+  uCGRes << ic;
+  // uCGRes.data[8] = 0.8;
+  // integrateAnalyticFunction(ic, feSpaceCG, uCGRes.data);
 
   t.start("p0 ic");
   Var uFV{"uFV"};
@@ -255,15 +433,19 @@ int main(int argc, char* argv[])
   FVSolver fv{feSpaceFV, bcsFV, MinModLimiter{}};
 
   IOManager ioCG{feSpaceCG, "output_supg1d/cg"};
-  ioCG.print(std::tuple{uCG});
+  ioCG.print(std::tuple{uCG, uCGRes});
   IOManager ioFV{feSpaceFV, "output_supg1d/fv"};
   ioFV.print({uFV});
 
   auto const lhs = std::tuple{lhsSUPG};
   auto const rhs = std::tuple{rhsSUPG};
 
+  auto const lhsRes = std::tuple{timeDer, advection, diffusion, lhsSUPGRes};
+  auto const rhsRes = std::tuple{timeDerRhs, rhsSUPGRes};
+
   double maxFV = 0.;
   double maxCG = 0.;
+  double maxCGRes = 0.;
 
   auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
@@ -280,6 +462,11 @@ int main(int argc, char* argv[])
     builder.closeMatrix();
     t.stop();
 
+    uCGOldRes.data = uCGRes.data;
+    builderRes.buildLhs(lhsRes, bcsCG);
+    builderRes.buildRhs(rhsRes, bcsCG);
+    builderRes.closeMatrix();
+
     t.start("p1 solve");
     solver.compute(builder.A);
     uCG.data = solver.solve(builder.b);
@@ -291,6 +478,12 @@ int main(int argc, char* argv[])
     // std::cout << "b:\n" << builder.b << std::endl;
     // std::cout << "sol:\n" << c.data << std::endl;
 
+
+    solverRes.compute(builderRes.A);
+    uCGRes.data = solverRes.solve(builderRes.b);
+    builderRes.clear();
+    maxCGRes = std::max(maxCGRes, uCGRes.data.maxCoeff());
+
     // explicit upwind
     t.start("p0 update");
     fv.update(uFV.data);
@@ -301,7 +494,7 @@ int main(int argc, char* argv[])
 
     // print
     t.start("print");
-    ioCG.print(std::tuple{uCG}, time);
+    ioCG.print(std::tuple{uCG, uCGRes}, time);
     ioFV.print({uFV}, time);
     t.stop();
   }
@@ -310,6 +503,7 @@ int main(int argc, char* argv[])
 
   std::cout << "maxFV:    " << maxFV << std::endl;
   std::cout << "maxCG:    " << maxCG << std::endl;
+  std::cout << "maxCGRes: " << maxCGRes << std::endl;
 
   Vec oneFieldCG;
   interpolateAnalyticFunction(one, feSpaceCG, oneFieldCG);

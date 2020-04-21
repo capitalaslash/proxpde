@@ -13,7 +13,7 @@ void l2Projection(
   AssemblyProjection projFromTo(1.0, from, feSpaceFrom, feSpaceTo);
   Builder builder{feSpaceTo.dof.size * FESpaceTo::dim};
   builder.buildLhs(std::tuple{massTo}, std::tuple{});
-  builder.buildRhs(std::tuple{projFromTo}, std::tuple());
+  builder.buildRhs(std::tuple{projFromTo}, std::tuple{});
   builder.closeMatrix();
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;

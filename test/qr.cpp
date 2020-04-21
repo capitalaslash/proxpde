@@ -57,6 +57,9 @@ struct PolyVec
 template <uint I, uint J = 0, uint K = 0>
 struct Polynomial
 {
+  static uint constexpr i = I;
+  static uint constexpr j = J;
+  static uint constexpr k = K;
   using T = PolyVec::T;
 
   static T value(PolyVec const & p)
@@ -84,7 +87,11 @@ int test(
   }
   if (std::fabs(value - expectedValue) > relativeError)
   {
-    std::cerr << "the integral is not the expected value: " << std::setprecision(16) << value << std::endl;
+    std::cerr.precision(16);
+    std::cerr << "the integral is not the expected value.\n"
+              << "expected: " << expectedValue << "\n"
+              << "computed: " << value << "\n"
+              << "polynomial: (" << Poly::i << " " << Poly::j << " " << Poly::k << ")" << std::endl;
     return 1;
   }
   return 0;
@@ -256,7 +263,7 @@ int main()
   hexahedronTests[21] = test(GaussQR<Hexahedron, 8>{}, Polynomial<1,0,2>{},   0.L, 1e-15L);
   hexahedronTests[22] = test(GaussQR<Hexahedron, 8>{}, Polynomial<0,1,2>{},   0.L, 1e-15L);
   hexahedronTests[23] = test(GaussQR<Hexahedron, 8>{}, Polynomial<1,1,1>{},   0.L, 1e-15L);
-  hexahedronTests[24] = test(GaussQR<Hexahedron,27>{}, Polynomial<0,0,0>{},   8.L, 1e-15L);
+  hexahedronTests[24] = test(GaussQR<Hexahedron,27>{}, Polynomial<0,0,0>{},   8.L, 1e-14L);
   hexahedronTests[25] = test(GaussQR<Hexahedron,27>{}, Polynomial<1,0,0>{},   0.L, 1e-15L);
   hexahedronTests[26] = test(GaussQR<Hexahedron,27>{}, Polynomial<0,1,0>{},   0.L, 1e-15L);
   hexahedronTests[27] = test(GaussQR<Hexahedron,27>{}, Polynomial<0,0,1>{},   0.L, 1e-15L);

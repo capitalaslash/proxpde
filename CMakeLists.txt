@@ -52,6 +52,7 @@ message(STATUS "link flags      : ${MINIFEM_LINK_FLAGS}")
 
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
 option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
+option(ENABLE_TESTS "compile all testsuite" ON)
 
 message(STATUS "=== CONFIG OPTIONS =============================================")
 message(STATUS "DOF_INTERLEAVED:    ${DOF_INTERLEAVED}")
@@ -163,8 +164,11 @@ export(EXPORT MiniFEMTargets
 
 export(PACKAGE MiniFEM)
 
-# include(CTest)
-enable_testing()
-add_subdirectory(test)
+if (ENABLE_TESTS)
+  # include(CTest)
+  enable_testing()
+  add_subdirectory(test)
+endif()
+
 
 feature_summary(WHAT ALL)

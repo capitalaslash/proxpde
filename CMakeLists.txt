@@ -76,7 +76,7 @@ add_library(MiniFEM::minifem ALIAS minifem)
 target_include_directories(minifem PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+  $<INSTALL_INTERFACE:include>  # or include/minifem
   ${HDF5_INCLUDE_DIRS}
 )
 

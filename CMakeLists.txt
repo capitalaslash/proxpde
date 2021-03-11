@@ -125,6 +125,7 @@ install(TARGETS minifem
   )
 
 install(DIRECTORY include/ DESTINATION include/minifem)
+install(FILES ${PROJECT_BINARY_DIR}/minifem.h DESTINATION include/minifem)
 
 install(EXPORT MiniFEMTargets
   FILE MiniFEMTargets.cmake

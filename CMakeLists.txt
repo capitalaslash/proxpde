@@ -33,13 +33,19 @@ write_compiler_detection_header(
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
 option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
 option(ENABLE_TESTS "compile all testsuite" ON)
-string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
-string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
+option(ENABLE_LTO "enable link time optimizations (only in Release mode)" ON)
+
+string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
+string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
 #add_compile_options(-Wall -Wpedantic)
 # set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 # set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_STATIC_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
+if (ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES RELEASE)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -56,6 +62,7 @@ message(STATUS "=== CONFIG OPTIONS =============================================
 message(STATUS "DOF_INTERLEAVED:    ${DOF_INTERLEAVED}")
 message(STATUS "ENABLE_SECONDDERIV: ${ENABLE_SECONDDERIV}")
 message(STATUS "ENABLE_TESTS:       ${ENABLE_TESTS}")
+message(STATUS "ENABLE_LTO:         ${ENABLE_LTO}")
 message(STATUS "================================================================")
 
 configure_file(

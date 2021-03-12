@@ -30,6 +30,9 @@ write_compiler_detection_header(
     # cxx_if_constexpr
 )
 
+option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
+option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
+option(ENABLE_TESTS "compile all testsuite" ON)
 string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
 string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-flto>")
 #add_compile_options(-Wall -Wpedantic)
@@ -49,15 +52,10 @@ message(STATUS "compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
 message(STATUS "compile flags   : ${MINIFEM_COMPILE_FLAGS}")
 message(STATUS "link flags      : ${MINIFEM_LINK_FLAGS}")
-
-option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
-option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
-option(ENABLE_TESTS "compile all testsuite" ON)
-
 message(STATUS "=== CONFIG OPTIONS =============================================")
 message(STATUS "DOF_INTERLEAVED:    ${DOF_INTERLEAVED}")
 message(STATUS "ENABLE_SECONDDERIV: ${ENABLE_SECONDDERIV}")
-
+message(STATUS "ENABLE_TESTS:       ${ENABLE_TESTS}")
 message(STATUS "================================================================")
 
 configure_file(

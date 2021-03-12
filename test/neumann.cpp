@@ -18,8 +18,8 @@ int test(YAML::Node const & config)
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T =
     FESpace<Mesh_T,
-            typename FEType<Elem_T, order>::RefFE_T,
-            typename FEType<Elem_T, order>::RecommendedQR>;
+            typename LagrangeFE<Elem_T, order>::RefFE_T,
+            typename LagrangeFE<Elem_T, order>::RecommendedQR>;
 
   scalarFun_T const rhsFun = [] (Vec3 const & p)
   {
@@ -97,8 +97,8 @@ int test(YAML::Node const & config)
   Var flux{"flux"};
   using RecFESpace_T =
     FESpace<Mesh_T,
-            typename FEType<Elem_T, order>::RefFE_T,
-            typename FEType<Elem_T, order>::ReconstructionQR, Elem_T::dim>;
+            typename LagrangeFE<Elem_T, order>::RefFE_T,
+            typename LagrangeFE<Elem_T, order>::ReconstructionQR, Elem_T::dim>;
   RecFESpace_T feSpaceRec{*mesh};
   reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
   t.stop();

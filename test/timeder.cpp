@@ -11,8 +11,8 @@
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T, 0>::RefFE_T,
-                          FEType<Elem_T, 0>::RecommendedQR>;
+                          LagrangeFE<Elem_T, 0>::RefFE_T,
+                          LagrangeFE<Elem_T, 0>::RecommendedQR>;
 
 using TimeFun_T = std::function<double(double const)>;
 

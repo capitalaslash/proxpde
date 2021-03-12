@@ -15,15 +15,15 @@ using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
 // implicit finite element central
 using FESpaceP1_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          FEType<Elem_T,1>::RecommendedQR>;
+                          LagrangeFE<Elem_T,1>::RefFE_T,
+                          LagrangeFE<Elem_T,1>::RecommendedQR>;
 // explicit finite volume upwind
 using FESpaceP0_T = FESpace<Mesh_T,
-                          FEType<Elem_T,0>::RefFE_T,
-                          FEType<Elem_T,0>::RecommendedQR>;
+                          LagrangeFE<Elem_T,0>::RefFE_T,
+                          LagrangeFE<Elem_T,0>::RecommendedQR>;
 using FESpaceVel_T = FESpace<Mesh_T,
-                             FEType<Elem_T,1>::RefFE_T,
-                             FEType<Elem_T,1>::RecommendedQR, 2>;
+                             LagrangeFE<Elem_T,1>::RefFE_T,
+                             LagrangeFE<Elem_T,1>::RecommendedQR, 2>;
 static scalarFun_T ic = [] (Vec3 const& p)
 {
   // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);

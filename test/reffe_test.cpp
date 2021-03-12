@@ -13,8 +13,8 @@ int test()
 {
   using Mesh_T = Mesh<Elem>;
   using FESpace_T = FESpace<Mesh_T,
-                            typename FEType<Elem, Order>::RefFE_T,
-                            typename FEType<Elem, Order>::RecommendedQR>;
+                            typename LagrangeFE<Elem, Order>::RefFE_T,
+                            typename LagrangeFE<Elem, Order>::RecommendedQR>;
   using RefFE_T = typename FESpace_T::RefFE_T;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};

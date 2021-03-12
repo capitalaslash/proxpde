@@ -312,12 +312,12 @@ int main(int argc, char* argv[])
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
   using FESpaceCG_T = FESpace<Mesh_T,
-                              FEType<Elem_T, orderCG>::RefFE_T,
-                              FEType<Elem_T, orderCG>::RecommendedQR>;
+                              LagrangeFE<Elem_T, orderCG>::RefFE_T,
+                              LagrangeFE<Elem_T, orderCG>::RecommendedQR>;
   // explicit finite volume upwind
   using FESpaceFV_T = FESpace<Mesh_T,
-                              FEType<Elem_T, 0>::RefFE_T,
-                              FEType<Elem_T, 0>::RecommendedQR>;
+                              LagrangeFE<Elem_T, 0>::RefFE_T,
+                              LagrangeFE<Elem_T, 0>::RecommendedQR>;
   // velocity field
   using FESpaceVel_T = FESpaceCG_T;
 

@@ -371,7 +371,7 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
 
     // we always use linear elements for boundary facets
-    XDMFDoc<typename FEType<Facet_T, 1>::RefFE_T> doc{filePath, "boundary", "mesh", "mesh"};
+    XDMFDoc<typename LagrangeFE<Facet_T, 1>::RefFE_T> doc{filePath, "boundary", "mesh", "mesh"};
     doc.setTopology(mesh.facetList.size(), "connectivity_bd");
     doc.setGeometry(mesh.pointList.size(), "coords_bd");
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});

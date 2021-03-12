@@ -91,8 +91,8 @@ struct FVSolver
   using Facet_T = typename Elem_T::Facet_T;
   using ElemRefFE_T = typename FESpace::RefFE_T;
   // using FacetFESpace_T = FESpace<Mesh_T,
-  //                                typename FEType<Facet_T, 0>::RefFE_T,
-  //                                typename FEType<Facet_T, 0>::RecommendedQR>;
+  //                                typename LagrangeFE<Facet_T, 0>::RefFE_T,
+  //                                typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
   // using FacetFESpace_T = FESpace<Mesh_T,
   //                                typename FacetRefFE<ElemRefFE_T>::type,
   //                                GaussQR<NullElem, 0>>;

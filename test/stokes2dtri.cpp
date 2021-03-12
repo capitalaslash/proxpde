@@ -11,9 +11,9 @@
 
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
-using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
+using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
+using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
+using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
 

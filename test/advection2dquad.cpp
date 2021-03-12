@@ -14,14 +14,14 @@ int main(/*int argc, char* argv[]*/)
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpaceP0_T = FESpace<Mesh_T,
-                              FEType<Elem_T, 0>::RefFE_T,
-                              FEType<Elem_T, 0>::RecommendedQR>;
+                              LagrangeFE<Elem_T, 0>::RefFE_T,
+                              LagrangeFE<Elem_T, 0>::RecommendedQR>;
   using FESpaceP1_T = FESpace<Mesh_T,
-                              FEType<Elem_T, 1>::RefFE_T,
-                              FEType<Elem_T, 1>::RecommendedQR>;
+                              LagrangeFE<Elem_T, 1>::RefFE_T,
+                              LagrangeFE<Elem_T, 1>::RecommendedQR>;
   using FESpaceVel_T = FESpace<Mesh_T,
-                               FEType<Elem_T, 1>::RefFE_T,
-                               FEType<Elem_T, 1>::RecommendedQR, 2>;
+                               LagrangeFE<Elem_T, 1>::RefFE_T,
+                               LagrangeFE<Elem_T, 1>::RecommendedQR, 2>;
 
   scalarFun_T const ic = [] (Vec3 const& p)
   {
@@ -70,7 +70,7 @@ int main(/*int argc, char* argv[]*/)
   t.start("init");
   FEVar c{feSpace, "conc"};
   Vec cOld(feSpace.dof.size);
-  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, c.data);
   t.stop();
 

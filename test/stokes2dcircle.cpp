@@ -15,11 +15,11 @@ int main(int argc, char* argv[])
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpaceU_T = FESpace<Mesh_T,
-                             FEType<Elem_T,2>::RefFE_T,
-                             FEType<Elem_T,2>::RecommendedQR, 2>;
+                             LagrangeFE<Elem_T,2>::RefFE_T,
+                             LagrangeFE<Elem_T,2>::RecommendedQR, 2>;
   using FESpaceP_T = FESpace<Mesh_T,
-                             FEType<Elem_T,1>::RefFE_T,
-                             FEType<Elem_T,2>::RecommendedQR>;
+                             LagrangeFE<Elem_T,1>::RefFE_T,
+                             LagrangeFE<Elem_T,2>::RecommendedQR>;
 
   MilliTimer t;
 
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
   // wall shear stress on circle
   t.start("wss");
-  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, FEType<Elem_T, 0>::RecommendedQR> feSpaceWSS{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR> feSpaceWSS{*mesh};
   // mean cell value
   Var wss{"wss"};
   computeElemWSS(wss.data, feSpaceWSS, sol.data, feSpaceU, {side::CIRCLE}, nu);

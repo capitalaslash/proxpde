@@ -15,8 +15,8 @@ using Elem_T = Hexahedron;
 uint constexpr order = 2U;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T, order>::RefFE_T,
-                          FEType<Elem_T, order>::RecommendedQR>;
+                          LagrangeFE<Elem_T, order>::RefFE_T,
+                          LagrangeFE<Elem_T, order>::RecommendedQR>;
 
 static scalarFun_T rhs = [] (Vec3 const& p)
 {

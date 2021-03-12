@@ -15,9 +15,9 @@ int main(int argc, char* argv[])
 {
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = FEType<Elem_T,2>::RefFE_T;
-  using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
-  using QuadraticQR = FEType<Elem_T,2>::RecommendedQR;
+  using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
   using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
   using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
   using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
   // wall shear stress
   t.start("wssCell");
-  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, FEType<Elem_T, 0>::RecommendedQR> feSpaceP0{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR> feSpaceP0{*mesh};
   // mean cell value
   Var wssCell{"wssCell"};
   computeElemWSS(wssCell.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT}, nu);

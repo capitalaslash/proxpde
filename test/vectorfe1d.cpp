@@ -17,8 +17,8 @@ std::vector<uint> const COMP_Z {2};
 using Elem_T = Line;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T,1>::RefFE_T,
-                          FEType<Elem_T,1>::RecommendedQR,
+                          LagrangeFE<Elem_T,1>::RefFE_T,
+                          LagrangeFE<Elem_T,1>::RecommendedQR,
                           dim>;
 
 auto rhs = [] (Vec3 const& p)

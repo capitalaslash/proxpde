@@ -16,8 +16,8 @@ int main(int argc, char* argv[])
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<Mesh_T,
-                            FEType<Elem_T,1>::RefFE_T,
-                            FEType<Elem_T,1>::RecommendedQR>;
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR>;
   uint const numElems = (argc < 2)? 3 : std::stoi(argv[1]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};

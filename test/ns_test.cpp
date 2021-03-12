@@ -8,16 +8,16 @@ int main(int argc, char* argv[])
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpaceVel_T = FESpace<Mesh_T,
-                               typename FEType<Elem_T, 2>::RefFE_T,
-                               typename FEType<Elem_T, 2>::RecommendedQR,
+                               typename LagrangeFE<Elem_T, 2>::RefFE_T,
+                               typename LagrangeFE<Elem_T, 2>::RecommendedQR,
                                dim>;
   using FESpaceU_T = FESpace<Mesh_T,
-                               typename FEType<Elem_T, 2>::RefFE_T,
-                               typename FEType<Elem_T, 2>::RecommendedQR,
+                               typename LagrangeFE<Elem_T, 2>::RefFE_T,
+                               typename LagrangeFE<Elem_T, 2>::RecommendedQR,
                                1>;
   using FESpaceP_T = FESpace<Mesh_T,
-                             typename FEType<Elem_T, 1>::RefFE_T,
-                             typename FEType<Elem_T, 2>::RecommendedQR>;
+                             typename LagrangeFE<Elem_T, 1>::RefFE_T,
+                             typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   MilliTimer t;
 
   ParameterDict config;

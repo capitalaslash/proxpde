@@ -19,7 +19,7 @@ int main()
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<Mesh_T,
-                            FEType<Elem_T, 1>::RefFE_T,
+                            LagrangeFE<Elem_T, 1>::RefFE_T,
                             GaussQR<Elem_T, 4>>;
 
   auto const solverType = SolverType::SPARSELU;

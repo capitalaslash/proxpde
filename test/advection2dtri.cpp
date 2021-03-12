@@ -16,16 +16,16 @@ int main(int argc, char* argv[])
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
   using FESpaceP1_T = FESpace<Mesh_T,
-                              FEType<Elem_T,1>::RefFE_T,
-                              FEType<Elem_T,1>::RecommendedQR>;
+                              LagrangeFE<Elem_T,1>::RefFE_T,
+                              LagrangeFE<Elem_T,1>::RecommendedQR>;
   // explicit finite volume upwind
   using FESpaceP0_T = FESpace<Mesh_T,
-                              FEType<Elem_T,0>::RefFE_T,
-                              FEType<Elem_T,0>::RecommendedQR>;
+                              LagrangeFE<Elem_T,0>::RefFE_T,
+                              LagrangeFE<Elem_T,0>::RecommendedQR>;
   // velocity field
   // using FESpaceVel_T = FESpace<Mesh_T,
-  //                              FEType<Elem_T,1>::RefFE_T,
-  //                              FEType<Elem_T,1>::RecommendedQR, Elem_T::dim>;
+  //                              LagrangeFE<Elem_T,1>::RefFE_T,
+  //                              LagrangeFE<Elem_T,1>::RecommendedQR, Elem_T::dim>;
   using FESpaceVel_T = FESpace<Mesh_T,
                                RefTriangleRT0,
                                GaussQR<Triangle, 3>>;
@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
   // flux feSpace
   using MeshFacet_T = Mesh<Elem_T::Facet_T>;
   using FESpaceFacet_T = FESpace<MeshFacet_T,
-                                 FEType<Elem_T::Facet_T,0>::RefFE_T,
-                                 FEType<Elem_T::Facet_T,0>::RecommendedQR>;
+                                 LagrangeFE<Elem_T::Facet_T,0>::RefFE_T,
+                                 LagrangeFE<Elem_T::Facet_T,0>::RecommendedQR>;
 
   ParameterDict config;
   if (argc > 1)
@@ -140,8 +140,8 @@ int main(int argc, char* argv[])
   concP1 << ic;
   FEVar concP0{feSpaceP0, "concP0"};
   // we need to use the highest order available QR to integrate discontinuous functions
-  // FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
-  FESpace<Mesh_T, FEType<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
+  // FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
   Var flux{"flux"};
   flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()), 1);

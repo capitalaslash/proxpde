@@ -11,8 +11,8 @@
 using Elem_T = Line;
 using Mesh_T = Mesh<Elem_T>;
 using FESpace_T = FESpace<Mesh_T,
-                          FEType<Elem_T,2>::RefFE_T,
-                          FEType<Elem_T,2>::RecommendedQR>;
+                          LagrangeFE<Elem_T,2>::RefFE_T,
+                          LagrangeFE<Elem_T,2>::RecommendedQR>;
 
 static scalarFun_T rhs = [] (Vec3 const& p)
 {

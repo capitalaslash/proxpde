@@ -12,8 +12,8 @@ int main(int argc, char* argv[])
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<Mesh_T,
-                            FEType<Elem_T,1>::RefFE_T,
-                            FEType<Elem_T,1>::RecommendedQR>;
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR>;
 
   scalarFun_T rhs = [] (Vec3 const& p)
   {

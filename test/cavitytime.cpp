@@ -13,9 +13,9 @@
 static constexpr uint dim = 2;
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T, dim>::RefFE_T;
-using LinearRefFE = FEType<Elem_T,1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T, dim>::RecommendedQR;
+using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
+using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
+using QuadraticQR = LagrangeFE<Elem_T, dim>::RecommendedQR;
 using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR, dim>;
 using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
 

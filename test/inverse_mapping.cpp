@@ -14,8 +14,8 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
 
   using Mesh_T = Mesh<Elem>;
   using FESpace_T = FESpace<Mesh_T,
-                            typename FEType<Elem, Order>::RefFE_T,
-                            typename FEType<Elem, 0>::RecommendedQR>;
+                            typename LagrangeFE<Elem, Order>::RefFE_T,
+                            typename LagrangeFE<Elem, 0>::RecommendedQR>;
   using RefFE_T = typename FESpace_T::RefFE_T;
 
   t.start("mesh");

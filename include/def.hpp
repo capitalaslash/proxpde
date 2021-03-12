@@ -318,9 +318,9 @@ struct convert<Vec3> {
 
 // ----------------------------------------------------------------------------
 inline bool checkError(
-    std::vector<double> const & error,
-    std::vector<double> const & ref,
-    double toll = 1.e-12)
+    std::vector<long double> const & error,
+    std::vector<long double> const & ref,
+    long double const toll = 1.e-12)
 {
   assert(error.size() == ref.size());
   bool check = true;
@@ -331,6 +331,13 @@ inline bool checkError(
   if (!check)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+    std::cerr << "ERROR REF DIFF" << std::endl;
+    for (uint i=0; i<error.size(); ++i)
+    {
+      std::cerr << error[i] << " " << ref[i] << " "
+                << std::fabs(error[i] - ref[i]) << std::endl;
+    }
+
   }
   return !check;
 }

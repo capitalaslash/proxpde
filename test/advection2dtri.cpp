@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
   //                              LagrangeFE<Elem_T,1>::RefFE_T,
   //                              LagrangeFE<Elem_T,1>::RecommendedQR, Elem_T::dim>;
   using FESpaceVel_T = FESpace<Mesh_T,
-                               RefTriangleRT0,
-                               GaussQR<Triangle, 3>>;
+                               RaviartThomasFE<Elem_T, 0>::RefFE_T,
+                               RaviartThomasFE<Elem_T, 0>::RecommendedQR>;
   using FESpaceVelP0_T = FESpace<Mesh_T,
                                  RefTriangleP0,
                                  GaussQR<Triangle, 3>, 2>;

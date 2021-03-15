@@ -10,10 +10,10 @@
 
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
-using QR = GaussQR<Triangle, 3>;
-using FESpaceRT0_T = FESpace<Mesh_T, RefTriangleRT0, QR>;
-using FESpaceP0_T = FESpace<Mesh_T, RefTriangleP0, QR>;
-using FESpaceP0Vec_T = FESpace<Mesh_T, RefTriangleP0, QR, 2>;
+using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
+using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
+using FESpaceP0_T = FESpace<Mesh_T, RefTriangleP0, QR_T>;
+using FESpaceP0Vec_T = FESpace<Mesh_T, RefTriangleP0, QR_T, 2>;
 
 int test(YAML::Node const & config)
 {

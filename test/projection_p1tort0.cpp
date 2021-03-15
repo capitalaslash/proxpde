@@ -7,12 +7,13 @@
 
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
-using P1RefFE = RefTriangleP1;
-using RT0RefFE = RefTriangleRT0;
-using QR = LagrangeFE<Elem_T, 1>::RecommendedQR;
-using FESpaceP0_T = FESpace<Mesh_T, RefTriangleP0, QR, 2>;
-using FESpaceP1_T = FESpace<Mesh_T, RefTriangleP1, QR, 2>;
-using FESpaceRT0_T = FESpace<Mesh_T, RefTriangleRT0, QR>;
+using P0RefFE_T = LagrangeFE<Elem_T, 0>::RefFE_T;
+using P1RefFE_T = LagrangeFE<Elem_T, 1>::RefFE_T;
+using RT0RefFE_T = RaviartThomasFE<Elem_T, 0>::RefFE_T;
+using QR_T = LagrangeFE<Elem_T, 1>::RecommendedQR;
+using FESpaceP0_T = FESpace<Mesh_T, P0RefFE_T, QR_T, 2>;
+using FESpaceP1_T = FESpace<Mesh_T, P1RefFE_T, QR_T, 2>;
+using FESpaceRT0_T = FESpace<Mesh_T, RT0RefFE_T, QR_T>;
 
 int main()
 {

@@ -12,8 +12,8 @@
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using QR_T = GaussQR<Quad, 4>;
-using FESpaceRT0_T = FESpace<Mesh_T, RefQuadRT0, QR_T>;
+using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
+using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
 using FESpaceP0_T = FESpace<Mesh_T, RefQuadP0, QR_T>;
 using FESpaceP0Vec_T = FESpace<Mesh_T, RefQuadP0, QR_T, 2>;
 

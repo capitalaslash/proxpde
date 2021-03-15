@@ -124,3 +124,22 @@ struct LagrangeFE<Hexahedron,2>
   using RecommendedQR = GaussQR<Hexahedron,27>;
   using ReconstructionQR = SimpsonQR<Hexahedron>;
 };
+
+// ====================================================================
+
+template <typename Elem, uint order>
+struct RaviartThomasFE {};
+
+template <>
+struct RaviartThomasFE<Triangle, 0>
+{
+  using RefFE_T = RefTriangleRT0;
+  using RecommendedQR = GaussQR<Triangle, 3>;
+};
+
+template <>
+struct RaviartThomasFE<Quad, 0>
+{
+  using RefFE_T = RefQuadRT0;
+  using RecommendedQR = GaussQR<Quad, 4>;
+};

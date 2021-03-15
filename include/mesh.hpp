@@ -267,7 +267,9 @@ void buildHyperCube(Mesh<Elem> & mesh,
 }
 
 void refTriangleMesh(Mesh<Triangle> & mesh);
+void refQuadMesh(Mesh<Quad> & mesh);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
+void refHexahedronMesh(Mesh<Hexahedron> & mesh);
 void hexagonMesh(Mesh<Triangle> & mesh);
 void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags = MeshFlags::NONE);
 
@@ -285,19 +287,11 @@ void referenceMesh(Mesh<Elem> & mesh)
   }
   else if constexpr (std::is_same_v<Elem, Quad>)
   {
-    buildHyperCube(
-      mesh,
-      {-1., -1., 0.},
-      {2., 2., 0.},
-      {1, 1, 0});
+    refQuadMesh(mesh);
   }
   else if constexpr (std::is_same_v<Elem, Hexahedron>)
   {
-    buildHyperCube(
-      mesh,
-      {-1., -1., -1.},
-      {2., 2., 2.},
-      {1, 1, 1});
+    refHexahedronMesh(mesh);
   }
   else if constexpr (std::is_same_v<Elem, Triangle>)
   {

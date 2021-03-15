@@ -549,6 +549,76 @@ void refTriangleMesh(Mesh<Triangle> & mesh)
   };
   mesh.buildConnectivity();
   buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
+  addElemFacetList(mesh);
+}
+
+void refQuadMesh(Mesh<Quad> & mesh)
+{
+  mesh.pointList = {
+    Point(Vec3(-1., -1., 0.), 0),
+    Point(Vec3( 1., -1., 0.), 1),
+    Point(Vec3( 1.,  1., 0.), 2),
+    Point(Vec3(-1.,  1., 0.), 3),
+  };
+  mesh.elementList = {
+    Quad{{&mesh.pointList[0],
+          &mesh.pointList[1],
+          &mesh.pointList[2],
+          &mesh.pointList[3]},
+          0},
+  };
+  mesh.buildConnectivity();
+  buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
+  addElemFacetList(mesh);
+}
+
+void refTetrahedronMesh(Mesh<Tetrahedron> & mesh)
+{
+  mesh.pointList = {
+    Point(Vec3(0., 0., 0.), 0),
+    Point(Vec3(1., 0., 0.), 1),
+    Point(Vec3(0., 1., 0.), 2),
+    Point(Vec3(0., 0., 1.), 3),
+  };
+  mesh.elementList = {
+    Tetrahedron {
+      {&mesh.pointList[0],
+       &mesh.pointList[1],
+       &mesh.pointList[2],
+       &mesh.pointList[3]},
+      0},
+  };
+  mesh.buildConnectivity();
+  buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
+  addElemFacetList(mesh);
+}
+
+void refHexahedronMesh(Mesh<Hexahedron> & mesh)
+{
+  mesh.pointList = {
+    Point(Vec3(-1., -1., -1.), 0),
+    Point(Vec3( 1., -1., -1.), 1),
+    Point(Vec3( 1.,  1., -1.), 2),
+    Point(Vec3(-1.,  1., -1.), 3),
+    Point(Vec3(-1., -1.,  1.), 4),
+    Point(Vec3( 1., -1.,  1.), 5),
+    Point(Vec3( 1.,  1.,  1.), 6),
+    Point(Vec3(-1.,  1.,  1.), 7),
+  };
+  mesh.elementList = {
+    Hexahedron{{&mesh.pointList[0],
+                &mesh.pointList[1],
+                &mesh.pointList[2],
+                &mesh.pointList[3],
+                &mesh.pointList[4],
+                &mesh.pointList[5],
+                &mesh.pointList[6],
+                &mesh.pointList[7]},
+               0},
+  };
+  mesh.buildConnectivity();
+  buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
+  addElemFacetList(mesh);
 }
 
 void hexagonMesh(Mesh<Triangle> & mesh)
@@ -737,21 +807,3 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags)
   buildNormals(mesh);
 }
 
-void refTetrahedronMesh(Mesh<Tetrahedron> & mesh)
-{
-  mesh.pointList = {
-    Point(Vec3(0., 0., 0.), 0),
-    Point(Vec3(1., 0., 0.), 1),
-    Point(Vec3(0., 1., 0.), 2),
-    Point(Vec3(0., 0., 1.), 3),
-  };
-  mesh.elementList = {
-    Tetrahedron {
-      {&mesh.pointList[0],
-       &mesh.pointList[1],
-       &mesh.pointList[2],
-       &mesh.pointList[3]},
-      0},
-  };
-  mesh.buildConnectivity();
-}

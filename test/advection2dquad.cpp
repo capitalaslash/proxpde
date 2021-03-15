@@ -41,8 +41,8 @@ int main(/*int argc, char* argv[]*/)
   //       {0., 0., 0.},
   //       {1., 1., 0.},
   //       {numElemsX, numElemsY, 0},
-  //       INTERNAL_FACETS | NORMALS);
-  readGMSH(*mesh, "square_q.msh", INTERNAL_FACETS | NORMALS);
+  //       MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
+  readGMSH(*mesh, "square_q.msh", MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   t.stop();
 
   t.start("fespace");

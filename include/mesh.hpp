@@ -3,12 +3,15 @@
 #include "def.hpp"
 #include "geo.hpp"
 
-using MeshFlags = std::bitset<4>;
-static constexpr MeshFlags NONE = 0b00;
-static constexpr MeshFlags BOUNDARY_FACETS = 0b0001;
-static constexpr MeshFlags INTERNAL_FACETS = 0b0010;
-static constexpr MeshFlags NORMALS = 0b0100;
-static constexpr MeshFlags FACET_PTRS = 0b1000;
+struct MeshFlags
+{
+  using T = std::bitset<4>;
+  static constexpr T NONE            = 0b0000;
+  static constexpr T BOUNDARY_FACETS = 0b0001;
+  static constexpr T INTERNAL_FACETS = 0b0010;
+  static constexpr T NORMALS         = 0b0100;
+  static constexpr T FACET_PTRS      = 0b1000;
+};
 
 template <typename Elem>
 class Mesh
@@ -43,7 +46,7 @@ public:
   FacetList_T facetList;
   elemToPoint_T elemToPoint;
   elemToFacet_T elemToFacet;
-  MeshFlags flags;
+  MeshFlags::T flags;
 };
 
 template <typename Elem>
@@ -83,7 +86,7 @@ enum side: marker_T
 };
 
 template <typename Mesh>
-void buildFacets(Mesh & mesh, bool keepInternal = false)
+void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
 {
   using Facet_T = typename Mesh::Facet_T;
   std::map<std::set<id_T>, Facet_T> facetMap;
@@ -125,7 +128,7 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
   }
 
   uint bFacetSize = facetCount - iFacetCount;
-  if(keepInternal)
+  if ((flags & MeshFlags::INTERNAL_FACETS).any())
   {
     mesh.facetList.resize(facetCount);
   }
@@ -158,7 +161,7 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
     else
     {
       // this is an internal facet
-      if(keepInternal)
+      if ((flags & MeshFlags::INTERNAL_FACETS).any())
       {
         mesh.facetList[iFacetCount] = facet;
         mesh.facetList[iFacetCount].id = iFacetCount;
@@ -174,30 +177,29 @@ void buildFacets(Mesh & mesh, bool keepInternal = false)
   }
   assert(bFacetCount == bFacetSize);
   assert(iFacetCount == facetCount);
-  mesh.flags |= BOUNDARY_FACETS;
-  if (keepInternal)
-  {
-    mesh.flags |= INTERNAL_FACETS;
-  }
+  // always set the BOUNDARY_FACETS flags
+  mesh.flags |= MeshFlags::BOUNDARY_FACETS;
+  // set INTERNAL_FACETS flag based on the input flags
+  mesh.flags |= flags & MeshFlags::INTERNAL_FACETS;
 }
 
 void buildLine(Mesh<Line> & mesh,
                Vec3 const& origin,
                Vec3 const& length,
                uint const numElems,
-               bool keepInternalFacets);
+               MeshFlags::T flags);
 
 void buildSquare(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numElems,
-                 bool keepInternalFacets);
+                 MeshFlags::T flags);
 
 void buildSquare(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numElems,
-                 bool keepInternalFacets);
+                 MeshFlags::T flags);
 
 void buildCircleMesh(Mesh<Quad> & mesh,
                      Vec3 const& origin,
@@ -208,20 +210,20 @@ void buildCube(Mesh<Tetrahedron> & mesh,
                Vec3 const& origin,
                Vec3 const& length,
                array<uint, 3> const numElems,
-               bool keepInternalFacets);
+               MeshFlags::T flags);
 
 void buildCube(Mesh<Hexahedron> & mesh,
                Vec3 const& origin,
                Vec3 const& length,
                array<uint, 3> const numElems,
-               bool keepInternalFacets);
+               MeshFlags::T flags);
 
 template <typename Elem>
 void buildHyperCube(Mesh<Elem> & mesh,
                Vec3 const& origin,
                Vec3 const& length,
                array<uint, 3> const numElems,
-               MeshFlags flags = NONE)
+               MeshFlags::T flags = MeshFlags::NONE)
 {
   if constexpr (std::is_same_v<Elem, Line>)
   {
@@ -229,7 +231,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               numElems[0],
-              (flags & INTERNAL_FACETS).any());
+              flags);
   }
   else if constexpr (std::is_same_v<Elem, Triangle> || std::is_same_v<Elem, Quad>)
   {
@@ -237,7 +239,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
                 origin,
                 length,
                 {{numElems[0], numElems[1]}},
-                (flags & INTERNAL_FACETS).any());
+                flags);
   }
   else if constexpr (std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
   {
@@ -245,7 +247,7 @@ void buildHyperCube(Mesh<Elem> & mesh,
               origin,
               length,
               {{numElems[0], numElems[1], numElems[2]}},
-              (flags & INTERNAL_FACETS).any());
+              flags);
   }
   else
   {
@@ -254,20 +256,20 @@ void buildHyperCube(Mesh<Elem> & mesh,
     abort();
   }
 
-  if ((flags & NORMALS).any())
+  if ((flags & MeshFlags::NORMALS).any())
   {
     buildNormals(mesh);
   }
-  if ((flags & FACET_PTRS).any())
+  if ((flags & MeshFlags::FACET_PTRS).any())
   {
     addElemFacetList(mesh);
   }
 }
 
 void refTriangleMesh(Mesh<Triangle> & mesh);
-void hexagonMesh(Mesh<Triangle> & mesh);
-void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets = false);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
+void hexagonMesh(Mesh<Triangle> & mesh);
+void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags = MeshFlags::NONE);
 
 template <typename Elem>
 void referenceMesh(Mesh<Elem> & mesh)
@@ -278,7 +280,8 @@ void referenceMesh(Mesh<Elem> & mesh)
       mesh,
       {-1., 0., 0.},
       {2., 0., 0.},
-      {1, 0, 0});
+      {1, 0, 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
   }
   else if constexpr (std::is_same_v<Elem, Quad>)
   {
@@ -313,7 +316,7 @@ void referenceMesh(Mesh<Elem> & mesh)
 template <typename Mesh>
 void buildNormals(Mesh & mesh)
 {
-  if ((mesh.flags & NORMALS).none())
+  if ((mesh.flags & MeshFlags::NORMALS).none())
   {
     for (auto & facet: mesh.facetList)
     {
@@ -334,7 +337,7 @@ void buildNormals(Mesh & mesh)
         facet._normal *= -1.0;
       }
     }
-    mesh.flags |= NORMALS;
+    mesh.flags |= MeshFlags::NORMALS;
   }
   else
   {
@@ -345,7 +348,7 @@ void buildNormals(Mesh & mesh)
 template <typename Mesh>
 void addElemFacetList(Mesh & mesh)
 {
-  if ((mesh.flags & FACET_PTRS).none())
+  if ((mesh.flags & MeshFlags::FACET_PTRS).none())
   {
     for (auto & elem: mesh.elementList)
     {
@@ -363,7 +366,7 @@ void addElemFacetList(Mesh & mesh)
         outsideElem->facetList[outsidePos] = &facet;
       }
     }
-    mesh.flags |= FACET_PTRS;
+    mesh.flags |= MeshFlags::FACET_PTRS;
   }
   else
   {
@@ -422,7 +425,7 @@ struct ElemToGmsh<Hexahedron>
 template <typename Elem>
 void readGMSH(Mesh<Elem> & mesh,
               std::string_view const filename,
-              MeshFlags flags = NONE)
+              MeshFlags::T flags = MeshFlags::NONE)
 {
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
@@ -578,7 +581,7 @@ void readGMSH(Mesh<Elem> & mesh,
     in >> buf;
   }
   mesh.buildConnectivity();
-  buildFacets(mesh, (flags & INTERNAL_FACETS).any());
+  buildFacets(mesh, flags);
 
   // the file should contain all the boundary facets
   // TODO: this does not work if the mesh has internal boundaries
@@ -604,11 +607,11 @@ void readGMSH(Mesh<Elem> & mesh,
   // check that all facets have been found in the mesh
   assert(facets.size() == 0);
 
-  if ((flags & NORMALS).any())
+  if ((flags & MeshFlags::NORMALS).any())
   {
     buildNormals(mesh);
   }
-  if ((flags & FACET_PTRS).any())
+  if ((flags & MeshFlags::FACET_PTRS).any())
   {
     addElemFacetList(mesh);
   }
@@ -618,7 +621,7 @@ void readGMSH(Mesh<Elem> & mesh,
 template <typename Mesh>
 void readMesh(Mesh & mesh,
               YAML::Node const & config,
-              MeshFlags flags = NONE)
+              MeshFlags::T flags = MeshFlags::NONE)
 {
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")

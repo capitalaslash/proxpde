@@ -43,10 +43,13 @@ int main(int argc, char* argv[])
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 0., 0.};
   uint const numElems = config["n"].as<uint>();
-  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, INTERNAL_FACETS | NORMALS);
+  buildHyperCube(
+        *mesh,
+        Vec3{0.0, 0.0, 0.0},
+        Vec3{1.0, 0.0, 0.0},
+        {numElems, 0, 0},
+        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
   // auto const r = 1. / 1.1;
   // auto const starting = (1. - r) / (1. - pow(r, numElems));
   // auto counter = 0;

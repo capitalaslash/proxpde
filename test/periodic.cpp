@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   uint const numElems = config["n"].as<uint>();
-  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, INTERNAL_FACETS | NORMALS);
+  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   t.stop();
 
   t.start("fespace");

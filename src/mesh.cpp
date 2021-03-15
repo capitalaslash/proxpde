@@ -4,7 +4,7 @@ void buildLine(Mesh<Line> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  uint const numElems,
-                 bool keepInternalFacets)
+                 MeshFlags::T flags)
 {
   assert(numElems > 0);
   assert(length.norm() > 0.);
@@ -23,7 +23,7 @@ void buildLine(Mesh<Line> & mesh,
   }
 
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   mesh.facetList[0].marker = side::LEFT;
   mesh.facetList[1].marker = side::RIGHT;
 }
@@ -76,7 +76,7 @@ void buildSquare(Mesh<Triangle> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numElems,
-                 bool keepInternalFacets)
+                 MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
@@ -141,7 +141,7 @@ void buildSquare(Mesh<Triangle> & mesh,
                  counter++});
     }
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
 }
 
@@ -149,7 +149,7 @@ void buildSquare(Mesh<Quad> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 2> const numElems,
-                 bool keepInternalFacets)
+                 MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
@@ -192,7 +192,7 @@ void buildSquare(Mesh<Quad> & mesh,
              counter++});
     }
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
 }
 
@@ -370,7 +370,7 @@ void buildCube(Mesh<Tetrahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 3> const numElems,
-                 bool keepInternalFacets)
+                 MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
@@ -454,7 +454,7 @@ void buildCube(Mesh<Tetrahedron> & mesh,
         }
       }
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
 }
 
@@ -462,7 +462,7 @@ void buildCube(Mesh<Hexahedron> & mesh,
                  Vec3 const& origin,
                  Vec3 const& length,
                  array<uint, 3> const numElems,
-                 bool keepInternalFacets)
+                 MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
@@ -530,7 +530,7 @@ void buildCube(Mesh<Hexahedron> & mesh,
                          counter++});
       }
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
 }
 
@@ -548,7 +548,7 @@ void refTriangleMesh(Mesh<Triangle> & mesh)
               0},
   };
   mesh.buildConnectivity();
-  buildFacets(mesh, true);
+  buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
 }
 
 void hexagonMesh(Mesh<Triangle> & mesh)
@@ -590,7 +590,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
               5},
   };
   mesh.buildConnectivity();
-  buildFacets(mesh, true);
+  buildFacets(mesh, MeshFlags::INTERNAL_FACETS);
   for (auto & facet: mesh.facetList)
   {
     if (facet.onBoundary())
@@ -606,7 +606,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
   std::cout << mesh << std::endl;
 }
 
-void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets)
+void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags)
 {
   id_T counter = 0;
   double const h = 0.1;
@@ -732,7 +732,7 @@ void hexagonSquare(Mesh<Triangle> & mesh, bool keepInternalFacets)
       counter++);
   }
   mesh.buildConnectivity();
-  buildFacets(mesh, keepInternalFacets);
+  buildFacets(mesh, flags);
   markFacetsCube(mesh, {0., 0., 0.}, {1., (2+2*rows)*h*oneOnSr3, 0.});
   buildNormals(mesh);
 }

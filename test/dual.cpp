@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  hexagonSquare(*mesh, true);
+  hexagonSquare(*mesh, MeshFlags::INTERNAL_FACETS);
   addElemFacetList(*mesh);
 
   // uint const numElemsX = (argc < 3)? 16 : std::stoul(argv[1]);
@@ -86,10 +86,10 @@ int main(int argc, char* argv[])
   //       {0., 0., 0.},
   //       {1., 1., 0.},
   //       {{numElemsX, numElemsY, 0}},
-  //       INTERNAL_FACETS | NORMALS);
+  //       MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
 
   // readGMSH(*mesh, "square_uns.msh");
-  // buildFacets(*mesh, true);
+  // buildFacets(*mesh, MeshFlags::INTERNAL_FACETS);
   // buildNormals(*mesh);
   t.stop();
 

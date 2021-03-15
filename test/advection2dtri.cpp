@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
         {0., 0., 0.},
         {1., 1., 0.},
         {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
-        INTERNAL_FACETS | NORMALS | FACET_PTRS);
-  // readGMSH(*mesh, "square_uns.msh", INTERNAL_FACETS | NORMALS);
+        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
+  // readGMSH(*mesh, "square_uns.msh", MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   // hexagonSquare(*mesh, true);
   // buildNormals(*mesh);
 

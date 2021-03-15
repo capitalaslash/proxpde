@@ -21,7 +21,7 @@ int test(YAML::Node const & config)
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
-  buildHyperCube(*mesh, origin, length, {n, n, 0}, INTERNAL_FACETS | FACET_PTRS);
+  buildHyperCube(*mesh, origin, length, {n, n, 0}, MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
   // addElemFacetList(*mesh);

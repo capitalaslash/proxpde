@@ -34,7 +34,7 @@ struct FESpace
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       // RT0 requires internal facets and facet ptrs
-      assert ((mesh.flags & (INTERNAL_FACETS | FACET_PTRS)).count() == 2);
+      assert ((mesh.flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS)).count() == 2);
     }
   }
 

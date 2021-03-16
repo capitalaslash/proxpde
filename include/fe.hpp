@@ -143,3 +143,17 @@ struct RaviartThomasFE<Quad, 0>
   using RefFE_T = RefQuadRT0;
   using RecommendedQR = GaussQR<Quad, 4>;
 };
+
+template <>
+struct RaviartThomasFE<Tetrahedron, 0>
+{
+  using RefFE_T = RefTetrahedronRT0;
+  using RecommendedQR = GaussQR<Tetrahedron, 4>;
+};
+
+template <>
+struct RaviartThomasFE<Hexahedron, 0>
+{
+  using RefFE_T = RefHexahedronRT0;
+  using RecommendedQR = GaussQR<Hexahedron, 8>;
+};

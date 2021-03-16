@@ -785,6 +785,58 @@ struct RefTetrahedronP2
   }
 };
 
+struct RefTetrahedronRT0
+{
+  using GeoElem_T = Tetrahedron;
+  using FacetFE_T = RefTriangleP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 3;
+  static uint constexpr numFuns = 4U;
+  static uint constexpr numGeoFuns = 4U;
+  static array<uint,4> constexpr dofPlace{{0,1,0,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,4> constexpr dofOnFacet = {{
+    {{0}}, {{1}}, {{2}}, {{3}}
+  }};
+  static Vec3 const refMidpoint;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<threedFun_T,numFuns> const phiVectFun;
+  static array<scalarThreedFun_T,numFuns> const divphiFun;
+  static array<threedFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 0.1666666666666667L;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+    return array<Vec3,numFuns>{
+      (e.pointList[0]->coord + e.pointList[2]->coord + e.pointList[1]->coord) / 3.,
+      (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[3]->coord) / 3.,
+      (e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord) / 3.,
+      (e.pointList[1]->coord + e.pointList[2]->coord + e.pointList[3]->coord) / 3.,
+    };
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+     array<Vec3,numGeoFuns> mappingPts {{
+         e.pointList[0]->coord,
+         e.pointList[1]->coord,
+         e.pointList[2]->coord,
+         e.pointList[3]->coord
+     }};
+     return mappingPts;
+  }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > (0. - 1.e-16) && p[1] > (0. - 1.e-16) &&
+        p[2] > (0. - 1.e-16) && p[0] + p[1] + p[2] < (1. + 1.e-16);
+  }
+};
+
 struct RefHexahedronP0
 {
   using GeoElem_T = Hexahedron;
@@ -971,6 +1023,66 @@ struct RefHexahedronQ2
   }
 };
 
+
+struct RefHexahedronRT0
+{
+  using GeoElem_T = Hexahedron;
+  using FacetFE_T = RefQuadP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 3;
+  static uint constexpr numFuns = 6U;
+  static uint constexpr numGeoFuns = 8U;
+  static array<uint,4> constexpr dofPlace{{0,1,0,0}};
+  static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,6> constexpr dofOnFacet = {{
+    {0}, {1}, {2}, {3}, {4}, {5}
+  }};
+  static Vec3 const refMidpoint;
+  using Vec_T = FVec<dim>;
+  using LocalVec_T = FVec<numFuns>;
+  using LocalMat_T = FMat<numFuns,numFuns>;
+
+  static array<threedFun_T,numFuns> const phiVectFun;
+  static array<scalarThreedFun_T,numFuns> const divphiFun;
+  static array<threedFun_T,numGeoFuns> const mapping;
+  static double constexpr volume = 8.L;
+
+  static array<Vec3,numFuns> dofPts(GeoElem const & e)
+  {
+    return array<Vec3,numFuns>{
+      0.25*(e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord + e.pointList[1]->coord),
+      0.25*(e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[5]->coord + e.pointList[4]->coord),
+      0.25*(e.pointList[1]->coord + e.pointList[2]->coord + e.pointList[6]->coord + e.pointList[5]->coord),
+      0.25*(e.pointList[2]->coord + e.pointList[3]->coord + e.pointList[7]->coord + e.pointList[6]->coord),
+      0.25*(e.pointList[3]->coord + e.pointList[0]->coord + e.pointList[4]->coord + e.pointList[7]->coord),
+      0.25*(e.pointList[4]->coord + e.pointList[5]->coord + e.pointList[6]->coord + e.pointList[7]->coord),
+    };
+  }
+
+  static array<Vec3,numGeoFuns> mappingPts(GeoElem const & e)
+  {
+     return array<Vec3,numGeoFuns>{
+         e.pointList[0]->coord,
+         e.pointList[1]->coord,
+         e.pointList[2]->coord,
+         e.pointList[3]->coord,
+         e.pointList[4]->coord,
+         e.pointList[5]->coord,
+         e.pointList[6]->coord,
+         e.pointList[7]->coord,
+     };
+  }
+
+  static bool inside(Vec_T const & p)
+  {
+    return
+        p[0] > -1. - 1.e-16 && p[0] < 1. + 1.e-16 &&
+        p[1] > -1. - 1.e-16 && p[1] < 1. + 1.e-16 &&
+        p[2] > -1. - 1.e-16 && p[2] < 1. + 1.e-16;
+  }
+};
+
 // ----------------------------------------------------------------------------
 template <typename RefFE>
 struct Order{ static constexpr uint value = 0; };
@@ -1049,11 +1161,15 @@ struct Family<RefTetrahedronP1>{ static constexpr FamilyType value = FamilyType:
 template <>
 struct Family<RefTetrahedronP2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
+struct Family<RefTetrahedronRT0>{ static constexpr FamilyType value = FamilyType::RAVIART_THOMAS; };
+template <>
 struct Family<RefHexahedronP0>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefHexahedronQ1>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
 template <>
 struct Family<RefHexahedronQ2>{ static constexpr FamilyType value = FamilyType::LAGRANGE; };
+template <>
+struct Family<RefHexahedronRT0>{ static constexpr FamilyType value = FamilyType::RAVIART_THOMAS; };
 
 template <typename RefFE>
 inline constexpr FamilyType family_v = Family<RefFE>::value;
@@ -1102,11 +1218,15 @@ struct FEDim<RefTetrahedronP1>{ static constexpr FEDimType value = FEDimType::SC
 template <>
 struct FEDim<RefTetrahedronP2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
+struct FEDim<RefTetrahedronRT0>{ static constexpr FEDimType value = FEDimType::VECTOR; };
+template <>
 struct FEDim<RefHexahedronP0>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefHexahedronQ1>{ static constexpr FEDimType value = FEDimType::SCALAR; };
 template <>
 struct FEDim<RefHexahedronQ2>{ static constexpr FEDimType value = FEDimType::SCALAR; };
+template <>
+struct FEDim<RefHexahedronRT0>{ static constexpr FEDimType value = FEDimType::VECTOR; };
 
 template <typename RefFE>
 inline constexpr FEDimType fedim_v = FEDim<RefFE>::value;
@@ -1140,7 +1260,11 @@ struct MappingIsSeparate<RefQuadRT0>{ static constexpr bool value = true; };
 template <>
 struct MappingIsSeparate<RefTetrahedronP0>{ static constexpr bool value = true; };
 template <>
+struct MappingIsSeparate<RefTetrahedronRT0>{ static constexpr bool value = true; };
+template <>
 struct MappingIsSeparate<RefHexahedronP0>{ static constexpr bool value = true; };
+template <>
+struct MappingIsSeparate<RefHexahedronRT0>{ static constexpr bool value = true; };
 
 template <typename RefFE>
 inline constexpr bool mappingIsSeparate_v = MappingIsSeparate<RefFE>::value;

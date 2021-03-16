@@ -99,7 +99,7 @@ public:
             {
               DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
               data[_constrainedDofMap.at(dofId)] = value[c];
-              if (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+              if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
               {
                 // value gives the entrant flux, it must be scaled to the facet size
                 // ???

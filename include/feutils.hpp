@@ -5,6 +5,40 @@
 #include "builder.hpp"
 
 template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
+struct L2Projector
+{
+  L2Projector(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom):
+    dummy{feSpaceTo.dof.size * FESpaceTo::dim},
+    massTo{1.0, feSpaceTo},
+    projFromTo{1.0, dummy, feSpaceFrom, feSpaceTo},
+    builder{feSpaceTo.dof.size * FESpaceTo::dim}
+  {
+    builder.buildLhs(std::tuple{massTo}, std::tuple{});
+    builder.closeMatrix();
+    solver.analyzePattern(builder.A);
+    solver.factorize(builder.A);
+  }
+
+  void setRhs(Vec const & rhs)
+  {
+    dummy = rhs;
+    builder.clearRhs();
+  }
+
+  Vec apply()
+  {
+    builder.buildRhs(std::tuple{projFromTo}, std::tuple());
+    return solver.solve(builder.b);
+  }
+
+  Vec dummy;
+  AssemblyMass<FESpaceTo> massTo;
+  AssemblyProjection<FESpaceTo, FESpaceFrom> projFromTo;
+  Builder<StorageType::ClmMajor> builder;
+  Solver solver;
+};
+
+template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
 void l2Projection(
     Vec & to, FESpaceTo const & feSpaceTo,
     Vec const & from, FESpaceFrom const & feSpaceFrom)

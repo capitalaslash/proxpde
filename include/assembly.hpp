@@ -52,7 +52,7 @@ struct Diagonal: public AssemblyBase
   virtual void build(LMat_T & Ke) const = 0;
   // virtual LMat_T build(/*LMat_T & Ke*/) const = 0;
 
-  virtual void reinit(GeoElem const & ) const {}
+  virtual void reinit(GeoElem const &) const {}
 
   FESpace_T const & feSpace;
   // LMat_T mat;
@@ -108,7 +108,7 @@ struct AssemblyVector: public AssemblyBase
 
   virtual void build(LVec_T & Fe) const = 0;
 
-  virtual void reinit(GeoElem const &) const {}
+  virtual void reinit(GeoElem const & ) const {}
 
   FESpace_T const & feSpace;
 };
@@ -500,7 +500,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyAnalyticRhs(Fun<FESpace_T::dim, 3> const r,
+  AssemblyAnalyticRhs(FEFun_T<FESpace> const r,
                       FESpace_T const & fe,
                       AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, std::move(cmp)),
@@ -520,18 +520,34 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      FVec<FESpace_T::dim> localRhs = rhs(this->feSpace.curFE.qpoint[q]);
-      for (uint const c: this->comp)
+      FEVec_T<FESpace> const localRhs = rhs(this->feSpace.curFE.qpoint[q]);
+
+      if constexpr (family_v<typename FESpace_T::RefFE_T> == FamilyType::LAGRANGE)
       {
-        Fe.template block<CurFE_T::numDOFs, 1>(c*CurFE_T::numDOFs, 0) +=
+        for (uint const c: this->comp)
+        {
+          Fe.template block<CurFE_T::numDOFs, 1>(c*CurFE_T::numDOFs, 0) +=
+              this->feSpace.curFE.JxW[q] *
+              this->feSpace.curFE.phi[q] *
+              localRhs[c];
+        }
+      }
+      else if constexpr (family_v<typename FESpace_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        Vec3 localRhs3 = promote<3>(localRhs);
+        Fe +=
             this->feSpace.curFE.JxW[q] *
-            this->feSpace.curFE.phi[q] *
-            localRhs[c];
+            this->feSpace.curFE.phiVect[q] *
+            localRhs3;
+      }
+      else
+      {
+        std::abort();
       }
     }
   }
 
-  Fun<FESpace_T::dim, 3> const rhs;
+  FEFun_T<FESpace> const rhs;
 };
 
 template <typename FESpace, typename FESpaceVel>

@@ -55,6 +55,40 @@ void l2Projection(
   to = solver.solve(builder.b);
 }
 
+template <typename FESpace, typename Solver = LUSolver>
+void projectAnalyticFunction(FEFun_T<FESpace> const & fun,
+                             FESpace & feSpace,
+                             Vec & v,
+                             uint const offset = 0)
+{
+  // set the vector data to the appropriate dimension if it comes with length 0
+  if (v.size() == 0)
+  {
+    v = Vec::Zero(feSpace.dof.size * FESpace::dim);
+  }
+  AssemblyMass massTo{1.0, feSpace};
+  AssemblyAnalyticRhs projFromTo{fun, feSpace};
+  uint const size = feSpace.dof.size * FESpace::dim;
+  Builder builder{size};
+  builder.buildLhs(std::tuple{massTo}, std::tuple{});
+  builder.buildRhs(std::tuple{projFromTo}, std::tuple{});
+  builder.closeMatrix();
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
+  Solver solver(builder.A);
+  v.block(offset, 0, size, 1) = solver.solve(builder.b);
+
+}
+
+template <typename FESpace>
+void projectAnalyticFunction(scalarFun_T const & f,
+                             FESpace & feSpace,
+                             Vec & v,
+                             uint const offset = 0)
+{
+  projectAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
+}
+
 template <typename FESpaceT>
 using Grad_T =
   FESpace<typename FESpaceT::Mesh_T,

@@ -323,6 +323,9 @@ inline bool checkError(
     long double const toll = 1.e-12)
 {
   assert(error.size() == ref.size());
+
+  auto const prec = -std::log10(toll);
+
   bool check = true;
   for (uint i=0; i<error.size(); ++i)
   {
@@ -331,10 +334,11 @@ inline bool checkError(
   if (!check)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    std::cerr << "ERROR REF DIFF" << std::endl;
+    std::cerr << "ERROR" << std::string(prec + 2, ' ') << "REF" << std::string(prec + 4, ' ') <<  "DIFF" << std::endl;
     for (uint i=0; i<error.size(); ++i)
     {
-      std::cerr << error[i] << " " << ref[i] << " "
+      std::cerr << std::scientific << std::setprecision(prec)
+                << error[i] << " " << ref[i] << " "
                 << std::fabs(error[i] - ref[i]) << std::endl;
     }
 

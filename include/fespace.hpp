@@ -123,6 +123,11 @@ void interpolateAnalyticFunction(FEFun_T<FESpace> const & fun,
     v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
 
+  if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+  {
+    assert((feSpace.mesh.flags & MeshFlags::NORMALS).any());
+  }
+
   for(auto const & elem: feSpace.mesh.elementList)
   {
     feSpace.curFE.reinit(elem);
@@ -142,10 +147,10 @@ void interpolateAnalyticFunction(FEFun_T<FESpace> const & fun,
       }
       else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
-        // the value of the dof is the flux through the face
+        // the value of the dof is the flux through the facet
         // u_k = \int_{f_k} u.dot(n_k)
         // TODO: this should be an integral, we are taking the mean value
-        // at the center of facet (should work only for order 0)
+        // at the center of facet (ok for linear function and order 0 only)
         uint constexpr dim = FESpace::Mesh_T::Elem_T::dim;
         id_T const facetId = feSpace.mesh.elemToFacet[elem.id][i];
         auto const & facet = feSpace.mesh.facetList[facetId];
@@ -218,7 +223,7 @@ void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
         {
           // the value of the dof is the flux through the face
           // u_k = u.dot(n_k)
-          v[offset + dofId] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
+          v[offset + dofId] = value.dot(FESpace::RefFE_T::normal(e)[i]);
         }
       }
     }

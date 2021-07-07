@@ -44,3 +44,47 @@ void computeGradient(
   solverGrad.compute(builderGrad.A);
   grad = solverGrad.solve(builderGrad.b);
 }
+
+template <typename FESpaceFlux, typename FESpaceU>
+void computeFluxes(
+    Vec & fluxes, FESpaceFlux const & feSpaceFlux,
+    Vec const & u, FESpaceU const & feSpace,
+    std::unordered_set<marker_T> const & markers = std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
+    double const coef = 1.0)
+{
+  uint constexpr dim = FESpaceU::dim;
+  using FacetFE_T = typename FESpaceU::RefFE_T::FacetFE_T;
+  using FacetQR_T = SideQR_T<typename FESpaceU::QR_T>;
+  using FacetCurFE_T = CurFE<FacetFE_T, FacetQR_T>;
+  using FacetFESpace_T =
+    FESpace<typename FESpaceU::Mesh_T,
+            typename FESpaceU::RefFE_T,
+            SideGaussQR<typename FESpaceU::Mesh_T::Elem_T, FacetQR_T::numPts>, dim>;
+
+  fluxes = Vec::Zero(feSpaceFlux.dof.size);
+  FacetCurFE_T curFEFacet;
+
+  FacetFESpace_T feSpaceFacet{feSpace.mesh};
+  FEVar uFacet{feSpaceFacet};
+  uFacet.data = u;
+
+  for (auto & facet: feSpaceFlux.mesh.elementList)
+  {
+    if (markers == std::unordered_set<marker_T>({marker_T(-1)}) || (markers.find(facet.marker) != markers.end()))
+    {
+      // std::cout << "facet " << facet.id << std::endl;
+      Vec3 const normal = facet.normal();
+      curFEFacet.reinit(facet);
+      auto elem = facet.facingElem[0].ptr;
+      auto const side = facet.facingElem[0].side;
+      uFacet.reinit(*elem);
+      for(uint q=0; q<FacetQR_T::numPts; ++q)
+      {
+        FVec<dim> const uLocal = coef * uFacet.evaluate(side * FacetQR_T::numPts + q);
+        Vec3 const uLocal3 = promote<3>(uLocal);
+        // entering fluxes should be positive
+        fluxes[facet.id] += curFEFacet.JxW[q] * (uLocal3.dot(normal));
+      }
+    }
+  }
+}

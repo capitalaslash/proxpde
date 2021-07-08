@@ -50,7 +50,7 @@ public:
     size_t strLength = 9;
     // sort by id
     std::vector<std::pair<std::string, typename TimeUnit::rep>> sortedData(_data.size());
-    for (auto const [name, data]: _data)
+    for (auto const & [name, data]: _data)
     {
       strLength = std::max(strLength, name.length());
       totalTime += data.time;

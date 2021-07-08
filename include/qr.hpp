@@ -296,6 +296,23 @@ struct SideGaussQR
   static array<Vec_T, numPts> const node;
 };
 
+template<> SideGaussQR<Triangle, 2>::Weights_T const SideGaussQR<Triangle, 2>::weight =
+    (SideGaussQR<Triangle, 2>::Weights_T{} <<
+     1.L, 1.L,
+     1.L, 1.L,
+     1.L, 1.L).finished();
+template<> array<SideGaussQR<Triangle, 2>::Vec_T, 2 * 3> const SideGaussQR<Triangle, 2>::node =
+{{
+   SideGaussQR<Triangle, 2>::Vec_T{0.5 * (1. - sqrt13rd), 0.0},
+   SideGaussQR<Triangle, 2>::Vec_T{0.5 * (1. + sqrt13rd), 0.0},
+
+   SideGaussQR<Triangle, 2>::Vec_T{0.5 * (1. + sqrt13rd), 0.5 * (1. - sqrt13rd)},
+   SideGaussQR<Triangle, 2>::Vec_T{0.5 * (1. - sqrt13rd), 0.5 * (1. + sqrt13rd)},
+
+   SideGaussQR<Triangle, 2>::Vec_T{0.0, 0.5 * (1. - sqrt13rd)},
+   SideGaussQR<Triangle, 2>::Vec_T{0.0, 0.5 * (1. + sqrt13rd)},
+}};
+
 template<> SideGaussQR<Quad, 2>::Weights_T const SideGaussQR<Quad, 2>::weight =
     (SideGaussQR<Quad, 2>::Weights_T{} <<
      1.L, 1.L,

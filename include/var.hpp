@@ -5,7 +5,7 @@
 
 struct Var
 {
-  explicit Var(std::string_view const n, uint size = 0):
+  explicit Var(std::string_view const n, unsigned long const size = 0):
     name{n},
     data(size)
   {}
@@ -55,11 +55,17 @@ struct FEVar
   using RefFE_T = typename FESpace_T::RefFE_T;
   using Vec_T = FEVec_T<FESpace_T>;
 
-  FEVar(FESpace_T const & fe, std::string_view n = ""):
+  FEVar(std::string_view n, FESpace_T const & fe):
+    name(n),
     feSpace(fe),
-    data(fe.dof.size * FESpace_T::dim),
-    name(n)
+    data(fe.dof.size * FESpace_T::dim)
   {}
+
+  explicit FEVar(FESpace_T const & fe):
+    feSpace(fe),
+    data(fe.dof.size * FESpace_T::dim)
+  {}
+
 
   FEVar<FESpace_T> & operator<<(FEFun_T<FESpace_T> const & f)
   {
@@ -73,12 +79,12 @@ struct FEVar
     return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
-  FEVar<FESpace_T> & operator <<(Vec_T const & v)
+  FEVar<FESpace_T> & operator<<(Vec_T const & v)
   {
     return operator<<([&v] (Vec3 const &) { return v; });
   }
 
-  FEVar<FESpace_T> & operator <<(double const & v)
+  FEVar<FESpace_T> & operator<<(double const & v)
   {
     static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
     return operator<<([&v] (Vec3 const &) { return Vec1::Constant(v); });
@@ -192,29 +198,39 @@ struct FEVar
     getComponent(data, feSpace, v, feSpaceVec, component);
   }
 
+  std::string const name = "";
   FESpace_T const & feSpace;
   Vec data;
-  std::string name;
 
 private:
   FMat<FESpace_T::RefFE_T::numFuns, FESpace_T::dim> _localData;
 };
 
-template <typename FEList>
-struct BlockFEVar
-{
-  BlockFEVar(FEList & fe, std::string_view n = ""):
-    feList{fe},
-    name{n}
-  {
-    uint sum = 0;
-    static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
-      sum += feSpace.dof.size;
-    });
-    data.resize(sum);
-  }
-
-  FEList & feList;
-  std::string name;
-  Vec data;
-};
+// template <typename FEList>
+// struct BlockFEVar
+// {
+//   BlockFEVar(std::string_view n, FEList & fe):
+//     name(n),
+//     feList(fe)
+//   {
+//     uint sum = 0;
+//     static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
+//       sum += feSpace.dof.size;
+//     });
+//     data.resize(sum);
+//   }
+//
+//   explicit BlockFEVar(FEList & fe):
+//     feList{fe},
+//   {
+//     uint sum = 0;
+//     static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
+//       sum += feSpace.dof.size;
+//     });
+//     data.resize(sum);
+//   }
+//
+//   std::string const name = "";
+//   FEList & feList;
+//   Vec data;
+// };

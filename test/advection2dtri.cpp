@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("velocity");
-  FEVar vel{feSpaceVel, "velocity"};
+  FEVar vel{"velocity", feSpaceVel};
   vel << narrow<Elem_T::dim>(config["velocity"].as<Vec3>());
 
   double const dt = config["dt"].as<double>();
@@ -136,9 +136,9 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("init");
-  FEVar concP1{feSpaceP1, "concP1"};
+  FEVar concP1{"concP1", feSpaceP1};
   concP1 << ic;
-  FEVar concP0{feSpaceP0, "concP0"};
+  FEVar concP0{"concP0", feSpaceP0};
   // we need to use the highest order available QR to integrate discontinuous functions
   // FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
   FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};

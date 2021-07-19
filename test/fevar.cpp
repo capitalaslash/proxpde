@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   // std::cout << "b:\n" << builder.b << std::endl;
 
   t.start("solve");
-  FEVar sol{feSpace, "u"};
+  FEVar sol{"u", feSpace};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);

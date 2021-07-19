@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
   t.start("fe builder");
   FESpaceVel_T feSpaceVel{*mesh};
-  FEVar vel{feSpaceVel, "velocity"};
+  FEVar vel{"velocity", feSpaceVel};
   interpolateAnalyticFunction(velFun, feSpaceVel, vel.data);
   vel << Vec2{0.2, 0.0};
   double const dt = 0.1;

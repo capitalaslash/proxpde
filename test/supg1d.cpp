@@ -397,7 +397,7 @@ int main(int argc, char* argv[])
   AssemblyProjection timeDerRhs{1./dt, uCGOldRes.data, uCGOldRes.feSpace, feSpaceCG};
   AssemblyRhsSUPGRes rhsSUPGRes{1./dt, uCGOldRes, vel, eps, feSpaceCG};
 
-  // FEVar c{feSpace, "conc"};
+  // FEVar c{"conc", feSpace};
   // FEList feList{feSpace, feSpace};
   // auto fe1 = std::get<0>(feList);
   // BlockFEVar tmp{"tmp", feList};
@@ -413,11 +413,11 @@ int main(int argc, char* argv[])
   //   if (p(0) > 0.25 && p(0) < 0.5) return 1.;
   //   return 0.;
   // };
-  FEVar uCG{feSpaceCG, "uCG"};
+  FEVar uCG{"uCG", feSpaceCG};
   uCG << ic;
   // uCG.data[8] = 0.8;
   // integrateAnalyticFunction(ic, feSpaceCG, uCG.data);
-  FEVar uCGRes{feSpaceCG, "uCGres"};
+  FEVar uCGRes{"uCGres", feSpaceCG};
   uCGRes << ic;
   // uCGRes.data[8] = 0.8;
   // integrateAnalyticFunction(ic, feSpaceCG, uCGRes.data);

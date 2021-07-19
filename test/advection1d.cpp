@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
   // the only 1D velocity that is divergence free is a constant one
   auto const velocity = config["velocity"].as<double>();
   FESpaceVel_T feSpaceVel{*mesh};
-  FEVar vel{feSpaceVel, "velocity"};
+  FEVar vel{"velocity", feSpaceVel};
   vel << velocity;
   double const cfl = velocity * dt * numElems;
   std::cout << "cfl = " << cfl << std::endl;
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   Vec concP1Old(feSpaceP1.dof.size);
   AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
 
-  FEVar concP1{feSpaceP1, "conc"};
+  FEVar concP1{"conc", feSpaceP1};
   auto const threshold = config["threshold"].as<double>();
   scalarFun_T ic = [threshold] (Vec3 const& p)
   {
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
   concP1 << ic;
 
   t.start("p0 ic");
-  FEVar concP0{feSpaceP0, "concP0"};
+  FEVar concP0{"concP0", feSpaceP0};
   // we need to use the highest order available QR to integrate discontinuous functions
   // FESpace<Mesh_T, RefLineP0, GaussQR<Line, 4>> feSpaceIC{*mesh};
   FESpace<Mesh_T, RefLineP0, MiniQR<Line, 20>> feSpaceIC{*mesh};

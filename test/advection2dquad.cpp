@@ -59,7 +59,7 @@ int main(/*int argc, char* argv[]*/)
 
   t.start("velocity");
   FESpaceVel_T feSpaceVel{*mesh};
-  FEVar vel{feSpaceVel, "velocity"};
+  FEVar vel{"velocity", feSpaceVel};
   vel << Vec2{0.1, 0.};
 
   double const dt = 0.1;
@@ -68,7 +68,7 @@ int main(/*int argc, char* argv[]*/)
   t.stop();
 
   t.start("init");
-  FEVar c{feSpace, "conc"};
+  FEVar c{"conc", feSpace};
   Vec cOld(feSpace.dof.size);
   FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, c.data);

@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
   // \int_{-\infty}^{+\infty} exp(-a (x - b)^2 dx = \sqrt(\pi / a)
   double const refIntegral = std::sqrt(M_PI / a);
 
-  FEVar u{feSpace, "u"};
+  FEVar u{"u", feSpace};
   u << ic;
 
   t.start("assembly lhs");

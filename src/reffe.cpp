@@ -352,18 +352,18 @@ Vec2 const RefQuadRT0::refMidpoint = Vec2{0., 0.};
 
 array<twodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::phiVectFun =
 {{
-  [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) - 1.)); },
-  [] (Vec_T const & p) { return Vec_T(0.5 * (p(0) + 1.), 0.); },
-  [] (Vec_T const & p) { return Vec_T(0., 0.5 * (p(1) + 1.)); },
-  [] (Vec_T const & p) { return Vec_T(0.5 * (p(0) - 1.), 0.); },
+  [] (Vec_T const & p) { return Vec_T(0., 0.25 * (p(1) - 1.)); },
+  [] (Vec_T const & p) { return Vec_T(0.25 * (p(0) + 1.), 0.); },
+  [] (Vec_T const & p) { return Vec_T(0., 0.25 * (p(1) + 1.)); },
+  [] (Vec_T const & p) { return Vec_T(0.25 * (p(0) - 1.), 0.); },
 }};
 
 array<scalarTwodFun_T,RefQuadRT0::numFuns> const RefQuadRT0::divphiFun =
 {{
-  [] (Vec_T const & ) { return 0.5; },
-  [] (Vec_T const & ) { return 0.5; },
-  [] (Vec_T const & ) { return 0.5; },
-  [] (Vec_T const & ) { return 0.5; },
+  [] (Vec_T const & ) { return 0.25; },
+  [] (Vec_T const & ) { return 0.25; },
+  [] (Vec_T const & ) { return 0.25; },
+  [] (Vec_T const & ) { return 0.25; },
 }};
 
 // bi-linear mapping

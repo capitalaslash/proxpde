@@ -131,12 +131,12 @@ public:
     auto const buf = filePath.filename().string() + dataSuffix + ".h5:/" + var.name;
     // auto const buf = filepath.filename().string() + ".time.h5:/" + name + "." + iter;
     createDataItem(
-            varNode,
-            {1, var.size},
-            XDMFNumberType::FLOAT,
-            8,
-            XDMFFormat::HDF,
-            buf);
+          varNode,
+          {var.size, 1},
+          XDMFNumberType::FLOAT,
+          8,
+          XDMFFormat::HDF,
+          buf);
   }
 
   void setTimeSeries(std::vector<std::pair<uint, double>> const timeSeries)
@@ -233,7 +233,7 @@ public:
   // void print(Var const & var)
   // {
   //   print(var.data, var.name);
-  //   // hsize_t dimsf[2] = {1, static_cast<hsize_t>(var.data.size())};
+  //   // hsize_t dimsf[2] = {static_cast<hsize_t>(var.data.size()), 1};
   //   // hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
   //   // hid_t dataset;
   //   // // for(uint v = 0; v < varNames.size(); v++)
@@ -249,7 +249,7 @@ public:
 
   void print(Vec const & vec, std::string_view const name)
   {
-    hsize_t dimsf[2] = {1, static_cast<hsize_t>(vec.size())};
+    hsize_t dimsf[2] = {static_cast<hsize_t>(vec.size()), 1};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
     dataset = H5Dcreate(fileId, name.data(), H5T_NATIVE_DOUBLE,

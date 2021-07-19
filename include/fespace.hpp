@@ -298,7 +298,7 @@ template <typename FESpaceDest, typename FESpaceOrig>
 void getComponent(
     Vec & dest,
     FESpaceDest const & feSpaceDest,
-    Vec & orig,
+    Vec const & orig,
     [[maybe_unused]] FESpaceOrig const & feSpaceOrig,
     uint component)
 {
@@ -312,8 +312,10 @@ void getComponent(
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {
+    // temporary copy required by non-const method
+    Vec tmp = orig;
     dest = Eigen::Map<Vec, 0, Eigen::InnerStride<dim>>(
-          orig.data() + component, size);
+          tmp.data() + component, size);
     // Eigen dev branch
     // dest = orig(Eigen::seqN(component, size*dim, dim))};
   }

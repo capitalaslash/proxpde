@@ -320,10 +320,10 @@ struct IOManager
     printTimeSeries();
   }
 
-  void print(std::vector<Var> && data, double const t = 0.0);
+  void print(std::vector<Var> const && data, double const t = 0.0);
 
   template <typename VarTup>
-  void print(VarTup && data, double const t = 0.0);
+  void print(VarTup const && data, double const t = 0.0);
 
 protected:
   void printTimeSeries()
@@ -423,7 +423,7 @@ public:
 // implementation --------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
+void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
@@ -432,8 +432,11 @@ void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
-  for (auto & v: data)
+  for (auto const & v: vars)
   {
+    // mixed variable vectors can be longer than current fespace
+    assert(v.data.size() >= feSpace.dof.size * FESpace_T::dim);
+
     for (uint d=0; d<feSpace.dim; ++d)
     {
       auto name = v.name;
@@ -449,7 +452,7 @@ void IOManager<FESpace>::print(std::vector<Var> && data, double const t)
       // TODO: pass data as const &
       if constexpr (FESpace_T::dim > 1)
       {
-        // TOOD: print vector variable as vector xdmf data
+        // TODO: print vector variable as vector xdmf data
         getComponent(compdata, feSpaceScalar, v.data, feSpace, d);
       }
       else
@@ -478,7 +481,7 @@ inline constexpr uint getDim()
 
 template <typename FESpace>
 template <typename VarTup>
-void IOManager<FESpace>::print(VarTup && data, double const t)
+void IOManager<FESpace>::print(VarTup const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
@@ -487,8 +490,10 @@ void IOManager<FESpace>::print(VarTup && data, double const t)
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
-  static_for(data, [&] (auto const /*i*/, auto & v)
+  static_for(vars, [&] (auto const /*i*/, auto const & v)
   {
+    assert(v.name != "");
+    assert(v.data.size() == feSpace.dof.size * FESpace_T::dim);
     using Var_T = std::decay_t<decltype(v)>;
     constexpr uint dim = getDim<Var_T, FESpace>();
     if constexpr (!std::is_same_v<Var_T, Var>)

@@ -467,7 +467,7 @@ struct NSSolverSplit2D
 template <typename FESpaceWSS, typename FESpaceVel>
 void computeElemWSS(
     Vec & wss, FESpaceWSS const & feSpaceWSS,
-    Vec & vel, FESpaceVel const & feSpaceVel,
+    Vec const & vel, FESpaceVel const & feSpaceVel,
     std::unordered_set<marker_T> const & markers,
     double const nu)
 {
@@ -502,7 +502,7 @@ void computeElemWSS(
 template <typename FESpaceWSS, typename FESpaceVel>
 void computeFEWSS(
     Vec & wss, FESpaceWSS const & feSpaceWSS,
-    Vec & vel, FESpaceVel const & feSpaceVel,
+    Vec const & vel, FESpaceVel const & feSpaceVel,
     std::unordered_set<marker_T> const & markers,
     double const nu)
 {

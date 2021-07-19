@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 
   Builder<StorageType::RowMajor> builderM{dofU*FESpaceVel_T::dim + dofP};
   // builderM.buildLhs(dummy, bcsP);
-  builderM.buildLhs(std::tuple{timeder, stiffness}, bcsVel);
+  builderM.buildLhs(std::tuple{timeder, advection, stiffness}, bcsVel);
   builderM.buildCoupling(grad, bcsVel, bcsP);
   builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();

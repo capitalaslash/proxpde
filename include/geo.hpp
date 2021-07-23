@@ -32,16 +32,18 @@ inline std::ostream& operator<<(std::ostream& out, Point const & p)
   return out;
 }
 
+struct GeoElem;
+
+struct FacingElem
+{
+  GeoElem * ptr;
+  id_T side;
+};
+
 struct GeoElem
 {
   using PointList_T = std::vector<Point *>;
   using FacetList_T = std::vector<GeoElem *>;
-  struct FacingElem
-  {
-    GeoElem * ptr;
-    id_T side;
-  };
-
   GeoElem(std::initializer_list<Point *> const & pList,
           id_T const i,
           marker_T const m):
@@ -123,7 +125,7 @@ inline std::ostream & operator<<(std::ostream & out, GeoElem const & e)
     auto const [outsideFacePtr, outsideFaceLoc] = e.facingElem[1];
     if(outsideFacePtr)
     {
-      out << ", " << outsideFacePtr->id << ", " << outsideFaceLoc << ")";
+      out << ", (" << outsideFacePtr->id << ", " << outsideFaceLoc << ")";
     }
     else
     {

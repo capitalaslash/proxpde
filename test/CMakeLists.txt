@@ -58,6 +58,7 @@ minifem_add_test(vectorfe1d)
 minifem_add_test(assemblyvector)
 minifem_add_test(fevar)
 minifem_add_test(timeder)
+minifem_add_test(mesh_refine)
 
 # 1d
 minifem_add_test(poisson1d)

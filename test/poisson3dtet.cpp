@@ -8,25 +8,26 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-using Elem_T = Tetrahedron;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          LagrangeFE<Elem_T,1>::RecommendedQR>;
-
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  // return 0.;
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  // return 1.;
-};
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Tetrahedron;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR>;
+
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return 0.;
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return 1.;
+  };
+
   MilliTimer t;
 
   auto const configFile = (argc > 1) ? argv[1] : "poisson3dtet.yaml";

@@ -69,7 +69,7 @@ struct BCEssNormal: public BCEss<FESpace>
 
   BCEssNormal<FESpace_T> operator<<(std::function<double (double const &)> f)
   {
-    static_assert(dim == 2, "scalar function on gcaet only available in 2D.");
+    static_assert(dim == 2, "scalar function on facet only available in 2D.");
     return this->operator<<([f] (const Vec1 s) { return f(s[0]); });
   }
 };

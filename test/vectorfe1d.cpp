@@ -8,34 +8,34 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-static const int dim = 2;
-
-std::vector<uint> const COMP_X {0};
-std::vector<uint> const COMP_Y {1};
-std::vector<uint> const COMP_Z {2};
-
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          LagrangeFE<Elem_T,1>::RecommendedQR,
-                          dim>;
-
-auto rhs = [] (Vec3 const& p)
-{
-  FVec<dim> rhs;
-  for(int d=0; d<dim; ++d)
-    rhs[d] = M_PI*std::sin(M_PI*p(0));
-  return rhs;
-};
-
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
-
 int main(int argc, char* argv[])
 {
+  uint constexpr dim = 2U;
+
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR,
+                            dim>;
+
+  std::vector<uint> const COMP_X {0};
+  std::vector<uint> const COMP_Y {1};
+  std::vector<uint> const COMP_Z {2};
+
+  auto const rhs = [] (Vec3 const& p)
+  {
+    FVec<dim> rhs;
+    for(uint d=0; d<dim; ++d)
+      rhs[d] = M_PI*std::sin(M_PI*p(0));
+    return rhs;
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(M_PI*p(0))/M_PI + p(0);
+  };
+
   MilliTimer t;
   uint const numElems = (argc < 2)? 3 : std::stoi(argv[1]);
 
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   auto bcValue = [](Vec3 const &)
   {
     FVec<dim> v;
-    for (int d=0; d<dim; ++d)
+    for (uint d=0; d<dim; ++d)
     {
       v[d] = d;
     }

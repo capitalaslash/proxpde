@@ -6,31 +6,31 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
-
-// static scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
-// static scalarFun_T exactSol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
-
-// static scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
-// static scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
-// static scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
-
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          TrapQR<Elem_T>>;
-
 int main()
 {
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return M_PI*std::sin(M_PI*p(0));
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(M_PI*p(0))/M_PI + p(0);
+  };
+
+  // const scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
+  // const scalarFun_T exactSol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
+
+  // const scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
+  // const scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
+  // const scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(1.-p(0)); };
+
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            TrapQR<Elem_T>>;
+
   uint const numElemsX = 10;
   uint const numElemsY = 2;
 

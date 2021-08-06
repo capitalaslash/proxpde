@@ -8,25 +8,26 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          LagrangeFE<Elem_T,1>::RecommendedQR>;
-
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR>;
+
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return M_PI*std::sin(M_PI*p(0));
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(M_PI*p(0))/M_PI + p(0);
+  };
+
   MilliTimer t;
+
   uint const numElems = (argc < 2)? 20 : std::stoi(argv[1]);
 
   Vec3 const origin{0., 0., 0.};
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
 
   t.start("fe build");
   AssemblyStiffness stiffness(1.0, feSpace);
-  auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
+  auto rotatedRhs = [&Rt, &rhs] (Vec3 const& p) {return rhs(Rt * p);};
   AssemblyAnalyticRhs f(rotatedRhs, feSpace);
   // // using an interpolated rhs makes its quality independent of the chosen qr
   // Vec rhsProj;
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
   // std::cout << "u:\n" << sol.data << std::endl;
 
   Var exact{"exact"};
-  auto rotatedESol = [&Rt] (Vec3 const& p) {return exactSol(Rt * p);};
+  auto rotatedESol = [&Rt, &exactSol] (Vec3 const& p) {return exactSol(Rt * p);};
   interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
   Var error{"e"};
   error.data = sol.data - exact.data;

@@ -8,23 +8,23 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,2>::RefFE_T,
-                          LagrangeFE<Elem_T,2>::RecommendedQR>;
-
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return M_PI*std::sin(M_PI*p(0));
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(M_PI*p(0))/M_PI + p(0);
-};
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,2>::RefFE_T,
+                            LagrangeFE<Elem_T,2>::RecommendedQR>;
+
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return M_PI*std::sin(M_PI*p(0));
+  };
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(M_PI*p(0))/M_PI + p(0);
+  };
+
   MilliTimer t;
   uint const numElems = (argc < 2)? 20 : std::stoi(argv[1]);
 

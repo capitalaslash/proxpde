@@ -8,25 +8,26 @@
 #include "iomanager.hpp"
 #include "timer.hpp"
 
-using Elem_T = Tetrahedron;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T, 2>::RefFE_T,
-                          LagrangeFE<Elem_T, 2>::RecommendedQR>;
-
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  // return 0.;
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  // return 1.;
-};
-
 int test(YAML::Node const & config)
 {
+  using Elem_T = Tetrahedron;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T, 2>::RefFE_T,
+                            LagrangeFE<Elem_T, 2>::RecommendedQR>;
+
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return 0.;
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    // return 1.;
+  };
+
   MilliTimer t;
 
   t.start("mesh build");

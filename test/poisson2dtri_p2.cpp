@@ -7,23 +7,24 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 
-using Elem_T = Triangle;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,2>::RefFE_T,
-                          LagrangeFE<Elem_T,2>::RecommendedQR>;
-
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-
 int main(int argc, char* argv[])
 {
+  using Elem_T = Triangle;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,2>::RefFE_T,
+                            LagrangeFE<Elem_T,2>::RecommendedQR>;
+
+  scalarFun_T const rhs = [] (Vec3 const& p)
+  {
+    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+
+  scalarFun_T const exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+
   uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
   uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
 

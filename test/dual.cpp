@@ -9,28 +9,6 @@
 #include "timer.hpp"
 #include "fv.hpp"
 
-#include <iostream>
-
-using Elem_T = Triangle;
-using Mesh_T = Mesh<Elem_T>;
-// implicit finite element central
-using FESpaceP1_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          LagrangeFE<Elem_T,1>::RecommendedQR>;
-// explicit finite volume upwind
-using FESpaceP0_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,0>::RefFE_T,
-                          LagrangeFE<Elem_T,0>::RecommendedQR>;
-using FESpaceVel_T = FESpace<Mesh_T,
-                             LagrangeFE<Elem_T,1>::RefFE_T,
-                             LagrangeFE<Elem_T,1>::RecommendedQR, 2>;
-static scalarFun_T ic = [] (Vec3 const& p)
-{
-  // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-  if (p(0) < .4) return 1.;
-  return 0.;
-};
-
 double areaTriangle(Vec3 p0, Vec3 p1, Vec3 p2)
 {
   return 0.5 * ((p1 - p0).cross(p2 - p0)).norm();
@@ -63,14 +41,35 @@ struct DualCell //: public GeoElem
   std::vector<double> volumes;
 };
 
-static Fun<2, 3> velFun = [] (Vec3 const &)
+int main()
 {
-  return Vec2(0.2, 0.0);
-};
+  using Elem_T = Triangle;
+  using Mesh_T = Mesh<Elem_T>;
+  // implicit finite element central
+  using FESpaceP1_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,1>::RefFE_T,
+                            LagrangeFE<Elem_T,1>::RecommendedQR>;
+  // explicit finite volume upwind
+  using FESpaceP0_T = FESpace<Mesh_T,
+                            LagrangeFE<Elem_T,0>::RefFE_T,
+                            LagrangeFE<Elem_T,0>::RecommendedQR>;
+  using FESpaceVel_T = FESpace<Mesh_T,
+                               LagrangeFE<Elem_T,1>::RefFE_T,
+                               LagrangeFE<Elem_T,1>::RecommendedQR, 2>;
 
-int main(int argc, char* argv[])
-{
+  static scalarFun_T ic = [] (Vec3 const& p)
+  {
+    // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
+    if (p(0) < .4) return 1.;
+    return 0.;
+  };
+
   MilliTimer t;
+
+  Fun<2, 3> velFun = [] (Vec3 const &)
+  {
+    return Vec2(0.2, 0.0);
+  };
 
   t.start("mesh build");
   // we need internal facets

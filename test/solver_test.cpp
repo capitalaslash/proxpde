@@ -18,15 +18,6 @@ using FESpace_T = FESpace<Mesh_T,
                           LagrangeFE<Elem_T, order>::RefFE_T,
                           LagrangeFE<Elem_T, order>::RecommendedQR>;
 
-static scalarFun_T rhs = [] (Vec3 const& p)
-{
-  return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-static scalarFun_T exactSol = [] (Vec3 const& p)
-{
-  return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-};
-
 template <StorageType Storage, typename Solver>
 void solve(Mat<Storage> const & A, Vec const & b, YAML::Node const & config, Vec & x)
 {
@@ -41,6 +32,15 @@ void solve(Mat<Storage> const & A, Vec const & b, YAML::Node const & config, Vec
 
 int main(int argc, char* argv[])
 {
+  const scalarFun_T rhs = [] (Vec3 const& p)
+  {
+    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+  const scalarFun_T exactSol = [] (Vec3 const& p)
+  {
+    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
+
   MilliTimer t;
   uint const numElems = (argc < 2)? 10 : std::stoi(argv[1]);
 

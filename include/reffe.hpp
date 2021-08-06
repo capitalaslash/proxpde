@@ -21,8 +21,10 @@ struct RefPointP1
   static uint constexpr numFuns = 1U;
   static uint constexpr numGeoFuns = 1U;
   static array<uint,4> constexpr dofPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,1> constexpr dofOnFacet = {{
+    {{0}}
+  }};
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<1>;
 
@@ -65,8 +67,10 @@ struct RefLineP0
   static uint constexpr numGeoFuns = 2U;
   static array<uint,4> constexpr dofPlace{{0,0,1,0}};
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,2> constexpr dofOnFacet = {{
+    {{0}}, {{0}}
+  }};
   static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
 //  using LocalVec_T = FVec<2>;
@@ -209,8 +213,10 @@ struct RefTriangleP0
   static uint constexpr numGeoFuns = 3U;
   static array<uint,4> constexpr dofPlace{{0,1,0,0}};
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,3> constexpr dofOnFacet = {{
+    {{0}}, {{0}}, {{0}}
+  }};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
@@ -397,8 +403,10 @@ struct RefQuadP0
   static uint constexpr numGeoFuns = 4U;
   static array<uint,4> constexpr dofPlace{{0,1,0,0}};
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,2>,4> constexpr dofOnFacet = {{
+    {{0}}, {{0}}, {{0}}, {{0}}
+  }};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
@@ -648,8 +656,10 @@ struct RefTetrahedronP0
   static uint constexpr numGeoFuns = 4U;
   static array<uint,4> constexpr dofPlace{{1,0,0,0}};
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,4> constexpr dofOnFacet = {{
+    {{0}}, {{0}}, {{0}}, {{0}}
+  }};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
@@ -847,8 +857,11 @@ struct RefHexahedronP0
   static uint constexpr numGeoFuns = 8U;
   static array<uint,4> constexpr dofPlace{{1,0,0,0}};
   static array<uint,4> inline constexpr geoPlace{{0,0,0,1}};
-  static uint constexpr dofPerFacet = 0U;
-  static array<array<uint,0>,0> constexpr dofOnFacet = {};
+  static uint constexpr dofPerFacet = 1U;
+  static array<array<uint,1>,6> constexpr dofOnFacet =
+  {{
+     {{0}}, {{0}}, {{0}}, {{0}}, {{0}}, {{0}}
+  }};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<numFuns>;
@@ -1022,7 +1035,6 @@ struct RefHexahedronQ2
         p[2] > -1. - 1.e-16 && p[2] < 1. + 1.e-16;
   }
 };
-
 
 struct RefHexahedronRT0
 {

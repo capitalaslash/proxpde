@@ -1,10 +1,6 @@
 #include "reffe.hpp"
 
 // ----------------------------------------------------------------------------
-uint constexpr RefPointP1::numFuns;
-array<uint,4> constexpr RefPointP1::dofPlace;
-array<array<uint,0>,0> constexpr RefPointP1::dofOnFacet;
-
 array<RefPointP1::Vec_T,RefPointP1::numFuns> const RefPointP1::points =
 {{
   Vec_T::Constant( 1.L)

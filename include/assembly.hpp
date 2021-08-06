@@ -567,11 +567,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     coef(c),
     vel(u),
     feSpaceVel(feVel)
-  {
-    static_assert(
-          family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::LAGRANGE,
-          "this implementation requires Lagrange discretization for the velocity");
-  }
+  {}
 
   void reinit(GeoElem const & elem) const override
   {
@@ -584,14 +580,30 @@ struct AssemblyAdvection: public Diagonal<FESpace>
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
       FVec<3> localVel = FVec<3>::Zero();
-      for(uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+      if constexpr (family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::LAGRANGE)
       {
-        for (uint d=0; d<FESpaceVel_T::dim; ++d)
+        for(uint n=0; n<FESpaceVel_T::RefFE_T::numFuns; ++n)
         {
-          id_T const dofId = feSpaceVel.dof.getId(this->feSpace.curFE.elem->id, n, d);
-          localVel[d] += vel[dofId] * this->feSpace.curFE.phi[q](n);
+          for (uint d=0; d<FESpaceVel_T::dim; ++d)
+          {
+            id_T const dofId = feSpaceVel.dof.getId(this->feSpace.curFE.elem->id, n, d);
+            localVel[d] += vel[dofId] * this->feSpace.curFE.phi[q](n);
+          }
         }
       }
+      else if constexpr (family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        for(uint n=0; n<FESpaceVel_T::RefFE_T::numFuns; ++n)
+        {
+          id_T const dofId = feSpaceVel.dof.getId(this->feSpace.curFE.elem->id, n);
+          localVel += vel[dofId] * this->feSpace.curFE.phiVect[q].row(n).transpose();
+        }
+      }
+      else
+      {
+        std::abort();
+      }
+
       for (uint d=0; d<FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs,CurFE_T::numDOFs>(d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=

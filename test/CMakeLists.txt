@@ -123,6 +123,7 @@ minifem_add_test(cavity)
 minifem_add_test(cavitytime DATA cavitytime.yaml)
 minifem_add_test(nipcs)
 minifem_add_test(ipcs)
+minifem_add_test(ipcs_rt)
 minifem_add_test(ns_test)
 minifem_add_test(slip)
 

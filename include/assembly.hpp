@@ -978,14 +978,17 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
   explicit AssemblyV2SProjection(double const c,
                                  Vec const & r,
                                  FESpaceRhs_T const & feRhs,
-                                 FESpace_T const & fe):
-    AssemblyVector<FESpace_T>(fe, {0}),
+                                 FESpace_T const & fe,
+                                 AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp),
     coef(c),
     rhs(r),
     feSpaceRhs(feRhs)
   {
-    static_assert(FESpace_T::dim == FESpaceRhs_T::RefFE_T::dim,
-                  "the two fespaces are not of the same dimension");
+    // TODO: when comp is specified, this is not guaranteed anymore
+    // static_assert(FESpace_T::dim == FESpaceRhs_T::RefFE_T::dim,
+    //               "the two fespaces are not of the same dimension");
+    assert(cmp.size() == FESpace_T::dim);
 
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -1004,18 +1007,21 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
+
     FVec<CurFERhs_T::numDOFs> localRhs;
     for(uint n=0; n<CurFERhs_T::RefFE_T::numFuns; ++n)
     {
       id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.elem->id, n);
       localRhs[n] = rhs[dofId];
     }
-    for (uint d=0; d<CurFE_T::RefFE_T::dim; ++d)
+
+    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+      for (uint d=0; d<this->comp.size(); ++d)
       {
+        auto const c = this->comp[d];
         // u*[q] = sum_k u*_k vec{psi}_k[q]
-        double rhsQ = feSpaceRhs.curFE.phiVect[q].col(d).dot(localRhs);
+        double rhsQ = feSpaceRhs.curFE.phiVect[q].col(c).dot(localRhs);
 
         Fe.template block<CurFE_T::numDOFs, 1>(d*CurFE_T::numDOFs, 0) +=
             coef * this->feSpace.curFE.JxW[q] *
@@ -1059,8 +1065,9 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
   explicit AssemblyProjection(double const c,
                               Vec const & r,
                               FESpaceRhs_T const & feRhs,
-                              FESpace_T const & fe):
-    AssemblyVector<FESpace_T>(fe, allComp<FESpace_T>())
+                              FESpace_T const & fe,
+                              AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+    AssemblyVector<FESpace_T>(fe, cmp)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -1086,7 +1093,7 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
     {
       // static_assert (dependent_false_v<FESpace>, "not yet implemented");
       assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
-              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe});
+              AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe, cmp});
     }
     else if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
                        fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)

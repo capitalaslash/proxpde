@@ -13,15 +13,15 @@
 namespace fs = std::experimental::filesystem;
 
 template <typename T>
-std::string join(std::vector<T> const & v)
+std::string join(std::vector<T> const & v, std::string_view const divider = " ")
 {
   std::string buf;
   for (auto const & i: v)
   {
-    buf += " " + std::to_string(i);
+    buf += std::to_string(i);
+    buf += divider;
   }
-  buf = buf.substr(1, buf.size()-1);
-  return buf;
+  return buf.substr(0, buf.size()-1);
 }
 
 template <typename RefFE>
@@ -139,7 +139,7 @@ public:
           buf);
   }
 
-  void setTimeSeries(std::vector<std::pair<uint, double>> const timeSeries)
+  void setTimeSeries(std::vector<std::pair<uint, double>> const & timeSeries)
   {
     std::string timesStr = "";
     for (auto const & step: timeSeries)
@@ -304,11 +304,14 @@ struct IOManager
     // h5Time{fs::path{filepath} += ".time.h5"},
     iter(it)
   {
+    // create subfolder if not saving in the current directory
     if (filePath.parent_path() != fs::path(""))
     {
       fs::create_directories(filePath.parent_path());
     }
+
     printMeshData();
+
     if constexpr (Elem_T::dim > 1)
     {
       printBoundary();

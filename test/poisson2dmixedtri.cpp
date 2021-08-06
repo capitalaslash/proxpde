@@ -8,15 +8,15 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 
-using Elem_T = Triangle;
-using Mesh_T = Mesh<Elem_T>;
-using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
-using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
-using FESpaceP0_T = FESpace<Mesh_T, RefTriangleP0, QR_T>;
-using FESpaceP0Vec_T = FESpace<Mesh_T, RefTriangleP0, QR_T, 2>;
-
 int test(YAML::Node const & config)
 {
+  using Elem_T = Triangle;
+  using Mesh_T = Mesh<Elem_T>;
+  using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
+  using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
+  using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
+  using FESpaceP0Vec_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
+
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
@@ -48,15 +48,17 @@ int test(YAML::Node const & config)
 
   auto const bcsU = std::make_tuple();
 
-  // the function must be the normal flux, positive if entrant
+  // the function is multiplied by the normal in the bc
   auto bcWRight = BCEss{feSpaceW, side::RIGHT};
-  bcWRight << [g] (Vec3 const & ) { return g; };
+  bcWRight << [&exactGrad] (Vec3 const & p) {
+    return promote<3>(exactGrad(p));
+  };
 
   // symmetry
   auto bcWTop = BCEss{feSpaceW, side::TOP};
-  bcWTop << [] (Vec3 const & ) { return 0.; };
+  bcWTop << [] (Vec3 const & ) { return Vec3{0.0, 0.0, 0.0}; };
   auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
-  bcWBottom << [] (Vec3 const & ) { return 0.; };
+  bcWBottom << [] (Vec3 const & ) { return Vec3{0.0, 0.0, 0.0}; };
 
   auto const bcsW = std::tuple{bcWRight, bcWBottom, bcWTop};
 
@@ -104,7 +106,7 @@ int test(YAML::Node const & config)
   Vec exact = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   Var exactU{"exactU"};
-  exactU.data = exact.block( sizeW, 0, sizeU, 1);
+  exactU.data = exact.block(sizeW, 0, sizeU, 1);
   Var errorU{"errorU"};
   errorU.data = u.data - exactU.data;
 

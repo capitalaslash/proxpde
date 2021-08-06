@@ -8,14 +8,12 @@
 #include "builder.hpp"
 #include "iomanager.hpp"
 
-#include <iostream>
-
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
 using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
 using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
-using FESpaceP0_T = FESpace<Mesh_T, RefQuadP0, QR_T>;
-using FESpaceP0Vec_T = FESpace<Mesh_T, RefQuadP0, QR_T, 2>;
+using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
+using FESpaceP0Vec_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
 
 int test(YAML::Node const & config)
 {
@@ -55,14 +53,16 @@ int test(YAML::Node const & config)
 
   auto const bcsU = std::make_tuple();
 
-  // the function must be the normal flux, positive if entrant
+  // the function is multiplied by the normal in the bc
   // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
   auto bcWRight = BCEss{feSpaceW, side::RIGHT};
-  bcWRight << [g] (Vec3 const & ) { return g; };
+  bcWRight << [&exactGrad] (Vec3 const & p) {
+    return promote<3>(exactGrad(p));
+  };
 
   // symmetry
   auto bcWTop = BCEss{feSpaceW, side::TOP};
-  bcWTop << [] (Vec3 const & ) { return 0.; };
+  bcWTop << [] (Vec3 const & ) { return Vec3{0.0, 0.0, 0.0}; };
   // auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
   // bcWBottom << [] (Vec3 const & ) { return 0.; };
 

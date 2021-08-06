@@ -37,7 +37,9 @@ int main(int argc, char* argv[])
   t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceComponent_T feSpaceComponent{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 2*feSpaceVel.dof.size};
+  auto const dofU = feSpaceVel.dof.size;
+  FESpaceP_T feSpaceP{*mesh, FESpaceVel_T::dim * dofU};
+  auto const dofP = feSpaceP.dof.size;
   t.stop();
   // std::cout << feSpaceVel.dof << std::endl;
 
@@ -65,16 +67,13 @@ int main(int argc, char* argv[])
   auto const bcsP = std::make_tuple();
   t.stop();
 
-  auto const dofU = feSpaceVel.dof.size;
-  auto const dofP = feSpaceP.dof.size;
-
   t.start("build");
   double const nu = 0.1;
   AssemblyTensorStiffness stiffness(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
 
-  Builder builder{dofU*FESpaceVel_T::dim + dofP};
+  Builder builder{dofU * FESpaceVel_T::dim + dofP};
   builder.buildLhs(std::tuple{stiffness}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
@@ -82,68 +81,65 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("solve");
-  Var sol{"vel"};
   LUSolver solver(builder.A);
-  sol.data = solver.solve(builder.b);
+  Vec const sol = solver.solve(builder.b);
   t.stop();
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
   // std::cout << "sol:\n" << sol << std::endl;
 
-  Var exact{"exact", dofU*FESpaceVel_T::dim + dofP};
-  interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
+  t.start("exact");
+  Vec exact{FESpaceVel_T::dim * dofU + dofP};
+  interpolateAnalyticFunction(inlet, feSpaceVel, exact);
   interpolateAnalyticFunction(
         [nu] (Vec3 const & p) { return nu*(1.-p(1)); },
         feSpaceP,
-        exact.data);
-
-  // std::cout << "solution:\n" << sol.data << std::endl;
-  // std::cout << sol.data.norm() << std::endl;
+        exact);
 
   Var u{"u"};
   Var v{"v"};
-  getComponent(u.data, feSpaceComponent, sol.data, feSpaceVel, 0);
-  getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
-  Var p{"p", sol.data, 2*dofU, dofP};
+  getComponent(u.data, feSpaceComponent, sol, feSpaceVel, 0);
+  getComponent(v.data, feSpaceComponent, sol, feSpaceVel, 1);
+  Var p{"p", sol, 2*dofU, dofP};
 
-  Var ue{"ue"};
-  Var ve{"ve"};
-  getComponent(ue.data, feSpaceComponent, exact.data, feSpaceVel, 0);
-  getComponent(ve.data, feSpaceComponent, exact.data, feSpaceVel, 1);
-  Var pe{"pe", exact.data, 2*dofU, dofP};
+  Var u_exact{"ue"};
+  Var v_exact{"ve"};
+  getComponent(u_exact.data, feSpaceComponent, exact, feSpaceVel, 0);
+  getComponent(v_exact.data, feSpaceComponent, exact, feSpaceVel, 1);
+  Var p_exact{"p", exact, FESpaceVel_T::dim * dofU, dofP};
 
   // wall shear stress
   t.start("wssCell");
   FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR> feSpaceP0{*mesh};
   // mean cell value
   Var wssCell{"wssCell"};
-  computeElemWSS(wssCell.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT}, nu);
+  computeElemWSS(wssCell.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
   std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff() << std::endl;
   std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff() << std::endl;
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
-  computeFEWSS(wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT}, nu);
+  computeFEWSS(wssFacet.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
   std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff() << std::endl;
   std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff() << std::endl;
 
   t.start("print");
-  IOManager ioVel{feSpaceVel, "output_stokes2dquad/vel"};
-  ioVel.print({sol, exact});
+  IOManager ioComponent{feSpaceComponent, "output_stokes2dquad/vel"};
+  ioComponent.print({u, v, u_exact, v_exact});
   IOManager ioP{feSpaceP, "output_stokes2dquad/p"};
-  ioP.print({p, pe});
+  ioP.print({p, p_exact});
   IOManager ioWSS{feSpaceP0, "output_stokes2dquad/wss"};
   ioWSS.print({wssCell, wssFacet});
   t.stop();
 
   t.print();
 
-  auto uError = (u.data - ue.data).norm();
-  auto vError = (v.data - ve.data).norm();
-  auto pError = (p.data - pe.data).norm();
+  auto uError = (u.data - u_exact.data).norm();
+  auto vError = (v.data - v_exact.data).norm();
+  auto pError = (p.data - p_exact.data).norm();
 
   std::cout << "u error norm: " << uError << std::endl;
   std::cout << "v error norm: " << vError << std::endl;

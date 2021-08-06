@@ -437,7 +437,7 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
     // mixed variable vectors can be longer than current fespace
     assert(v.data.size() >= feSpace.dof.size * FESpace_T::dim);
 
-    for (uint d=0; d<feSpace.dim; ++d)
+    for (uint d=0; d<FESpace_T::dim; ++d)
     {
       auto name = v.name;
       if constexpr (FESpace_T::dim > 1)

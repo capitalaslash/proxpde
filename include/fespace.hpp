@@ -23,7 +23,7 @@ struct FESpace
   using QR_T = QR;
   using DOF_T = DOF<Mesh, RefFE, Dimension, ordering>;
   using CurFE_T = CurFE<RefFE, QR>;
-  static uint const dim = Dimension;
+  static uint constexpr dim = Dimension;
 
   explicit FESpace(Mesh const & m, uint offset = 0):
     mesh(m),
@@ -38,7 +38,21 @@ struct FESpace
     }
   }
 
-  FVec<dim> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
+  static uint constexpr physicalDim()
+  {
+    if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
+    {
+      return Dimension;
+    }
+    else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
+    {
+      // return Mesh_T::Elem_T::dim;
+      // when using RT elements, all physical structures are 3d
+      return 3;
+    }
+  }
+
+  FVec<physicalDim()> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
   {
     this->curFE.reinit(elem);
 
@@ -76,7 +90,8 @@ struct FESpace
       // instead of moving the point back to the ref element, we could
       // instead move the shape functions to the real element
     }
-    FVec<dim> value;
+
+    FVec<physicalDim()> value;
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       value = localValue.transpose() * phi;
@@ -112,7 +127,7 @@ struct FESpace
 };
 
 template <typename FESpace>
-void interpolateAnalyticFunction(FEFun_T<FESpace> const & fun,
+void interpolateAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
                                  FESpace & feSpace,
                                  Vec & v,
                                  uint const offset = 0)
@@ -149,14 +164,12 @@ void interpolateAnalyticFunction(FEFun_T<FESpace> const & fun,
       {
         // the value of the dof is the flux through the facet
         // u_k = \int_{f_k} u.dot(n_k)
-        // TODO: this should be an integral, we are taking the mean value
-        // at the center of facet (ok for linear function and order 0 only)
-        uint constexpr dim = FESpace::Mesh_T::Elem_T::dim;
+        // TODO: this should be an integral, we are taking the mean value at the
+        // center of facet (ok for linear and piecewise constant functions only)
         id_T const facetId = feSpace.mesh.elemToFacet[elem.id][i];
         auto const & facet = feSpace.mesh.facetList[facetId];
-        FVec<dim> normal = narrow<dim>(facet._normal);
         auto const dofId = feSpace.dof.getId(elem.id, i);
-        v[offset + dofId] = value.dot(normal) * facet.volume();
+        v[offset + dofId] = value.dot(facet.normal()) * facet.volume();
       }
       else
       {

@@ -56,7 +56,7 @@ void l2Projection(
 }
 
 template <typename FESpace, typename Solver = LUSolver>
-void projectAnalyticFunction(FEFun_T<FESpace> const & fun,
+void projectAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
                              FESpace & feSpace,
                              Vec & v,
                              uint const offset = 0)
@@ -113,45 +113,81 @@ void computeGradient(
   grad = solverGrad.solve(builderGrad.b);
 }
 
-template <typename FESpaceFlux, typename FESpaceU>
-void computeFluxes(
-    Vec & fluxes, FESpaceFlux const & feSpaceFlux,
-    Vec const & u, FESpaceU const & feSpace,
+enum class Component: char
+{
+  SCALAR,
+  NORMAL,
+  TANGENTIAL
+};
+
+template<Component Comp>
+struct CompSizer
+{
+  static constexpr uint size = 3U;
+};
+
+template<>
+struct CompSizer<Component::SCALAR>
+{
+  static constexpr uint size = 1U;
+};
+
+template <Component Comp, typename FESpaceOut, typename FESpaceIn>
+void interpolateOnFacets(
+    Vec & out, FESpaceOut const & feSpaceOut,
+    Vec const & in, FESpaceIn const & feSpaceIn,
     std::unordered_set<marker_T> const & markers = std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
     double const coef = 1.0)
 {
-  uint constexpr dim = FESpaceU::dim;
-  using FacetFE_T = typename FESpaceU::RefFE_T::FacetFE_T;
-  using FacetQR_T = SideQR_T<typename FESpaceU::QR_T>;
-  using FacetCurFE_T = CurFE<FacetFE_T, FacetQR_T>;
-  using FacetFESpace_T =
-    FESpace<typename FESpaceU::Mesh_T,
-            typename FESpaceU::RefFE_T,
-            SideGaussQR<typename FESpaceU::Mesh_T::Elem_T, FacetQR_T::numPts>, dim>;
+  uint constexpr dim = FESpaceIn::dim;
+  using FEFacet_T = typename FESpaceIn::RefFE_T::FacetFE_T;
+  using QRFacet_T = SideQR_T<typename FESpaceIn::QR_T>;
+  using CurFEFacet_T = CurFE<FEFacet_T, QRFacet_T>;
+  using FESpaceFacet_T =
+    FESpace<typename FESpaceIn::Mesh_T,
+            typename FESpaceIn::RefFE_T,
+            SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>, dim>;
 
-  fluxes = Vec::Zero(feSpaceFlux.dof.size);
-  FacetCurFE_T curFEFacet;
+  out = Vec::Zero(feSpaceOut.dof.size);
+  CurFEFacet_T curFEFacet;
 
-  FacetFESpace_T feSpaceFacet{feSpace.mesh};
-  FEVar uFacet{feSpaceFacet};
-  uFacet.data = u;
+  FESpaceFacet_T feSpaceFacet{feSpaceIn.mesh};
+  FEVar inFacet{feSpaceFacet};
+  inFacet.data = in;
 
-  for (auto & facet: feSpaceFlux.mesh.elementList)
+  for (auto & facet: feSpaceOut.mesh.elementList)
   {
     if (markers == std::unordered_set<marker_T>({marker_T(-1)}) || (markers.find(facet.marker) != markers.end()))
     {
       // std::cout << "facet " << facet.id << std::endl;
-      Vec3 const normal = facet.normal();
       curFEFacet.reinit(facet);
-      auto elem = facet.facingElem[0].ptr;
+
+      auto const & elem = *(facet.facingElem[0].ptr);
       auto const side = facet.facingElem[0].side;
-      uFacet.reinit(*elem);
-      for(uint q=0; q<FacetQR_T::numPts; ++q)
+      inFacet.reinit(elem);
+
+      FVec<3> comp;
+      if constexpr (Comp == Component::SCALAR)
       {
-        FVec<dim> const uLocal = coef * uFacet.evaluate(side * FacetQR_T::numPts + q);
-        Vec3 const uLocal3 = promote<3>(uLocal);
+        comp = Vec3{1.0, 0.0, 0.0};
+      }
+      if constexpr (Comp == Component::NORMAL)
+      {
+        comp = facet.normal();
+      }
+      else if constexpr (Comp == Component::TANGENTIAL)
+      {
+        // TODO: make the tangent a class method and extend to 3d
+        static_assert(FESpaceIn::Mesh_T::Elem_T::dim == 2);
+        comp = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      }
+
+      for(uint q=0; q<QRFacet_T::numPts; ++q)
+      {
+        FVec<FESpaceIn::physicalDim()> const inLocal = coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
+        Vec3 const inLocal3 = promote<3>(inLocal);
         // entering fluxes should be positive
-        fluxes[facet.id] += curFEFacet.JxW[q] * (uLocal3.dot(normal));
+        out[facet.id] += curFEFacet.JxW[q] * (inLocal3.dot(comp));
       }
     }
   }

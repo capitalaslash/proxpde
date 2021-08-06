@@ -53,7 +53,7 @@ struct FEVar
 {
   using FESpace_T = FESpace;
   using RefFE_T = typename FESpace_T::RefFE_T;
-  using Vec_T = FEVec_T<FESpace_T>;
+  using Vec_T = FVec<FESpace_T::physicalDim()>;
 
   FEVar(std::string_view n, FESpace_T const & fe):
     name(n),
@@ -67,7 +67,7 @@ struct FEVar
   {}
 
 
-  FEVar<FESpace_T> & operator<<(FEFun_T<FESpace_T> const & f)
+  FEVar<FESpace_T> & operator<<(Fun<FESpace_T::physicalDim(), 3> const & f)
   {
     interpolateAnalyticFunction(f, this->feSpace, this->data);
     return *this;
@@ -127,13 +127,11 @@ struct FEVar
 
   auto integrate()
   {
-    using QR_T = typename FESpace_T::QR_T;
-
     FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
     for (auto const & elem: feSpace.mesh.elementList)
     {
       this->reinit(elem);
-      for (uint q=0; q<QR_T::numPts; ++q)
+      for (uint q=0; q<FESpace_T::QR_T::numPts; ++q)
       {
         integral += feSpace.curFE.JxW[q] * this->evaluate(q);
       }

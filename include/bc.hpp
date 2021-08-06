@@ -79,7 +79,7 @@ public:
     data = Vec::Zero(_constrainedDofMap.size());
   }
 
-  BCEss<FESpace> & operator<<(Fun<FESpace::dim, 3> const & fun)
+  BCEss<FESpace> & operator<<(Fun<FESpace::physicalDim(), 3> const & fun)
   {
     if (marker != markerNotSet)
     {
@@ -88,33 +88,22 @@ public:
         auto const & facet = feSpace.mesh.facetList[facetId];
         auto const & [elem, side] = facet.facingElem[0];
         feSpace.curFE.reinit(*elem);
-        // this works for both Lagrange and RT elements because the function
-        // is the scalar flux in case of RT elements
-        if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+
+        for (auto const dofFacet: RefFE_T::dofOnFacet[side])
         {
-          for (auto const dofFacet: RefFE_T::dofOnFacet[side])
+          auto const value = fun(feSpace.curFE.dofPts[dofFacet]);
+          if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
           {
-            auto const value = fun(feSpace.curFE.dofPts[dofFacet]);
             for (auto const c: comp)
             {
               DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
               data[_constrainedDofMap.at(dofId)] = value[c];
-              if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
-              {
-                // value gives the entrant flux, it must be scaled to the facet size
-                // ???
-                data[_constrainedDofMap.at(dofId)] *= facet.volume();
-              }
             }
           }
-        }
-        else // order_v<RefFE_T> == 0 && family_v<RefFE_T> == FamilyType::LAGRANGE
-        {
-          auto const value = fun(feSpace.curFE.dofPts[0]);
-          for (auto const c: comp)
+          else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
           {
-            DOFid_T const dofId = feSpace.dof.getId(elem->id, 0, c);
-            data[_constrainedDofMap.at(dofId)] = value[c];
+            DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet);
+            data[_constrainedDofMap.at(dofId)] = promote<3>(value).dot(facet.normal()) * facet.volume();
           }
         }
       }
@@ -122,8 +111,9 @@ public:
     else // no marker, work on the dof set
     {
       auto const size = numDOFs<RefFE_T>();
-      for (auto const & elem: feSpace.mesh.elementList)
+      for (auto const & facet: feSpace.mesh.facetList)
       {
+        auto const & elem = *(facet.facingElem[0].ptr);
         for (uint d=0; d<size * FESpace_T::dim; ++d)
         {
           auto const dof = feSpace.dof.elemMap(elem.id, d);
@@ -132,7 +122,15 @@ public:
             feSpace.curFE.reinit(elem);
             auto const localDof = d % size;
             auto const c = d / size;
-            data[_constrainedDofMap.at(dof)] = fun(feSpace.curFE.dofPts[localDof])[c];
+            auto const value = fun(feSpace.curFE.dofPts[localDof]);
+            if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
+            {
+              data[_constrainedDofMap.at(dof)] = value[c];
+            }
+            else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+            {
+              data[_constrainedDofMap.at(dof)] = promote<3>(value).dot(facet.normal()) * facet.volume();
+            }
           }
         }
       }

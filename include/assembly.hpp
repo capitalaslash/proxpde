@@ -39,8 +39,8 @@ struct Diagonal: public AssemblyBase
 {
   using FESpace_T = FESpace;
   using CurFE_T = typename FESpace_T::CurFE_T;
-  using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
-  using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
+  using LMat_T = FMat<FESpace_T::dim * CurFE_T::numDOFs, FESpace_T::dim * CurFE_T::numDOFs>;
+  using LVec_T = FVec<FESpace_T::dim * CurFE_T::numDOFs>;
 
   explicit Diagonal(FESpace_T const & fe, CompList const & cmp):
     AssemblyBase{cmp},
@@ -66,8 +66,8 @@ struct Coupling: public AssemblyBase
   using FESpace2_T = FESpace2;
   using CurFE1_T = typename FESpace1_T::CurFE_T;
   using CurFE2_T = typename FESpace2_T::CurFE_T;
-  using LMat_T = FMat<FESpace1_T::dim*CurFE1_T::numDOFs, FESpace2_T::dim*CurFE2_T::numDOFs>;
-  using LVec_T = FVec<FESpace1_T::dim*CurFE1_T::numDOFs>;
+  using LMat_T = FMat<FESpace1_T::dim * CurFE1_T::numDOFs, FESpace2_T::dim * CurFE2_T::numDOFs>;
+  using LVec_T = FVec<FESpace1_T::dim * CurFE1_T::numDOFs>;
 
   explicit Coupling(FESpace1_T const & fe1,
                     FESpace2_T const & fe2,
@@ -96,8 +96,8 @@ struct AssemblyVector: public AssemblyBase
 {
   using FESpace_T = FESpace;
   using CurFE_T = typename FESpace::CurFE_T;
-  using LMat_T = FMat<FESpace_T::dim*CurFE_T::numDOFs, FESpace_T::dim*CurFE_T::numDOFs>;
-  using LVec_T = FVec<FESpace_T::dim*CurFE_T::numDOFs>;
+  using LMat_T = FMat<FESpace_T::dim * CurFE_T::numDOFs, FESpace_T::dim * CurFE_T::numDOFs>;
+  using LVec_T = FVec<FESpace_T::dim * CurFE_T::numDOFs>;
 
   explicit AssemblyVector(FESpace_T const & fe, CompList const & cmp):
     AssemblyBase{cmp},
@@ -500,7 +500,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyAnalyticRhs(FEFun_T<FESpace> const r,
+  AssemblyAnalyticRhs(Fun<FESpace::physicalDim(), 3> const r,
                       FESpace_T const & fe,
                       AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
     AssemblyVector<FESpace_T>(fe, std::move(cmp)),
@@ -520,7 +520,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
     for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
     {
-      FEVec_T<FESpace> const localRhs = rhs(this->feSpace.curFE.qpoint[q]);
+      FVec<FESpace::physicalDim()> const localRhs = rhs(this->feSpace.curFE.qpoint[q]);
 
       if constexpr (family_v<typename FESpace_T::RefFE_T> == FamilyType::LAGRANGE)
       {
@@ -547,7 +547,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
     }
   }
 
-  FEFun_T<FESpace> const rhs;
+  Fun<FESpace::physicalDim(), 3> const rhs;
 };
 
 template <typename FESpace, typename FESpaceVel>

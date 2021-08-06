@@ -1270,33 +1270,6 @@ template <typename RefFE>
 inline constexpr bool mappingIsSeparate_v = MappingIsSeparate<RefFE>::value;
 
 // ----------------------------------------------------------------------------
-template <typename FESpace, FEDimType FEDim>
-struct FEVecDim {};
-
-// scalar variables require vector based on the dimension of the fe space
-template <typename FESpace>
-struct FEVecDim<FESpace, FEDimType::SCALAR>
-{
-  static constexpr uint value = FESpace::dim;
-};
-
-// vector variables are always scalar, but shape functions are dimensioned on the geometry
-template <typename FESpace>
-struct FEVecDim<FESpace, FEDimType::VECTOR>
-{
-  static constexpr uint value = FESpace::Mesh_T::Elem_T::dim;
-};
-
-template <typename FESpace>
-inline constexpr uint fevecdim_v = FEVecDim<FESpace, fedim_v<typename FESpace::RefFE_T>>::value;
-
-template <typename FESpace>
-using FEVec_T = FVec<fevecdim_v<FESpace>>;
-
-template <typename FESpace>
-using FEFun_T = Fun<fevecdim_v<FESpace>, 3>;
-
-// ----------------------------------------------------------------------------
 template <typename RefFE>
 struct EnableSecondDeriv
 {

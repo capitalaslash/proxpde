@@ -178,8 +178,8 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  // array<Vec, 2> vel = {Vec{split.feSpaceU.dof.size}, Vec{split.feSpaceU.dof.size}};
-  // getComponents(vel, ns.sol.data, ns.feSpaceVel);
+  // std::array<Vec, 2> vel = {Vec{split.feSpaceU.dof.size},
+  // Vec{split.feSpaceU.dof.size}}; getComponents(vel, ns.sol.data, ns.feSpaceVel);
   Vec u{split.feSpaceU.dof.size};
   Vec v{split.feSpaceU.dof.size};
   getComponent(u, split.feSpaceU, ns.sol.data, ns.feSpaceVel, 0);

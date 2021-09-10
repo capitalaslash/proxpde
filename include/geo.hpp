@@ -92,7 +92,7 @@ struct GeoElem
   id_T id = idNotSet;
   marker_T marker = markerNotSet;
   // stores internal and external (element, facet side) pairs
-  array<FacingElem, 2> facingElem = {
+  std::array<FacingElem, 2> facingElem = {
       FacingElem{nullptr, idNotSet}, FacingElem{nullptr, idNotSet}};
   Vec3 _normal;
 };
@@ -182,9 +182,9 @@ public:
   static uint constexpr numEdges = 1U;
   static uint constexpr numFaces = 0U;
   static uint constexpr numFacets = 2U;
-  static array<array<id_T, 1>, 2> constexpr elemToFacet = {{{{0}}, {{1}}}};
-  static array<array<id_T, 0>, 0> constexpr elemToFace = {{}};
-  static array<array<id_T, 2>, 1> constexpr elemToEdge = {{{{0, 1}}}};
+  static std::array<std::array<id_T, 1>, 2> constexpr elemToFacet = {{{{0}}, {{1}}}};
+  static std::array<std::array<id_T, 0>, 0> constexpr elemToFace = {{}};
+  static std::array<std::array<id_T, 2>, 1> constexpr elemToEdge = {{{{0, 1}}}};
   static double constexpr refVolume = 2.;
 
   explicit Line(
@@ -245,10 +245,10 @@ public:
   static uint constexpr numEdges = 3U;
   static uint constexpr numFaces = 1U;
   static uint constexpr numFacets = 3U;
-  static array<array<id_T, 2>, 3> constexpr elemToFacet = {
+  static std::array<std::array<id_T, 2>, 3> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
-  static array<array<id_T, 2>, 3> constexpr elemToEdge = elemToFacet;
-  static array<array<id_T, 3>, 1> constexpr elemToFace = {{{{0, 1, 2}}}};
+  static std::array<std::array<id_T, 2>, 3> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<id_T, 3>, 1> constexpr elemToFace = {{{{0, 1, 2}}}};
   static double constexpr refVolume = 0.5;
 
   Triangle(
@@ -334,10 +334,10 @@ public:
   static uint constexpr numEdges = 4U;
   static uint constexpr numFaces = 1U;
   static uint constexpr numFacets = 4U;
-  static array<array<id_T, 2>, 4> constexpr elemToFacet = {
+  static std::array<std::array<id_T, 2>, 4> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
-  static array<array<id_T, 2>, 4> constexpr elemToEdge = elemToFacet;
-  static array<array<id_T, 4>, 1> constexpr elemToFace = {{{{0, 1, 2, 3}}}};
+  static std::array<std::array<id_T, 2>, 4> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<id_T, 4>, 1> constexpr elemToFace = {{{{0, 1, 2, 3}}}};
   static double constexpr refVolume = 4.;
 
   Quad(
@@ -432,11 +432,11 @@ public:
   static uint constexpr numEdges = 6U;
   static uint constexpr numFaces = 4U;
   static uint constexpr numFacets = 4U;
-  static array<array<id_T, 3>, 4> constexpr elemToFacet = {
+  static std::array<std::array<id_T, 3>, 4> constexpr elemToFacet = {
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
-  static array<array<id_T, 2>, 6> constexpr elemToEdge = {
+  static std::array<std::array<id_T, 2>, 6> constexpr elemToEdge = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
-  static array<array<id_T, 3>, 4> constexpr elemToFace = elemToFacet;
+  static std::array<std::array<id_T, 3>, 4> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 1. / 6;
 
   Tetrahedron(
@@ -499,14 +499,14 @@ public:
   static uint constexpr numEdges = 12U;
   static uint constexpr numFaces = 6U;
   static uint constexpr numFacets = 6U;
-  static array<array<id_T, 4>, 6> constexpr elemToFacet = {
+  static std::array<std::array<id_T, 4>, 6> constexpr elemToFacet = {
       {{{0, 3, 2, 1}},
        {{0, 1, 5, 4}},
        {{1, 2, 6, 5}},
        {{2, 3, 7, 6}},
        {{3, 0, 4, 7}},
        {{4, 5, 6, 7}}}};
-  static array<array<id_T, 2>, 12> constexpr elemToEdge = {
+  static std::array<std::array<id_T, 2>, 12> constexpr elemToEdge = {
       {{{0, 1}},
        {{1, 2}},
        {{2, 3}},
@@ -519,7 +519,7 @@ public:
        {{5, 6}},
        {{6, 7}},
        {{7, 4}}}};
-  static array<array<id_T, 4>, 6> constexpr elemToFace = elemToFacet;
+  static std::array<std::array<id_T, 4>, 6> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 8.;
 
   Hexahedron(
@@ -579,7 +579,7 @@ public:
 template <typename Elem>
 bool geoEqual(Elem const & e1, Elem const & e2)
 {
-  array<id_T, Elem::numPts> ids1, ids2;
+  std::array<id_T, Elem::numPts> ids1, ids2;
   uint counter = 0;
   std::for_each(
       e1.pointList.begin(),
@@ -620,7 +620,8 @@ private:
 };
 
 // http://blackpawn.com/texts/pointinpoly/default.html
-inline bool sameSide2d(Vec3 const & p1, Vec3 const & p2, array<Vec3, 2> const & line)
+inline bool
+sameSide2d(Vec3 const & p1, Vec3 const & p2, std::array<Vec3, 2> const & line)
 {
   // the two points p1 and p2 are on the same side of the line through a and b
   // iff their cross product with the line itself point in the same direction
@@ -628,7 +629,8 @@ inline bool sameSide2d(Vec3 const & p1, Vec3 const & p2, array<Vec3, 2> const & 
   return ((p1 - line[0]).cross(diff)).dot((p2 - line[0]).cross(diff)) >= 0.;
 }
 
-inline bool sameSide3d(Vec3 const & p1, Vec3 const & p2, array<Vec3, 3> const & plane)
+inline bool
+sameSide3d(Vec3 const & p1, Vec3 const & p2, std::array<Vec3, 3> const & plane)
 {
   // the two points p1 and p2 are on the same side of the plane through a, b and c
   // iff the dot products of of them with the normal to the plane has the same sign.

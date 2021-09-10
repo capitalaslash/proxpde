@@ -12,7 +12,7 @@ using FESpace_T = FESpace<Mesh_T, RefHexahedronQ2, GaussQR<Hexahedron, 1>>;
 
 int main(int argc, char * argv[])
 {
-  array<uint, 3> numElems = {{1, 1, 1}};
+  std::array<uint, 3> numElems = {{1, 1, 1}};
   if (argc == 4)
   {
     numElems[0] = static_cast<uint>(std::stoi(argv[1]));

@@ -23,15 +23,15 @@ public:
   using PointList_T = std::vector<Point>;
   using ElementList_T = std::vector<Elem>;
   using FacetList_T = std::vector<Facet_T>;
-  using elemToPoint_T = std::vector<array<id_T, Elem::numPts>>;
-  using elemToFacet_T = std::vector<array<id_T, Elem::numFacets>>;
+  using elemToPoint_T = std::vector<std::array<id_T, Elem::numPts>>;
+  using elemToFacet_T = std::vector<std::array<id_T, Elem::numFacets>>;
 
   void buildConnectivity()
   {
     elemToPoint.reserve(elementList.size());
     for (auto & l: elementList)
     {
-      array<id_T, Elem::numPts> elemConn;
+      std::array<id_T, Elem::numPts> elemConn;
       uint counter = 0;
       for (auto & p: l.pointList)
       {
@@ -193,34 +193,34 @@ void buildSquare(
     Mesh<Triangle> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 2> const numElems,
+    std::array<uint, 2> const numElems,
     MeshFlags::T flags);
 
 void buildSquare(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 2> const numElems,
+    std::array<uint, 2> const numElems,
     MeshFlags::T flags);
 
 void buildCircleMesh(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     double const & radius,
-    array<uint, 3> const numElems);
+    std::array<uint, 3> const numElems);
 
 void buildCube(
     Mesh<Tetrahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 3> const numElems,
+    std::array<uint, 3> const numElems,
     MeshFlags::T flags);
 
 void buildCube(
     Mesh<Hexahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 3> const numElems,
+    std::array<uint, 3> const numElems,
     MeshFlags::T flags);
 
 template <typename Elem>
@@ -228,7 +228,7 @@ void buildHyperCube(
     Mesh<Elem> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 3> const numElems,
+    std::array<uint, 3> const numElems,
     MeshFlags::T flags = MeshFlags::NONE)
 {
   if constexpr (std::is_same_v<Elem, Line>)
@@ -511,14 +511,14 @@ void readGMSH(
         if (ElemToGmsh<Elem>::value == elType)
         {
           // read connectivity from file
-          array<uint, Elem::numPts> conn;
+          std::array<uint, Elem::numPts> conn;
           for (uint c = 0; c < Elem::numPts; c++)
           {
             in >> conn[c];
           }
 
           // get points pointers from connectivity
-          // TODO: use array or pre-fix size
+          // TODO: use std::array or pre-fix size
           std::vector<Point *> connPts;
           std::for_each(
               conn.begin(),
@@ -533,14 +533,14 @@ void readGMSH(
         else if (ElemToGmsh<typename Elem::Facet_T>::value == elType)
         {
           // read connectivity from file
-          array<uint, Elem::Facet_T::numPts> conn;
+          std::array<uint, Elem::Facet_T::numPts> conn;
           for (uint c = 0; c < Elem::Facet_T::numPts; c++)
           {
             in >> conn[c];
           }
 
           // get points pointers from connectivity
-          // TODO: use array or pre-fix size
+          // TODO: use std::array or pre-fix size
           std::vector<Point *> connPts;
           std::for_each(
               conn.begin(),
@@ -625,7 +625,7 @@ void readMesh(
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")
   {
-    array<uint, 3> numElems = {
+    std::array<uint, 3> numElems = {
         config["nx"].as<uint>(), config["ny"].as<uint>(), config["nz"].as<uint>()};
     // TODO: auto const origin = config["origin"].as<Vec3>();
     Vec3 const origin{0., 0., 0.};

@@ -2,10 +2,12 @@
 
 #include "minifem.h"
 
+// io
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 
+// containers
 #include <array>
 #include <bitset>
 #include <map>
@@ -14,18 +16,21 @@
 #include <unordered_set>
 #include <vector>
 
+// other std
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
 #include <numeric>
 
+// eigen
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
 #include <unsupported/Eigen/IterativeSolvers>
 #include <unsupported/Eigen/SparseExtra>
 
+// yaml
 #include <yaml-cpp/yaml.h>
 
 // ----------------------------------------------------------------------------
@@ -57,15 +62,10 @@ std::vector<uint> allComp()
 }
 
 // ----------------------------------------------------------------------------
-// #include <array>
-template <typename T, std::size_t N>
-using array = std::array<T, N>;
-// #include "array.hpp"
-
 template <int N, typename T>
-static constexpr array<T, N> fillArray(T const & t)
+static constexpr std::array<T, N> fillArray(T const & t)
 {
-  array<T, N> a;
+  std::array<T, N> a;
   a.fill(t);
   return a;
 }
@@ -218,7 +218,7 @@ FVec<dim1> narrow(FVec<dim2> const & v2)
 }
 
 template <int dim>
-FVec<dim> arrayToFVec(array<double, dim> const & a)
+FVec<dim> arrayToFVec(std::array<double, dim> const & a)
 {
   FVec<dim> v;
   for (uint k = 0; k < dim; ++k)

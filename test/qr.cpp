@@ -39,7 +39,7 @@ struct PolyVec
 
   T operator()(uint const i) const { return data[i]; }
 
-  array<T, 3> data;
+  std::array<T, 3> data;
 };
 
 template <uint I, uint J = 0, uint K = 0>

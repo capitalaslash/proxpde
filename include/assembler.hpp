@@ -55,7 +55,7 @@ struct gen_seq<0, Is...>: seq<Is...>
 {};
 
 template <typename FESpaceTuple, int... Is>
-static array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure(
+static std::array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure(
     seq<Is...>)
 {
   return {
@@ -65,7 +65,7 @@ static array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure(
 } // namespace details
 
 template <typename FESpaceTuple>
-static array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure()
+static std::array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStructure()
 {
   return utility::details::getBlockStructure<FESpaceTuple>(
       utility::details::gen_seq<std::tuple_size_v<FESpaceTuple>>{});
@@ -77,7 +77,7 @@ struct Assembler
 {
   static uint constexpr dofLocalNum =
       utility::ComputeDOFLocal<std::tuple<FESpaces...>>::sum();
-  static array<uint, sizeof...(FESpaces)> constexpr blocks{
+  static std::array<uint, sizeof...(FESpaces)> constexpr blocks{
       utility::getBlockStructure<std::tuple<FESpaces...>>()};
 
   Assembler(std::tuple<FESpaces...> const & list):
@@ -105,7 +105,7 @@ struct Assembler
 };
 
 template <typename... FESpaces>
-array<uint, sizeof...(FESpaces)> constexpr Assembler<FESpaces...>::blocks;
+std::array<uint, sizeof...(FESpaces)> constexpr Assembler<FESpaces...>::blocks;
 
 template <typename... FESpaces>
 Assembler<FESpaces...> make_assembler(std::tuple<FESpaces...> const & list)

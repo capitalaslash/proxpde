@@ -45,7 +45,7 @@ int test(YAML::Node const & config)
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
   Vec3 length{1., 0., 0.};
-  array<uint, 3> numElems{n, 0, 0};
+  std::array<uint, 3> numElems{n, 0, 0};
   if constexpr (Elem_T::dim > 1)
   {
     length[1] = 1.;

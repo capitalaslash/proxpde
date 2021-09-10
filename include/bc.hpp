@@ -1,6 +1,8 @@
 #pragma once
 
 #include "def.hpp"
+
+#include "qr.hpp"
 #include "reffe.hpp"
 
 template <typename RefFE, typename QR>
@@ -181,7 +183,7 @@ public:
       {
         // get the vector value on the dof
         FVec<dim> localValue;
-        array<DOFid_T, dim> dofIds;
+        std::array<DOFid_T, dim> dofIds;
         for (uint d = 0; d < dim; ++d)
         {
           dofIds[d] = feSpace.dof.getId(elem->id, dofFacet, d);

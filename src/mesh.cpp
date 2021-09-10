@@ -75,14 +75,14 @@ void buildSquare(
     Mesh<Triangle> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 2> const numElems,
+    std::array<uint, 2> const numElems,
     MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
   assert(length[0] > 0. && length[1] > 0.);
   Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], 1.};
-  array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
+  std::array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
   mesh.pointList.reserve(numPts[0] * numPts[1]);
   for (uint j = 0; j < numPts[1]; ++j)
   {
@@ -110,7 +110,7 @@ void buildSquare(
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      array<id_T, 3> triplet_b, triplet_t;
+      std::array<id_T, 3> triplet_b, triplet_t;
       if (base % 2)
       {
         triplet_b[0] = base;
@@ -149,14 +149,14 @@ void buildSquare(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 2> const numElems,
+    std::array<uint, 2> const numElems,
     MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
   assert(length[0] > 0. && length[1] > 0.);
   Vec3 const h = {length[0] / numElems[0], length[1] / numElems[1], 1.};
-  array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
+  std::array<uint, 2> const numPts = {numElems[0] + 1, numElems[1] + 1};
 
   mesh.pointList.reserve(numPts[0] * numPts[1]);
   for (uint j = 0; j < numPts[1]; ++j)
@@ -201,9 +201,9 @@ void buildCircleMesh(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     double const & radius,
-    array<uint, 3> const numElems)
+    std::array<uint, 3> const numElems)
 {
-  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.resize(
       numPts[0] * numPts[1] + numPts[0] * numElems[2] + numElems[1] * numElems[2]);
   //    l0  r0
@@ -370,14 +370,14 @@ void buildCube(
     Mesh<Tetrahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 3> const numElems,
+    std::array<uint, 3> const numElems,
     MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
   Vec3 const h = {
       length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
   for (uint k = 0; k < numPts[2]; ++k)
   {
@@ -469,14 +469,14 @@ void buildCube(
     Mesh<Hexahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    array<uint, 3> const numElems,
+    std::array<uint, 3> const numElems,
     MeshFlags::T flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
   Vec3 const h = {
       length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
   for (uint k = 0; k < numPts[2]; ++k)
   {

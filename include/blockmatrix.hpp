@@ -13,13 +13,13 @@ static constexpr auto sum(T1 s, T... ts)
 }
 
 template <typename T>
-constexpr auto accumulator(T const & array, size_t const end = std::tuple_size_v<T>)
+constexpr auto accumulator(T const & arr, size_t const end = std::tuple_size_v<T>)
 {
   // static_assert(N <= std::tuple_size_v<T>, "cannot accumulate beyond array size");
   auto sum = typename T::value_type(0);
   for (uint i = 0; i < end; ++i)
   {
-    sum += array[i];
+    sum += arr[i];
   }
   return sum;
 }
@@ -40,7 +40,7 @@ template <uint... Is>
 struct Block
 {
   static uint const totalSize = detail::sum(Is...);
-  using Array_T = array<uint, sizeof...(Is)>;
+  using Array_T = std::array<uint, sizeof...(Is)>;
   static Array_T constexpr size = {{Is...}};
   static Array_T constexpr offset = detail::array_accu<Array_T>({{Is...}});
 };

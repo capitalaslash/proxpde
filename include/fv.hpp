@@ -180,7 +180,7 @@ struct FVSolver
             double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id)];
             // check uJump on all other facets of the upwind element
             auto const elemFacetIds = feSpace.mesh.elemToFacet[upwindElem->id];
-            array<double, Elem_T::numFacets> rFacets;
+            std::array<double, Elem_T::numFacets> rFacets;
             for (uint f = 0; f < Elem_T::numFacets; ++f)
             {
               rFacets[f] = uJump[elemFacetIds[f]] / uJump[facet.id];

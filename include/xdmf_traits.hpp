@@ -207,7 +207,7 @@ struct XDMFTraits<RefHexahedronQ2>
   //  |      |
   //  0-- 8--1
   // clang-format off
-  static constexpr array<char,27> mapping = {
+  static constexpr std::array<char,27> mapping = {
     0, 1, 2, 3, 4, 5, 6, 7,
     8, 9, 10, 11,
     16, 17, 18, 19,

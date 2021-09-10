@@ -464,10 +464,10 @@ struct NSSolverSplit2D
   AssemblyS2SProjection<FESpaceU_T> assemblyVStarRhs;
   AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsU;
   AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsV;
-  array<typename Builder<StorageType::RowMajor>::Mat_T, dim> matFixedVelStar;
-  array<Vec, dim> rhsFixedVelStar;
+  std::array<typename Builder<StorageType::RowMajor>::Mat_T, dim> matFixedVelStar;
+  std::array<Vec, dim> rhsFixedVelStar;
   Vec rhsFixedP;
-  array<Vec, dim> rhsFixedVel;
+  std::array<Vec, dim> rhsFixedVel;
   IOManager<FESpaceU_T> ioVel;
   IOManager<FESpaceP_T> ioP;
 };

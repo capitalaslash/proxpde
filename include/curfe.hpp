@@ -198,26 +198,26 @@ struct CurFE
   bool inside(Vec3 const & pt) { return RefFE_T::inside(inverseMap(pt)); }
 
   GeoElem const * elem = nullptr;
-  array<Vec3, numDOFs> dofPts;
-  array<JacMat_T, QR::numPts> jac;
-  array<JacTMat_T, QR::numPts> jacPlus;
-  array<double, QR::numPts> detJ;
-  array<double, QR::numPts> JxW;
-  array<Vec3, QR::numPts> qpoint;
-  array<FVec<numDOFs>, QR::numPts> phiRef;
-  array<FVec<numDOFs>, QR::numPts> phi;
-  array<FMat<numDOFs, dim>, QR::numPts> dphiRef;
-  array<FMat<numDOFs, 3>, QR::numPts> dphi;
+  std::array<Vec3, numDOFs> dofPts;
+  std::array<JacMat_T, QR::numPts> jac;
+  std::array<JacTMat_T, QR::numPts> jacPlus;
+  std::array<double, QR::numPts> detJ;
+  std::array<double, QR::numPts> JxW;
+  std::array<Vec3, QR::numPts> qpoint;
+  std::array<FVec<numDOFs>, QR::numPts> phiRef;
+  std::array<FVec<numDOFs>, QR::numPts> phi;
+  std::array<FMat<numDOFs, dim>, QR::numPts> dphiRef;
+  std::array<FMat<numDOFs, 3>, QR::numPts> dphi;
 #ifdef ENABLE_SECONDDERIV
-  array<FMat<numDOFs * dim, dim>, QR::numPts> d2phiRef;
-  array<FMat<numDOFs * 3, 3>, QR::numPts> d2phi;
+  std::array<FMat<numDOFs * dim, dim>, QR::numPts> d2phiRef;
+  std::array<FMat<numDOFs * 3, 3>, QR::numPts> d2phi;
 #endif
-  array<FMat<numDOFs, dim>, QR::numPts> phiVectRef;
+  std::array<FMat<numDOFs, dim>, QR::numPts> phiVectRef;
   // TODO: box phiVect in external data struct that is specialized on the FEDimType
-  array<FMat<numDOFs, 3>, QR::numPts> phiVect;
-  array<FVec<numDOFs>, QR::numPts> divphiRef;
-  array<FVec<numDOFs>, QR::numPts> divphi;
-  array<FMat<RefFE::numGeoFuns, dim>, QR::numPts> mapping;
+  std::array<FMat<numDOFs, 3>, QR::numPts> phiVect;
+  std::array<FVec<numDOFs>, QR::numPts> divphiRef;
+  std::array<FVec<numDOFs>, QR::numPts> divphi;
+  std::array<FMat<RefFE::numGeoFuns, dim>, QR::numPts> mapping;
 };
 
 template <typename QR>
@@ -234,8 +234,8 @@ struct CurFE<RefPointP1, QR>
   }
 
   GeoElem const * elem;
-  array<Vec3, RefFE_T::numFuns> dofPts;
-  array<double, QR::numPts> JxW = {{1.L}};
-  array<Vec3, QR::numPts> qpoint;
-  array<FVec<1>, QR::numPts> phi = {{FVec<1>(1.L)}};
+  std::array<Vec3, RefFE_T::numFuns> dofPts;
+  std::array<double, QR::numPts> JxW = {{1.L}};
+  std::array<Vec3, QR::numPts> qpoint;
+  std::array<FVec<1>, QR::numPts> phi = {{FVec<1>(1.L)}};
 };

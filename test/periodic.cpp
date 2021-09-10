@@ -1,11 +1,12 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 template <typename FESpace>
@@ -13,12 +14,13 @@ struct BCPeriodic
 {
   using FESpace_T = FESpace;
 
-  BCPeriodic(FESpace_T const & feSpace,
-             marker_T const mDest,
-             marker_T const mOrig,
-             Fun<3,3> const destToOrigFun):
-    bcDest{feSpace, mDest},
-    bcOrig{feSpace, mOrig}
+  BCPeriodic(
+      FESpace_T const & feSpace,
+      marker_T const mDest,
+      marker_T const mOrig,
+      Fun<3, 3> const destToOrigFun):
+      bcDest{feSpace, mDest},
+      bcOrig{feSpace, mOrig}
   {
     // this works only for translated meshes
     assert(bcOrig._constrainedDofMap.size() == bcDest._constrainedDofMap.size());
@@ -61,13 +63,14 @@ struct BCPeriodic
   std::unordered_map<id_T, id_T> destToOrig;
 };
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpaceP1_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T, 1>::RefFE_T,
-                              LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using FESpaceP1_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
 
   MilliTimer t;
 
@@ -91,7 +94,12 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   uint const numElems = config["n"].as<uint>();
-  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
+  buildHyperCube(
+      *mesh,
+      origin,
+      length,
+      {numElems, 0, 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   t.stop();
 
   t.start("fespace");
@@ -100,10 +108,13 @@ int main(int argc, char* argv[])
 
   t.start("bc");
   auto bcLeft = BCEss{feSpace, side::LEFT};
-  bcLeft << [] (Vec3 const &) { return 0.; };
+  bcLeft << [](Vec3 const &) { return 0.; };
   auto bcRight = BCEss{feSpace, side::RIGHT};
-  bcRight << [] (Vec3 const &) { return 0.; };
-  auto const bcPeriodic = BCPeriodic{feSpace, side::LEFT, side::RIGHT, [](Vec3 const &){return Vec3{1.0, 0., 0.};}};
+  bcRight << [](Vec3 const &) { return 0.; };
+  auto const bcPeriodic =
+      BCPeriodic{feSpace, side::LEFT, side::RIGHT, [](Vec3 const &) {
+                   return Vec3{1.0, 0., 0.};
+                 }};
   auto const bcs = std::make_tuple(/*bcLeft, bcRight*/);
   t.stop();
 
@@ -116,10 +127,8 @@ int main(int argc, char* argv[])
   std::cout << "cfl = " << velocity * dt * hinv << std::endl;
 
   double const a = 20.;
-  scalarFun_T ic = [a] (Vec3 const& p)
-  {
-    return std::exp(-(p(0)-0.5)*(p(0)-0.5) * a);
-  };
+  scalarFun_T ic = [a](Vec3 const & p)
+  { return std::exp(-(p(0) - 0.5) * (p(0) - 0.5) * a); };
   // \int_{-\infty}^{+\infty} exp(-a (x - b)^2 dx = \sqrt(\pi / a)
   double const refIntegral = std::sqrt(M_PI / a);
 
@@ -128,11 +137,12 @@ int main(int argc, char* argv[])
 
   t.start("assembly lhs");
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(std::tuple{
-                     AssemblyScalarMass{1./dt, feSpace},
-                     AssemblyStiffness{nu, feSpace},
-                     AssemblyAdvection{1.0, vel.data, feSpace, feSpace}},
-                   bcs);
+  builder.buildLhs(
+      std::tuple{
+          AssemblyScalarMass{1. / dt, feSpace},
+          AssemblyStiffness{nu, feSpace},
+          AssemblyAdvection{1.0, vel.data, feSpace, feSpace}},
+      bcs);
   auto const penalty = 1.e10;
   for (auto const & [dest, orig]: bcPeriodic.destToOrig)
   {
@@ -143,7 +153,7 @@ int main(int argc, char* argv[])
   }
   builder.closeMatrix();
   Vec uOld{feSpace.dof.size};
-  auto assemblyRhs = AssemblyProjection{1./dt, uOld, feSpace};
+  auto assemblyRhs = AssemblyProjection{1. / dt, uOld, feSpace};
   t.stop();
 
   auto const ntime = config["ntime"].as<uint>();
@@ -158,7 +168,7 @@ int main(int argc, char* argv[])
   solver.factorize(builder.A);
   t.stop();
 
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
@@ -182,6 +192,7 @@ int main(int argc, char* argv[])
   t.print();
 
   double const error = std::fabs(u.integrate()[0] - refIntegral);
-  std::cout << "the error in the solution is " << std::setprecision(16) << error << std::endl;
+  std::cout << "the error in the solution is " << std::setprecision(16) << error
+            << std::endl;
   return checkError({error}, {0.0005238803728871422});
 }

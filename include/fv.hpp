@@ -1,10 +1,12 @@
 #pragma once
 
 #include "def.hpp"
+
 #include "geo.hpp"
 #include "reffe.hpp"
 
-template <typename T> int sgn(T val)
+template <typename T>
+int sgn(T val)
 {
   return (T(0) < val) - (val < T(0));
 }
@@ -15,37 +17,31 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
   double cfl = 0.;
   for (auto const & elem: feSpace.mesh.elementList)
   {
-      // feSpace.curFE.reinit(elem);
-      FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
-      for(uint n=0; n<FESpace::CurFE_T::RefFE_T::numFuns; ++n)
+    // feSpace.curFE.reinit(elem);
+    FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
+    for (uint n = 0; n < FESpace::CurFE_T::RefFE_T::numFuns; ++n)
+    {
+      for (uint d = 0; d < FESpace::dim; ++d)
       {
-        for (uint d=0; d<FESpace::dim; ++d)
-        {
-          id_T const dofId = feSpace.dof.getId(elem.id, n, d);
-          localVel[d] += vel[dofId];
-        }
+        id_T const dofId = feSpace.dof.getId(elem.id, n, d);
+        localVel[d] += vel[dofId];
       }
-      localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
+    }
+    localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
 
     cfl = std::max(cfl, localVel.norm() * dt / elem.hMin());
   }
   return cfl;
 }
 
-double minmod(double const r)
-{
-  return std::max(0., std::min(1., r));
-}
+double minmod(double const r) { return std::max(0., std::min(1., r)); }
 
 double superbee(double const r)
 {
-  return std::max(std::max(0., std::min(2.*r, 1.)), std::min(r, 2.));
+  return std::max(std::max(0., std::min(2. * r, 1.)), std::min(r, 2.));
 }
 
-double pureUpwind(double const)
-{
-  return 0.;
-}
+double pureUpwind(double const) { return 0.; }
 
 enum class LimiterType
 {
@@ -54,22 +50,22 @@ enum class LimiterType
   SUPERBEE
 };
 
-static const std::unordered_map<LimiterType, std::function<double(double const)>> limiterMap =
-{
-  {LimiterType::UPWIND, pureUpwind},
-  {LimiterType::MINMOD, minmod},
-  {LimiterType::SUPERBEE, superbee},
+static const std::unordered_map<LimiterType, std::function<double(double const)>>
+    limiterMap = {
+        {LimiterType::UPWIND, pureUpwind},
+        {LimiterType::MINMOD, minmod},
+        {LimiterType::SUPERBEE, superbee},
 };
 
-static const std::unordered_map<std::string, LimiterType> stringToLimiter =
-{
-  {"upwind", LimiterType::UPWIND},
-  {"minmod", LimiterType::MINMOD},
-  {"superbee", LimiterType::SUPERBEE},
+static const std::unordered_map<std::string, LimiterType> stringToLimiter = {
+    {"upwind", LimiterType::UPWIND},
+    {"minmod", LimiterType::MINMOD},
+    {"superbee", LimiterType::SUPERBEE},
 };
 
 template <auto L>
-struct Limiter {};
+struct Limiter
+{};
 
 using UpwindLimiter = Limiter<LimiterType::UPWIND>;
 using MinModLimiter = Limiter<LimiterType::MINMOD>;
@@ -98,26 +94,23 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(
-      FESpace const & fe,
-      BCS const & bcList,
-      Limiter<L> /*l*/):
-    feSpace(fe),
-    bcs(bcList),
-    uOld(fe.dof.size),
-    uJump{fe.mesh.facetList.size()},
-    fluxes(Vec::Zero(fe.mesh.facetList.size())),
-    normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
+  FVSolver(FESpace const & fe, BCS const & bcList, Limiter<L> /*l*/):
+      feSpace(fe),
+      bcs(bcList),
+      uOld(fe.dof.size),
+      uJump{fe.mesh.facetList.size()},
+      fluxes(Vec::Zero(fe.mesh.facetList.size())),
+      normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
   {
-    static_assert (order_v<ElemRefFE_T> == 0,
-                   "finite volume solver works only on order 0.");
+    static_assert(
+        order_v<ElemRefFE_T> == 0, "finite volume solver works only on order 0.");
     assert((feSpace.mesh.flags & MeshFlags::INTERNAL_FACETS).any());
     assert((feSpace.mesh.flags & MeshFlags::NORMALS).any());
 
     for (auto const & elem: feSpace.mesh.elementList)
     {
       auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];
-      for (uint f=0; f<Elem_T::numFacets; ++f)
+      for (uint f = 0; f < Elem_T::numFacets; ++f)
       {
         auto const & facet = feSpace.mesh.facetList[facetIds[f]];
         // normals are always oriented from facingElem[0] to facingElem[1]
@@ -138,9 +131,8 @@ struct FVSolver
       auto const * outsideElem = facet.facingElem[1].ptr;
       if (outsideElem)
       {
-        uJump[facet.id] =
-            u[feSpace.dof.getId(insideElem->id)] -
-            u[feSpace.dof.getId(outsideElem->id)];
+        uJump[facet.id] = u[feSpace.dof.getId(insideElem->id)] -
+                          u[feSpace.dof.getId(outsideElem->id)];
       }
     }
   }
@@ -159,7 +151,8 @@ struct FVSolver
         Vec3 v3 = promote<3>(v);
         vNorm = v3.dot(facet._normal) * facet.volume();
       }
-      else if constexpr (family_v<typename Vel::FESpace_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      else if constexpr (
+          family_v<typename Vel::FESpace_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
         // for RT fe spaces the dof is already a flux
         vNorm = v[0];
@@ -179,39 +172,38 @@ struct FVSolver
           // by default use pure upwind
           double uLimited = uUpwind;
           // if there is a downwind element, compute a slope limited flux.
-          // if there is none, it means we are on a downwind boundary and pure upwind is the best we can do
-          auto const * downwindElem = facet.facingElem[1-upwindDir].ptr;
+          // if there is none, it means we are on a downwind boundary and pure upwind is
+          // the best we can do
+          auto const * downwindElem = facet.facingElem[1 - upwindDir].ptr;
           if (downwindElem)
           {
             double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id)];
             // check uJump on all other facets of the upwind element
             auto const elemFacetIds = feSpace.mesh.elemToFacet[upwindElem->id];
             array<double, Elem_T::numFacets> rFacets;
-            for (uint f=0; f<Elem_T::numFacets; ++f)
+            for (uint f = 0; f < Elem_T::numFacets; ++f)
             {
               rFacets[f] = uJump[elemFacetIds[f]] / uJump[facet.id];
             }
             double const r = *std::min_element(rFacets.begin(), rFacets.end());
             uLimited = uUpwind + limiterFun(r) * .5 * (uDownwind - uUpwind);
           }
-          fluxes[facet.id] =
-              vNorm *
-              uLimited;
+          fluxes[facet.id] = vNorm * uLimited;
         }
         // no upwind element means that we are on a boundary and the flux is
         // coming from outside
         else
         {
-          static_for(bcs, [&, elemId = insideElemPtr->id] (auto const /*i*/, auto const & bc)
-          {
-            if (bc.marker == facet.marker)
-            {
-              auto const uLocal = bc.get(elemId);
-              fluxes[facet.id] =
-                  vNorm *
-                  uLocal;
-            }
-          });
+          static_for(
+              bcs,
+              [&, elemId = insideElemPtr->id](auto const /*i*/, auto const & bc)
+              {
+                if (bc.marker == facet.marker)
+                {
+                  auto const uLocal = bc.get(elemId);
+                  fluxes[facet.id] = vNorm * uLocal;
+                }
+              });
           // for (auto const & bc: bcs.bcEssList)
           // {
           //   if (bc.marker == facet.marker)
@@ -235,24 +227,24 @@ struct FVSolver
       //           << fluxes[facet.id] << std::endl;
     }
     // TODO: overwrite the bc fixed fluxes here ?
-//    auto const bcIt = bcs.fixedMarkers.find(facet.marker);
-//    // set flux according to upwind bcs
-//    if (bcIt != bcs.fixedMarkers.end())
-//    {
-//      // TODO: use all facet points
-//      Point const & p = *facet.pointList[0];
-//      DOFid_T const id = feSpaceVel.dof.ptMap[p.id];
-//      double const v = vel[id];
-//      for(auto const & bc: bcs.bcEssList)
-//      {
-//        if (bc.isConstrained(id))
-//        {
-//          fluxes[facet.id] = bc.get(*facet.facingElem[0].ptr->id) * v;
-//        }
-//      }
-//    }
-//    std::cout << fluxes << std::endl;
-//    abort();
+    // auto const bcIt = bcs.fixedMarkers.find(facet.marker);
+    // // set flux according to upwind bcs
+    // if (bcIt != bcs.fixedMarkers.end())
+    // {
+    //   // TODO: use all facet points
+    //   Point const & p = *facet.pointList[0];
+    //   DOFid_T const id = feSpaceVel.dof.ptMap[p.id];
+    //   double const v = vel[id];
+    //   for(auto const & bc: bcs.bcEssList)
+    //   {
+    //     if (bc.isConstrained(id))
+    //     {
+    //       fluxes[facet.id] = bc.get(*facet.facingElem[0].ptr->id) * v;
+    //     }
+    //   }
+    // }
+    // std::cout << fluxes << std::endl;
+    // abort();
   }
 
   void advance(Vec & u, double const dt)
@@ -265,14 +257,12 @@ struct FVSolver
       double const hinv = 1. / elem.volume();
       auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];
       // fluxes sign must be adjusted wrt the normal pointing outside the element
-      for (uint f=0; f<Elem_T::numFacets; ++f)
+      for (uint f = 0; f < Elem_T::numFacets; ++f)
       {
         auto const facetId = feSpace.mesh.facetList[facetIds[f]].id;
-        u[id] += dt *
-            normalSgn(elem.id, f) *
-            fluxes[facetId] *
-            hinv;
-        // std::cout << normalSgn(elem.id, f) << " " << fluxes[feSpace.mesh.facetList[facetIds[f]].id] << std::endl;
+        u[id] += dt * normalSgn(elem.id, f) * fluxes[facetId] * hinv;
+        // std::cout << normalSgn(elem.id, f) << " " <<
+        // fluxes[feSpace.mesh.facetList[facetIds[f]].id] << std::endl;
       }
     }
   }

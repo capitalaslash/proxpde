@@ -1,20 +1,22 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 template <typename Elem, uint Order>
 int test()
 {
   using Mesh_T = Mesh<Elem>;
-  using FESpace_T = FESpace<Mesh_T,
-                            typename LagrangeFE<Elem, Order>::RefFE_T,
-                            typename LagrangeFE<Elem, Order>::RecommendedQR>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem, Order>::RefFE_T,
+      typename LagrangeFE<Elem, Order>::RecommendedQR>;
   using RefFE_T = typename FESpace_T::RefFE_T;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -26,12 +28,12 @@ int test()
   FMat<size, 3> matDPhi = FMat<size, 3>::Zero();
   auto & cfe = feSpace.curFE;
   cfe.reinit(feSpace.mesh.elementList[0]);
-  for (uint i=0; i<size; ++i)
+  for (uint i = 0; i < size; ++i)
   {
-    for (uint j=0; j<size; ++j)
+    for (uint j = 0; j < size; ++j)
     {
       matPhi(i, j) = RefFE_T::phiFun[j](narrow<Elem::dim>(cfe.dofPts[i]));
-      for (uint d=0; d<Elem::dim; ++d)
+      for (uint d = 0; d < Elem::dim; ++d)
       {
         matDPhi(i, d) += RefFE_T::dphiFun[j](narrow<Elem::dim>(cfe.dofPts[i]))[d];
       }
@@ -43,7 +45,8 @@ int test()
   auto const normDPhi = matDPhi.norm();
   if (std::fabs(normPhi - 0.) > 1.e-16 || std::fabs(normDPhi - 0.) > 1.e-16)
   {
-    std::cerr << "the norm of the error is not the prescribed value: " << normPhi << " " << normDPhi << std::endl;
+    std::cerr << "the norm of the error is not the prescribed value: " << normPhi << " "
+              << normDPhi << std::endl;
     return 1;
   }
 

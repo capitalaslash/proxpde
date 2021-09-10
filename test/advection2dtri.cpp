@@ -1,42 +1,45 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
-#include "timer.hpp"
-#include "fv.hpp"
 #include "feutils.hpp"
+#include "fv.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
-  using FESpaceP1_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T,1>::RefFE_T,
-                              LagrangeFE<Elem_T,1>::RecommendedQR>;
+  using FESpaceP1_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
   // explicit finite volume upwind
-  using FESpaceP0_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T,0>::RefFE_T,
-                              LagrangeFE<Elem_T,0>::RecommendedQR>;
+  using FESpaceP0_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T, 0>::RecommendedQR>;
   // velocity field
   // using FESpaceVel_T = FESpace<Mesh_T,
   //                              LagrangeFE<Elem_T,1>::RefFE_T,
   //                              LagrangeFE<Elem_T,1>::RecommendedQR, Elem_T::dim>;
-  using FESpaceVel_T = FESpace<Mesh_T,
-                               RaviartThomasFE<Elem_T, 0>::RefFE_T,
-                               RaviartThomasFE<Elem_T, 0>::RecommendedQR>;
-  using FESpaceVelP0_T = FESpace<Mesh_T,
-                                 RefTriangleP0,
-                                 GaussQR<Triangle, 3>, 2>;
+  using FESpaceVel_T = FESpace<
+      Mesh_T,
+      RaviartThomasFE<Elem_T, 0>::RefFE_T,
+      RaviartThomasFE<Elem_T, 0>::RecommendedQR>;
+  using FESpaceVelP0_T = FESpace<Mesh_T, RefTriangleP0, GaussQR<Triangle, 3>, 2>;
   // flux feSpace
   using MeshFacet_T = Mesh<Elem_T::Facet_T>;
-  using FESpaceFacet_T = FESpace<MeshFacet_T,
-                                 LagrangeFE<Elem_T::Facet_T,0>::RefFE_T,
-                                 LagrangeFE<Elem_T::Facet_T,0>::RecommendedQR>;
+  using FESpaceFacet_T = FESpace<
+      MeshFacet_T,
+      LagrangeFE<Elem_T::Facet_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T::Facet_T, 0>::RecommendedQR>;
 
   ParameterDict config;
   if (argc > 1)
@@ -56,10 +59,11 @@ int main(int argc, char* argv[])
   }
   config.validate({"nx", "ny", "dt", "velocity", "threshold", "ntime"});
 
-  scalarFun_T const ic = [threshold = config["threshold"].as<double>()] (Vec3 const& p)
+  scalarFun_T const ic = [threshold = config["threshold"].as<double>()](Vec3 const & p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50-(p(1)-0.7)*(p(1)-0.7)*50);
-    if (p(0) < .37) return 1.;
+    if (p(0) < .37)
+      return 1.;
     return 0.;
   };
 
@@ -69,15 +73,14 @@ int main(int argc, char* argv[])
   // we need internal facets
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(
-        *mesh,
-        {0., 0., 0.},
-        {1., 1., 0.},
-        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
-        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
+      *mesh,
+      {0., 0., 0.},
+      {1., 1., 0.},
+      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
   // readGMSH(*mesh, "square_uns.msh", MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   // hexagonSquare(*mesh, true);
   // buildNormals(*mesh);
-
 
   std::unique_ptr<MeshFacet_T> facetMesh{new MeshFacet_T};
   buildFacetMesh(*facetMesh, *mesh);
@@ -93,7 +96,7 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   // auto const zero = [](Vec3 const & ){return 0.;};
-  auto const one = [](Vec3 const & ){return 1.;};
+  auto const one = [](Vec3 const &) { return 1.; };
   auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
   bcLeftP1 << one;
   // bcLeftP1 << zero;
@@ -103,7 +106,7 @@ int main(int argc, char* argv[])
   // bcRightP1 << zero;
   // auto bcTopP1 = BCEss{feSpaceP1, side::TOP};
   // bcTopP1 << zero;
-  auto const bcsP1 = std::make_tuple(bcLeftP1/*, bcBottomP1, bcRightP1, bcTopP1*/);
+  auto const bcsP1 = std::make_tuple(bcLeftP1 /*, bcBottomP1, bcRightP1, bcTopP1*/);
   auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
   bcLeftP0 << one;
   // bcLeftP0 << zero;
@@ -113,7 +116,7 @@ int main(int argc, char* argv[])
   // bcRightP0 << zero;
   // auto bcTopP0 = BCEss{feSpaceP0, side::TOP};
   // bcTopP0 << zero;
-  auto const bcsP0 = std::make_tuple(bcLeftP0/*, bcBottomP0, bcRightP0, bcTopP0*/);
+  auto const bcsP0 = std::make_tuple(bcLeftP0 /*, bcBottomP0, bcRightP0, bcTopP0*/);
   t.stop();
 
   t.start("velocity");
@@ -129,10 +132,10 @@ int main(int argc, char* argv[])
   auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
   LUSolver solver;
-  AssemblyScalarMass timeDer(1./dt, feSpaceP1);
+  AssemblyScalarMass timeDer(1. / dt, feSpaceP1);
   AssemblyAdvectionFE advection(1.0, vel, feSpaceP1);
   Vec concP1Old{sizeP1};
-  AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
+  AssemblyProjection timeDerRhs(1. / dt, concP1Old, feSpaceP1);
   t.stop();
 
   t.start("init");
@@ -140,7 +143,8 @@ int main(int argc, char* argv[])
   concP1 << ic;
   FEVar concP0{"concP0", feSpaceP0};
   // we need to use the highest order available QR to integrate discontinuous functions
-  // FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>> feSpaceIC{*mesh};
+  // FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, GaussQR<Triangle, 7>>
+  // feSpaceIC{*mesh};
   FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, MiniQR<Elem_T, 10>> feSpaceIC{*mesh};
   integrateAnalyticFunction(ic, feSpaceIC, concP0.data);
   Var flux{"flux"};
@@ -162,7 +166,7 @@ int main(int argc, char* argv[])
   IOManager ioVel{feSpaceVelP0, "output_advection2dtri/vel"};
   ioVel.print(std::array{velP0});
 
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << std::endl;
@@ -210,10 +214,11 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(one, feSpaceP0, oneFieldP0);
 
   double errorNormP1 = (concP1.data - oneFieldP1).norm();
-  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1 << std::endl;
+  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1
+            << std::endl;
   double errorNormP0 = (concP0.data - oneFieldP0).norm();
-  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0 << std::endl;
+  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0
+            << std::endl;
   return checkError(
-    {errorNormP1, errorNormP0},
-    {0.2572474581492306, 0.03789136711107713});
+      {errorNormP1, errorNormP0}, {0.2572474581492306, 0.03789136711107713});
 }

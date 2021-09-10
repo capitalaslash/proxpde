@@ -1,16 +1,17 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
+#include "var.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Hexahedron;
   using Mesh_T = Mesh<Elem_T>;
@@ -26,32 +27,28 @@ int main(int argc, char* argv[])
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   double const ly = 2.;
-  uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
-  uint const numElemsZ = (argc < 3)? 4 : std::stoi(argv[3]);
-  buildHyperCube(
-        *mesh,
-        {0., 0., 0.},
-        {1., ly, 1.},
-        {numElemsX, numElemsY, numElemsZ});
+  uint const numElemsX = (argc < 3) ? 4 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 4 : std::stoi(argv[2]);
+  uint const numElemsZ = (argc < 3) ? 4 : std::stoi(argv[3]);
+  buildHyperCube(*mesh, {0., 0., 0.}, {1., ly, 1.}, {numElemsX, numElemsY, numElemsZ});
   t.stop();
 
   t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 3*feSpaceVel.dof.size};
+  FESpaceP_T feSpaceP{*mesh, 3 * feSpaceVel.dof.size};
   FESpaceComponent_T feSpaceComponent{*mesh};
   t.stop();
 
   t.start("bcs");
-  auto zero = [] (Vec3 const &) { return Vec3::Constant(0.); };
-  auto inlet = [] (Vec3 const & p) { return Vec3(0., 0.5*(1.-p(0)*p(0)), 0.); };
+  auto zero = [](Vec3 const &) { return Vec3::Constant(0.); };
+  auto inlet = [](Vec3 const & p) { return Vec3(0., 0.5 * (1. - p(0) * p(0)), 0.); };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::TOP, {0, 2}},
-        BCEss{feSpaceVel, side::LEFT, {0, 2}},
-        BCEss{feSpaceVel, side::BACK, {2}},
-        BCEss{feSpaceVel, side::FRONT, {2}});
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::TOP, {0, 2}},
+      BCEss{feSpaceVel, side::LEFT, {0, 2}},
+      BCEss{feSpaceVel, side::BACK, {2}},
+      BCEss{feSpaceVel, side::FRONT, {2}});
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
@@ -79,17 +76,16 @@ int main(int argc, char* argv[])
   sol.data = solver.solve(builder.b);
   t.stop();
 
-  // std::cout << "A:\n" << builder.A.block(2*dofU, 2*dofU, dofU, dofU).norm() << std::endl;
-  // std::cout << "b:\n" << builder.b.block(2*dofU, 0, dofU, 1).norm() << std::endl;
-  // std::cout << "sol:\n" << sol.data.block(2*dofU, 0, dofU, 1).transpose() << std::endl;
+  // std::cout << "A:\n" << builder.A.block(2*dofU, 2*dofU, dofU, dofU).norm() <<
+  // std::endl; std::cout << "b:\n" << builder.b.block(2*dofU, 0, dofU, 1).norm() <<
+  // std::endl; std::cout << "sol:\n" << sol.data.block(2*dofU, 0, dofU, 1).transpose()
+  // << std::endl;
 
   t.start("error");
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
   interpolateAnalyticFunction(
-        [ly, nu](Vec3 const & p){ return nu * (ly - p(1)); },
-        feSpaceP,
-        exact.data);
+      [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); }, feSpaceP, exact.data);
 
   std::cout << "solution norm: " << sol.data.norm() << std::endl;
 
@@ -99,7 +95,7 @@ int main(int argc, char* argv[])
   getComponent(u.data, feSpaceComponent, sol.data, feSpaceVel, 0);
   getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
   getComponent(w.data, feSpaceComponent, sol.data, feSpaceVel, 2);
-  Var p{"p", sol.data, 3*dofU, dofP};
+  Var p{"p", sol.data, 3 * dofU, dofP};
 
   Var ue{"ue"};
   Var ve{"ve"};
@@ -107,7 +103,7 @@ int main(int argc, char* argv[])
   getComponent(ue.data, feSpaceComponent, exact.data, feSpaceVel, 0);
   getComponent(ve.data, feSpaceComponent, exact.data, feSpaceVel, 1);
   getComponent(we.data, feSpaceComponent, exact.data, feSpaceVel, 2);
-  Var pe{"pe", exact.data, 3*dofU, dofP};
+  Var pe{"pe", exact.data, 3 * dofU, dofP};
   t.stop();
 
   t.start("print");
@@ -130,6 +126,9 @@ int main(int argc, char* argv[])
   std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
 
   return checkError(
-    {uError, vError, wError, pError},
-    {1.309442419567852e-15, 1.021847252919293e-14, 1.800953966048908e-15, 1.097009563518918e-14});
+      {uError, vError, wError, pError},
+      {1.309442419567852e-15,
+       1.021847252919293e-14,
+       1.800953966048908e-15,
+       1.097009563518918e-14});
 }

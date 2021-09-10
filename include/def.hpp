@@ -2,23 +2,23 @@
 
 #include "minifem.h"
 
-#include <iostream>
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 
-#include <vector>
 #include <array>
-#include <tuple>
 #include <bitset>
-#include <set>
-#include <unordered_set>
 #include <map>
+#include <set>
+#include <tuple>
+#include <unordered_set>
+#include <vector>
 
-#include <memory>
-#include <functional>
 #include <algorithm>
-#include <numeric>
 #include <cassert>
+#include <functional>
+#include <memory>
+#include <numeric>
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -59,7 +59,7 @@ std::vector<uint> allComp()
 // ----------------------------------------------------------------------------
 // #include <array>
 template <typename T, std::size_t N>
-using array = std::array<T,N>;
+using array = std::array<T, N>;
 // #include "array.hpp"
 
 template <int N, typename T>
@@ -73,18 +73,25 @@ static constexpr array<T, N> fillArray(T const & t)
 // ----------------------------------------------------------------------------
 // ColMajor is better for UMFPack
 // RowMajor is better for iterative solvers
-enum class StorageType: char
+enum class StorageType : char
 {
   RowMajor,
   ClmMajor,
 };
 
 template <StorageType Storage>
-struct StorageToEigen {};
+struct StorageToEigen
+{};
 template <>
-struct StorageToEigen<StorageType::RowMajor> { static Eigen::StorageOptions constexpr value = Eigen::RowMajor; };
+struct StorageToEigen<StorageType::RowMajor>
+{
+  static Eigen::StorageOptions constexpr value = Eigen::RowMajor;
+};
 template <>
-struct StorageToEigen<StorageType::ClmMajor> { static Eigen::StorageOptions constexpr value = Eigen::ColMajor; };
+struct StorageToEigen<StorageType::ClmMajor>
+{
+  static Eigen::StorageOptions constexpr value = Eigen::ColMajor;
+};
 
 template <StorageType Storage>
 Eigen::StorageOptions constexpr StorageToEigen_V = StorageToEigen<Storage>::value;
@@ -109,14 +116,13 @@ struct Table: public Eigen::Matrix<T, Eigen::Dynamic, I, Eigen::RowMajor>
 
   Table() = default;
 
-  Table(std::size_t rows, uint const clms):
-    Super_T(rows, clms)
-  {}
+  Table(std::size_t rows, uint const clms): Super_T(rows, clms) {}
 
   template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
-  Table<T, I> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
+  Table<T, I> &
+  operator=(Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
   {
-    Super_T::operator= (b);
+    Super_T::operator=(b);
     return *this;
   }
 };
@@ -129,54 +135,58 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
 
   Table() = default;
 
-  Table(std::size_t rows, uint const clms):
-    Super_T(rows, clms)
+  Table(std::size_t rows, uint const clms): Super_T(rows, clms)
   {
     // the number of columns must be one
     assert(clms == 1);
   }
 
   template <typename Matrix, int BlockRows, int BlockCols, bool InnerPanel>
-  Table<T, 1> & operator= (Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
+  Table<T, 1> &
+  operator=(Eigen::Block<Matrix, BlockRows, BlockCols, InnerPanel> const & b)
   {
-    Super_T::operator= (b);
+    Super_T::operator=(b);
     return *this;
   }
 };
 
 // ----------------------------------------------------------------------------
-// using LUSolver = Eigen::SparseLU<Mat<StorageType::ClmMajor>, Eigen::COLAMDOrdering<int>>;
+// using LUSolver = Eigen::SparseLU<Mat<StorageType::ClmMajor>,
+// Eigen::COLAMDOrdering<int>>;
 using LUSolver = Eigen::UmfPackLU<Mat<StorageType::ClmMajor>>;
-// using IterSolver = Eigen::GMRES<Mat<StorageType::RowMajor, Eigen::IncompleteLUT<double>>;
-using IterSolver = Eigen::BiCGSTAB<
-    Mat<StorageType::RowMajor>,
-    Eigen::DiagonalPreconditioner<double>>;
+// using IterSolver = Eigen::GMRES<Mat<StorageType::RowMajor,
+// Eigen::IncompleteLUT<double>>;
+using IterSolver =
+    Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
 
 template <StorageType Storage>
-struct RecommendedSolver {};
+struct RecommendedSolver
+{};
 template <>
-struct RecommendedSolver<StorageType::RowMajor> { using type = IterSolver; };
+struct RecommendedSolver<StorageType::RowMajor>
+{
+  using type = IterSolver;
+};
 template <>
-struct RecommendedSolver<StorageType::ClmMajor> { using type = LUSolver; };
+struct RecommendedSolver<StorageType::ClmMajor>
+{
+  using type = LUSolver;
+};
 template <StorageType Storage>
 using RecommendedSolverType = typename RecommendedSolver<Storage>::type;
 
 // ----------------------------------------------------------------------------
 template <int Size>
-using FVec = Eigen::Matrix<double,Size,1>;
+using FVec = Eigen::Matrix<double, Size, 1>;
 
 template <int RowSize, int ClmSize>
-using FMat = Eigen::Matrix<double,RowSize,ClmSize>;
+using FMat = Eigen::Matrix<double, RowSize, ClmSize>;
 
 template <int ImageSize, int DomainSize>
-using Fun = std::function<
-  FVec<ImageSize> (FVec<DomainSize> const&)
->;
+using Fun = std::function<FVec<ImageSize>(FVec<DomainSize> const &)>;
 
 template <int DomainSize>
-using ScalarFun = std::function<
-  double (FVec<DomainSize> const&)
->;
+using ScalarFun = std::function<double(FVec<DomainSize> const &)>;
 
 using Vec1 = FVec<1>;
 using Vec2 = FVec<2>;
@@ -186,9 +196,9 @@ using Vec3 = FVec<3>;
 template <int dim1, int dim2>
 FVec<dim1> promote(FVec<dim2> const & v2)
 {
-  static_assert (dim1 >= dim2, "promoting to shorter vector");
+  static_assert(dim1 >= dim2, "promoting to shorter vector");
   FVec<dim1> v1 = FVec<dim1>::Zero();
-  for (uint i=0; i<dim2; ++i)
+  for (uint i = 0; i < dim2; ++i)
   {
     v1[i] = v2[i];
   }
@@ -198,9 +208,9 @@ FVec<dim1> promote(FVec<dim2> const & v2)
 template <int dim1, int dim2>
 FVec<dim1> narrow(FVec<dim2> const & v2)
 {
-  static_assert (dim1 <= dim2, "narrowing to longer vector");
+  static_assert(dim1 <= dim2, "narrowing to longer vector");
   FVec<dim1> v1;
-  for (uint i=0; i<dim1; ++i)
+  for (uint i = 0; i < dim1; ++i)
   {
     v1[i] = v2[i];
   }
@@ -211,7 +221,7 @@ template <int dim>
 FVec<dim> arrayToFVec(array<double, dim> const & a)
 {
   FVec<dim> v;
-  for (uint k=0; k<dim; ++k)
+  for (uint k = 0; k < dim; ++k)
   {
     v[k] = a[k];
   }
@@ -221,17 +231,19 @@ FVec<dim> arrayToFVec(array<double, dim> const & a)
 using Triplet = Eigen::Triplet<double>;
 
 using scalarFun_T = ScalarFun<3>;
-using vectorFun_T = Fun<3,3>;
+using vectorFun_T = Fun<3, 3>;
 
-using onedFun_T = Fun<1,1>;
-using twodFun_T = Fun<2,2>;
-using threedFun_T = Fun<3,3>;
+using onedFun_T = Fun<1, 1>;
+using twodFun_T = Fun<2, 2>;
+using threedFun_T = Fun<3, 3>;
 using scalarOnedFun_T = ScalarFun<1>;
 using scalarTwodFun_T = ScalarFun<2>;
 using scalarThreedFun_T = ScalarFun<3>;
 
 // ----------------------------------------------------------------------------
-template <class T> struct dependent_false: std::false_type {};
+template <class T>
+struct dependent_false: std::false_type
+{};
 
 template <class T>
 static constexpr bool dependent_false_v = dependent_false<T>::value;
@@ -244,38 +256,34 @@ static constexpr bool dependent_false_v = dependent_false<T>::value;
 template <class Tup, class Func, std::size_t... Is>
 constexpr void static_for_impl(Tup && t, Func && f, std::index_sequence<Is...>)
 {
-  ( f(std::integral_constant<std::size_t, Is>{}, std::get<Is>(t)),... );
+  (f(std::integral_constant<std::size_t, Is>{}, std::get<Is>(t)), ...);
 }
 
 template <class Tup, class Func>
 constexpr void static_for(Tup & t, Func && f)
 {
   static_for_impl(
-        t,
-        std::forward<Func>(f),
-        std::make_index_sequence<std::tuple_size_v<std::decay_t<Tup>>>{});
+      t,
+      std::forward<Func>(f),
+      std::make_index_sequence<std::tuple_size_v<std::decay_t<Tup>>>{});
 }
 
 // ----------------------------------------------------------------------------
 static constexpr int ERROR_GMSH = 1;
 
 // ----------------------------------------------------------------------------
-template<class T>
+template <class T>
 inline constexpr T pow(T const & base, unsigned const exponent)
 {
-  return exponent == 0 ? 1 : base * pow(base, exponent-1);
+  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
 }
 
 // ----------------------------------------------------------------------------
 struct ParameterDict: public YAML::Node
 {
-  ParameterDict():
-    YAML::Node{}
-  {}
+  ParameterDict(): YAML::Node{} {}
 
-  ParameterDict(YAML::Node const & n):
-    YAML::Node{n}
-  {}
+  ParameterDict(YAML::Node const & n): YAML::Node{n} {}
 
   bool validate(std::vector<std::string> const & requiredPars)
   {
@@ -292,10 +300,13 @@ struct ParameterDict: public YAML::Node
   }
 };
 
-namespace YAML {
-template<>
-struct convert<Vec3> {
-  static Node encode(const Vec3& rhs) {
+namespace YAML
+{
+template <>
+struct convert<Vec3>
+{
+  static Node encode(const Vec3 & rhs)
+  {
     Node node;
     node.push_back(rhs[0]);
     node.push_back(rhs[1]);
@@ -303,8 +314,10 @@ struct convert<Vec3> {
     return node;
   }
 
-  static bool decode(const Node& node, Vec3& rhs) {
-    if(!node.IsSequence() || node.size() != 3) {
+  static bool decode(const Node & node, Vec3 & rhs)
+  {
+    if (!node.IsSequence() || node.size() != 3)
+    {
       return false;
     }
 
@@ -314,7 +327,7 @@ struct convert<Vec3> {
     return true;
   }
 };
-}
+} // namespace YAML
 
 // ----------------------------------------------------------------------------
 inline bool checkError(
@@ -327,21 +340,20 @@ inline bool checkError(
   auto const prec = -std::log10(toll);
 
   bool check = true;
-  for (uint i=0; i<error.size(); ++i)
+  for (uint i = 0; i < error.size(); ++i)
   {
     check = check && std::fabs(error[i] - ref[i]) < toll && !std::isnan(error[i]);
   }
   if (!check)
   {
     std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    std::cerr << "ERROR" << std::string(prec + 2, ' ') << "REF" << std::string(prec + 4, ' ') <<  "DIFF" << std::endl;
-    for (uint i=0; i<error.size(); ++i)
+    std::cerr << "ERROR" << std::string(prec + 2, ' ') << "REF"
+              << std::string(prec + 4, ' ') << "DIFF" << std::endl;
+    for (uint i = 0; i < error.size(); ++i)
     {
-      std::cerr << std::scientific << std::setprecision(prec)
-                << error[i] << " " << ref[i] << " "
-                << std::fabs(error[i] - ref[i]) << std::endl;
+      std::cerr << std::scientific << std::setprecision(prec) << error[i] << " "
+                << ref[i] << " " << std::fabs(error[i] - ref[i]) << std::endl;
     }
-
   }
   return !check;
 }

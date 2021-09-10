@@ -1,26 +1,29 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
-#include "timer.hpp"
 #include "fv.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
-  using FESpaceP1_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T, 1>::RefFE_T,
-                              LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using FESpaceP1_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
   // explicit finite volume upwind
-  using FESpaceP0_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T, 0>::RefFE_T,
-                              LagrangeFE<Elem_T, 0>::RecommendedQR>;
+  using FESpaceP0_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T, 0>::RecommendedQR>;
   // velocity field
   using FESpaceVel_T = FESpaceP1_T;
 
@@ -45,11 +48,11 @@ int main(int argc, char* argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   uint const numElems = config["n"].as<uint>();
   buildHyperCube(
-        *mesh,
-        Vec3{0.0, 0.0, 0.0},
-        Vec3{1.0, 0.0, 0.0},
-        {numElems, 0, 0},
-        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
+      *mesh,
+      Vec3{0.0, 0.0, 0.0},
+      Vec3{1.0, 0.0, 0.0},
+      {numElems, 0, 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
   // auto const r = 1. / 1.1;
   // auto const starting = (1. - r) / (1. - pow(r, numElems));
   // auto counter = 0;
@@ -66,7 +69,7 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bcs");
-  auto const one = [](Vec3 const & ){return 1.;};
+  auto const one = [](Vec3 const &) { return 1.; };
   auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
   bcLeftP1 << one;
   auto const bcsP1 = std::make_tuple(bcLeftP1);
@@ -88,16 +91,17 @@ int main(int argc, char* argv[])
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;
   AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
-  AssemblyScalarMass timeDer(1./dt, feSpaceP1);
+  AssemblyScalarMass timeDer(1. / dt, feSpaceP1);
   Vec concP1Old(feSpaceP1.dof.size);
-  AssemblyProjection timeDerRhs(1./dt, concP1Old, feSpaceP1);
+  AssemblyProjection timeDerRhs(1. / dt, concP1Old, feSpaceP1);
 
   FEVar concP1{"conc", feSpaceP1};
   auto const threshold = config["threshold"].as<double>();
-  scalarFun_T ic = [threshold] (Vec3 const& p)
+  scalarFun_T ic = [threshold](Vec3 const & p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-    if (p(0) < threshold) return 1.;
+    if (p(0) < threshold)
+      return 1.;
     return 0.;
   };
   concP1 << ic;
@@ -120,9 +124,10 @@ int main(int argc, char* argv[])
   auto const lhs = std::tuple{timeDer, advection};
   auto const rhs = std::tuple{timeDerRhs};
 
-  auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
+  auto const ntime =
+      static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
@@ -167,8 +172,11 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(one, feSpaceP0, oneFieldP0);
 
   double errorNormP1 = (concP1.data - oneFieldP1).norm();
-  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1 << std::endl;
+  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1
+            << std::endl;
   double errorNormP0 = (concP0.data - oneFieldP0).norm();
-  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0 << std::endl;
-  return checkError({errorNormP1, errorNormP0}, {0.01153555695665251, 0.0003358552892295136});
+  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0
+            << std::endl;
+  return checkError(
+      {errorNormP1, errorNormP0}, {0.01153555695665251, 0.0003358552892295136});
 }

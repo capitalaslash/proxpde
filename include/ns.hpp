@@ -1,13 +1,14 @@
 #pragma once
 
 #include "def.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
+
 #include "bc.hpp"
 #include "builder.hpp"
-#include "var.hpp"
-#include "iomanager.hpp"
+#include "fe.hpp"
+#include "fespace.hpp"
 #include "feutils.hpp"
+#include "iomanager.hpp"
+#include "var.hpp"
 
 // #include <amgcl/backend/eigen.hpp>
 // #include <amgcl/make_solver.hpp>
@@ -44,10 +45,7 @@ struct NSParameters
   // long const dummy = 0;
 };
 
-template <typename FESpaceVel,
-          typename FESpaceP,
-          typename BCSVel,
-          typename BCSP>
+template <typename FESpaceVel, typename FESpaceP, typename BCSVel, typename BCSP>
 struct NSSolverMonolithic
 {
   using FESpaceVel_T = FESpaceVel;
@@ -107,20 +105,20 @@ struct NSSolverMonolithic
       BCSVel const & bcsVV,
       BCSP const & bcsPP,
       NSParameters const & par):
-    feSpaceVel{feVel},
-    feSpaceP{feP},
-    bcsVel{bcsVV},
-    bcsP{bcsPP},
-    parameters{par},
-    builder{feSpaceVel.dof.size * dim + feSpaceP.dof.size},
-    sol{"vel", feSpaceVel.dof.size * dim + feSpaceP.dof.size},
-    p{"p", feSpaceP.dof.size},
-    velOld{feSpaceVel.dof.size * dim},
-    assemblyRhs{1. / par.dt, velOld, feSpaceVel},
-    assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
-    // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0),
-    ioVel{feSpaceVel, par.outputDir / "vel"},
-    ioP{feSpaceP, par.outputDir / "p"}
+      feSpaceVel{feVel},
+      feSpaceP{feP},
+      bcsVel{bcsVV},
+      bcsP{bcsPP},
+      parameters{par},
+      builder{feSpaceVel.dof.size * dim + feSpaceP.dof.size},
+      sol{"vel", feSpaceVel.dof.size * dim + feSpaceP.dof.size},
+      p{"p", feSpaceP.dof.size},
+      velOld{feSpaceVel.dof.size * dim},
+      assemblyRhs{1. / par.dt, velOld, feSpaceVel},
+      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
+      // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0),
+      ioVel{feSpaceVel, par.outputDir / "vel"},
+      ioP{feSpaceP, par.outputDir / "p"}
   {
     // // set up size and position of pressure dofs
     // std::fill(pMask.begin() + feSpaceVel.dof.size * dim, pMask.end(), 1);
@@ -133,9 +131,11 @@ struct NSSolverMonolithic
   void init()
   {
     // TODO: assert that this comes after setting up bcs
-    builder.buildLhs(std::tuple{
-                       AssemblyScalarMass{1. / parameters.dt, feSpaceVel},
-                       AssemblyTensorStiffness{parameters.nu, feSpaceVel}}, bcsVel);
+    builder.buildLhs(
+        std::tuple{
+            AssemblyScalarMass{1. / parameters.dt, feSpaceVel},
+            AssemblyTensorStiffness{parameters.nu, feSpaceVel}},
+        bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
     builder.buildLhs(std::tuple{AssemblyScalarMass{0., feSpaceP}}, bcsP);
@@ -207,7 +207,6 @@ struct NSSolverMonolithic
     // Eigen::saveMarketVector(pm, "pm.m");
     // abort();
 
-
     // SchurSolver solve(builder.A, solverParams);
     // auto [numIter, res] = solve(builder.b, sol.data);
     // std::cout << "iter: " << numIter << ", res: " << res << std::endl;
@@ -215,7 +214,7 @@ struct NSSolverMonolithic
     sol.data = solver.solve(builder.b);
   }
 
-  void ic(std::function<FVec<dim> (Vec3 const &)> const & f)
+  void ic(std::function<FVec<dim>(Vec3 const &)> const & f)
   {
     interpolateAnalyticFunction(f, feSpaceVel, sol.data);
     velOld = sol.data;
@@ -224,7 +223,7 @@ struct NSSolverMonolithic
   void print(double const time = 0.0)
   {
     ioVel.print({sol}, time);
-    p.data = sol.data.block(feSpaceVel.dof.size*dim, 0, feSpaceP.dof.size, 1);
+    p.data = sol.data.block(feSpaceVel.dof.size * dim, 0, feSpaceP.dof.size, 1);
     ioP.print({p}, time);
   }
 
@@ -248,20 +247,23 @@ struct NSSolverMonolithic
   IOManager<FESpaceP_T> ioP;
 };
 
-template <typename FESpaceU,
-          typename FESpaceP,
-          typename BCSU,
-          typename BCSV,
-          typename BCSP>
+template <
+    typename FESpaceU,
+    typename FESpaceP,
+    typename BCSU,
+    typename BCSV,
+    typename BCSP>
 struct NSSolverSplit2D
 {
   using FESpaceU_T = FESpaceU;
   using FESpaceP_T = FESpaceP;
   static int constexpr dim = FESpaceU_T::Mesh_T::Elem_T::dim;
   using Elem_T = typename FESpaceU_T::Mesh_T::Elem_T;
-  using FESpaceVel_T = FESpace<typename FESpaceU_T::Mesh_T,
-                               typename FESpaceU_T::RefFE_T,
-                               typename FESpaceU_T::QR_T, dim>;
+  using FESpaceVel_T = FESpace<
+      typename FESpaceU_T::Mesh_T,
+      typename FESpaceU_T::RefFE_T,
+      typename FESpaceU_T::QR_T,
+      dim>;
   using BuilderVel_T = Builder<StorageType::RowMajor>;
   using BuilderP_T = Builder<StorageType::ClmMajor>;
   // using Backend = amgcl::backend::eigen<double>;
@@ -285,44 +287,44 @@ struct NSSolverSplit2D
       BCSV const & bcsVV,
       BCSP const & bcsPP,
       NSParameters const & par):
-    feSpaceU{feU},
-    feSpaceP{feP},
-    feSpaceVel{feU.mesh},
-    bcsU{bcsUU},
-    bcsV{bcsVV},
-    bcsP{bcsPP},
-    parameters{par},
-    builderUStar{feSpaceU.dof.size},
-    builderVStar{feSpaceU.dof.size},
-    builderP{feSpaceP.dof.size},
-    builderU{feSpaceU.dof.size},
-    builderV{feSpaceU.dof.size},
-    uStar{"uStar", feSpaceU.dof.size},
-    vStar{"vStar", feSpaceU.dof.size},
-    p{"p", feSpaceP.dof.size},
-    u{"u", feSpaceU.dof.size},
-    v{"v", feSpaceU.dof.size},
-    velStar{feSpaceU.dof.size * dim},
-    pOld{feSpaceP.dof.size},
-    dp{feSpaceP.dof.size},
-    vel{feSpaceU.dof.size * dim},
-    assemblyMassUStar{1. / par.dt, feSpaceU},
-    assemblyMassVStar{1. / par.dt, feSpaceU},
-    assemblyStiffnessUStar{par.nu, feSpaceU},
-    assemblyStiffnessVStar{par.nu, feSpaceU},
-    assemblyURhs{1. / par.dt, u.data, feSpaceU},
-    assemblyVRhs{1. / par.dt, v.data, feSpaceU},
-    assemblyAdvectionU{1.0, vel, feSpaceVel, feSpaceU},
-    assemblyAdvectionV{1.0, vel, feSpaceVel, feSpaceU},
-    assemblyPOldU{1.0, pOld, feSpaceP, feSpaceU, {0}},
-    assemblyPOldV{1.0, pOld, feSpaceP, feSpaceU, {1}},
-    assemblyDivVelStar{-1.0, velStar, feSpaceVel, feSpaceP},
-    assemblyUStarRhs{1.0, uStar.data, feSpaceU},
-    assemblyVStarRhs{1.0, vStar.data, feSpaceU},
-    assemblyGradPRhsU{-par.dt, dp, feSpaceP, feSpaceU, {0}},
-    assemblyGradPRhsV{-par.dt, dp, feSpaceP, feSpaceU, {1}},
-    ioVel{feSpaceU, par.outputDir / "vel"},
-    ioP{feSpaceP, par.outputDir / "p"}
+      feSpaceU{feU},
+      feSpaceP{feP},
+      feSpaceVel{feU.mesh},
+      bcsU{bcsUU},
+      bcsV{bcsVV},
+      bcsP{bcsPP},
+      parameters{par},
+      builderUStar{feSpaceU.dof.size},
+      builderVStar{feSpaceU.dof.size},
+      builderP{feSpaceP.dof.size},
+      builderU{feSpaceU.dof.size},
+      builderV{feSpaceU.dof.size},
+      uStar{"uStar", feSpaceU.dof.size},
+      vStar{"vStar", feSpaceU.dof.size},
+      p{"p", feSpaceP.dof.size},
+      u{"u", feSpaceU.dof.size},
+      v{"v", feSpaceU.dof.size},
+      velStar{feSpaceU.dof.size * dim},
+      pOld{feSpaceP.dof.size},
+      dp{feSpaceP.dof.size},
+      vel{feSpaceU.dof.size * dim},
+      assemblyMassUStar{1. / par.dt, feSpaceU},
+      assemblyMassVStar{1. / par.dt, feSpaceU},
+      assemblyStiffnessUStar{par.nu, feSpaceU},
+      assemblyStiffnessVStar{par.nu, feSpaceU},
+      assemblyURhs{1. / par.dt, u.data, feSpaceU},
+      assemblyVRhs{1. / par.dt, v.data, feSpaceU},
+      assemblyAdvectionU{1.0, vel, feSpaceVel, feSpaceU},
+      assemblyAdvectionV{1.0, vel, feSpaceVel, feSpaceU},
+      assemblyPOldU{1.0, pOld, feSpaceP, feSpaceU, {0}},
+      assemblyPOldV{1.0, pOld, feSpaceP, feSpaceU, {1}},
+      assemblyDivVelStar{-1.0, velStar, feSpaceVel, feSpaceP},
+      assemblyUStarRhs{1.0, uStar.data, feSpaceU},
+      assemblyVStarRhs{1.0, vStar.data, feSpaceU},
+      assemblyGradPRhsU{-par.dt, dp, feSpaceP, feSpaceU, {0}},
+      assemblyGradPRhsV{-par.dt, dp, feSpaceP, feSpaceU, {1}},
+      ioVel{feSpaceU, par.outputDir / "vel"},
+      ioP{feSpaceP, par.outputDir / "p"}
   {}
 
   void init()
@@ -346,11 +348,15 @@ struct NSSolverSplit2D
     setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
     pOld += dp;
     builderUStar.clear();
-    builderUStar.buildLhs(std::tuple{assemblyMassUStar, assemblyAdvectionU, assemblyStiffnessUStar}, bcsU);
+    builderUStar.buildLhs(
+        std::tuple{assemblyMassUStar, assemblyAdvectionU, assemblyStiffnessUStar},
+        bcsU);
     builderUStar.buildRhs(std::tuple{assemblyURhs, assemblyPOldU}, bcsU);
     builderUStar.closeMatrix();
     builderVStar.clear();
-    builderVStar.buildLhs(std::tuple{assemblyMassVStar, assemblyAdvectionV, assemblyStiffnessVStar}, bcsV);
+    builderVStar.buildLhs(
+        std::tuple{assemblyMassVStar, assemblyAdvectionV, assemblyStiffnessVStar},
+        bcsV);
     builderVStar.buildRhs(std::tuple{assemblyVRhs, assemblyPOldV}, bcsV);
     builderVStar.closeMatrix();
   }
@@ -359,10 +365,10 @@ struct NSSolverSplit2D
   {
     // Solver solveUStar(builderUStar.A);
     // auto const [numIterUStar, resUStar] = solveUStar(builderUStar.b, uStar.data);
-    // std::cout << "ustar - iter: " << numIterUStar << ", res: " << resUStar << std::endl;
-    // Solver solveVStar(builderVStar.A);
-    // auto const [numIterVStar, resVStar] = solveVStar(builderVStar.b, vStar.data);
-    // std::cout << "vstar - iter: " << numIterVStar << ", res: " << resVStar << std::endl;
+    // std::cout << "ustar - iter: " << numIterUStar << ", res: " << resUStar <<
+    // std::endl; Solver solveVStar(builderVStar.A); auto const [numIterVStar, resVStar]
+    // = solveVStar(builderVStar.b, vStar.data); std::cout << "vstar - iter: " <<
+    // numIterVStar << ", res: " << resVStar << std::endl;
     solverUStar.compute(builderUStar.A);
     uStar.data = solverUStar.solve(builderUStar.b);
     solverVStar.compute(builderVStar.A);
@@ -398,11 +404,13 @@ struct NSSolverSplit2D
     v.data = solverU.solve(builderV.b);
   }
 
-  void ic(std::function<FVec<dim> (Vec3 const &)> const & f)
+  void ic(std::function<FVec<dim>(Vec3 const &)> const & f)
   {
-    interpolateAnalyticFunction([&f](Vec3 const & p) { return f(p)[0]; }, feSpaceU, u.data);
+    interpolateAnalyticFunction(
+        [&f](Vec3 const & p) { return f(p)[0]; }, feSpaceU, u.data);
     uStar.data = u.data;
-    interpolateAnalyticFunction([&f](Vec3 const & p) { return f(p)[1]; }, feSpaceU, v.data);
+    interpolateAnalyticFunction(
+        [&f](Vec3 const & p) { return f(p)[1]; }, feSpaceU, v.data);
     vStar.data = v.data;
     dp = Vec::Zero(feSpaceP.dof.size);
     pOld = Vec::Zero(feSpaceP.dof.size);
@@ -466,8 +474,10 @@ struct NSSolverSplit2D
 
 template <typename FESpaceWSS, typename FESpaceVel>
 void computeElemWSS(
-    Vec & wss, FESpaceWSS const & feSpaceWSS,
-    Vec const & vel, FESpaceVel const & feSpaceVel,
+    Vec & wss,
+    FESpaceWSS const & feSpaceWSS,
+    Vec const & vel,
+    FESpaceVel const & feSpaceVel,
     std::unordered_set<marker_T> const & markers,
     double const nu)
 {
@@ -482,11 +492,12 @@ void computeElemWSS(
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();
-      Vec3 const tangent = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      Vec3 const tangent =
+          (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
       auto elem = facet.facingElem[0].ptr;
       auto const id = feSpaceWSS.dof.getId(elem->id);
       velFE.reinit(*elem);
-      for(uint q=0; q<FESpaceVel::QR_T::numPts; ++q)
+      for (uint q = 0; q < FESpaceVel::QR_T::numPts; ++q)
       {
         FMat<3, 3> tau = FMat<3, 3>::Zero();
         FMat<3, dim> const grad = velFE.evaluateGrad(q);
@@ -501,8 +512,10 @@ void computeElemWSS(
 
 template <typename FESpaceWSS, typename FESpaceVel>
 void computeFEWSS(
-    Vec & wss, FESpaceWSS const & feSpaceWSS,
-    Vec const & vel, FESpaceVel const & feSpaceVel,
+    Vec & wss,
+    FESpaceWSS const & feSpaceWSS,
+    Vec const & vel,
+    FESpaceVel const & feSpaceVel,
     std::unordered_set<marker_T> const & markers,
     double const nu)
 {
@@ -510,10 +523,11 @@ void computeFEWSS(
   using FacetFEVel_T = typename FESpaceVel::RefFE_T::FacetFE_T;
   using FacetQR_T = SideQR_T<typename FESpaceVel::QR_T>;
   using FacetCurFEVel_T = CurFE<FacetFEVel_T, FacetQR_T>;
-  using FacetFESpaceVel_T =
-    FESpace<typename FESpaceVel::Mesh_T,
-            typename FESpaceVel::RefFE_T,
-            SideGaussQR<typename FESpaceVel::Mesh_T::Elem_T, FacetQR_T::numPts>, dim>;
+  using FacetFESpaceVel_T = FESpace<
+      typename FESpaceVel::Mesh_T,
+      typename FESpaceVel::RefFE_T,
+      SideGaussQR<typename FESpaceVel::Mesh_T::Elem_T, FacetQR_T::numPts>,
+      dim>;
 
   wss = Vec::Zero(feSpaceWSS.dof.size);
   FacetCurFEVel_T facetCurFEVel;
@@ -531,18 +545,20 @@ void computeFEWSS(
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();
-      Vec3 const tangent = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      Vec3 const tangent =
+          (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
       facetCurFEVel.reinit(facet);
       auto elem = facet.facingElem[0].ptr;
       auto const side = facet.facingElem[0].side;
       auto const id = feSpaceWSS.dof.getId(elem->id);
       gradFacet.reinit(*elem);
-      for(uint q=0; q<FacetQR_T::numPts; ++q)
+      for (uint q = 0; q < FacetQR_T::numPts; ++q)
       {
-        FMat<1, dim*dim> tauVec = nu * gradFacet.evaluate(side * FacetQR_T::numPts + q);
+        FMat<1, dim * dim> tauVec =
+            nu * gradFacet.evaluate(side * FacetQR_T::numPts + q);
         FMat<3, 3> tau = FMat<3, 3>::Zero();
-        for (uint i=0; i<dim; ++i)
-          for (uint j=0; j<dim; ++j)
+        for (uint i = 0; i < dim; ++i)
+          for (uint j = 0; j < dim; ++j)
           {
             tau(i, j) = tauVec[j + FESpaceVel::dim * i];
           }

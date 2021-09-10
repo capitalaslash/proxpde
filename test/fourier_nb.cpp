@@ -1,4 +1,5 @@
 #include "def.hpp"
+
 #include "assembly.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
@@ -10,12 +11,14 @@
 
 using Elem_T = Line;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T,1>::RefFE_T,
-                          LagrangeFE<Elem_T,1>::RecommendedQR>;
-using RecFESpace_T = FESpace<Mesh_T,
-                             LagrangeFE<Elem_T, 1>::RefFE_T,
-                             LagrangeFE<Elem_T, 1>::ReconstructionQR>;
+using FESpace_T = FESpace<
+    Mesh_T,
+    LagrangeFE<Elem_T, 1>::RefFE_T,
+    LagrangeFE<Elem_T, 1>::RecommendedQR>;
+using RecFESpace_T = FESpace<
+    Mesh_T,
+    LagrangeFE<Elem_T, 1>::RefFE_T,
+    LagrangeFE<Elem_T, 1>::ReconstructionQR>;
 
 int test(YAML::Node const & config)
 {
@@ -28,20 +31,11 @@ int test(YAML::Node const & config)
             << "  - hConv = " << hConv << "\n"
             << "  - tempA = " << tempA << std::endl;
 
-  const scalarFun_T rhs = [] (Vec3 const &)
-  {
-    return 2.;
-  };
+  const scalarFun_T rhs = [](Vec3 const &) { return 2.; };
 
-  const scalarFun_T exactSol = [] (Vec3 const & p)
-  {
-    return 4. - p(0) * p(0);
-  };
+  const scalarFun_T exactSol = [](Vec3 const & p) { return 4. - p(0) * p(0); };
 
-  const scalarFun_T ic = [tempA] (Vec3 const & /*p*/)
-  {
-    return tempA;
-  };
+  const scalarFun_T ic = [tempA](Vec3 const & /*p*/) { return tempA; };
 
   uint const numElems = config["n"].as<uint>();
 
@@ -81,24 +75,16 @@ int test(YAML::Node const & config)
   // hConv -> 0: \nabla u = 0, Neumann homogeneous
   // hConv -> inf: u = b / a = tempA, Dirichlet
   // the matrix block and the rhs block must be added separatly
-  AssemblyBCMixed mixBC{
-    [hConv] (Vec3 const &) { return hConv; },
-    side::RIGHT,
-    feSpace};
+  AssemblyBCMixed mixBC{[hConv](Vec3 const &) { return hConv; }, side::RIGHT, feSpace};
   AssemblyBCNatural natBC{
-    [hConv, tempA] (Vec3 const &) { return hConv * tempA;},
-    side::RIGHT,
-    feSpace
-  };
+      [hConv, tempA](Vec3 const &) { return hConv * tempA; }, side::RIGHT, feSpace};
 
   Var flux{"flux", size};
 
   Builder builder{size};
   double time = 0.;
   IOManager io{
-    feSpace,
-    fs::path{"output_fourier"} / config["filename"].as<std::string>()
-  };
+      feSpace, fs::path{"output_fourier"} / config["filename"].as<std::string>()};
   io.print({sol, flux, exact});
   for (uint itime = 0; itime < steps; ++itime)
   {
@@ -126,9 +112,11 @@ int test(YAML::Node const & config)
     t.start("gradient");
     reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
     t.stop();
-    std::cout << "u|1 = " << sol.data[size-1] << ", exact = " << exact.data[size-1] << std::endl;
-    std::cout << "du / dx |1 = " << flux.data[size-1] << std::endl;
-    std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size-1] - tempA) << std::endl;
+    std::cout << "u|1 = " << sol.data[size - 1] << ", exact = " << exact.data[size - 1]
+              << std::endl;
+    std::cout << "du / dx |1 = " << flux.data[size - 1] << std::endl;
+    std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size - 1] - tempA)
+              << std::endl;
 
     t.start("print");
     io.print({sol, flux, exact}, time);
@@ -141,7 +129,8 @@ int test(YAML::Node const & config)
   error.data = sol.data - exact.data;
 
   auto const errorNorm = error.data.norm();
-  std::cout << "the norm of the error is "<< std::setprecision(16) << errorNorm << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm
+            << std::endl;
   return checkError({errorNorm}, {config["expected_error"].as<double>()});
 }
 

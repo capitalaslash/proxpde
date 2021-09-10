@@ -1,17 +1,18 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 
 using Elem_T = Hexahedron;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T, RefHexahedronQ2, GaussQR<Hexahedron,1>>;
+using FESpace_T = FESpace<Mesh_T, RefHexahedronQ2, GaussQR<Hexahedron, 1>>;
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
-  array<uint,3> numElems = {{1, 1, 1}};
+  array<uint, 3> numElems = {{1, 1, 1}};
   if (argc == 4)
   {
     numElems[0] = static_cast<uint>(std::stoi(argv[1]));
@@ -26,7 +27,8 @@ int main(int argc, char* argv[])
 
   Var u{"u"};
 
-  interpolateAnalyticFunction([](Vec3 const & p){ return p(0)*p(0); }, feSpace, u.data);
+  interpolateAnalyticFunction(
+      [](Vec3 const & p) { return p(0) * p(0); }, feSpace, u.data);
 
   IOManager io{feSpace, "output_io/u"};
   io.print({u});

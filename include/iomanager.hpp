@@ -1,14 +1,15 @@
 #pragma once
 
 #include "def.hpp"
-#include "xdmf_traits.hpp"
+
 #include "fe.hpp"
 #include "var.hpp"
+#include "xdmf_traits.hpp"
 
 #include <experimental/filesystem>
 
-#include <pugixml.hpp>
 #include <hdf5.h>
+#include <pugixml.hpp>
 
 namespace fs = std::experimental::filesystem;
 
@@ -21,22 +22,23 @@ std::string join(std::vector<T> const & v, std::string_view const divider = " ")
     buf += std::to_string(i);
     buf += divider;
   }
-  return buf.substr(0, buf.size()-1);
+  return buf.substr(0, buf.size() - 1);
 }
 
 template <typename RefFE>
 class XDMFDoc
 {
 public:
-  explicit XDMFDoc(fs::path const fp,
-                   std::string_view s = "",
-                   std::string_view meshS = "mesh",
-                   std::string_view dataS = "",
-                   XDMFGridType gridType = XDMFGridType::SINGLE):
-    filePath(std::move(fp)),
-    suffix(s),
-    meshSuffix(meshS),
-    dataSuffix(dataS)
+  explicit XDMFDoc(
+      fs::path const fp,
+      std::string_view s = "",
+      std::string_view meshS = "mesh",
+      std::string_view dataS = "",
+      XDMFGridType gridType = XDMFGridType::SINGLE):
+      filePath(std::move(fp)),
+      suffix(s),
+      meshSuffix(meshS),
+      dataSuffix(dataS)
   {
     if (!suffix.empty())
     {
@@ -87,37 +89,33 @@ public:
     timeNode.append_attribute("Value") = time;
   }
 
-  void setTopology(uint const numElems,
-                   std::string_view const connName = "connectivity")
+  void
+  setTopology(uint const numElems, std::string_view const connName = "connectivity")
   {
     auto topoNode = gridNode.append_child("Topology");
     topoNode.append_attribute("TopologyType") = XDMFTraits<RefFE>::shapeName;
     topoNode.append_attribute("Dimensions") = numElems;
 
-    auto const buf = filePath.filename().string() + meshSuffix + ".h5:/" + connName.data();
+    auto const buf =
+        filePath.filename().string() + meshSuffix + ".h5:/" + connName.data();
     createDataItem(
-          topoNode,
-          {numElems, RefFE::numGeoFuns},
-          XDMFNumberType::INT,
-          8,
-          XDMFFormat::HDF,
-          buf);
+        topoNode,
+        {numElems, RefFE::numGeoFuns},
+        XDMFNumberType::INT,
+        8,
+        XDMFFormat::HDF,
+        buf);
   }
 
-  void setGeometry(uint const mapSize,
-                   std::string_view const coordName = "coords")
+  void setGeometry(uint const mapSize, std::string_view const coordName = "coords")
   {
     auto geoNode = gridNode.append_child("Geometry");
     geoNode.append_attribute("GeometryType") = "XYZ";
 
-    auto const buf = filePath.filename().string() + meshSuffix + ".h5:/" + coordName.data();
+    auto const buf =
+        filePath.filename().string() + meshSuffix + ".h5:/" + coordName.data();
     createDataItem(
-            geoNode,
-            {mapSize, 3},
-            XDMFNumberType::FLOAT,
-            8,
-            XDMFFormat::HDF,
-            buf);
+        geoNode, {mapSize, 3}, XDMFNumberType::FLOAT, 8, XDMFFormat::HDF, buf);
   }
 
   void setVar(XDMFVar const & var)
@@ -131,12 +129,7 @@ public:
     auto const buf = filePath.filename().string() + dataSuffix + ".h5:/" + var.name;
     // auto const buf = filepath.filename().string() + ".time.h5:/" + name + "." + iter;
     createDataItem(
-          varNode,
-          {var.size, 1},
-          XDMFNumberType::FLOAT,
-          8,
-          XDMFFormat::HDF,
-          buf);
+        varNode, {var.size, 1}, XDMFNumberType::FLOAT, 8, XDMFFormat::HDF, buf);
   }
 
   void setTimeSeries(std::vector<std::pair<uint, double>> const & timeSeries)
@@ -147,29 +140,29 @@ public:
       timesStr += std::to_string(step.second) + " ";
       auto stepNode = gridNode.append_child("xi:include");
       stepNode.append_attribute("href") =
-          (filePath.filename().string() + "." + std::to_string(step.first) + ".xmf").data();
+          (filePath.filename().string() + "." + std::to_string(step.first) + ".xmf")
+              .data();
       stepNode.append_attribute("xpointer") = "element(/1/1/1)";
     }
     auto timeNode = gridNode.append_child("Time");
     timeNode.append_attribute("TimeType") = "List";
     createDataItem(
-          timeNode,
-          {1, timeSeries.size()},
-          XDMFNumberType::FLOAT,
-          8,
-          XDMFFormat::INLINE,
-          timesStr
-    );
+        timeNode,
+        {1, timeSeries.size()},
+        XDMFNumberType::FLOAT,
+        8,
+        XDMFFormat::INLINE,
+        timesStr);
   }
 
 private:
   pugi::xml_node createDataItem(
-          pugi::xml_node & parent,
-          std::vector<ulong> const & dims,
-          XDMFNumberType const type,
-          uint const precision,
-          XDMFFormat const format,
-          std::string const & content)
+      pugi::xml_node & parent,
+      std::vector<ulong> const & dims,
+      XDMFNumberType const type,
+      uint const precision,
+      XDMFFormat const format,
+      std::string const & content)
   {
     auto node = parent.append_child("DataItem");
     node.append_attribute("Dimensions") = join(dims).c_str();
@@ -188,8 +181,9 @@ private:
   pugi::xml_node gridNode;
 };
 
-template<typename T>
-struct HDF5Var {};
+template <typename T>
+struct HDF5Var
+{};
 
 template <>
 struct HDF5Var<uint>
@@ -214,10 +208,7 @@ enum class HDF5FileMode : int8_t
 class HDF5
 {
 public:
-
-  HDF5(fs::path const fp, HDF5FileMode const mode):
-    filePath(std::move(fp)),
-    status(0)
+  HDF5(fs::path const fp, HDF5FileMode const mode): filePath(std::move(fp)), status(0)
   {
     if (mode == HDF5FileMode::OVERWRITE)
     {
@@ -252,10 +243,16 @@ public:
     hsize_t dimsf[2] = {static_cast<hsize_t>(vec.size()), 1};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
-    dataset = H5Dcreate(fileId, name.data(), H5T_NATIVE_DOUBLE,
-                        dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
-                      H5P_DEFAULT, vec.data());
+    dataset = H5Dcreate(
+        fileId,
+        name.data(),
+        H5T_NATIVE_DOUBLE,
+        dspace,
+        H5P_DEFAULT,
+        H5P_DEFAULT,
+        H5P_DEFAULT);
+    status =
+        H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, vec.data());
     H5Dclose(dataset);
     H5Sclose(dspace);
   }
@@ -263,21 +260,25 @@ public:
   template <typename T, unsigned long I>
   void print(Table<T, I> const & tab, std::string_view const name)
   {
-    hsize_t dimsf[2] = {static_cast<hsize_t>(tab.rows()), static_cast<hsize_t>(tab.cols())};
+    hsize_t dimsf[2] = {
+        static_cast<hsize_t>(tab.rows()), static_cast<hsize_t>(tab.cols())};
     hid_t dspace = H5Screate_simple(2, dimsf, nullptr);
     hid_t dataset;
-    dataset = H5Dcreate(fileId, name.data(), HDF5Var<T>::value,
-                        dspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, HDF5Var<T>::value, H5S_ALL, H5S_ALL,
-                      H5P_DEFAULT, tab.data());
+    dataset = H5Dcreate(
+        fileId,
+        name.data(),
+        HDF5Var<T>::value,
+        dspace,
+        H5P_DEFAULT,
+        H5P_DEFAULT,
+        H5P_DEFAULT);
+    status =
+        H5Dwrite(dataset, HDF5Var<T>::value, H5S_ALL, H5S_ALL, H5P_DEFAULT, tab.data());
     H5Dclose(dataset);
     H5Sclose(dspace);
   }
 
-  ~HDF5()
-  {
-    status = H5Fclose(fileId);
-  }
+  ~HDF5() { status = H5Fclose(fileId); }
 
 protected:
   fs::path filePath;
@@ -295,14 +296,12 @@ struct IOManager
   using Elem_T = typename Mesh_T::Elem_T;
   using Traits_T = XDMFTraits<RefFE_T>;
 
-  IOManager(FESpace_T const & fe,
-            fs::path const fp,
-            uint const it = 0):
-    feSpace{fe},
-    feSpaceScalar{fe.mesh},
-    filePath(std::move(fp)),
-    // h5Time{fs::path{filepath} += ".time.h5"},
-    iter(it)
+  IOManager(FESpace_T const & fe, fs::path const fp, uint const it = 0):
+      feSpace{fe},
+      feSpaceScalar{fe.mesh},
+      filePath(std::move(fp)),
+      // h5Time{fs::path{filepath} += ".time.h5"},
+      iter(it)
   {
     // create subfolder if not saving in the current directory
     if (filePath.parent_path() != fs::path(""))
@@ -318,10 +317,7 @@ struct IOManager
     }
   }
 
-  ~IOManager()
-  {
-    printTimeSeries();
-  }
+  ~IOManager() { printTimeSeries(); }
 
   void print(std::vector<Var> const && data, double const t = 0.0);
 
@@ -342,10 +338,10 @@ protected:
     if constexpr (Traits_T::needsMapping == true)
     {
       Table<DOFid_T, RefFE_T::numGeoFuns> mappedConn(
-            feSpace.mesh.elementList.size(), RefFE_T::numGeoFuns);
-      for (uint i=0; i<feSpace.mesh.elementList.size(); ++i)
+          feSpace.mesh.elementList.size(), RefFE_T::numGeoFuns);
+      for (uint i = 0; i < feSpace.mesh.elementList.size(); ++i)
       {
-        for (uint j=0; j<RefFE_T::numGeoFuns; ++j)
+        for (uint j = 0; j < RefFE_T::numGeoFuns; ++j)
         {
           mappedConn(i, j) = feSpace.dof.geoMap(i, Traits_T::mapping[j]);
         }
@@ -360,7 +356,7 @@ protected:
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: feSpace.mesh.elementList)
     {
-      for (uint p=0; p<RefFE_T::numGeoFuns; ++p)
+      for (uint p = 0; p < RefFE_T::numGeoFuns; ++p)
       {
         coords.row(feSpace.dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
       }
@@ -374,7 +370,8 @@ protected:
     Mesh_T const & mesh = feSpace.mesh;
 
     // we always use linear elements for boundary facets
-    XDMFDoc<typename LagrangeFE<Facet_T, 1>::RefFE_T> doc{filePath, "boundary", "mesh", "mesh"};
+    XDMFDoc<typename LagrangeFE<Facet_T, 1>::RefFE_T> doc{
+        filePath, "boundary", "mesh", "mesh"};
     doc.setTopology(mesh.facetList.size(), "connectivity_bd");
     doc.setGeometry(mesh.pointList.size(), "coords_bd");
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
@@ -385,7 +382,7 @@ protected:
     Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
     for (auto const & f: mesh.facetList)
     {
-      for (uint p=0; p<Facet_T::numPts; ++p)
+      for (uint p = 0; p < Facet_T::numPts; ++p)
       {
         conn(f.id, p) = f.pointList[p]->id;
       }
@@ -434,13 +431,14 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
   doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
-  HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  HDF5 h5Iter{
+      filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
   for (auto const & v: vars)
   {
     // mixed variable vectors can be longer than current fespace
     assert(v.data.size() >= feSpace.dof.size * FESpace_T::dim);
 
-    for (uint d=0; d<FESpace_T::dim; ++d)
+    for (uint d = 0; d < FESpace_T::dim; ++d)
     {
       auto name = v.name;
       if constexpr (FESpace_T::dim > 1)
@@ -492,52 +490,60 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
   doc.setTopology(feSpace.mesh.elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
-  HDF5 h5Iter{filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
-  static_for(vars, [&] (auto const /*i*/, auto const & v)
-  {
-    assert(v.name != "");
-    assert(v.data.size() == feSpace.dof.size * FESpace_T::dim);
-    using Var_T = std::decay_t<decltype(v)>;
-    constexpr uint dim = getDim<Var_T, FESpace>();
-    if constexpr (!std::is_same_v<Var_T, Var>)
-    {
-      // we need only the mesh and reffe to be the same, no need to check the qr
-      static_assert(std::is_same_v<typename Var_T::FESpace_T::Mesh_T, typename FESpace::Mesh_T>);
-      static_assert(std::is_same_v<typename Var_T::FESpace_T::RefFE_T, typename FESpace::RefFE_T>);
-    }
-
-    for (uint d=0; d<dim; ++d)
-    {
-      auto name = v.name;
-      if constexpr (dim > 1)
+  HDF5 h5Iter{
+      filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  static_for(
+      vars,
+      [&](auto const /*i*/, auto const & v)
       {
-        name += "_" + std::to_string(d);
-      }
-
-      doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
-
-      // this works only with Lagrange elements
-      Vec compData{feSpace.dof.size};
-      // TODO: pass data as const &
-      if constexpr (dim > 1)
-      {
-        // TODO: print vector variable as vector xdmf data
-        if constexpr (std::is_same_v<Var_T, Var>)
+        assert(v.name != "");
+        assert(v.data.size() == feSpace.dof.size * FESpace_T::dim);
+        using Var_T = std::decay_t<decltype(v)>;
+        constexpr uint dim = getDim<Var_T, FESpace>();
+        if constexpr (!std::is_same_v<Var_T, Var>)
         {
-          getComponent(compData, feSpaceScalar, v.data, feSpace, d);
+          // we need only the mesh and reffe to be the same, no need to check the
+          // qr
+          static_assert(std::is_same_v<
+                        typename Var_T::FESpace_T::Mesh_T,
+                        typename FESpace::Mesh_T>);
+          static_assert(std::is_same_v<
+                        typename Var_T::FESpace_T::RefFE_T,
+                        typename FESpace::RefFE_T>);
         }
-        else
+
+        for (uint d = 0; d < dim; ++d)
         {
-          getComponent(compData, feSpaceScalar, v.data, v.feSpace, d);
+          auto name = v.name;
+          if constexpr (dim > 1)
+          {
+            name += "_" + std::to_string(d);
+          }
+
+          doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
+
+          // this works only with Lagrange elements
+          Vec compData{feSpace.dof.size};
+          // TODO: pass data as const &
+          if constexpr (dim > 1)
+          {
+            // TODO: print vector variable as vector xdmf data
+            if constexpr (std::is_same_v<Var_T, Var>)
+            {
+              getComponent(compData, feSpaceScalar, v.data, feSpace, d);
+            }
+            else
+            {
+              getComponent(compData, feSpaceScalar, v.data, v.feSpace, d);
+            }
+          }
+          else
+          {
+            compData = v.data;
+          }
+          h5Iter.print(compData, name);
+          // h5Time.print(compdata, name + "." + std::to_string(iter));
         }
-      }
-      else
-      {
-        compData = v.data;
-      }
-      h5Iter.print(compData, name);
-      // h5Time.print(compdata, name + "." + std::to_string(iter));
-    }
-  });
+      });
   iter++;
 }

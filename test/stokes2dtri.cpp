@@ -1,24 +1,25 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
+#include "var.hpp"
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int /*argc*/, char * /*argv*/[])
 {
   using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-  using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
-  using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-  using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
-  using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+  using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   // uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);
@@ -35,15 +36,16 @@ int main(int /*argc*/, char* /*argv*/[])
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);
   auto assembler = make_assembler(feList);
-  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU, feSpaceP));
+  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU,
+  // feSpaceP));
 
-  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
+  auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
+  auto inlet = [](Vec3 const & p) { return Vec2(0., 0.5 * (1. - p(0) * p(0))); };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::TOP, {0}},
-        BCEss{feSpaceVel, side::LEFT, {0}});
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::TOP, {0}},
+      BCEss{feSpaceVel, side::LEFT, {0}});
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
@@ -52,7 +54,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
-  uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
+  uint const numDOFs = dofU * FESpaceVel_T::dim + dofP;
 
   AssemblyTensorStiffness stiffness(1.0, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
@@ -74,16 +76,17 @@ int main(int /*argc*/, char* /*argv*/[])
 
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
-  interpolateAnalyticFunction([](Vec3 const & p){return 1.-p(1);}, feSpaceP, exact.data);
+  interpolateAnalyticFunction(
+      [](Vec3 const & p) { return 1. - p(1); }, feSpaceP, exact.data);
 
   std::cout << sol.data.norm() << std::endl;
 
   Var u{"u", sol.data, 0, dofU};
   Var v{"v", sol.data, dofU, dofU};
-  Var p{"p", sol.data, 2*dofU, dofP};
+  Var p{"p", sol.data, 2 * dofU, dofP};
   Var ue{"ue", exact.data, 0, dofU};
   Var ve{"ve", exact.data, dofU, dofU};
-  Var pe{"pe", exact.data, 2*dofU, dofP};
+  Var pe{"pe", exact.data, 2 * dofU, dofP};
 
   IOManager ioVel{feSpaceVel, "output_stokes2dtri/vel"};
   ioVel.print({sol, exact});

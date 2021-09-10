@@ -1,23 +1,21 @@
 #pragma once
 
 #include "def.hpp"
+
 #include "fespace.hpp"
 
 struct Var
 {
   explicit Var(std::string_view const n, unsigned long const size = 0):
-    name{n},
-    data(size)
+      name{n},
+      data(size)
   {}
 
-  Var(std::string_view const n, Vec const vec):
-    name{n},
-    data(std::move(vec))
-  {}
+  Var(std::string_view const n, Vec const vec): name{n}, data(std::move(vec)) {}
 
   Var(std::string_view const n, Vec const & vec, uint offset, uint size):
-    name{n},
-    data(vec.block(offset,0,size,1))
+      name{n},
+      data(vec.block(offset, 0, size, 1))
   {}
 
   std::string name;
@@ -27,22 +25,19 @@ struct Var
 std::vector<uint> offsetInit(std::vector<uint> blocks)
 {
   std::vector<uint> offsets(blocks.size(), 0U);
-  std::partial_sum(blocks.begin(), blocks.end()-1, offsets.begin()+1);
+  std::partial_sum(blocks.begin(), blocks.end() - 1, offsets.begin() + 1);
   return offsets;
 }
 
 struct BlockVar: public Var
 {
   BlockVar(std::string_view const n, std::vector<uint> const & bs):
-    Var{n, std::accumulate(bs.begin(), bs.end(), 0U)},
-    offsets{offsetInit(bs)},
-    blocks{bs}
+      Var{n, std::accumulate(bs.begin(), bs.end(), 0U)},
+      offsets{offsetInit(bs)},
+      blocks{bs}
   {}
 
-  auto block(uint i)
-  {
-    return this->data.block(offsets[i], 0, blocks[i], 1);
-  }
+  auto block(uint i) { return this->data.block(offsets[i], 0, blocks[i], 1); }
 
   std::vector<uint> const offsets;
   std::vector<uint> const blocks;
@@ -56,16 +51,13 @@ struct FEVar
   using Vec_T = FVec<FESpace_T::physicalDim()>;
 
   FEVar(std::string_view n, FESpace_T const & fe):
-    name(n),
-    feSpace(fe),
-    data(fe.dof.size * FESpace_T::dim)
+      name(n),
+      feSpace(fe),
+      data(fe.dof.size * FESpace_T::dim)
   {}
 
-  explicit FEVar(FESpace_T const & fe):
-    feSpace(fe),
-    data(fe.dof.size * FESpace_T::dim)
+  explicit FEVar(FESpace_T const & fe): feSpace(fe), data(fe.dof.size * FESpace_T::dim)
   {}
-
 
   FEVar<FESpace_T> & operator<<(Fun<FESpace_T::physicalDim(), 3> const & f)
   {
@@ -76,24 +68,21 @@ struct FEVar
   FEVar<FESpace_T> & operator<<(scalarFun_T const & f)
   {
     static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
-    return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
+    return operator<<([f](Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
   FEVar<FESpace_T> & operator<<(Vec_T const & v)
   {
-    return operator<<([&v] (Vec3 const &) { return v; });
+    return operator<<([&v](Vec3 const &) { return v; });
   }
 
   FEVar<FESpace_T> & operator<<(double const & v)
   {
     static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
-    return operator<<([&v] (Vec3 const &) { return Vec1::Constant(v); });
+    return operator<<([&v](Vec3 const &) { return Vec1::Constant(v); });
   }
 
-  double operator[](id_T const id) const
-  {
-    return data[id];
-  }
+  double operator[](id_T const id) const { return data[id]; }
 
   void reinit(GeoElem const & elem)
   {
@@ -103,9 +92,9 @@ struct FEVar
 
   void setLocalData(id_T const elemId)
   {
-    for (uint d=0; d<FESpace_T::dim; ++d)
+    for (uint d = 0; d < FESpace_T::dim; ++d)
     {
-      for (uint n=0; n<FESpace_T::RefFE_T::numFuns; ++n)
+      for (uint n = 0; n < FESpace_T::RefFE_T::numFuns; ++n)
       {
         auto const id = feSpace.dof.getId(elemId, n, d);
         _localData(n, d) = data[id];
@@ -131,7 +120,7 @@ struct FEVar
     for (auto const & elem: feSpace.mesh.elementList)
     {
       this->reinit(elem);
-      for (uint q=0; q<FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
       {
         integral += feSpace.curFE.JxW[q] * this->evaluate(q);
       }
@@ -158,8 +147,8 @@ struct FEVar
   auto evaluateGrad(uint const q) const
   {
     static_assert(
-          family_v<RefFE_T> == FamilyType::LAGRANGE,
-          "gradient is available only for Lagrange elements.");
+        family_v<RefFE_T> == FamilyType::LAGRANGE,
+        "gradient is available only for Lagrange elements.");
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
     return feSpace.curFE.dphi[q].transpose() * _localData;
@@ -169,7 +158,7 @@ struct FEVar
   auto evaluateOnRef(FVec<FESpace_T::RefFE_T::dim> const & p) const
   {
     FVec<FESpace_T::dim> value = FVec<FESpace_T::dim>::Zero();
-    for (uint k=0; k<FESpace_T::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpace_T::RefFE_T::numFuns; ++k)
     {
       value += FESpace_T::RefFE_T::phiFun[k](p) * _localData.row(k);
     }

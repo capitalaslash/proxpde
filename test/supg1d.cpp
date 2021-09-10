@@ -1,13 +1,14 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
-#include "timer.hpp"
 #include "fv.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
 
 // sigma = +1 MS
 // sigma =  0 SUPG
@@ -23,20 +24,19 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
   using Super_T = Diagonal<FESpace>;
   using LMat_T = typename Super_T::LMat_T;
 
-  explicit AssemblyLhsSUPG(double const c,
-                           Vel & u,
-                           FESpace_T & fe,
-                           AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-    Diagonal<FESpace>(fe, cmp),
-    idt(c),
-    vel(u)
+  explicit AssemblyLhsSUPG(
+      double const c,
+      Vel & u,
+      FESpace_T & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>(fe, cmp),
+      idt(c),
+      vel(u)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Vel::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Vel::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
   }
 
   void reinit(GeoElem const & elem) const override
@@ -53,22 +53,20 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace.curFE;
 
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel.evaluate(q));
       double const iVelNorm = 1. / velQPoint.norm();
 
-      FVec<RefFE_T::numFuns> phiSUPG =
-          curFE.phi[q] +
-          0.5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint);
+      FVec<RefFE_T::numFuns> phiSUPG = curFE.phi[q] + 0.5 * curFE.elem->hMin() *
+                                                          iVelNorm *
+                                                          (curFE.dphi[q] * velQPoint);
 
-      for (uint d=0; d<FESpace_T::dim; ++d)
+      for (uint d = 0; d < FESpace_T::dim; ++d)
       {
         Ke.template block<size, size>(d * size, d * size) +=
-            curFE.JxW[q] *
-            phiSUPG *
-            (idt * curFE.phi[q] +
-             curFE.dphi[q] * velQPoint).transpose();
+            curFE.JxW[q] * phiSUPG *
+            (idt * curFE.phi[q] + curFE.dphi[q] * velQPoint).transpose();
       }
     }
   }
@@ -77,36 +75,31 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
   Vel & vel;
 };
 
-template <typename FESpace,
-          typename Rhs,
-          typename Vel>
+template <typename FESpace, typename Rhs, typename Vel>
 struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
   using Super_T = AssemblyVector<FESpace>;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyRhsSUPG(double const c,
-                  Rhs & u,
-                  Vel & v,
-                  FESpace_T & fe,
-                  AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-    AssemblyVector<FESpace_T>(fe, cmp),
-    idt(c),
-    uOld(u),
-    vel(v)
+  AssemblyRhsSUPG(
+      double const c,
+      Rhs & u,
+      Vel & v,
+      FESpace_T & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+      AssemblyVector<FESpace_T>(fe, cmp),
+      idt(c),
+      uOld(u),
+      vel(v)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Rhs::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Rhs::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Vel::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Vel::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
   }
 
   void reinit(GeoElem const & elem) const override
@@ -124,22 +117,20 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace.curFE;
 
-    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const uOldQPoint = uOld.evaluate(q);
       auto const velQPoint = promote<3>(vel.evaluate(q));
       double const iVelNorm = 1. / velQPoint.norm();
 
-      FVec<RefFE_T::numFuns> phiSUPG =
-          curFE.phi[q] +
-          0.5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint);
+      FVec<RefFE_T::numFuns> phiSUPG = curFE.phi[q] + 0.5 * curFE.elem->hMin() *
+                                                          iVelNorm *
+                                                          (curFE.dphi[q] * velQPoint);
 
-      for (uint d=0; d<FESpace_T::dim; ++d)
+      for (uint d = 0; d < FESpace_T::dim; ++d)
       {
-        Fe.template block<size, 1>(d* size, 0) +=
-            curFE.JxW[q] *
-            phiSUPG *
-            (idt * uOldQPoint[d]);
+        Fe.template block<size, 1>(d * size, 0) +=
+            curFE.JxW[q] * phiSUPG * (idt * uOldQPoint[d]);
       }
     }
   }
@@ -149,7 +140,6 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
   Vel & vel;
 };
 
-
 template <typename FESpace, typename Vel>
 struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
 {
@@ -157,22 +147,21 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
   using Super_T = Diagonal<FESpace>;
   using LMat_T = typename Super_T::LMat_T;
 
-  explicit AssemblyLhsSUPGRes(double const c,
-                              Vel & u,
-                              double const e,
-                              FESpace_T & fe,
-                              AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-    Diagonal<FESpace>(fe, cmp),
-    idt(c),
-    vel(u),
-    eps(e)
+  explicit AssemblyLhsSUPGRes(
+      double const c,
+      Vel & u,
+      double const e,
+      FESpace_T & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>(fe, cmp),
+      idt(c),
+      vel(u),
+      eps(e)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Vel::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Vel::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
   }
 
   void reinit(GeoElem const & elem) const override
@@ -189,35 +178,33 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace.curFE;
 
-    for(uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel.evaluate(q));
       double const iVelNorm = 1. / velQPoint.norm();
 
       FVec<RefFE_T::numFuns> phiSUPG =
           .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
-    #ifdef ENABLE_SECONDDERIV
-          + sigma * eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
-                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
-                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
-    #endif
+#ifdef ENABLE_SECONDDERIV
+          + sigma * eps *
+                (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                 curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                 curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(2, 0).col(2))
+#endif
           ;
 
       auto const res =
-          idt * curFE.phi[q] +
-          curFE.dphi[q] * velQPoint
-    #ifdef ENABLE_SECONDDERIV
-          + eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
-                   curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
-                   curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
-    #endif
+          idt * curFE.phi[q] + curFE.dphi[q] * velQPoint
+#ifdef ENABLE_SECONDDERIV
+          + eps * (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                   curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                   curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(2, 0).col(2))
+#endif
           ;
-      for (uint d=0; d<FESpace_T::dim; ++d)
+      for (uint d = 0; d < FESpace_T::dim; ++d)
       {
         Ke.template block<size, size>(d * size, d * size) +=
-            curFE.JxW[q] *
-            phiSUPG *
-            res.transpose();
+            curFE.JxW[q] * phiSUPG * res.transpose();
       }
     }
   }
@@ -227,38 +214,33 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
   double const eps;
 };
 
-template <typename FESpace,
-          typename Rhs,
-          typename Vel>
+template <typename FESpace, typename Rhs, typename Vel>
 struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
   using Super_T = AssemblyVector<FESpace>;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyRhsSUPGRes(double const c,
-                     Rhs & u,
-                     Vel & v,
-                     double const e,
-                     FESpace_T & fe,
-                     AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-    AssemblyVector<FESpace_T>(fe, cmp),
-    idt(c),
-    uOld(u),
-    vel(v),
-    eps(e)
+  AssemblyRhsSUPGRes(
+      double const c,
+      Rhs & u,
+      Vel & v,
+      double const e,
+      FESpace_T & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+      AssemblyVector<FESpace_T>(fe, cmp),
+      idt(c),
+      uOld(u),
+      vel(v),
+      eps(e)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Rhs::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Rhs::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
     static_assert(
-          std::is_same_v<
-          typename FESpace_T::QR_T,
-          typename Vel::FESpace_T::QR_T>,
-          "the two quad rule are not the same");
+        std::is_same_v<typename FESpace_T::QR_T, typename Vel::FESpace_T::QR_T>,
+        "the two quad rule are not the same");
   }
 
   void reinit(GeoElem const & elem) const override
@@ -276,7 +258,7 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace.curFE;
 
-    for (uint q=0; q<CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const uOldQPoint = uOld.evaluate(q);
       auto const velQPoint = promote<3>(vel.evaluate(q));
@@ -284,18 +266,17 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
 
       FVec<RefFE_T::numFuns> phiSUPG =
           .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
-    #ifdef ENABLE_SECONDDERIV
-          + sigma * eps * (curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(0, 0).col(0) +
-                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(1, 0).col(1) +
-                           curFE.d2phi[q].template  block<RefFE_T::numFuns, 3>(2, 0).col(2))
-    #endif
+#ifdef ENABLE_SECONDDERIV
+          + sigma * eps *
+                (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
+                 curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +
+                 curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(2, 0).col(2))
+#endif
           ;
-      for (uint d=0; d<FESpace_T::dim; ++d)
+      for (uint d = 0; d < FESpace_T::dim; ++d)
       {
-        Fe.template block<size, 1>(d* size, 0) +=
-            curFE.JxW[q] *
-            phiSUPG *
-            (idt * uOldQPoint[d]);
+        Fe.template block<size, 1>(d * size, 0) +=
+            curFE.JxW[q] * phiSUPG * (idt * uOldQPoint[d]);
       }
     }
   }
@@ -306,18 +287,20 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
   double eps;
 };
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
-  using FESpaceCG_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T, orderCG>::RefFE_T,
-                              LagrangeFE<Elem_T, orderCG>::RecommendedQR>;
+  using FESpaceCG_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, orderCG>::RefFE_T,
+      LagrangeFE<Elem_T, orderCG>::RecommendedQR>;
   // explicit finite volume upwind
-  using FESpaceFV_T = FESpace<Mesh_T,
-                              LagrangeFE<Elem_T, 0>::RefFE_T,
-                              LagrangeFE<Elem_T, 0>::RecommendedQR>;
+  using FESpaceFV_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T, 0>::RecommendedQR>;
   // velocity field
   using FESpaceVel_T = FESpaceCG_T;
 
@@ -342,7 +325,12 @@ int main(int argc, char* argv[])
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   uint const numElems = config["n"].as<uint>();
-  buildHyperCube(*mesh, origin, length, {numElems, 0, 0}, MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
+  buildHyperCube(
+      *mesh,
+      origin,
+      length,
+      {numElems, 0, 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   // auto const r = 1. / 1.1;
   // auto const starting = (1. - r) / (1. - pow(r, numElems));
   // auto counter = 0;
@@ -359,7 +347,7 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("bcs");
-  auto const one = [] (Vec3 const & ) { return 1.; };
+  auto const one = [](Vec3 const &) { return 1.; };
   // auto const zero = [] (Vec3 const & ) { return 0.; };
   auto bcLeftCG = BCEss{feSpaceCG, side::LEFT};
   bcLeftCG << one;
@@ -381,31 +369,32 @@ int main(int argc, char* argv[])
 
   Builder builder{feSpaceCG.dof.size};
   LUSolver solver;
-  AssemblyLhsSUPG lhsSUPG{1./dt, vel, feSpaceCG};
+  AssemblyLhsSUPG lhsSUPG{1. / dt, vel, feSpaceCG};
   // AssemblyStiffness artificialDiff(0.5 * velocity / numElems, feSpaceCG);
   FEVar uCGOld{feSpaceCG};
-  AssemblyRhsSUPG rhsSUPG{1./dt, uCGOld, vel, feSpaceCG};
+  AssemblyRhsSUPG rhsSUPG{1. / dt, uCGOld, vel, feSpaceCG};
 
   Builder builderRes{feSpaceCG.dof.size};
   LUSolver solverRes;
-  AssemblyMass timeDer{1./dt, feSpaceCG};
+  AssemblyMass timeDer{1. / dt, feSpaceCG};
   AssemblyAdvection advection{1.0, vel.data, vel.feSpace, feSpaceCG};
   double const eps = 0.001;
   AssemblyStiffness diffusion{eps, feSpaceCG};
-  AssemblyLhsSUPGRes lhsSUPGRes{1./dt, vel, eps, feSpaceCG};
+  AssemblyLhsSUPGRes lhsSUPGRes{1. / dt, vel, eps, feSpaceCG};
   FEVar uCGOldRes{feSpaceCG};
-  AssemblyProjection timeDerRhs{1./dt, uCGOldRes.data, uCGOldRes.feSpace, feSpaceCG};
-  AssemblyRhsSUPGRes rhsSUPGRes{1./dt, uCGOldRes, vel, eps, feSpaceCG};
+  AssemblyProjection timeDerRhs{1. / dt, uCGOldRes.data, uCGOldRes.feSpace, feSpaceCG};
+  AssemblyRhsSUPGRes rhsSUPGRes{1. / dt, uCGOldRes, vel, eps, feSpaceCG};
 
   // FEVar c{"conc", feSpace};
   // FEList feList{feSpace, feSpace};
   // auto fe1 = std::get<0>(feList);
   // BlockFEVar tmp{"tmp", feList};
   auto const threshold = config["threshold"].as<double>();
-  scalarFun_T ic = [threshold] (Vec3 const& p)
+  scalarFun_T ic = [threshold](Vec3 const & p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-    if (p(0) < threshold) return 1.;
+    if (p(0) < threshold)
+      return 1.;
     return 0.;
   };
   // scalarFun_T ic = [] (Vec3 const& p)
@@ -447,9 +436,10 @@ int main(int argc, char* argv[])
   double maxCG = 0.;
   double maxCGRes = 0.;
 
-  auto const ntime = static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
+  auto const ntime =
+      static_cast<uint>(std::nearbyint(config["final_time"].as<double>() / dt));
   double time = 0.0;
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
@@ -477,7 +467,6 @@ int main(int argc, char* argv[])
     // std::cout << "A:\n" << builder.A << std::endl;
     // std::cout << "b:\n" << builder.b << std::endl;
     // std::cout << "sol:\n" << c.data << std::endl;
-
 
     solverRes.compute(builderRes.A);
     uCGRes.data = solverRes.solve(builderRes.b);
@@ -511,8 +500,11 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(one, feSpaceFV, oneFieldFV);
 
   double errorNormCG = (uCG.data - oneFieldCG).norm();
-  std::cout << "the norm of the CG error is " << std::setprecision(16) << errorNormCG << std::endl;
+  std::cout << "the norm of the CG error is " << std::setprecision(16) << errorNormCG
+            << std::endl;
   double errorNormFV = (uFV.data - oneFieldFV).norm();
-  std::cout << "the norm of the FV error is " << std::setprecision(16) << errorNormFV << std::endl;
-  return checkError({errorNormCG, errorNormFV}, {0.0007185655616791794, 2.68467866957268e-06});
+  std::cout << "the norm of the FV error is " << std::setprecision(16) << errorNormFV
+            << std::endl;
+  return checkError(
+      {errorNormCG, errorNormFV}, {0.0007185655616791794, 2.68467866957268e-06});
 }

@@ -23,23 +23,25 @@ public:
 
   // use manual-provided set of DOFs
   // TODO: pass in a dofset anyway, the map is only needed internally
-  BCEss(FESpace_T const & fe,
-        DofMap_T const dofMap):
-    feSpace(fe),
-    _constrainedDofMap(std::move(dofMap)),
-    data{Vec::Zero(_constrainedDofMap.size())}
+  BCEss(FESpace_T const & fe, DofMap_T const dofMap):
+      feSpace(fe),
+      _constrainedDofMap(std::move(dofMap)),
+      data{Vec::Zero(_constrainedDofMap.size())}
   {
-    std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs" << std::endl;
+    std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
+              << std::endl;
   }
 
-  BCEss(FESpace_T const & fe,
-        marker_T const m,
-        std::vector<uint> const & c = allComp<FESpace>()):
-    feSpace(fe),
-    marker(m),
-    comp(c)
+  BCEss(
+      FESpace_T const & fe,
+      marker_T const m,
+      std::vector<uint> const & c = allComp<FESpace>()):
+      feSpace(fe),
+      marker(m),
+      comp(c)
   {
-    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size() << " dofs" << std::endl;
+    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
+              << " dofs" << std::endl;
     id_T counter = 0;
     for (auto const & facet: feSpace.mesh.facetList)
     {
@@ -48,14 +50,16 @@ public:
       {
         facetIdList.push_back(facet.id);
         auto const & [elem, side] = facet.facingElem[0];
-        if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+        if constexpr (
+            order_v < RefFE_T >> 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
         {
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])
           {
             for (auto const c: comp)
             {
               DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet, c);
-              [[maybe_unused]] auto const [ptr, inserted] = _constrainedDofMap.insert({dofId, counter});
+              [[maybe_unused]] auto const [ptr, inserted] =
+                  _constrainedDofMap.insert({dofId, counter});
               if (inserted)
               {
                 counter++;
@@ -69,7 +73,8 @@ public:
           for (auto const c: comp)
           {
             DOFid_T const dofId = feSpace.dof.getId(elem->id, 0, c);
-            // elements cannot be walked through multiple times, each insert() is successful
+            // elements cannot be walked through multiple times, each insert() is
+            // successful
             _constrainedDofMap.insert({dofId, counter});
             counter++;
           }
@@ -103,7 +108,8 @@ public:
           else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
           {
             DOFid_T const dofId = feSpace.dof.getId(elem->id, dofFacet);
-            data[_constrainedDofMap.at(dofId)] = promote<3>(value).dot(facet.normal()) * facet.volume();
+            data[_constrainedDofMap.at(dofId)] =
+                promote<3>(value).dot(facet.normal()) * facet.volume();
           }
         }
       }
@@ -114,7 +120,7 @@ public:
       for (auto const & facet: feSpace.mesh.facetList)
       {
         auto const & elem = *(facet.facingElem[0].ptr);
-        for (uint d=0; d<size * FESpace_T::dim; ++d)
+        for (uint d = 0; d < size * FESpace_T::dim; ++d)
         {
           auto const dof = feSpace.dof.elemMap(elem.id, d);
           if (_constrainedDofMap.count(dof) > 1)
@@ -129,7 +135,8 @@ public:
             }
             else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
             {
-              data[_constrainedDofMap.at(dof)] = promote<3>(value).dot(facet.normal()) * facet.volume();
+              data[_constrainedDofMap.at(dof)] =
+                  promote<3>(value).dot(facet.normal()) * facet.volume();
             }
           }
         }
@@ -140,8 +147,9 @@ public:
 
   BCEss<FESpace> & operator<<(scalarFun_T const & f)
   {
-    static_assert(FESpace_T::dim == 1, "scalar functions can be used only on scalar fe spaces.");
-    return operator<<([f] (Vec3 const & p) { return Vec1::Constant(f(p)); });
+    static_assert(
+        FESpace_T::dim == 1, "scalar functions can be used only on scalar fe spaces.");
+    return operator<<([f](Vec3 const & p) { return Vec1::Constant(f(p)); });
   }
 
   BCEss<FESpace> & operator<<(Vec const & v)
@@ -158,36 +166,34 @@ public:
     return _constrainedDofMap.count(id + d * feSpace.dof.size) > 0;
   }
 
-  double get(DOFid_T const id) const
-  {
-    return data[_constrainedDofMap.at(id)];
-  }
+  double get(DOFid_T const id) const { return data[_constrainedDofMap.at(id)]; }
 
   void makeTangent()
   {
-    static_assert (dim > 1, "cannot make tangent a scalar field.");
+    static_assert(dim > 1, "cannot make tangent a scalar field.");
     for (auto const facetId: facetIdList)
     {
       auto const & facet = feSpace.mesh.facetList[facetId];
       auto const normal = narrow<dim>(facet.normal());
       auto const & [elem, side] = facet.facingElem[0];
-          feSpace.curFE.reinit(*elem);
-          for (auto const dofFacet: RefFE_T::dofOnFacet[side])
+      feSpace.curFE.reinit(*elem);
+      for (auto const dofFacet: RefFE_T::dofOnFacet[side])
       {
         // get the vector value on the dof
         FVec<dim> localValue;
         array<DOFid_T, dim> dofIds;
-        for (uint d=0; d<dim; ++d)
+        for (uint d = 0; d < dim; ++d)
         {
           dofIds[d] = feSpace.dof.getId(elem->id, dofFacet, d);
           localValue[d] = data[_constrainedDofMap[dofIds[d]]];
         }
 
         // take the tangential component
-        localValue = (FMat<dim, dim>::Identity() - normal * normal.transpose()) * localValue;
+        localValue =
+            (FMat<dim, dim>::Identity() - normal * normal.transpose()) * localValue;
 
         // save back
-        for (uint d=0; d<dim; ++d)
+        for (uint d = 0; d < dim; ++d)
         {
           data[_constrainedDofMap[dofIds[d]]] = localValue[d];
         }
@@ -212,7 +218,7 @@ public:
   std::vector<uint> const comp = {};
   double diag = 1.0;
 
-//protected:
+  // protected:
   DofMap_T _constrainedDofMap;
   std::vector<id_T> facetIdList;
 
@@ -228,32 +234,32 @@ struct BCNat
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
   using CurFE_T = CurFE<FacetFE_T, QR_T>;
 
-  BCNat(marker_T const m,
-        Fun<FESpace::dim,3> const f,
-        std::vector<uint> const c = allComp<FESpace>()):
-    marker(m),
-    value(std::move(f)),
-    comp(std::move(c))
+  BCNat(
+      marker_T const m,
+      Fun<FESpace::dim, 3> const f,
+      std::vector<uint> const c = allComp<FESpace>()):
+      marker(m),
+      value(std::move(f)),
+      comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
   }
 
-  BCNat(marker_T const m,
-        scalarFun_T const f,
-        std::vector<uint> const c = allComp<FESpace>()):
-    BCNat{m, [f] (Vec3 const & p) { return Vec1(f(p)); }, c}
+  BCNat(
+      marker_T const m,
+      scalarFun_T const f,
+      std::vector<uint> const c = allComp<FESpace>()):
+      BCNat{m, [f](Vec3 const & p) { return Vec1(f(p)); }, c}
   {
-    static_assert(FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
+    static_assert(
+        FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
   }
 
-  bool hasComp(uint c)
-  {
-    return std::find(comp.begin(), comp.end(), c) != comp.end();
-  }
+  bool hasComp(uint c) { return std::find(comp.begin(), comp.end(), c) != comp.end(); }
 
   CurFE_T curFE;
   marker_T marker;
-  Fun<FESpace::dim,3> const value;
+  Fun<FESpace::dim, 3> const value;
   std::vector<uint> const comp;
 };
 
@@ -268,18 +274,18 @@ struct BCMixed
   using CurFE_T = CurFE<FacetFE_T, QR_T>;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
-  explicit BCMixed(marker_T m, Fun<FESpace_T::dim,3> const f, std::vector<uint> const c = allComp<FESpace>()):
-    marker(m),
-    coef(std::move(f)),
-    comp(std::move(c))
+  explicit BCMixed(
+      marker_T m,
+      Fun<FESpace_T::dim, 3> const f,
+      std::vector<uint> const c = allComp<FESpace>()):
+      marker(m),
+      coef(std::move(f)),
+      comp(std::move(c))
   {
     // TODO: create a list of constrained faces at the beginning?
   }
 
-  bool hasComp(uint c)
-  {
-    return std::find(comp.begin(), comp.end(), c) != comp.end();
-  }
+  bool hasComp(uint c) { return std::find(comp.begin(), comp.end(), c) != comp.end(); }
 
   CurFE_T curFE;
   marker_T marker;
@@ -293,19 +299,20 @@ class BCList
 public:
   using FESpace_T = FESpace;
 
-  explicit BCList(FESpace const & fe):
-    feSpace(fe)
-  {}
+  explicit BCList(FESpace const & fe): feSpace(fe) {}
 
   template <typename BC>
   void addBC(BC const bc)
   {
-    static_assert(std::is_same_v<typename BC::FESpace_T, FESpace>, "this BC does not use the same FESpace");
+    static_assert(
+        std::is_same_v<typename BC::FESpace_T, FESpace>,
+        "this BC does not use the same FESpace");
     if (bc.marker != markerNotSet)
     {
       if (checkMarkerFixed(bc.marker))
       {
-        std::cerr << "the marker " << bc.marker << " has already been fixed." << std::endl;
+        std::cerr << "the marker " << bc.marker << " has already been fixed."
+                  << std::endl;
         abort();
       }
       fixedMarkers.insert(bc.marker);
@@ -318,7 +325,8 @@ public:
     else
     {
       // this should never happen
-      std::cerr << "a BC of type " << typeid(bc).name() << " has been added." << std::endl;
+      std::cerr << "a BC of type " << typeid(bc).name() << " has been added."
+                << std::endl;
       std::abort();
     }
   }
@@ -355,17 +363,15 @@ class DOFCoordSet
 {
 public:
   using FESpace_T = FESpace;
-  using Predicate_T = std::function<bool (Vec3 const &)>;
+  using Predicate_T = std::function<bool(Vec3 const &)>;
 
-  DOFCoordSet(FESpace_T & fe, Predicate_T const & p):
-    feSpace(fe),
-    predicate(p)
+  DOFCoordSet(FESpace_T & fe, Predicate_T const & p): feSpace(fe), predicate(p)
   {
     id_T counter = 0;
     for (auto const & e: feSpace.mesh.elementList)
     {
       feSpace.curFE.reinit(e);
-      for (uint d=0; d<numDOFs<typename FESpace_T::RefFE_T>(); ++d)
+      for (uint d = 0; d < numDOFs<typename FESpace_T::RefFE_T>(); ++d)
       {
         if (predicate(feSpace.curFE.dofPts[d]))
         {

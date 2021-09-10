@@ -1,6 +1,7 @@
 #pragma once
 
 #include "def.hpp"
+
 #include "reffe.hpp"
 
 enum class XDMFGridType : int8_t
@@ -9,10 +10,9 @@ enum class XDMFGridType : int8_t
   COLLECTION
 };
 
-static const std::unordered_map<XDMFGridType,std::string> XDMFGridTypeToString =
-{
-  {XDMFGridType::SINGLE, "Uniform"},
-  {XDMFGridType::COLLECTION, "Collection"},
+static const std::unordered_map<XDMFGridType, std::string> XDMFGridTypeToString = {
+    {XDMFGridType::SINGLE, "Uniform"},
+    {XDMFGridType::COLLECTION, "Collection"},
 };
 
 enum class XDMFNumberType : int8_t
@@ -21,10 +21,9 @@ enum class XDMFNumberType : int8_t
   FLOAT
 };
 
-static const std::unordered_map<XDMFNumberType, char const *> XDMFNumberTypeToString =
-{
-  {XDMFNumberType::INT, "Int"},
-  {XDMFNumberType::FLOAT, "Float"},
+static const std::unordered_map<XDMFNumberType, char const *> XDMFNumberTypeToString = {
+    {XDMFNumberType::INT, "Int"},
+    {XDMFNumberType::FLOAT, "Float"},
 };
 
 enum class XDMFFormat : int8_t
@@ -33,10 +32,9 @@ enum class XDMFFormat : int8_t
   INLINE
 };
 
-static const std::unordered_map<XDMFFormat, char const *> XDMFFormatToString =
-{
-  {XDMFFormat::HDF, "HDF"},
-  {XDMFFormat::INLINE, "XML"},
+static const std::unordered_map<XDMFFormat, char const *> XDMFFormatToString = {
+    {XDMFFormat::HDF, "HDF"},
+    {XDMFFormat::INLINE, "XML"},
 };
 
 enum class XDMFCenter : int8_t
@@ -45,10 +43,9 @@ enum class XDMFCenter : int8_t
   NODE
 };
 
-static const std::unordered_map<XDMFCenter, std::string> XDMFCenterToString =
-{
-  {XDMFCenter::CELL, "Cell"},
-  {XDMFCenter::NODE, "Node"},
+static const std::unordered_map<XDMFCenter, std::string> XDMFCenterToString = {
+    {XDMFCenter::CELL, "Cell"},
+    {XDMFCenter::NODE, "Node"},
 };
 
 struct XDMFVar
@@ -59,7 +56,8 @@ struct XDMFVar
 };
 
 template <typename RefFE>
-struct XDMFTraits {};
+struct XDMFTraits
+{};
 
 template <>
 struct XDMFTraits<RefLineP0>
@@ -208,6 +206,7 @@ struct XDMFTraits<RefHexahedronQ2>
   // 11  24  9
   //  |      |
   //  0-- 8--1
+  // clang-format off
   static constexpr array<char,27> mapping = {
     0, 1, 2, 3, 4, 5, 6, 7,
     8, 9, 10, 11,
@@ -215,4 +214,5 @@ struct XDMFTraits<RefHexahedronQ2>
     12, 13, 14, 15,
     24, 22, 21, 23, 20, 25,
     26};
+  // clang-format on
 };

@@ -1,13 +1,14 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
-#include "timer.hpp"
 #include "fv.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
 
 double areaTriangle(Vec3 p0, Vec3 p1, Vec3 p2)
 {
@@ -23,14 +24,16 @@ struct DualCell //: public GeoElem
   {
     assert(edgeNeighbors.size() > 0);
     volumes.resize(edgeNeighbors.size());
-    for (uint n=0; n<edgeNeighbors.size(); ++n)
+    for (uint n = 0; n < edgeNeighbors.size(); ++n)
     {
       auto const & edge = *edgeNeighbors[n];
       // points.row(n) = edge.midpoint();
-      volumes[n] = areaTriangle(center->coord, edge.midpoint(), edge.facingElem[0].ptr->midpoint());
+      volumes[n] = areaTriangle(
+          center->coord, edge.midpoint(), edge.facingElem[0].ptr->midpoint());
       if (edge.facingElem[1].ptr != nullptr)
       {
-        volumes[n] += areaTriangle(center->coord, edge.midpoint(), edge.facingElem[1].ptr->midpoint());
+        volumes[n] += areaTriangle(
+            center->coord, edge.midpoint(), edge.facingElem[1].ptr->midpoint());
       }
     }
   }
@@ -46,30 +49,32 @@ int main()
   using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central
-  using FESpaceP1_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T,1>::RefFE_T,
-                            LagrangeFE<Elem_T,1>::RecommendedQR>;
+  using FESpaceP1_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
   // explicit finite volume upwind
-  using FESpaceP0_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T,0>::RefFE_T,
-                            LagrangeFE<Elem_T,0>::RecommendedQR>;
-  using FESpaceVel_T = FESpace<Mesh_T,
-                               LagrangeFE<Elem_T,1>::RefFE_T,
-                               LagrangeFE<Elem_T,1>::RecommendedQR, 2>;
+  using FESpaceP0_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T, 0>::RecommendedQR>;
+  using FESpaceVel_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR,
+      2>;
 
-  static scalarFun_T ic = [] (Vec3 const& p)
+  static scalarFun_T ic = [](Vec3 const & p)
   {
     // return std::exp(-(p(0)-0.5)*(p(0)-0.5)*50);
-    if (p(0) < .4) return 1.;
+    if (p(0) < .4)
+      return 1.;
     return 0.;
   };
 
   MilliTimer t;
 
-  Fun<2, 3> velFun = [] (Vec3 const &)
-  {
-    return Vec2(0.2, 0.0);
-  };
+  Fun<2, 3> velFun = [](Vec3 const &) { return Vec2(0.2, 0.0); };
 
   t.start("mesh build");
   // we need internal facets
@@ -127,7 +132,7 @@ int main()
   t.stop();
 
   t.start("bcs");
-  auto const one = [] (Vec3 const &) { return 1.; };
+  auto const one = [](Vec3 const &) { return 1.; };
   auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
   bcLeftP1 << one;
   auto const bcsP1 = std::make_tuple(bcLeftP1);
@@ -149,9 +154,9 @@ int main()
   Builder builder{sizeP1};
   LUSolver solver;
   AssemblyAdvection advection(1.0, vel.data, feSpaceVel, feSpaceP1);
-  AssemblyScalarMass timeder(1./dt, feSpaceP1);
+  AssemblyScalarMass timeder(1. / dt, feSpaceP1);
   Vec concP1Old(sizeP1);
-  AssemblyProjection timeder_rhs(1./dt, concP1Old, feSpaceP1);
+  AssemblyProjection timeder_rhs(1. / dt, concP1Old, feSpaceP1);
 
   Var concP1{"concP1"};
   interpolateAnalyticFunction(ic, feSpaceP1, concP1.data);
@@ -171,7 +176,7 @@ int main()
   t.start("time iter");
   auto const lhs = std::tuple{timeder, advection};
   auto const rhs = std::tuple{timeder_rhs};
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     std::cout << "solving timestep " << itime << std::endl;
@@ -206,10 +211,13 @@ int main()
   t.print();
 
   double normP1 = concP1.data.norm();
-  std::cout << "the norm of the P1 solution is " << std::setprecision(16) << normP1 << std::endl;
+  std::cout << "the norm of the P1 solution is " << std::setprecision(16) << normP1
+            << std::endl;
   double normP0 = concP0.data.norm();
-  std::cout << "the norm of the P0 solution is " << std::setprecision(16) << normP0 << std::endl;
-  // if(std::fabs(normP1 - 10.8594759676) > 1.e-10 || std::fabs(normP0 - 13.7780000857) > 1.e-10)
+  std::cout << "the norm of the P0 solution is " << std::setprecision(16) << normP0
+            << std::endl;
+  // if(std::fabs(normP1 - 10.8594759676) > 1.e-10 || std::fabs(normP0 - 13.7780000857)
+  // > 1.e-10)
   // {
   //   std::cerr << "the norm of the solution is not the prescribed value" << std::endl;
   //   return 1;

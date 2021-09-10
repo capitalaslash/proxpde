@@ -1,8 +1,9 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "curfe.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "curfe.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 #include <random>
@@ -13,9 +14,10 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   MilliTimer t;
 
   using Mesh_T = Mesh<Elem>;
-  using FESpace_T = FESpace<Mesh_T,
-                            typename LagrangeFE<Elem, Order>::RefFE_T,
-                            typename LagrangeFE<Elem, 0>::RecommendedQR>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem, Order>::RefFE_T,
+      typename LagrangeFE<Elem, 0>::RecommendedQR>;
   using RefFE_T = typename FESpace_T::RefFE_T;
 
   t.start("mesh");
@@ -23,88 +25,81 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   if constexpr (std::is_same_v<Elem, Line>)
   {
     mesh.pointList = {
-      Point(Vec3(1., 1., 0.), 0),
-      Point(Vec3(4., 1., 0.), 1),
+        Point(Vec3(1., 1., 0.), 0),
+        Point(Vec3(4., 1., 0.), 1),
     };
     mesh.elementList = {
-      Line{
-        {&mesh.pointList[0],
-         &mesh.pointList[1]},
-        0},
+        Line{{&mesh.pointList[0], &mesh.pointList[1]}, 0},
     };
   }
   else if constexpr (std::is_same_v<Elem, Triangle>)
   {
     mesh.pointList = {
-      Point(Vec3(1., 1., 0.), 0),
-      Point(Vec3(5., 2., 0.), 1),
-      Point(Vec3(3., 4., 0.), 2),
+        Point(Vec3(1., 1., 0.), 0),
+        Point(Vec3(5., 2., 0.), 1),
+        Point(Vec3(3., 4., 0.), 2),
     };
     mesh.elementList = {
-      Triangle{
-        {&mesh.pointList[0],
-         &mesh.pointList[1],
-         &mesh.pointList[2]},
-        0},
+        Triangle{{&mesh.pointList[0], &mesh.pointList[1], &mesh.pointList[2]}, 0},
     };
   }
   else if constexpr (std::is_same_v<Elem, Quad>)
   {
     mesh.pointList = {
-      Point(Vec3(1., 1., 0.), 0),
-      Point(Vec3(5., 2., 0.), 1),
-      Point(Vec3(3., 4., 0.), 2),
-      Point(Vec3(1., 3., 0.), 3),
+        Point(Vec3(1., 1., 0.), 0),
+        Point(Vec3(5., 2., 0.), 1),
+        Point(Vec3(3., 4., 0.), 2),
+        Point(Vec3(1., 3., 0.), 3),
     };
     mesh.elementList = {
-      Quad{
-        {&mesh.pointList[0],
-         &mesh.pointList[1],
-         &mesh.pointList[2],
-         &mesh.pointList[3]},
-        0},
+        Quad{
+            {&mesh.pointList[0],
+             &mesh.pointList[1],
+             &mesh.pointList[2],
+             &mesh.pointList[3]},
+            0},
     };
   }
   else if constexpr (std::is_same_v<Elem, Tetrahedron>)
   {
     mesh.pointList = {
-      Point(Vec3(1., 1., 0.), 0),
-      Point(Vec3(5., 2., 0.), 1),
-      Point(Vec3(3., 4., -1.), 2),
-      Point(Vec3(0., 0., -2.), 3),
+        Point(Vec3(1., 1., 0.), 0),
+        Point(Vec3(5., 2., 0.), 1),
+        Point(Vec3(3., 4., -1.), 2),
+        Point(Vec3(0., 0., -2.), 3),
     };
     mesh.elementList = {
-      Tetrahedron{
-        {&mesh.pointList[0],
-         &mesh.pointList[1],
-         &mesh.pointList[2],
-         &mesh.pointList[3]},
-        0},
+        Tetrahedron{
+            {&mesh.pointList[0],
+             &mesh.pointList[1],
+             &mesh.pointList[2],
+             &mesh.pointList[3]},
+            0},
     };
   }
   else if constexpr (std::is_same_v<Elem, Hexahedron>)
   {
     mesh.pointList = {
-      Point(Vec3(1., 1., 0.), 0),
-      Point(Vec3(5., 2., 0.), 1),
-      Point(Vec3(3., 4., 0.), 2),
-      Point(Vec3(0., 4., 0.), 3),
-      Point(Vec3(2., 0., 3.), 4),
-      Point(Vec3(4., 0., 3.), 5),
-      Point(Vec3(3., 5., 4.), 6),
-      Point(Vec3(0., 5., 4.), 7),
+        Point(Vec3(1., 1., 0.), 0),
+        Point(Vec3(5., 2., 0.), 1),
+        Point(Vec3(3., 4., 0.), 2),
+        Point(Vec3(0., 4., 0.), 3),
+        Point(Vec3(2., 0., 3.), 4),
+        Point(Vec3(4., 0., 3.), 5),
+        Point(Vec3(3., 5., 4.), 6),
+        Point(Vec3(0., 5., 4.), 7),
     };
     mesh.elementList = {
-      Hexahedron{
-        {&mesh.pointList[0],
-         &mesh.pointList[1],
-         &mesh.pointList[2],
-         &mesh.pointList[3],
-         &mesh.pointList[4],
-         &mesh.pointList[5],
-         &mesh.pointList[6],
-         &mesh.pointList[7]},
-        0},
+        Hexahedron{
+            {&mesh.pointList[0],
+             &mesh.pointList[1],
+             &mesh.pointList[2],
+             &mesh.pointList[3],
+             &mesh.pointList[4],
+             &mesh.pointList[5],
+             &mesh.pointList[6],
+             &mesh.pointList[7]},
+            0},
     };
   }
   else
@@ -129,7 +124,7 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   double errorIterMax = 0.;
   int insideCount = 0;
   int totalNumIter = 0;
-  for (int n=0; n<numTests; ++n)
+  for (int n = 0; n < numTests; ++n)
   {
     Vec3 const pt{disX(gen), disY(gen), disZ(gen)};
 
@@ -152,13 +147,15 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
       // auto const iterInside = cfe.inside(pt);
       if (approxInside)
         errorIterMax = std::max(errorIterMax, iterError);
-      // assert (iterError < 1.e4 * approxError + 2 * std::numeric_limits<double>::epsilon() || !approxInside);
+      // assert (iterError < 1.e4 * approxError + 2 *
+      // std::numeric_limits<double>::epsilon() || !approxInside);
       t.stop();
 
       if (approxInside && iterError > 1.e-12)
       {
         // abort();
-        //   std::cout << "test " << n << " - " << pt.transpose() << " -> " << approxPtNew.transpose()
+        //   std::cout << "test " << n << " - " << pt.transpose() << " -> " <<
+        //   approxPtNew.transpose()
         //             << " - distance norm: " << approxError
         //             << " - inside: " << approxInside << std::endl;
         //  return 1;
@@ -169,14 +166,15 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   }
   std::cout << "errorApproxMax: " << errorApproxMax << std::endl
             << "errorIterMax:   " << errorIterMax << std::endl
-            << "meanNumIter:    " << static_cast<double>(totalNumIter) / insideCount << std::endl;
+            << "meanNumIter:    " << static_cast<double>(totalNumIter) / insideCount
+            << std::endl;
 
   double bboxVolume = (max[0] - min[0]);
-  if constexpr(RefFE_T::dim > 1)
+  if constexpr (RefFE_T::dim > 1)
   {
     bboxVolume *= (max[1] - min[1]);
   }
-  if constexpr(RefFE_T::dim > 2)
+  if constexpr (RefFE_T::dim > 2)
   {
     bboxVolume *= (max[2] - min[2]);
   }
@@ -187,17 +185,16 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   double const insideFrac = static_cast<double>(insideCount) / numTests;
   double const error = std::fabs(insideArea - insideFrac);
 
-  std::cout << std::setprecision(16)
-            << "inside area: " << insideArea << std::endl
+  std::cout << std::setprecision(16) << "inside area: " << insideArea << std::endl
             << "inside frac: " << insideFrac << std::endl
             << "error:       " << error << std::endl;
 
   return checkError({error}, {expectedError});
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
-  int const exp = (argc > 1)? std::atoi(argv[1]) : 13;
+  int const exp = (argc > 1) ? std::atoi(argv[1]) : 13;
   int numTests = 1 << exp;
 
   std::bitset<10> tests;

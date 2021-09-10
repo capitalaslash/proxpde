@@ -1,33 +1,34 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
-#include "timer.hpp"
+#include "mesh.hpp"
 #include "ns.hpp"
+#include "timer.hpp"
+#include "var.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-  using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
-  using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-  using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
-  using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+  using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
 
   MilliTimer t;
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3) ? 10 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 10 : std::stoi(argv[2]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
   buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
@@ -45,20 +46,21 @@ int main(int argc, char* argv[])
 
   auto feList = std::make_tuple(feSpaceVel, feSpaceP);
   auto assembler = make_assembler(feList);
-  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU, feSpaceP));
+  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU,
+  // feSpaceP));
 
   t.start("bc");
-  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
-  auto inlet = [] (Vec3 const & p) {return Vec2(0., 0.5*(1.-p(0)*p(0)));};
+  auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
+  auto inlet = [](Vec3 const & p) { return Vec2(0., 0.5 * (1. - p(0) * p(0))); };
   // auto inlet = [] (Vec3 const & p) {return Vec2(0., 1.);};
   // auto inlet = [] (Vec3 const &p) {
   //   return p[0] < .5 ? Vec2(0., 1.) : Vec2(0., 0.);
   // };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::TOP, {0}},
-        BCEss{feSpaceVel, side::LEFT, {0}});
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::TOP, {0}},
+      BCEss{feSpaceVel, side::LEFT, {0}});
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
@@ -93,15 +95,13 @@ int main(int argc, char* argv[])
   Vec exact{FESpaceVel_T::dim * dofU + dofP};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact);
   interpolateAnalyticFunction(
-        [nu] (Vec3 const & p) { return nu*(1.-p(1)); },
-        feSpaceP,
-        exact);
+      [nu](Vec3 const & p) { return nu * (1. - p(1)); }, feSpaceP, exact);
 
   Var u{"u"};
   Var v{"v"};
   getComponent(u.data, feSpaceComponent, sol, feSpaceVel, 0);
   getComponent(v.data, feSpaceComponent, sol, feSpaceVel, 1);
-  Var p{"p", sol, 2*dofU, dofP};
+  Var p{"p", sol, 2 * dofU, dofP};
 
   Var u_exact{"ue"};
   Var v_exact{"ve"};
@@ -111,20 +111,25 @@ int main(int argc, char* argv[])
 
   // wall shear stress
   t.start("wssCell");
-  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR> feSpaceP0{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR>
+      feSpaceP0{*mesh};
   // mean cell value
   Var wssCell{"wssCell"};
   computeElemWSS(wssCell.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
-  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff() << std::endl;
-  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff() << std::endl;
+  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff()
+            << std::endl;
+  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff()
+            << std::endl;
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
   computeFEWSS(wssFacet.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
-  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff() << std::endl;
-  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff() << std::endl;
+  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
+            << std::endl;
+  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
+            << std::endl;
 
   t.start("print");
   IOManager ioComponent{feSpaceComponent, "output_stokes2dquad/vel"};
@@ -145,13 +150,13 @@ int main(int argc, char* argv[])
   std::cout << "v error norm: " << vError << std::endl;
   std::cout << "p error norm: " << pError << std::endl;
 
-  if (std::fabs(uError) > 1.e-14 ||
-      std::fabs(vError) > 2.e-14 ||
+  if (std::fabs(uError) > 1.e-14 || std::fabs(vError) > 2.e-14 ||
       std::fabs(pError) > 3.e-14 ||
       std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
       std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
   {
-    std::cerr << "one of the norms of the error is not the prescribed value" << std::endl;
+    std::cerr << "one of the norms of the error is not the prescribed value"
+              << std::endl;
     return 1;
   }
 

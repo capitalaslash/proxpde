@@ -1,17 +1,18 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
-using FESpace1_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-using FESpace2_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+using FESpace1_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+using FESpace2_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
 
 int main()
 {
@@ -28,8 +29,8 @@ int main()
   Var u1{"u1"};
   Var u2{"u2"};
 
-  auto inputFun = [] (Vec3 const &p) {return 1.*p(0) + 2.*p(1);};
-//  auto inputFun = [] (Vec3 const &) {return 1.;};
+  auto inputFun = [](Vec3 const & p) { return 1. * p(0) + 2. * p(1); };
+  //  auto inputFun = [] (Vec3 const &) {return 1.;};
   interpolateAnalyticFunction(inputFun, feSpace1, u1.data);
 
   AssemblyScalarMass mass2(1.0, feSpace2);

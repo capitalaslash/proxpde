@@ -1,13 +1,14 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
+#include "eqn.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "eqn.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "feutils.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 template <Component Comp, typename FESpaceOut, typename FESpaceIn>
@@ -16,17 +17,17 @@ void interpolateOnBoundary(
     FESpaceOut const & feSpaceOut,
     Vec const & in,
     FESpaceIn const & feSpaceIn,
-    std::unordered_set<marker_T> const & markers
-    )
+    std::unordered_set<marker_T> const & markers)
 {
   uint constexpr dim = FESpaceIn::dim;
   using FEFacet_T = typename FESpaceIn::RefFE_T::FacetFE_T;
   using QRFacet_T = SideQR_T<typename FESpaceIn::QR_T>;
   using CurFEFacet_T = CurFE<FEFacet_T, QRFacet_T>;
-  using FESpaceFacet_T =
-    FESpace<typename FESpaceIn::Mesh_T,
-            typename FESpaceIn::RefFE_T,
-            SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>, dim>;
+  using FESpaceFacet_T = FESpace<
+      typename FESpaceIn::Mesh_T,
+      typename FESpaceIn::RefFE_T,
+      SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>,
+      dim>;
 
   out = Vec::Zero(feSpaceOut.dof.size);
   CurFEFacet_T curFEFacet;
@@ -58,7 +59,7 @@ void interpolateOnBoundary(
         dotted = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
       }
 
-      for (uint q=0; q<QRFacet_T::numPts; ++q)
+      for (uint q = 0; q < QRFacet_T::numPts; ++q)
       {
         Vec3 const inLocal = inFacet.evaluate(side * QRFacet_T::numPts + q);
         out[id] += curFEFacet.JxW[q] * inLocal.dot(dotted);
@@ -67,37 +68,39 @@ void interpolateOnBoundary(
   }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
 
-  using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-  using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
   // using LinearQR = LagrangeFE<Elem_T,1>::RecommendedQR;
 
   // monolithic
-  using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR, 2>;
-  using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
   // split
-  using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
+  using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
 
   // split RT
   // using FESpaceUStarRT_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
   // using FESpaceVelStarRT_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR, 2>;
-  using FESpaceUStarRT_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-  using FESpaceVelStarRT_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR, 2>;
-  using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QuadraticQR>;
+  using FESpaceUStarRT_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVelStarRT_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR, 2>;
+  using FESpaceRT0_T =
+      FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QuadraticQR>;
   using FESpaceLambda_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QuadraticQR>;
 
   // split RT postpro
   using FESpaceVel0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QuadraticQR, 2>;
   using MeshFacet_T = Mesh<typename Elem_T::Facet_T>;
-  using FESpaceFacet_T = FESpace<MeshFacet_T,
-                                 typename LagrangeFE<typename Elem_T::Facet_T,0>::RefFE_T,
-                                 typename LagrangeFE<typename Elem_T::Facet_T,0>::RecommendedQR>;
+  using FESpaceFacet_T = FESpace<
+      MeshFacet_T,
+      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RefFE_T,
+      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RecommendedQR>;
 
   MilliTimer t;
 
@@ -112,7 +115,7 @@ int main(int argc, char* argv[])
     config["nx"] = 4U;
     config["ny"] = 8U;
     config["dt"] = 0.2;
-    config["ntime"]= 50U;
+    config["ntime"] = 50U;
     config["nu"] = 0.01;
     config["printStep"] = 1U;
   }
@@ -121,11 +124,11 @@ int main(int argc, char* argv[])
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildHyperCube(
-        *mesh,
-        Vec3{0., 0., 0.},
-        Vec3{1., 10., 0.},
-        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
-        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
+      *mesh,
+      Vec3{0., 0., 0.},
+      Vec3{1., 10., 0.},
+      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
   t.stop();
 
   t.start("facet mesh");
@@ -156,9 +159,9 @@ int main(int argc, char* argv[])
   t.start("bc");
   // monolithic
   // auto const inlet = [] (Vec3 const &) { return Vec2(0.0, 1.0); };
-  auto const zeroV = [] (Vec3 const &) { return Vec2{0., 0.}; };
-  auto const zeroS = [] (Vec3 const &) { return 0.; };
-  auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0]*p[0])}; };
+  auto const zeroV = [](Vec3 const &) { return Vec2{0., 0.}; };
+  auto const zeroS = [](Vec3 const &) { return 0.; };
+  auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0] * p[0])}; };
   // last essential bc wins on corners
   auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
@@ -175,18 +178,17 @@ int main(int argc, char* argv[])
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
   // split
-  auto const inlet0 = [&inlet] (Vec3 const & p) { return inlet(p)[0]; };
-  auto const inlet1 = [&inlet] (Vec3 const & p) { return inlet(p)[1]; };
+  auto const inlet0 = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
+  auto const inlet1 = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   auto bcsUStar = std::tuple{
-        BCEss{feSpaceU, side::BOTTOM},
-        BCEss{feSpaceU, side::RIGHT},
-        BCEss{feSpaceU, side::LEFT}};
+      BCEss{feSpaceU, side::BOTTOM},
+      BCEss{feSpaceU, side::RIGHT},
+      BCEss{feSpaceU, side::LEFT}};
   std::get<0>(bcsUStar) << inlet0;
   std::get<1>(bcsUStar) << zeroS;
   std::get<2>(bcsUStar) << zeroS;
-  auto bcsVStar = std::tuple{
-        BCEss{feSpaceU, side::BOTTOM},
-        BCEss{feSpaceU, side::RIGHT}};
+  auto bcsVStar =
+      std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
   std::get<0>(bcsVStar) << inlet1;
   std::get<1>(bcsVStar) << zeroS;
   auto bcTopPSplit = BCEss{feSpacePSplit, side::TOP};
@@ -196,15 +198,14 @@ int main(int argc, char* argv[])
 
   // split RT
   auto bcsUStarRT = std::tuple{
-        BCEss{feSpaceUStarRT, side::BOTTOM},
-        BCEss{feSpaceUStarRT, side::RIGHT},
-        BCEss{feSpaceUStarRT, side::LEFT}};
+      BCEss{feSpaceUStarRT, side::BOTTOM},
+      BCEss{feSpaceUStarRT, side::RIGHT},
+      BCEss{feSpaceUStarRT, side::LEFT}};
   std::get<0>(bcsUStarRT) << inlet0;
   std::get<1>(bcsUStarRT) << zeroS;
   std::get<2>(bcsUStarRT) << zeroS;
   auto bcsVStarRT = std::tuple{
-        BCEss{feSpaceUStarRT, side::BOTTOM},
-        BCEss{feSpaceUStarRT, side::RIGHT}};
+      BCEss{feSpaceUStarRT, side::BOTTOM}, BCEss{feSpaceUStarRT, side::RIGHT}};
   std::get<0>(bcsVStarRT) << inlet1;
   std::get<1>(bcsVStarRT) << zeroS;
   auto bcsVelRT = std::tuple{
@@ -217,14 +218,15 @@ int main(int argc, char* argv[])
   //     return -11./8.;
   //   return -5./8.;
   // };
-  std::get<0>(bcsVelRT) << [&inlet] (Vec3 const & p) {
+  std::get<0>(bcsVelRT) << [&inlet](Vec3 const & p)
+  {
     return promote<3>(inlet(p));
     // if (p[0] < 0.75)
     //   return -4./ 3.;
     // return 0.;
     // return -1.;
   };
-  auto const zero3d = [] (Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  auto const zero3d = [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
   std::get<1>(bcsVelRT) << zero3d;
   std::get<2>(bcsVelRT) << zero3d;
   // auto const bcsVelRT = std::tuple{};
@@ -239,12 +241,12 @@ int main(int argc, char* argv[])
   auto const dofP = feSpaceP.dof.size;
 
   Vec velOldMonolithic{dofU * FESpaceVel_T::dim};
-  AssemblyScalarMass timeder(1./dt, feSpaceVel);
+  AssemblyScalarMass timeder(1. / dt, feSpaceVel);
   AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel, feSpaceVel);
   AssemblyTensorStiffness stiffness(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
-  AssemblyProjection timederRhs(1./dt, velOldMonolithic, feSpaceVel);
+  AssemblyProjection timederRhs(1. / dt, velOldMonolithic, feSpaceVel);
   // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
   // to apply bc on pressure
   // AssemblyDummy dummy{feSpaceP};
@@ -272,28 +274,31 @@ int main(int argc, char* argv[])
   Vec pOld = Vec::Zero(dofP);
   Vec vel{dofU * FESpaceVel_T::dim};
 
-  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d pOld / dx
+  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d
+  // pOld / dx
   auto const uStarLhs = std::tuple{
-        AssemblyScalarMass{1./dt, feSpaceU},
-        AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-        AssemblyStiffness{nu, feSpaceU}};
+      AssemblyScalarMass{1. / dt, feSpaceU},
+      AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
+      AssemblyStiffness{nu, feSpaceU}};
   auto const uStarRhs = std::tuple{
-        AssemblyProjection{1./dt, u.data, feSpaceU},
-        AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}}};
+      AssemblyProjection{1. / dt, u.data, feSpaceU},
+      AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}}};
 
-  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d pOld / dy
+  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d
+  // pOld / dy
   auto const vStarLhs = std::tuple{
-        AssemblyScalarMass{1./dt, feSpaceU},
-        AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-        AssemblyStiffness{nu, feSpaceU}};
+      AssemblyScalarMass{1. / dt, feSpaceU},
+      AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
+      AssemblyStiffness{nu, feSpaceU}};
   auto const vStarRhs = std::tuple{
-      AssemblyProjection{1./dt, v.data, feSpaceU},
+      AssemblyProjection{1. / dt, v.data, feSpaceU},
       AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {1}}};
-        // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
+  // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
   // dt \nabla^2 \delta p = \nabla \cdot velStar
   auto const pLhs = std::tuple{AssemblyStiffness{dt, feSpacePSplit}};
-  auto const pRhs = std::tuple{AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit}};
+  auto const pRhs =
+      std::tuple{AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit}};
   // AssemblyStiffnessRhs{-dt, pOld, feSpaceP});
 
   // pOld += \delta p
@@ -336,40 +341,48 @@ int main(int argc, char* argv[])
   Vec velRT = Vec::Zero(feSpaceVelRT.dof.size);
   // Vec lambda = Vec::Zero(feSpaceLambda.dof.size);
 
-  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d pOld / dx
+  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d
+  // pOld / dx
   auto const uStarRTLhs = std::tuple{
-      AssemblyScalarMass{1./dt, feSpaceUStarRT},
+      AssemblyScalarMass{1. / dt, feSpaceUStarRT},
       AssemblyAdvection{1.0, velRT, feSpaceVelRT, feSpaceUStarRT},
       AssemblyStiffness{nu, feSpaceUStarRT}};
   auto const uStarRTRhs = std::tuple{
-      AssemblyProjection{2./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}},
-      AssemblyProjection{-1./dt, uStarRT.data, feSpaceUStarRT}
+      AssemblyProjection{2. / dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}},
+      AssemblyProjection{-1. / dt, uStarRT.data, feSpaceUStarRT}
       // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}}
   };
 
-  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d pOld / dy
+  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d
+  // pOld / dy
   auto const vStarRTLhs = std::tuple{
-      AssemblyScalarMass{1./dt, feSpaceUStarRT},
+      AssemblyScalarMass{1. / dt, feSpaceUStarRT},
       AssemblyAdvection{1.0, velRT, feSpaceVelRT, feSpaceUStarRT},
       AssemblyStiffness{nu, feSpaceUStarRT}};
   auto const vStarRTRhs = std::tuple{
-      AssemblyProjection{2./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}},
-      AssemblyProjection{-1./dt, vStarRT.data, feSpaceUStarRT}
+      AssemblyProjection{2. / dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}},
+      AssemblyProjection{-1. / dt, vStarRT.data, feSpaceUStarRT}
       // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}}
   };
   t.stop();
 
   t.start("eqn RT");
-  Eqn eqnUstarRT{uStarRT, uStarRTLhs, uStarRTRhs, bcsUStarRT, EqnSolver<StorageType::RowMajor>()};
-  Eqn eqnVstarRT{vStarRT, vStarRTLhs, vStarRTRhs, bcsVStarRT, EqnSolver<StorageType::RowMajor>()};
+  Eqn eqnUstarRT{
+      uStarRT, uStarRTLhs, uStarRTRhs, bcsUStarRT, EqnSolver<StorageType::RowMajor>()};
+  Eqn eqnVstarRT{
+      vStarRT, vStarRTLhs, vStarRTRhs, bcsVStarRT, EqnSolver<StorageType::RowMajor>()};
 
   // \vec{uRT} - dt \nabla \lambda = \vec{uStar}
   // \nabla \cdot \vec{uRT} = 0
-  Builder<StorageType::RowMajor> builderRT{feSpaceVelRT.dof.size + feSpaceLambda.dof.size};
+  Builder<StorageType::RowMajor> builderRT{
+      feSpaceVelRT.dof.size + feSpaceLambda.dof.size};
   builderRT.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceVelRT}}, bcsVelRT);
-  builderRT.buildCoupling(AssemblyVectorGrad(1.0, feSpaceVelRT, feSpaceLambda), bcsVelRT, bcsLambda);
-  builderRT.buildCoupling(AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceVelRT), bcsLambda, bcsVelRT);
-  auto const velRTRhs = std::tuple{AssemblyProjection{1.0, velStarRT, feSpaceVelStarRT, feSpaceVelRT}};
+  builderRT.buildCoupling(
+      AssemblyVectorGrad(1.0, feSpaceVelRT, feSpaceLambda), bcsVelRT, bcsLambda);
+  builderRT.buildCoupling(
+      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceVelRT), bcsLambda, bcsVelRT);
+  auto const velRTRhs =
+      std::tuple{AssemblyProjection{1.0, velStarRT, feSpaceVelStarRT, feSpaceVelRT}};
   builderRT.closeMatrix();
   auto const velRTRhsFixed = builderRT.b;
   builderRT.clearRhs();
@@ -380,7 +393,8 @@ int main(int argc, char* argv[])
   t.start("eqn RT pp");
   Builder<StorageType::RowMajor> builderVel0{feSpaceVel0.dof.size * FESpaceVel0_T::dim};
   builderVel0.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceVel0}}, std::tuple{});
-  auto const vel0Rhs = std::tuple{AssemblyProjection{1.0, velRT, feSpaceVelRT, feSpaceVel0}};
+  auto const vel0Rhs =
+      std::tuple{AssemblyProjection{1.0, velRT, feSpaceVelRT, feSpaceVel0}};
   builderVel0.closeMatrix();
   IterSolver solverVel0;
   solverVel0.compute(builderVel0.A);
@@ -397,8 +411,8 @@ int main(int argc, char* argv[])
   interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
 
   // split
-  auto const ic0 = [&ic] (Vec3 const & p) { return ic(p)[0]; };
-  auto const ic1 = [&ic] (Vec3 const & p) { return ic(p)[1]; };
+  auto const ic0 = [&ic](Vec3 const & p) { return ic(p)[0]; };
+  auto const ic1 = [&ic](Vec3 const & p) { return ic(p)[1]; };
   interpolateAnalyticFunction(ic0, feSpaceU, u.data);
   interpolateAnalyticFunction(ic1, feSpaceU, v.data);
   uStar.data = u.data;
@@ -407,7 +421,7 @@ int main(int argc, char* argv[])
   // split RT
   interpolateAnalyticFunction(ic0, feSpaceUStarRT, uStarRT.data);
   interpolateAnalyticFunction(ic1, feSpaceUStarRT, vStarRT.data);
-  auto const ic3d = [&ic] (Vec3 const & p) { return promote<3>(ic(p)); };
+  auto const ic3d = [&ic](Vec3 const & p) { return promote<3>(ic(p)); };
   interpolateAnalyticFunction(ic3d, feSpaceVelRT, velRT);
   t.stop();
 
@@ -449,13 +463,13 @@ int main(int argc, char* argv[])
   double time = 0.0;
   auto const ntime = config["ntime"].as<uint>();
   auto const printStep = config["printStep"].as<uint>();
-  for (uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     timerStep.start();
     time += dt;
-    std::cout << "\n" << separator
-              << "solving timestep " << itime+1
-              << ", time = " << time << std::endl;
+    std::cout << "\n"
+              << separator << "solving timestep " << itime + 1 << ", time = " << time
+              << std::endl;
     // filelog << "\n" << separator;
 
     t.start("build monolithic");
@@ -541,7 +555,8 @@ int main(int argc, char* argv[])
     // std::cout << "ART:\n" << builderRT.A << std::endl;
     auto const solRT = solverRT.solve(builderRT.b);
     velRT = solRT.block(0, 0, feSpaceVelRT.dof.size, 1);
-    std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm() << std::endl;
+    std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
+              << std::endl;
     t.stop();
 
     t.start("build RT pp");
@@ -576,7 +591,7 @@ int main(int argc, char* argv[])
 
     t.start("print");
     pSplit.data += eqnP.sol.data;
-    if ((itime+1) % printStep == 0)
+    if ((itime + 1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
       // monolithic
@@ -611,11 +626,7 @@ int main(int argc, char* argv[])
   //                                typename LagrangeFE<Facet_T,1>::RecommendedQR, 2>;
   FESpaceFacet_T feSpaceBd{*facetMesh};
   Var bd{"bd"};
-  interpolateOnFacets<Component::TANGENTIAL>(
-        bd.data,
-        feSpaceBd,
-        velRT,
-        feSpaceVelRT);
+  interpolateOnFacets<Component::TANGENTIAL>(bd.data, feSpaceBd, velRT, feSpaceVelRT);
   std::cout << bd.data.transpose() << std::endl;
   ioFlux.print({bd}, time);
 

@@ -1,30 +1,33 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 int test(YAML::Node const & config)
 {
   using Elem_T = Tetrahedron;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T, 2>::RefFE_T,
-                            LagrangeFE<Elem_T, 2>::RecommendedQR>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 2>::RefFE_T,
+      LagrangeFE<Elem_T, 2>::RecommendedQR>;
 
-  scalarFun_T const rhs = [] (Vec3 const& p)
+  scalarFun_T const rhs = [](Vec3 const & p)
   {
-    return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    return 2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
+           std::sin(1.5 * M_PI * p(1));
     // return 0.;
   };
 
-  scalarFun_T const exactSol = [] (Vec3 const& p)
+  scalarFun_T const exactSol = [](Vec3 const & p)
   {
-    return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+    return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1));
     // return 1.;
   };
 
@@ -42,9 +45,9 @@ int test(YAML::Node const & config)
   t.start("bcs");
   // face refs with z-axis that exits from the plane, x-axis towards the right
   auto bcLeft = BCEss{feSpace, side::LEFT};
-  bcLeft << [] (Vec3 const &) { return 0.; };
+  bcLeft << [](Vec3 const &) { return 0.; };
   auto bcBottom = BCEss{feSpace, side::BOTTOM};
-  bcBottom << [] (Vec3 const &) { return 0.; };
+  bcBottom << [](Vec3 const &) { return 0.; };
   auto const bcs = std::tuple{bcLeft, bcBottom};
   t.stop();
 
@@ -90,7 +93,8 @@ int test(YAML::Node const & config)
   t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm
+            << std::endl;
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 

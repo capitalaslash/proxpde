@@ -1,4 +1,5 @@
 #include "def.hpp"
+
 #include "qr.hpp"
 
 template <uint N>
@@ -6,10 +7,7 @@ struct Monomial
 {
   using T = double;
 
-  static T value(T const x)
-  {
-    return x * Monomial<N-1>::value(x);
-  }
+  static T value(T const x) { return x * Monomial<N - 1>::value(x); }
 };
 
 template <>
@@ -17,10 +15,7 @@ struct Monomial<0>
 {
   using T = double;
 
-  static T value(T const)
-  {
-    return 1.L;
-  }
+  static T value(T const) { return 1.L; }
 };
 
 struct PolyVec
@@ -30,26 +25,19 @@ struct PolyVec
   using Vec2_T = Eigen::Matrix<T, 2, 1>;
   using Vec3_T = Eigen::Matrix<T, 3, 1>;
 
-  explicit PolyVec(T const x, T const y=0.L, T const z=0.L):
-    data{{x, y, z}}
-  {}
+  explicit PolyVec(T const x, T const y = 0.L, T const z = 0.L): data{{x, y, z}} {}
 
-  explicit PolyVec(Vec1_T const & v):
-    data{{static_cast<T>(v[0]), 0.L, 0.L}}
-  {}
+  explicit PolyVec(Vec1_T const & v): data{{static_cast<T>(v[0]), 0.L, 0.L}} {}
 
   explicit PolyVec(Vec2_T const & v):
-    data{{static_cast<T>(v[0]), static_cast<T>(v[1]), 0.L}}
+      data{{static_cast<T>(v[0]), static_cast<T>(v[1]), 0.L}}
   {}
 
   explicit PolyVec(Vec3_T const & v):
-    data{{static_cast<T>(v[0]), static_cast<T>(v[1]), static_cast<T>(v[2])}}
+      data{{static_cast<T>(v[0]), static_cast<T>(v[1]), static_cast<T>(v[2])}}
   {}
 
-  T operator() (uint const i) const
-  {
-    return data[i];
-  }
+  T operator()(uint const i) const { return data[i]; }
 
   array<T, 3> data;
 };
@@ -64,10 +52,8 @@ struct Polynomial
 
   static T value(PolyVec const & p)
   {
-    return
-        Monomial<I>::value(p(0)) *
-        Monomial<J>::value(p(1)) *
-        Monomial<K>::value(p(2));
+    return Monomial<I>::value(p(0)) * Monomial<J>::value(p(1)) *
+           Monomial<K>::value(p(2));
   }
 };
 
@@ -79,7 +65,7 @@ int test(
     long double const relativeError)
 {
   auto value = 0.L;
-  for (uint n=0; n<QR::numPts; ++n)
+  for (uint n = 0; n < QR::numPts; ++n)
   {
     auto const w = qr.weight[n];
     auto const localValue = Poly::value(PolyVec(qr.node[n]));
@@ -91,7 +77,8 @@ int test(
     std::cerr << "the integral is not the expected value.\n"
               << "expected: " << expectedValue << "\n"
               << "computed: " << value << "\n"
-              << "polynomial: (" << Poly::i << " " << Poly::j << " " << Poly::k << ")" << std::endl;
+              << "polynomial: (" << Poly::i << " " << Poly::j << " " << Poly::k << ")"
+              << std::endl;
     return 1;
   }
   return 0;
@@ -99,6 +86,7 @@ int test(
 
 int main()
 {
+  // clang-format off
   std::bitset<20> lineTests;
   lineTests[ 0] = test(GaussQR<Line,1>{}, Polynomial<0>{},   2.L, 1e-15L);
   lineTests[ 1] = test(GaussQR<Line,1>{}, Polynomial<1>{},   0.L, 1e-15L);
@@ -293,6 +281,8 @@ int main()
   hexahedronTests[51] = test(GaussQR<Hexahedron,27>{}, Polynomial<2,2,0>{}, 8.L/9, 1e-14L);
   hexahedronTests[52] = test(GaussQR<Hexahedron,27>{}, Polynomial<2,1,1>{},   0.L, 1e-15L);
   std::cout << "hexahedron: " << hexahedronTests << std::endl;
+  // clang-format on
 
-  return lineTests.any() || triangleTests.any() || quadTests.any() || tetrahedronTests.any() || hexahedronTests.any();
+  return lineTests.any() || triangleTests.any() || quadTests.any() ||
+         tetrahedronTests.any() || hexahedronTests.any();
 }

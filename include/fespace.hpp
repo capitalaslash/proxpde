@@ -1,20 +1,22 @@
 #pragma once
 
 #include "def.hpp"
-#include "dof.hpp"
+
 #include "curfe.hpp"
+#include "dof.hpp"
 
 template <typename FESpace>
 struct FEVar;
 
-template <typename Mesh,
-          typename RefFE,
-          typename QR,
-          uint Dimension = 1,
+template <
+    typename Mesh,
+    typename RefFE,
+    typename QR,
+    uint Dimension = 1,
 #ifdef DOF_INTERLEAVED
-          DofOrdering ordering = DofOrdering::INTERLEAVED>
+    DofOrdering ordering = DofOrdering::INTERLEAVED>
 #else
-          DofOrdering ordering = DofOrdering::BLOCK>
+    DofOrdering ordering = DofOrdering::BLOCK>
 #endif
 struct FESpace
 {
@@ -25,16 +27,20 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static uint constexpr dim = Dimension;
 
-  explicit FESpace(Mesh const & m, uint offset = 0):
-    mesh(m),
-    dof(m, offset)
+  explicit FESpace(Mesh const & m, uint offset = 0): mesh(m), dof(m, offset)
   {
-    static_assert (std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>, "mesh element and reference element are not compatible.");
-    static_assert (std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>, "reference element and quad rule are not compatible.");
+    static_assert(
+        std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
+        "mesh element and reference element are not compatible.");
+    static_assert(
+        std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
+        "reference element and quad rule are not compatible.");
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       // RT0 requires internal facets and facet ptrs
-      assert ((mesh.flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS)).count() == 2);
+      assert(
+          (mesh.flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS)).count() ==
+          2);
     }
   }
 
@@ -57,7 +63,8 @@ struct FESpace
     this->curFE.reinit(elem);
 
     // TODO: this needs inverse mapping
-    // FMat<RefFE_T::numFuns, RefFE_T::numFuns> jac = FMat<RefFE_T::numFuns, RefFE_T::numFuns>::Zero();
+    // FMat<RefFE_T::numFuns, RefFE_T::numFuns> jac = FMat<RefFE_T::numFuns,
+    // RefFE_T::numFuns>::Zero();
     // for(uint n=0; n<RefFE_T::numGeoFuns; ++n)
     // {
     //   jac += curFE.dofPts[n] * RefFE::mapping[n](pt);
@@ -65,9 +72,9 @@ struct FESpace
 
     FMat<RefFE_T::numFuns, dim> localValue;
     FMat<RefFE_T::numFuns, feDimValue<RefFE_T>()> phi;
-    for (uint n=0; n<CurFE_T::RefFE_T::numFuns; ++n)
+    for (uint n = 0; n < CurFE_T::RefFE_T::numFuns; ++n)
     {
-      for (uint d=0; d<dim; ++d)
+      for (uint d = 0; d < dim; ++d)
       {
         id_T const dofId = this->dof.getId(elem.id, n, d);
         localValue(n, d) = data[dofId];
@@ -77,7 +84,9 @@ struct FESpace
       // (this is true only for linear mappings)
       auto const ptRef = this->curFE.jacPlus[QR_T::bestPt] * (pt - elem.origin());
       // check that the approximated inverse mapping is close enough
-      assert((pt - (elem.origin() + this->curFE.jac[QR_T::bestPt] * ptRef)).norm() < 1.e-15);
+      assert(
+          (pt - (elem.origin() + this->curFE.jac[QR_T::bestPt] * ptRef)).norm() <
+          1.e-15);
       if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
       {
         // scalar functions do not change from reffe to curfe
@@ -107,7 +116,7 @@ struct FESpace
   {
     for (auto const & elem: mesh.elementList)
     {
-      for (uint d=0; d<DOF_T::clms; ++d)
+      for (uint d = 0; d < DOF_T::clms; ++d)
       {
         if (dof.getId(elem.id, d) == id)
         {
@@ -127,10 +136,11 @@ struct FESpace
 };
 
 template <typename FESpace>
-void interpolateAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
-                                 FESpace & feSpace,
-                                 Vec & v,
-                                 uint const offset = 0)
+void interpolateAnalyticFunction(
+    Fun<FESpace::physicalDim(), 3> const & fun,
+    FESpace & feSpace,
+    Vec & v,
+    uint const offset = 0)
 {
   // set the vector data to the appropriate dimension if it comes with length 0
   if (v.size() == 0)
@@ -143,10 +153,10 @@ void interpolateAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
     assert((feSpace.mesh.flags & MeshFlags::NORMALS).any());
   }
 
-  for(auto const & elem: feSpace.mesh.elementList)
+  for (auto const & elem: feSpace.mesh.elementList)
   {
     feSpace.curFE.reinit(elem);
-    for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
+    for (uint i = 0; i < FESpace::RefFE_T::numFuns; ++i)
     {
       auto const value = fun(feSpace.curFE.dofPts[i]);
       if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
@@ -154,13 +164,14 @@ void interpolateAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
         // the value of the dof is the value of the function
         // u_k = u phi_k
         // for vector fespaces this is a vector
-        for (uint d=0; d<FESpace::dim; ++d)
+        for (uint d = 0; d < FESpace::dim; ++d)
         {
           auto const dofId = feSpace.dof.getId(elem.id, i, d);
           v[offset + dofId] = value[d];
         }
       }
-      else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      else if constexpr (
+          family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
         // the value of the dof is the flux through the facet
         // u_k = \int_{f_k} u.dot(n_k)
@@ -187,19 +198,16 @@ void interpolateAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
 }
 
 template <typename FESpace>
-void interpolateAnalyticFunction(scalarFun_T const & f,
-                                 FESpace & feSpace,
-                                 Vec & v,
-                                 uint const offset = 0)
+void interpolateAnalyticFunction(
+    scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
 {
-  interpolateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
+  interpolateAnalyticFunction(
+      [f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v, offset);
 }
 
 template <typename FESpace>
-void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
-                               FESpace & feSpace,
-                               Vec & v,
-                               uint const offset = 0)
+void integrateAnalyticFunction(
+    Fun<FESpace::dim, 3> const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
 {
   auto & curFE = feSpace.curFE;
 
@@ -209,21 +217,21 @@ void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
     v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
 
-  for(auto const & e: feSpace.mesh.elementList)
+  for (auto const & e: feSpace.mesh.elementList)
   {
     curFE.reinit(e);
-    for (uint i=0; i<FESpace::RefFE_T::numFuns; ++i)
+    for (uint i = 0; i < FESpace::RefFE_T::numFuns; ++i)
     {
       // auto const value = f(feSpace.curFE.dofPts[i]);
       FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
-      for (uint q=0; q<FESpace::QR_T::numPts; ++q)
+      for (uint q = 0; q < FESpace::QR_T::numPts; ++q)
       {
         value += curFE.JxW[q] * f(curFE.qpoint[q]);
       }
       // TODO: this is required only for color functions, should be optional
       value /= e.volume();
 
-      for (uint d=0; d<FESpace::dim; ++d)
+      for (uint d = 0; d < FESpace::dim; ++d)
       {
         auto const dofId = feSpace.dof.getId(e.id, i, d);
         if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
@@ -232,7 +240,8 @@ void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
           // u_k = u phi_k
           v[offset + dofId] = value[d];
         }
-        else if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+        else if constexpr (
+            family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
         {
           // the value of the dof is the flux through the face
           // u_k = u.dot(n_k)
@@ -244,12 +253,11 @@ void integrateAnalyticFunction(Fun<FESpace::dim,3> const & f,
 }
 
 template <typename FESpace>
-void integrateAnalyticFunction(scalarFun_T const & f,
-                               FESpace & feSpace,
-                               Vec & v,
-                               uint const offset = 0)
+void integrateAnalyticFunction(
+    scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
 {
-  integrateAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
+  integrateAnalyticFunction(
+      [f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v, offset);
 }
 
 template <typename FESpaceData, typename FESpaceGrad>
@@ -271,12 +279,12 @@ void reconstructGradient(
     feSpaceData.curFE.reinit(elem);
     feSpaceGrad.curFE.reinit(elem);
 
-    for (uint k=0; k<FESpaceData::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpaceData::RefFE_T::numFuns; ++k)
     {
       auto const baseDof = feSpaceData.dof.getId(elem.id, k);
       auto const value = data[baseDof];
       numberOfPasses[baseDof] += 1;
-      for (uint i=0; i<FESpaceGrad::RefFE_T::numFuns; ++i)
+      for (uint i = 0; i < FESpaceGrad::RefFE_T::numFuns; ++i)
       {
         for (auto const d: comp)
         {
@@ -286,23 +294,26 @@ void reconstructGradient(
             grad[offset + feSpaceGrad.dof.getId(elem.id, i, d)] +=
                 value * feSpaceGrad.curFE.dphi[i](k, d);
           }
-          else if constexpr (family_v<typename FESpaceData::RefFE_T> == FamilyType::RAVIART_THOMAS)
+          else if constexpr (
+              family_v<typename FESpaceData::RefFE_T> == FamilyType::RAVIART_THOMAS)
           {
             abort();
             // the value of the dof is the flux through the face
             // u_k = u.dot(n_k)
-            // v[offset + baseDof + d*size] = value[d].dot(FESpace::RefFE_T::normal(e)[i]);
+            // v[offset + baseDof + d*size] =
+            // value[d].dot(FESpace::RefFE_T::normal(e)[i]);
           }
         }
       }
     }
   }
-  // divide by the number of elements which provided a gradient to get the mean value of the gradient
-  for (uint i=0; i<size; ++i)
+  // divide by the number of elements which provided a gradient to get the mean value of
+  // the gradient
+  for (uint i = 0; i < size; ++i)
   {
     for (auto const d: comp)
     {
-      grad[i + d*size] /= numberOfPasses[i];
+      grad[i + d * size] /= numberOfPasses[i];
     }
   }
 }
@@ -318,17 +329,16 @@ void getComponent(
   static_assert(FESpaceOrig::dim > 1, "should not be used on scalar fespaces");
   auto const size = feSpaceDest.dof.size;
   auto constexpr dim = FESpaceOrig::dim;
-  assert (size == feSpaceOrig.dof.size);
+  assert(size == feSpaceOrig.dof.size);
   if (FESpaceOrig::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    dest = orig.block(component*size, 0, size, 1);
+    dest = orig.block(component * size, 0, size, 1);
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {
     // temporary copy required by non-const method
     Vec tmp = orig;
-    dest = Eigen::Map<Vec, 0, Eigen::InnerStride<dim>>(
-          tmp.data() + component, size);
+    dest = Eigen::Map<Vec, 0, Eigen::InnerStride<dim>>(tmp.data() + component, size);
     // Eigen dev branch
     // dest = orig(Eigen::seqN(component, size*dim, dim))};
   }
@@ -336,16 +346,15 @@ void getComponent(
 
 template <typename FESpaceOrig>
 void getComponents(
-    array<Vec &, FESpaceOrig::dim> dest,
-    Vec & orig,
-    FESpaceOrig const & feSpaceOrig)
+    array<Vec &, FESpaceOrig::dim> dest, Vec & orig, FESpaceOrig const & feSpaceOrig)
 {
   using FESpaceDest = FESpace<
       typename FESpaceOrig::Mesh_T,
       typename FESpaceOrig::RefFE_T,
-      typename FESpaceOrig::QR_T, 1>;
+      typename FESpaceOrig::QR_T,
+      1>;
   FESpaceDest feSpaceDest{feSpaceOrig.mesh};
-  for (uint d=0; d<feSpaceOrig; ++d)
+  for (uint d = 0; d < feSpaceOrig; ++d)
   {
     getComponent(dest[d], feSpaceDest, orig, feSpaceOrig, d);
   }
@@ -362,17 +371,17 @@ void setComponent(
   static_assert(FESpaceDest::dim > 1, "should not be used on scalar fespaces");
   auto const size = feSpaceOrig.dof.size;
   auto constexpr dim = FESpaceDest::dim;
-  assert (size == feSpaceDest.dof.size);
-  assert (component < dim);
+  assert(size == feSpaceDest.dof.size);
+  assert(component < dim);
   if (FESpaceDest::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    dest.block(component*size, 0, size, 1) = orig;
+    dest.block(component * size, 0, size, 1) = orig;
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {
-    for (uint k=0; k<size; ++k)
+    for (uint k = 0; k < size; ++k)
     {
-      dest[k*dim + component] = orig[k];
+      dest[k * dim + component] = orig[k];
     }
   }
 }
@@ -386,10 +395,10 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
   using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using FacetQR_T = SideQR_T<typename FESpace_T::QR_T>;
   using FacetCurFE_T = CurFE<FacetFE_T, FacetQR_T>;
-  using FacetFESpace_T =
-      FESpace<Mesh_T,
-              typename FESpace_T::RefFE_T,
-              SideGaussQR<Elem_T, FacetQR_T::numPts>>;
+  using FacetFESpace_T = FESpace<
+      Mesh_T,
+      typename FESpace_T::RefFE_T,
+      SideGaussQR<Elem_T, FacetQR_T::numPts>>;
 
   FacetCurFE_T facetCurFE;
   FacetFESpace_T facetFESpace{feSpace.mesh};
@@ -406,7 +415,7 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
       auto elem = facet.facingElem[0].ptr;
       auto const side = facet.facingElem[0].side;
       uFacet.reinit(*elem);
-      for (uint q=0; q<FacetQR_T::numPts; ++q)
+      for (uint q = 0; q < FacetQR_T::numPts; ++q)
       {
         double const value = uFacet.evaluate(side * FacetQR_T::numPts + q)[0];
         integral += facetCurFE.JxW[q] * value;
@@ -421,4 +430,5 @@ template <typename FESpaceVec>
 using Scalar_T = FESpace<
     typename FESpaceVec::Mesh_T,
     typename FESpaceVec::RefFE_T,
-    typename FESpaceVec::QR_T, 1>;
+    typename FESpaceVec::QR_T,
+    1>;

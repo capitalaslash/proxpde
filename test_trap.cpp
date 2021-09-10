@@ -1,25 +1,22 @@
 #include "def.hpp"
-#include "geo.hpp"
-#include "fe.hpp"
-#include "bc.hpp"
+
 #include "assembly.hpp"
+#include "bc.hpp"
 #include "builder.hpp"
+#include "fe.hpp"
+#include "geo.hpp"
 #include "iomanager.hpp"
 
 int main()
 {
-  scalarFun_T const rhs = [] (Vec3 const& p)
-  {
-    return M_PI*std::sin(M_PI*p(0));
-  };
+  scalarFun_T const rhs = [](Vec3 const & p) { return M_PI * std::sin(M_PI * p(0)); };
 
-  scalarFun_T const exactSol = [] (Vec3 const& p)
-  {
-    return std::sin(M_PI*p(0))/M_PI + p(0);
-  };
+  scalarFun_T const exactSol = [](Vec3 const & p)
+  { return std::sin(M_PI * p(0)) / M_PI + p(0); };
 
   // const scalarFun_T rhs = [] (Vec3 const& p) { return p(0); };
-  // const scalarFun_T exactSol = [] (Vec3 const& p) { return 0.5*p(0) -  p(0)*p(0)*p(0)/6.; };
+  // const scalarFun_T exactSol = [] (Vec3 const& p) { return 0.5*p(0) -
+  // p(0)*p(0)*p(0)/6.; };
 
   // const scalarFun_T rhs = [] (Vec3 const&) { return 8.; };
   // const scalarFun_T exactSol = [] (Vec3 const& p) { return 4.*p(0)*(2.-p(0)); };
@@ -27,9 +24,7 @@ int main()
 
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T,1>::RefFE_T,
-                            TrapQR<Elem_T>>;
+  using FESpace_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 1>::RefFE_T, TrapQR<Elem_T>>;
 
   uint const numElemsX = 10;
   uint const numElemsY = 2;
@@ -64,8 +59,9 @@ int main()
   // {
   //   for (Mat::InnerIterator it(builder.A,k); it; ++it)
   //   {
-  //     std::cout << it.row() << " " << it.col() << " " << it.value() << " " << it.index() << std::endl;
-  //     fout << it.row()+1 << " " << it.col()+1 << " " << it.value() << std::endl;
+  //     std::cout << it.row() << " " << it.col() << " " << it.value() << " " <<
+  //     it.index() << std::endl; fout << it.row()+1 << " " << it.col()+1 << " " <<
+  //     it.value() << std::endl;
   //   }
   //   std::cout << "-----" << std::endl;
   // }
@@ -80,7 +76,7 @@ int main()
   solver.factorize(builder.A);
 
   sol.data = solver.solve(builder.b);
-  std::cout<< "sol:\n" << sol.data << std::endl;
+  std::cout << "sol:\n" << sol.data << std::endl;
 
   Var exact{"exact"};
   interpolateAnalyticFunction(exactSol, feSpace, exact.data);

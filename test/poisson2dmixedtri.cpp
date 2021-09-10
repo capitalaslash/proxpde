@@ -1,12 +1,13 @@
 #include "def.hpp"
-#include "mesh.hpp"
-#include "reffe.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
+#include "reffe.hpp"
 
 int test(YAML::Node const & config)
 {
@@ -15,33 +16,36 @@ int test(YAML::Node const & config)
   using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
   using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
   using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
-  using FESpaceP0Vec_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
+  using FESpaceP0Vec_T =
+      FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   auto const n = config["n"].as<uint>();
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
-  buildHyperCube(*mesh, origin, length, {n, n, 0}, MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
+  buildHyperCube(
+      *mesh,
+      origin,
+      length,
+      {n, n, 0},
+      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
   // addElemFacetList(*mesh);
   // std::cout << "mesh: " << *mesh << std::endl;
 
   auto const g = config["g"].as<double>();
-  scalarFun_T rhs = [] (Vec3 const & )
+  scalarFun_T rhs = [](Vec3 const &)
   {
     return -2.;
     // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  scalarFun_T exactSol = [g] (Vec3 const & p)
+  scalarFun_T exactSol = [g](Vec3 const & p)
   {
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  Fun<2,3> exactGrad = [g] (Vec3 const & p)
-  {
-    return Vec2(2. + g - 2. * p(0), 0.);
-  };
+  Fun<2, 3> exactGrad = [g](Vec3 const & p) { return Vec2(2. + g - 2. * p(0), 0.); };
 
   FESpaceRT0_T feSpaceW{*mesh};
   FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
@@ -50,15 +54,13 @@ int test(YAML::Node const & config)
 
   // the function is multiplied by the normal in the bc
   auto bcWRight = BCEss{feSpaceW, side::RIGHT};
-  bcWRight << [&exactGrad] (Vec3 const & p) {
-    return promote<3>(exactGrad(p));
-  };
+  bcWRight << [&exactGrad](Vec3 const & p) { return promote<3>(exactGrad(p)); };
 
   // symmetry
   auto bcWTop = BCEss{feSpaceW, side::TOP};
-  bcWTop << [] (Vec3 const & ) { return Vec3{0.0, 0.0, 0.0}; };
+  bcWTop << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
   auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
-  bcWBottom << [] (Vec3 const & ) { return Vec3{0.0, 0.0, 0.0}; };
+  bcWBottom << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
 
   auto const bcsW = std::tuple{bcWRight, bcWBottom, bcWTop};
 
@@ -78,8 +80,9 @@ int test(YAML::Node const & config)
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
   auto const bcsDummy = std::make_tuple();
   // Vec rhsW;
-  // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) - p(0)); }, feSpaceP0Vec, rhsW);
-  // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceP0Vec, feSpaceRT0), bcsW);
+  // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) -
+  // p(0)); }, feSpaceP0Vec, rhsW); builder.buildRhs(AssemblyS2VProjection(1.0, rhsW,
+  // feSpaceP0Vec, feSpaceRT0), bcsW);
 
   // in order to apply essential bcs on U
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
@@ -115,7 +118,8 @@ int test(YAML::Node const & config)
 
   Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
   builderRT0.buildLhs(std::tuple{AssemblyScalarMass(1.0, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.buildRhs(std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceW, feSpaceP0Vec)}, bcsDummy);
+  builderRT0.buildRhs(
+      std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceW, feSpaceP0Vec)}, bcsDummy);
   builderRT0.closeMatrix();
   Var wP0("w");
   LUSolver solverRT0;
@@ -132,7 +136,8 @@ int test(YAML::Node const & config)
   ioRT0.print({wP0, exactW, errorW});
 
   double const norm = errorU.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm
+            << std::endl;
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 

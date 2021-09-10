@@ -1,26 +1,28 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
+#include "var.hpp"
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
-using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
-using FESpaceU_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
-using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
+using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
-unsigned long compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
+unsigned long
+compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2)
 {
-  using KeyT = std::pair<int,int>;
+  using KeyT = std::pair<int, int>;
   using DbT = std::map<KeyT, double>;
   DbT db;
   for (auto const & t: v1)
@@ -87,10 +89,10 @@ unsigned long compareTriplets(std::vector<Triplet> const & v1, std::vector<Tripl
   return db.size() + missing.size();
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
-  uint const numElemsX = (argc < 3)? 3 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 3 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3) ? 3 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 3 : std::stoi(argv[2]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -105,13 +107,13 @@ int main(int argc, char* argv[])
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
-  uint const numDOFs = dofU*FESpaceVel_T::dim + dofP;
+  uint const numDOFs = dofU * FESpaceVel_T::dim + dofP;
 
   if constexpr (FESpaceVel_T::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    for (uint e=0; e<feSpaceU.dof.rows; ++e)
+    for (uint e = 0; e < feSpaceU.dof.rows; ++e)
     {
-      for (uint k=0; k<FESpaceU_T::RefFE_T::numFuns; ++k)
+      for (uint k = 0; k < FESpaceU_T::RefFE_T::numFuns; ++k)
       {
         feSpaceV.dof.elemMap(e, k) += dofU;
       }
@@ -119,9 +121,9 @@ int main(int argc, char* argv[])
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {
-    for (uint e=0; e<feSpaceU.dof.rows; ++e)
+    for (uint e = 0; e < feSpaceU.dof.rows; ++e)
     {
-      for (uint k=0; k<FESpaceU_T::RefFE_T::numFuns; ++k)
+      for (uint k = 0; k < FESpaceU_T::RefFE_T::numFuns; ++k)
       {
         feSpaceU.dof.elemMap(e, k) *= 2;
         feSpaceV.dof.elemMap(e, k) *= 2;
@@ -129,41 +131,41 @@ int main(int argc, char* argv[])
       }
     }
   }
-  for (uint e=0; e<feSpaceP.dof.rows; ++e)
+  for (uint e = 0; e < feSpaceP.dof.rows; ++e)
   {
-    for (uint k=0; k<FESpaceP_T::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpaceP_T::RefFE_T::numFuns; ++k)
     {
       feSpaceP.dof.elemMap(e, k) += 2 * dofU;
     }
   }
 
-  auto const zero1d = [] (Vec3 const &) {return 0.;};
-  auto const one =    [] (Vec3 const &) {return 1.;};
-  auto const zero2d = [] (Vec3 const &) {return Vec2{0., 0.};};
-  auto const inlet =  [] (Vec3 const &) {return Vec2{1., 0.};};
+  auto const zero1d = [](Vec3 const &) { return 0.; };
+  auto const one = [](Vec3 const &) { return 1.; };
+  auto const zero2d = [](Vec3 const &) { return Vec2{0., 0.}; };
+  auto const inlet = [](Vec3 const &) { return Vec2{1., 0.}; };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::TOP},
-        BCEss{feSpaceVel, side::LEFT});
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::TOP},
+      BCEss{feSpaceVel, side::LEFT});
   std::get<0>(bcsVel) << zero2d;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << inlet;
   std::get<3>(bcsVel) << zero2d;
   auto bcsU = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM},
-        BCEss{feSpaceU, side::RIGHT},
-        BCEss{feSpaceU, side::TOP},
-        BCEss{feSpaceU, side::LEFT});
+      BCEss{feSpaceU, side::BOTTOM},
+      BCEss{feSpaceU, side::RIGHT},
+      BCEss{feSpaceU, side::TOP},
+      BCEss{feSpaceU, side::LEFT});
   std::get<0>(bcsU) << zero1d;
   std::get<1>(bcsU) << zero1d;
   std::get<2>(bcsU) << one;
   std::get<3>(bcsU) << zero1d;
   auto bcsV = std::make_tuple(
-        BCEss{feSpaceV, side::BOTTOM},
-        BCEss{feSpaceV, side::RIGHT},
-        BCEss{feSpaceV, side::TOP},
-        BCEss{feSpaceV, side::LEFT});
+      BCEss{feSpaceV, side::BOTTOM},
+      BCEss{feSpaceV, side::RIGHT},
+      BCEss{feSpaceV, side::TOP},
+      BCEss{feSpaceV, side::LEFT});
   std::get<0>(bcsU) << zero1d;
   std::get<1>(bcsU) << zero1d;
   std::get<2>(bcsU) << zero1d;

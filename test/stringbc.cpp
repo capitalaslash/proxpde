@@ -1,13 +1,14 @@
 #include <minifem/def.hpp>
-#include <minifem/mesh.hpp>
+
+#include <minifem/assembly.hpp>
+#include <minifem/bc.hpp>
+#include <minifem/builder.hpp>
 #include <minifem/fe.hpp>
 #include <minifem/fespace.hpp>
-#include <minifem/bc.hpp>
-#include <minifem/var.hpp>
-#include <minifem/assembly.hpp>
-#include <minifem/builder.hpp>
 #include <minifem/iomanager.hpp>
+#include <minifem/mesh.hpp>
 #include <minifem/timer.hpp>
+#include <minifem/var.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -29,20 +30,13 @@ static constexpr std::vector<uint> vecIota()
 }
 static const auto dimIota = vecIota<dim>();
 
-static auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
-static std::map<
-  std::string,
-  std::pair<
-    Fun<dim, 3>,
-    std::vector<uint>
-  >
-> bcTypes =
-{
-  {"outlet", {zero, {0}}}, // should clamp directions tangent to the face
-  {"wall", {zero, dimIota}},
-  {"sym", {zero, {0}}}, // should clamp direction normal to the face
+static auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
+static std::map<std::string, std::pair<Fun<dim, 3>, std::vector<uint>>> bcTypes = {
+    {"outlet", {zero, {0}}}, // should clamp directions tangent to the face
+    {"wall", {zero, dimIota}},
+    {"sym", {zero, {0}}}, // should clamp direction normal to the face
 };
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   MilliTimer t;
   auto const configFile = (argc > 1) ? argv[1] : "config.yaml";
@@ -54,8 +48,9 @@ int main(int argc, char* argv[])
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceP_T feSpaceP{*mesh};
 
-  FVec<dim> const vInlet = FVec<dim>(config["v_inlet"].as<std::vector<double>>().data());
-  auto inlet = [&vInlet] (Vec3 const &) {return vInlet;};
+  FVec<dim> const vInlet =
+      FVec<dim>(config["v_inlet"].as<std::vector<double>>().data());
+  auto inlet = [&vInlet](Vec3 const &) { return vInlet; };
   bcTypes["inlet"] = std::pair(inlet, dimIota);
   BCList bcsVel{feSpaceVel};
   // bcsVel.addEssentialBC(1, inlet);     // inlet
@@ -63,32 +58,31 @@ int main(int argc, char* argv[])
   // bcsVel.addEssentialBC(3, zero);      // heat
   // bcsVel.addEssentialBC(4, zero, {0}); // sym
   // bcsVel.addEssentialBC(5, zero);      // wall
-  for (auto const & [boundaryId, boundaryType]: config["bcs"].as<std::map<marker_T, std::string>>())
+  for (auto const & [boundaryId, boundaryType]:
+       config["bcs"].as<std::map<marker_T, std::string>>())
   {
     std::cout << boundaryId << " -> " << boundaryType << std::endl;
     bcsVel.addEssentialBC(
-      boundaryId,
-      bcTypes[boundaryType].first,
-      bcTypes[boundaryType].second);
+        boundaryId, bcTypes[boundaryType].first, bcTypes[boundaryType].second);
   }
   BCList bcsP{feSpaceP};
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
-  uint const numDOFs = dofU*dim + dofP;
+  uint const numDOFs = dofU * dim + dofP;
 
   Vec velOld{dofU * dim};
   double const dt = config["dt"].as<double>();
   double const mu = config["mu"].as<double>();
-  AssemblyMass timeder{1./dt, feSpaceVel};
+  AssemblyMass timeder{1. / dt, feSpaceVel};
   AssemblyAdvection advection{1.0, velOld, feSpaceVel};
   AssemblyTensorStiffness stiffness{mu, feSpaceVel};
-  AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP, {0,1}, 0, dofU*dim};
-  AssemblyDiv div{-1.0, feSpaceP, feSpaceVel, {0,1}, dofU*dim, 0};
-  AssemblyProjection timederRhs(1./dt, velOld, feSpaceVel);
+  AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP, {0, 1}, 0, dofU * dim};
+  AssemblyDiv div{-1.0, feSpaceP, feSpaceVel, {0, 1}, dofU * dim, 0};
+  AssemblyProjection timederRhs(1. / dt, velOld, feSpaceVel);
 
   Var sol{"vel", numDOFs};
-  Var p{"p", sol.data, dofU*dim, dofP};
+  Var p{"p", sol.data, dofU * dim, dofP};
 
   GMRESSolver solver;
 
@@ -110,11 +104,10 @@ int main(int argc, char* argv[])
   double time = 0.0;
   uint const ntime = config["final_time"].as<double>() / dt;
   uint const print_step = config["print_step"].as<uint>();
-  for (uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime+1
-              << ", time = " << time << std::endl;
+    std::cout << "solving timestep " << itime + 1 << ", time = " << time << std::endl;
 
     velOld = sol.data;
 
@@ -128,16 +121,16 @@ int main(int argc, char* argv[])
 
     solver.compute(builder.A);
     sol.data = solver.solve(builder.b);
-    auto const res = builder.A*sol.data-builder.b;
+    auto const res = builder.A * sol.data - builder.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
 
     if (itime % print_step == 0)
     {
-      ioVel.iter = itime+1;
+      ioVel.iter = itime + 1;
       ioVel.time = time;
       ioVel.print({sol});
-      p.data = sol.data.block(2*dofU,0,dofP,1);
-      ioP.iter = itime+1;
+      p.data = sol.data.block(2 * dofU, 0, dofP, 1);
+      ioP.iter = itime + 1;
       ioP.time = time;
       ioP.print({p});
     }

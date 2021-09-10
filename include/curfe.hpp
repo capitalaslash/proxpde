@@ -1,8 +1,9 @@
 #pragma once
 
 #include "def.hpp"
-#include "reffe.hpp"
+
 #include "qr.hpp"
+#include "reffe.hpp"
 
 template <typename RefFE, typename QR>
 struct CurFE
@@ -11,7 +12,7 @@ struct CurFE
   using QR_T = QR;
   static uint constexpr numDOFs = RefFE_T::numFuns;
   static uint constexpr dim = RefFE_T::dim;
-  using LocalMat_T = FMat<numDOFs,numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
   using LocalVec_T = FVec<numDOFs>;
   using JacMat_T = FMat<3, dim>;
   using JacTMat_T = FMat<dim, 3>;
@@ -19,9 +20,9 @@ struct CurFE
 
   CurFE()
   {
-    for (uint q=0; q<QR::numPts; ++q)
+    for (uint q = 0; q < QR::numPts; ++q)
     {
-      for (uint i=0; i<numDOFs; ++i)
+      for (uint i = 0; i < numDOFs; ++i)
       {
         if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
         {
@@ -31,9 +32,10 @@ struct CurFE
 #ifdef ENABLE_SECONDDERIV
           if constexpr (enableSecondDeriv_v<RefFE_T>)
           {
-            for (uint d=0; d<dim; ++d)
+            for (uint d = 0; d < dim; ++d)
             {
-              d2phiRef[q].row(i + d*numDOFs) = RefFE::d2phiFun[i + d*numDOFs](QR::node[q]);
+              d2phiRef[q].row(i + d * numDOFs) =
+                  RefFE::d2phiFun[i + d * numDOFs](QR::node[q]);
             }
           }
 #endif
@@ -44,7 +46,7 @@ struct CurFE
           divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
         }
       }
-      for (uint i=0; i<RefFE::numGeoFuns; ++i)
+      for (uint i = 0; i < RefFE::numGeoFuns; ++i)
       {
         mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
       }
@@ -65,10 +67,10 @@ struct CurFE
 
       auto const mappingPts = RefFE::mappingPts(*elem);
 
-      for(uint q=0; q<QR::numPts; ++q)
+      for (uint q = 0; q < QR::numPts; ++q)
       {
         jac[q] = JacMat_T::Zero();
-        for(uint n=0; n<RefFE::numGeoFuns; ++n)
+        for (uint n = 0; n < RefFE::numGeoFuns; ++n)
         {
           jac[q] += mappingPts[n] * mapping[q].row(n);
         }
@@ -94,9 +96,9 @@ struct CurFE
           if constexpr (enableSecondDeriv_v<RefFE_T>)
           {
             d2phi[q] = FMat<numDOFs * 3, 3>::Zero();
-            for (uint d1=0; d1<3; ++d1)
+            for (uint d1 = 0; d1 < 3; ++d1)
             {
-              for (uint d2=0; d2<dim; ++d2)
+              for (uint d2 = 0; d2 < dim; ++d2)
               {
                 d2phi[q].template block<numDOFs, 3>(d1 * numDOFs, 0) +=
                     jacPlus[q](d2, d1) *
@@ -114,7 +116,7 @@ struct CurFE
           phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
           divphi[q] = detJInv * divphiRef[q];
           // adjust signs based on normal going from lower id to greater id
-          for (uint f=0; f<RefFE_T::GeoElem_T::numFacets; ++f)
+          for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
           {
             if (elem->facetList[f]->facingElem[0].ptr->id != elem->id)
             {
@@ -141,7 +143,7 @@ struct CurFE
   {
     JacMat_T jac = JacMat_T::Zero();
     auto const mappingPts = RefFE::mappingPts(*elem);
-    for(uint n=0; n<RefFE::numGeoFuns; ++n)
+    for (uint n = 0; n < RefFE::numGeoFuns; ++n)
     {
       jac += mappingPts[n] * (RefFE::mapping[n](pt)).transpose();
     }
@@ -170,12 +172,13 @@ struct CurFE
     while (iter < maxIter)
     {
       JacMat_T jac = JacMat_T::Zero();
-      for(uint n=0; n<RefFE::numGeoFuns; ++n)
+      for (uint n = 0; n < RefFE::numGeoFuns; ++n)
       {
         jac += mappingPts[n] * (RefFE::mapping[n](approxPt)).transpose();
       }
       Vec3 const predictedPt = origin + jac * approxPt;
-      // filelog << iter << " " << std::setprecision(16) << approxPt.transpose() << " " << (pt - predictedPt).norm() << std::endl;
+      // filelog << iter << " " << std::setprecision(16) << approxPt.transpose() << " "
+      // << (pt - predictedPt).norm() << std::endl;
       Vec3 const deltaReal = pt - predictedPt;
       auto const jacPlus = (jac.transpose() * jac).inverse() * jac.transpose();
       // Newton iteration
@@ -190,15 +193,9 @@ struct CurFE
     return std::tie(approxPt, iter);
   }
 
-  bool approxInside(Vec3 const & pt)
-  {
-    return RefFE_T::inside(approxInverseMap(pt));
-  }
+  bool approxInside(Vec3 const & pt) { return RefFE_T::inside(approxInverseMap(pt)); }
 
-  bool inside(Vec3 const & pt)
-  {
-    return RefFE_T::inside(inverseMap(pt));
-  }
+  bool inside(Vec3 const & pt) { return RefFE_T::inside(inverseMap(pt)); }
 
   GeoElem const * elem = nullptr;
   array<Vec3, numDOFs> dofPts;

@@ -1,13 +1,14 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "iomanager.hpp"
-#include "timer.hpp"
 #include "feutils.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
 
 template <typename Elem, uint order>
 int test(YAML::Node const & config)
@@ -16,22 +17,22 @@ int test(YAML::Node const & config)
 
   using Elem_T = Elem;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T =
-    FESpace<Mesh_T,
-            typename LagrangeFE<Elem_T, order>::RefFE_T,
-            typename LagrangeFE<Elem_T, order>::RecommendedQR>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, order>::RefFE_T,
+      typename LagrangeFE<Elem_T, order>::RecommendedQR>;
 
-  scalarFun_T const rhsFun = [] (Vec3 const & p)
+  scalarFun_T const rhsFun = [](Vec3 const & p)
   {
     return M_PI * M_PI * std::sin(M_PI * p(0));
     // return 6. * p(0);
   };
-  scalarFun_T const exactSol = [] (Vec3 const& p)
+  scalarFun_T const exactSol = [](Vec3 const & p)
   {
     return std::sin(M_PI * p(0));
     // return 4. * p(0) - pow(p(0), 3);
   };
-  Fun<Elem_T::dim, 3> const exactGrad = [] (Vec3 const& p)
+  Fun<Elem_T::dim, 3> const exactGrad = [](Vec3 const & p)
   {
     FVec<Elem_T::dim> value = FVec<Elem_T::dim>::Zero();
     value[0] = M_PI * std::cos(M_PI * p(0));
@@ -64,7 +65,7 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   auto bc = BCEss{feSpace, side::LEFT};
-  bc << [] (Vec3 const &) { return 0.; };
+  bc << [](Vec3 const &) { return 0.; };
   auto const bcs = std::tuple{bc};
   t.stop();
 
@@ -72,10 +73,9 @@ int test(YAML::Node const & config)
   auto const size = feSpace.dof.size;
   Builder builder{size};
   builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
-  auto const rhs = std::tuple
-  {
+  auto const rhs = std::tuple{
       AssemblyAnalyticRhs{rhsFun, feSpace},
-      AssemblyBCNatural{[] (Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
+      AssemblyBCNatural{[](Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
   };
   builder.buildRhs(rhs, bcs);
   builder.closeMatrix();
@@ -95,10 +95,11 @@ int test(YAML::Node const & config)
 
   t.start("flux");
   Var flux{"flux"};
-  using RecFESpace_T =
-    FESpace<Mesh_T,
-            typename LagrangeFE<Elem_T, order>::RefFE_T,
-            typename LagrangeFE<Elem_T, order>::ReconstructionQR, Elem_T::dim>;
+  using RecFESpace_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, order>::RefFE_T,
+      typename LagrangeFE<Elem_T, order>::ReconstructionQR,
+      Elem_T::dim>;
   RecFESpace_T feSpaceRec{*mesh};
   reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
   t.stop();
@@ -127,7 +128,7 @@ int test(YAML::Node const & config)
   IOManager ioFlux{feSpaceRec, "output_neumann/flux"};
   ioFlux.print({flux});
   IOManager ioGrad{feSpaceGrad, "output_neumann/grad"};
-  ioGrad.print({grad, eGrad ,errorGrad});
+  ioGrad.print({grad, eGrad, errorGrad});
   t.stop();
 
   t.print();
@@ -148,7 +149,8 @@ int test(YAML::Node const & config)
   // }
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm
+            << std::endl;
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 

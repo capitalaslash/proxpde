@@ -1,29 +1,31 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T, 1>::RefFE_T,
-                            LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
 
-  static scalarFun_T rhs = [] (Vec3 const & p)
+  static scalarFun_T rhs = [](Vec3 const & p)
   {
     // return M_PI*std::sin(M_PI*p(0));
     // return 0.25 * M_PI * M_PI * std::sin(0.5 * M_PI * p[0]);
     return std::sin(0.5 * M_PI * p[0]) - 0.25 * M_PI * M_PI * cos(M_PI * p[0]);
   };
 
-  static scalarFun_T exactSol = [] (Vec3 const & p)
+  static scalarFun_T exactSol = [](Vec3 const & p)
   {
     // return std::sin(M_PI*p(0))/M_PI + p(0);
     return std::sin(0.5 * M_PI * p[0]);
@@ -33,7 +35,7 @@ int main(int argc, char* argv[])
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uint const numElems = (argc < 2)? 20 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2) ? 20 : std::stoi(argv[1]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
@@ -45,14 +47,14 @@ int main(int argc, char* argv[])
 
   t.start("bcs");
   auto bc = BCEss{feSpace, side::LEFT};
-  bc << [] (Vec3 const &) { return 0.; };
+  bc << [](Vec3 const &) { return 0.; };
   auto const bcs = std::tuple{bc};
   t.stop();
 
   t.start("fe build");
   // AssemblyStiffness stiffness(1.0, feSpace);
   FEVar nu{feSpace};
-  nu << [] (Vec3 const & p) { return std::sin(0.5 * M_PI * p[0]); };
+  nu << [](Vec3 const & p) { return std::sin(0.5 * M_PI * p[0]); };
   // nu << [] (Vec3 const & ) { return 1.; };
   ScalarCoef one{1.};
   AssemblyMassFE mass{1., one, feSpace};
@@ -95,6 +97,7 @@ int main(int argc, char* argv[])
   t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm
+            << std::endl;
   return checkError({norm}, {0.00111592884191975});
 }

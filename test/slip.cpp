@@ -1,15 +1,16 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
-#include "timer.hpp"
+#include "mesh.hpp"
 #include "ns.hpp"
+#include "timer.hpp"
+#include "var.hpp"
 
 template <typename FESpace>
 struct BCEssNormal: public BCEss<FESpace>
@@ -18,12 +19,9 @@ struct BCEssNormal: public BCEss<FESpace>
   using RefFE_T = typename FESpace_T::RefFE_T;
   static constexpr uint dim = FESpace_T::dim;
 
-  BCEssNormal(FESpace_T const & fe,
-              marker_T const m):
-    BCEss<FESpace_T>{fe, m}
-  {}
+  BCEssNormal(FESpace_T const & fe, marker_T const m): BCEss<FESpace_T>{fe, m} {}
 
-  BCEssNormal<FESpace_T> operator<<(std::function<double (FVec<dim-1> const &)> f)
+  BCEssNormal<FESpace_T> operator<<(std::function<double(FVec<dim - 1> const &)> f)
   {
     auto const refPt = Vec3{0., 0., 0.};
     for (auto const & facet: this->feSpace.mesh.facetList)
@@ -33,13 +31,15 @@ struct BCEssNormal: public BCEss<FESpace>
         auto const normal = narrow<dim>(facet.normal());
         auto const & [elem, side] = facet.facingElem[0];
         this->feSpace.curFE.reinit(*elem);
-        if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+        if constexpr (
+            order_v < RefFE_T >> 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
         {
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])
           {
             auto const pt = this->feSpace.curFE.dofPts[dofFacet];
             // TODO: f(s) where s is the curvilinear variable(s) on the facet
-            auto const value = - f(FVec<dim-1>::Constant((pt - refPt).norm())) * normal;
+            auto const value =
+                -f(FVec<dim - 1>::Constant((pt - refPt).norm())) * normal;
             for (auto const c: this->comp)
             {
               DOFid_T const dofId = this->feSpace.dof.getId(elem->id, dofFacet, c);
@@ -55,7 +55,7 @@ struct BCEssNormal: public BCEss<FESpace>
         }
         else // order_v<RefFE_T> == 0 && family_v<RefFE_T> == FamilyType::LAGRANGE
         {
-          auto const value = - f(FVec<dim-1>::Constant(0.)) * normal;
+          auto const value = -f(FVec<dim - 1>::Constant(0.)) * normal;
           for (auto const c: this->comp)
           {
             DOFid_T const dofId = this->feSpace.dof.getId(elem->id, 0, c);
@@ -67,30 +67,30 @@ struct BCEssNormal: public BCEss<FESpace>
     return *this;
   }
 
-  BCEssNormal<FESpace_T> operator<<(std::function<double (double const &)> f)
+  BCEssNormal<FESpace_T> operator<<(std::function<double(double const &)> f)
   {
     static_assert(dim == 2, "scalar function on facet only available in 2D.");
-    return this->operator<<([f] (const Vec1 s) { return f(s[0]); });
+    return this->operator<<([f](const Vec1 s) { return f(s[0]); });
   }
 };
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = LagrangeFE<Elem_T,2>::RefFE_T;
-  using LinearRefFE = LagrangeFE<Elem_T,1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T,2>::RecommendedQR;
-  using FESpaceP_T = FESpace<Mesh_T,LinearRefFE,QuadraticQR>;
-  using FESpaceVel_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR,2>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
   // using FESpaceComponent_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
 
   MilliTimer t;
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uint const numElemsX = (argc < 3)? 10 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 10 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3) ? 10 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 10 : std::stoi(argv[2]);
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
   buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
@@ -112,21 +112,20 @@ int main(int argc, char* argv[])
   // bend
   Vec3 const center = {2., 0., 0.};
   double const totalAngle = M_PI / 3.;
-  auto const bend = [center] (Vec3 const & p, double const angle)
+  auto const bend = [center](Vec3 const & p, double const angle)
   {
     double const r = center[0] - p[0];
     return Vec3{
-      center[0] + r * std::cos(M_PI - angle),
-      center[1] + r * std::sin(M_PI - angle),
-      0.
-    };
+        center[0] + r * std::cos(M_PI - angle),
+        center[1] + r * std::sin(M_PI - angle),
+        0.};
   };
-  for (uint j=0; j<numElemsY+1; ++j)
+  for (uint j = 0; j < numElemsY + 1; ++j)
   {
     double const angle = j * totalAngle / numElemsY;
-    for (uint i=0; i<numElemsX+1; ++i)
+    for (uint i = 0; i < numElemsX + 1; ++i)
     {
-      auto & p = mesh->pointList[i + (numElemsX+1)*j];
+      auto & p = mesh->pointList[i + (numElemsX + 1) * j];
       p.coord = bend(p.coord, angle);
       // double const r = center[0] - p[0];
       // p.coord[0] = center[0] + r * std::cos(M_PI - angle);
@@ -137,25 +136,25 @@ int main(int argc, char* argv[])
   t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
   // FESpaceComponent_T feSpaceComponent{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 2*feSpaceVel.dof.size};
+  FESpaceP_T feSpaceP{*mesh, 2 * feSpaceVel.dof.size};
   t.stop();
 
   t.start("bc");
-  auto const zero = [] (Vec3 const &) { return Vec2::Constant(0.); };
+  auto const zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   // auto const one = [] (Vec3 const &) { return -1.; };
   // auto const oneY = [] (Point const &) { return Vec2{0.0, 1.0}; };
   // auto const inlet = [&R] (Vec3 const & p)
   // {
   //   return narrow<2>(R * Vec3{0., 5 * p[0] * (1. - p[0]), 0.});
   // };
-  // auto const inlet = [&R] (Vec3 const & ) { return narrow<2>(R * Vec3{0., 1., 0.}); };
-  // auto const inlet = [&R] (Vec3 const & p) {
+  // auto const inlet = [&R] (Vec3 const & ) { return narrow<2>(R * Vec3{0., 1., 0.});
+  // }; auto const inlet = [&R] (Vec3 const & p) {
   //   return narrow<2>(R * Vec3{0., (2. - p[0]), 0.});
   // };
   auto bcBottom = BCEssNormal{feSpaceVel, side::BOTTOM};
   // bcBottom << inlet;
-  bcBottom << [] (double const & s) { return 1. /*6. * s * (1. - s)*/; };
-  auto const  bcsVel = std::make_tuple(bcBottom);
+  bcBottom << [](double const & s) { return 1. /*6. * s * (1. - s)*/; };
+  auto const bcsVel = std::make_tuple(bcBottom);
 
   // auto const pinPt = bend(Vec3{0.5, 1., 0.}, totalAngle);
   // auto const toll = 1.e-12;
@@ -182,7 +181,7 @@ int main(int argc, char* argv[])
 
   t.start("build");
   double const nu = 0.1;
-  Vec velOld{2*dofU};
+  Vec velOld{2 * dofU};
   auto const stiffness = AssemblyTensorStiffness{nu, feSpaceVel};
   auto const advection = AssemblyAdvection{0.0, velOld, feSpaceVel, feSpaceVel};
   auto const grad = AssemblyGrad{-1., feSpaceVel, feSpaceP};
@@ -190,7 +189,7 @@ int main(int argc, char* argv[])
   auto const dummy = AssemblyDummy{feSpaceP};
   auto const bcNat = AssemblyBCNatural{zero, side::TOP, feSpaceVel};
 
-  Builder builder{dofU*FESpaceVel_T::dim + dofP};
+  Builder builder{dofU * FESpaceVel_T::dim + dofP};
   builder.buildLhs(std::tuple{stiffness, advection}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
@@ -201,7 +200,7 @@ int main(int argc, char* argv[])
 
   t.start("solve");
   Var sol{"vel"};
-  sol.data = Vec::Zero(2*dofU + dofP);
+  sol.data = Vec::Zero(2 * dofU + dofP);
   LUSolver solver(builder.A);
   sol.data = solver.solve(builder.b);
   t.stop();
@@ -221,7 +220,7 @@ int main(int argc, char* argv[])
   // Var v{"v"};
   // getComponent(u.data, feSpaceComponent, sol.data, feSpaceVel, 0);
   // getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
-  Var p{"p", sol.data, 2*dofU, dofP};
+  Var p{"p", sol.data, 2 * dofU, dofP};
   //
   // Var ue{"ue"};
   // Var ve{"ve"};
@@ -231,20 +230,27 @@ int main(int argc, char* argv[])
 
   // wall shear stress
   t.start("wssCell");
-  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR> feSpaceP0{*mesh};
+  FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, LagrangeFE<Elem_T, 0>::RecommendedQR>
+      feSpaceP0{*mesh};
   // mean cell value
   Var wssCell{"wssCell"};
-  computeElemWSS(wssCell.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
+  computeElemWSS(
+      wssCell.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
   t.stop();
-  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff() << std::endl;
-  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff() << std::endl;
+  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff()
+            << std::endl;
+  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff()
+            << std::endl;
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
-  computeFEWSS(wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
+  computeFEWSS(
+      wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
   t.stop();
-  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff() << std::endl;
-  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff() << std::endl;
+  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
+            << std::endl;
+  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
+            << std::endl;
 
   t.start("print");
   IOManager ioVel{feSpaceVel, "output_slip/vel"};
@@ -258,7 +264,7 @@ int main(int argc, char* argv[])
   auto bcLeft = BCEss{feSpaceVel, side::LEFT};
   auto bcRight = BCEss{feSpaceVel, side::RIGHT};
   double normOld = 0.;
-  for (uint k=0; k<20; ++k)
+  for (uint k = 0; k < 20; ++k)
   {
     std::cout << separator << "iteration " << k << std::endl;
 
@@ -273,7 +279,7 @@ int main(int argc, char* argv[])
 
     t.start("build");
     builder.clear();
-    velOld = sol.data.block(0, 0, 2*dofU, 1);
+    velOld = sol.data.block(0, 0, 2 * dofU, 1);
     builder.buildLhs(std::tuple{stiffness, advection}, bcsVelNew);
     builder.buildCoupling(grad, bcsVelNew, bcsP);
     builder.buildCoupling(div, bcsP, bcsVelNew);
@@ -287,24 +293,28 @@ int main(int argc, char* argv[])
     sol.data = solver.solve(builder.b);
     auto const res = builder.A * sol.data - builder.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
-    p.data = sol.data.block(2*dofU, 0, dofP, 1);
+    p.data = sol.data.block(2 * dofU, 0, dofP, 1);
     t.stop();
 
     t.start("integral");
     double pIntegral = integrateOnBoundary(p.data, feSpaceP, side::TOP);
     t.stop();
-    std::cout << "integral of pressure on top face: " << std::setprecision(16) << pIntegral << std::endl;
+    std::cout << "integral of pressure on top face: " << std::setprecision(16)
+              << pIntegral << std::endl;
 
     t.start("wss");
-    computeFEWSS(wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
+    computeFEWSS(
+        wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
     t.stop();
-    std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff() << std::endl;
-    std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff() << std::endl;
+    std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
+              << std::endl;
+    std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
+              << std::endl;
 
     t.start("print");
-    ioVel.print({sol}, k+1);
-    ioP.print({p}, k+1);
-    ioWSS.print({wssFacet}, k+1);
+    ioVel.print({sol}, k + 1);
+    ioP.print({p}, k + 1);
+    ioWSS.print({wssFacet}, k + 1);
     t.stop();
 
     double const norm = sol.data.norm();
@@ -332,8 +342,8 @@ int main(int argc, char* argv[])
   //     std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
   //     std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
   // {
-  //   std::cerr << "one of the norms of the error is not the prescribed value" << std::endl;
-  //   return 1;
+  //   std::cerr << "one of the norms of the error is not the prescribed value" <<
+  //   std::endl; return 1;
   // }
 
   return 0;

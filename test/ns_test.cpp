@@ -1,23 +1,27 @@
 #include "def.hpp"
+
 #include "ns.hpp"
 #include "timer.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   uint constexpr dim = 2;
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpaceVel_T = FESpace<Mesh_T,
-                               typename LagrangeFE<Elem_T, 2>::RefFE_T,
-                               typename LagrangeFE<Elem_T, 2>::RecommendedQR,
-                               dim>;
-  using FESpaceU_T = FESpace<Mesh_T,
-                               typename LagrangeFE<Elem_T, 2>::RefFE_T,
-                               typename LagrangeFE<Elem_T, 2>::RecommendedQR,
-                               1>;
-  using FESpaceP_T = FESpace<Mesh_T,
-                             typename LagrangeFE<Elem_T, 1>::RefFE_T,
-                             typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
+  using FESpaceVel_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 2>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
+      dim>;
+  using FESpaceU_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 2>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
+      1>;
+  using FESpaceP_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 1>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   MilliTimer t;
 
   ParameterDict config;
@@ -33,7 +37,7 @@ int main(int argc, char* argv[])
     config["nx"] = 4;
     config["ny"] = 8;
     config["dt"] = 0.1;
-    config["ntime"]= 50U;
+    config["ntime"] = 50U;
     config["nu"] = 0.1;
   }
 
@@ -45,31 +49,31 @@ int main(int argc, char* argv[])
   NSParameters parSplit{dt, nu, "output_ns/split"};
 
   t.start("mesh");
-  std::unique_ptr<Mesh_T> mesh{new(Mesh_T)};
+  std::unique_ptr<Mesh_T> mesh{new (Mesh_T)};
   buildHyperCube(
-        *mesh,
-        config["origin"].as<Vec3>(),
-        config["length"].as<Vec3>(),
-        {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
+      *mesh,
+      config["origin"].as<Vec3>(),
+      config["length"].as<Vec3>(),
+      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
   t.stop();
 
- FESpaceVel_T feSpaceVel{*mesh};
- FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
- FESpaceU_T feSpaceU{*mesh};
- FESpaceP_T feSpacePSplit{*mesh};
+  FESpaceVel_T feSpaceVel{*mesh};
+  FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
+  FESpaceU_T feSpaceU{*mesh};
+  FESpaceP_T feSpacePSplit{*mesh};
 
   t.start("monolithic bc");
-  auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0)*p(0))}; };
+  auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0) * p(0))}; };
   // auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.0}; };
-  auto const zero2d = [] (Vec3 const & ) { return Vec2{0.0, 0.0}; };
-  auto const inletX = [&inlet] (Vec3 const & p) { return inlet(p)[0];};
-  auto const inletY = [&inlet] (Vec3 const & p) { return inlet(p)[1];};
-  auto const zero = [] (Vec3 const & ) { return 0.0; };
+  auto const zero2d = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
+  auto const inletX = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
+  auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
+  auto const zero = [](Vec3 const &) { return 0.0; };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::TOP, uComp},
-        BCEss{feSpaceVel, side::LEFT, uComp});
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::TOP, uComp},
+      BCEss{feSpaceVel, side::LEFT, uComp});
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;
@@ -81,17 +85,16 @@ int main(int argc, char* argv[])
 
   t.start("split bc");
   auto bcsU = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM},
-        BCEss{feSpaceU, side::RIGHT},
-        BCEss{feSpaceU, side::TOP, {0}},
-        BCEss{feSpaceU, side::LEFT, {0}});
+      BCEss{feSpaceU, side::BOTTOM},
+      BCEss{feSpaceU, side::RIGHT},
+      BCEss{feSpaceU, side::TOP, {0}},
+      BCEss{feSpaceU, side::LEFT, {0}});
   std::get<0>(bcsU) << inletX;
   std::get<1>(bcsU) << zero;
   std::get<2>(bcsU) << zero;
   std::get<3>(bcsU) << zero;
-  auto bcsV = std::make_tuple(
-        BCEss{feSpaceU, side::BOTTOM},
-        BCEss{feSpaceU, side::RIGHT});
+  auto bcsV =
+      std::make_tuple(BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT});
   std::get<0>(bcsV) << inletY;
   std::get<1>(bcsV) << zero;
   auto bcTopP = BCEss{feSpacePSplit, side::TOP};
@@ -111,7 +114,7 @@ int main(int argc, char* argv[])
   t.stop();
 
   t.start("ic");
-  auto const ic = [] (Vec3 const & ) { return Vec2{0.0, 1.0}; };
+  auto const ic = [](Vec3 const &) { return Vec2{0.0, 1.0}; };
   // auto const ic = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0)*p(0))}; };
   ns.ic(ic);
   split.ic(ic);
@@ -124,14 +127,14 @@ int main(int argc, char* argv[])
 
   auto const ntime = config["ntime"].as<uint>();
   double time = 0.0;
-  for (uint itime=0; itime<ntime; ++itime)
+  for (uint itime = 0; itime < ntime; ++itime)
   {
     MilliTimer stepTimer;
     stepTimer.start();
 
     time += dt;
-    std::cout << separator << "solving timestep " << itime
-              << ", time = " << time << std::endl;
+    std::cout << separator << "solving timestep " << itime << ", time = " << time
+              << std::endl;
 
     t.start("monolithic assembly");
     ns.assemblyStep();
@@ -202,7 +205,7 @@ int main(int argc, char* argv[])
   std::cout << "errorP: " << std::setprecision(16) << errorNormP << std::endl;
 
   return checkError(
-    {errorNormU, errorNormV, errorNormP},
-    {5.18337674567542e-05, 7.57375946701665e-05,  5.272719445641985e-05},
-    1.e-11);
+      {errorNormU, errorNormV, errorNormP},
+      {5.18337674567542e-05, 7.57375946701665e-05, 5.272719445641985e-05},
+      1.e-11);
 }

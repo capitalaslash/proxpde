@@ -1,17 +1,18 @@
 #pragma once
 
 #include "def.hpp"
-#include "fe.hpp"
+
 #include "builder.hpp"
+#include "fe.hpp"
 
 template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
 struct L2Projector
 {
   L2Projector(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom):
-    dummy{feSpaceTo.dof.size * FESpaceTo::dim},
-    massTo{1.0, feSpaceTo},
-    projFromTo{1.0, dummy, feSpaceFrom, feSpaceTo},
-    builder{feSpaceTo.dof.size * FESpaceTo::dim}
+      dummy{feSpaceTo.dof.size * FESpaceTo::dim},
+      massTo{1.0, feSpaceTo},
+      projFromTo{1.0, dummy, feSpaceFrom, feSpaceTo},
+      builder{feSpaceTo.dof.size * FESpaceTo::dim}
   {
     builder.buildLhs(std::tuple{massTo}, std::tuple{});
     builder.closeMatrix();
@@ -40,8 +41,10 @@ struct L2Projector
 
 template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
 void l2Projection(
-    Vec & to, FESpaceTo const & feSpaceTo,
-    Vec const & from, FESpaceFrom const & feSpaceFrom)
+    Vec & to,
+    FESpaceTo const & feSpaceTo,
+    Vec const & from,
+    FESpaceFrom const & feSpaceFrom)
 {
   AssemblyMass massTo(1.0, feSpaceTo);
   AssemblyProjection projFromTo(1.0, from, feSpaceFrom, feSpaceTo);
@@ -56,10 +59,11 @@ void l2Projection(
 }
 
 template <typename FESpace, typename Solver = LUSolver>
-void projectAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
-                             FESpace & feSpace,
-                             Vec & v,
-                             uint const offset = 0)
+void projectAnalyticFunction(
+    Fun<FESpace::physicalDim(), 3> const & fun,
+    FESpace & feSpace,
+    Vec & v,
+    uint const offset = 0)
 {
   // set the vector data to the appropriate dimension if it comes with length 0
   if (v.size() == 0)
@@ -77,56 +81,59 @@ void projectAnalyticFunction(Fun<FESpace::physicalDim(), 3> const & fun,
   // std::cout << "b:\n" << builder.b << std::endl;
   Solver solver(builder.A);
   v.block(offset, 0, size, 1) = solver.solve(builder.b);
-
 }
 
 template <typename FESpace>
-void projectAnalyticFunction(scalarFun_T const & f,
-                             FESpace & feSpace,
-                             Vec & v,
-                             uint const offset = 0)
+void projectAnalyticFunction(
+    scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
 {
-  projectAnalyticFunction([f](Vec3 const &p){return Vec1(f(p));}, feSpace, v, offset);
+  projectAnalyticFunction(
+      [f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v, offset);
 }
 
 template <typename FESpaceT>
-using Grad_T =
-  FESpace<typename FESpaceT::Mesh_T,
-          typename LagrangeFE<typename FESpaceT::Mesh_T::Elem_T, order_v<typename FESpaceT::RefFE_T>-1>::RefFE_T,
-          typename FESpaceT::QR_T,
-          FESpaceT::dim * FESpaceT::Mesh_T::Elem_T::dim>;
+using Grad_T = FESpace<
+    typename FESpaceT::Mesh_T,
+    typename LagrangeFE<
+        typename FESpaceT::Mesh_T::Elem_T,
+        order_v<typename FESpaceT::RefFE_T> - 1>::RefFE_T,
+    typename FESpaceT::QR_T,
+    FESpaceT::dim * FESpaceT::Mesh_T::Elem_T::dim>;
 
 template <typename FESpaceGrad, typename FESpaceOrig, typename Solver = LUSolver>
 void computeGradient(
-        Vec & grad, FESpaceGrad & feSpaceGrad,
-        Vec const & u, FESpaceOrig const & feSpaceOrig)
+    Vec & grad,
+    FESpaceGrad & feSpaceGrad,
+    Vec const & u,
+    FESpaceOrig const & feSpaceOrig)
 {
   static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);
 
   std::tuple<> bcsGrad;
   Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
   builderGrad.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceGrad}}, bcsGrad);
-  builderGrad.buildRhs(std::tuple{AssemblyGradRhs{1.0, u, feSpaceOrig, feSpaceGrad}}, bcsGrad);
+  builderGrad.buildRhs(
+      std::tuple{AssemblyGradRhs{1.0, u, feSpaceOrig, feSpaceGrad}}, bcsGrad);
   builderGrad.closeMatrix();
   Solver solverGrad;
   solverGrad.compute(builderGrad.A);
   grad = solverGrad.solve(builderGrad.b);
 }
 
-enum class Component: char
+enum class Component : char
 {
   SCALAR,
   NORMAL,
   TANGENTIAL
 };
 
-template<Component Comp>
+template <Component Comp>
 struct CompSizer
 {
   static constexpr uint size = 3U;
 };
 
-template<>
+template <>
 struct CompSizer<Component::SCALAR>
 {
   static constexpr uint size = 1U;
@@ -134,19 +141,23 @@ struct CompSizer<Component::SCALAR>
 
 template <Component Comp, typename FESpaceOut, typename FESpaceIn>
 void interpolateOnFacets(
-    Vec & out, FESpaceOut const & feSpaceOut,
-    Vec const & in, FESpaceIn const & feSpaceIn,
-    std::unordered_set<marker_T> const & markers = std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
+    Vec & out,
+    FESpaceOut const & feSpaceOut,
+    Vec const & in,
+    FESpaceIn const & feSpaceIn,
+    std::unordered_set<marker_T> const & markers =
+        std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
     double const coef = 1.0)
 {
   uint constexpr dim = FESpaceIn::dim;
   using FEFacet_T = typename FESpaceIn::RefFE_T::FacetFE_T;
   using QRFacet_T = SideQR_T<typename FESpaceIn::QR_T>;
   using CurFEFacet_T = CurFE<FEFacet_T, QRFacet_T>;
-  using FESpaceFacet_T =
-    FESpace<typename FESpaceIn::Mesh_T,
-            typename FESpaceIn::RefFE_T,
-            SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>, dim>;
+  using FESpaceFacet_T = FESpace<
+      typename FESpaceIn::Mesh_T,
+      typename FESpaceIn::RefFE_T,
+      SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>,
+      dim>;
 
   out = Vec::Zero(feSpaceOut.dof.size);
   CurFEFacet_T curFEFacet;
@@ -157,7 +168,8 @@ void interpolateOnFacets(
 
   for (auto & facet: feSpaceOut.mesh.elementList)
   {
-    if (markers == std::unordered_set<marker_T>({marker_T(-1)}) || (markers.find(facet.marker) != markers.end()))
+    if (markers == std::unordered_set<marker_T>({marker_T(-1)}) ||
+        (markers.find(facet.marker) != markers.end()))
     {
       // std::cout << "facet " << facet.id << std::endl;
       curFEFacet.reinit(facet);
@@ -182,9 +194,10 @@ void interpolateOnFacets(
         comp = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
       }
 
-      for(uint q=0; q<QRFacet_T::numPts; ++q)
+      for (uint q = 0; q < QRFacet_T::numPts; ++q)
       {
-        FVec<FESpaceIn::physicalDim()> const inLocal = coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
+        FVec<FESpaceIn::physicalDim()> const inLocal =
+            coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
         Vec3 const inLocal3 = promote<3>(inLocal);
         // entering fluxes should be positive
         out[facet.id] += curFEFacet.JxW[q] * (inLocal3.dot(comp));

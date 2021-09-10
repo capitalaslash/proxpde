@@ -1,43 +1,43 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   uint constexpr dim = 2U;
 
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T = FESpace<Mesh_T,
-                            LagrangeFE<Elem_T,1>::RefFE_T,
-                            LagrangeFE<Elem_T,1>::RecommendedQR,
-                            dim>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR,
+      dim>;
 
-  std::vector<uint> const COMP_X {0};
-  std::vector<uint> const COMP_Y {1};
-  std::vector<uint> const COMP_Z {2};
+  std::vector<uint> const COMP_X{0};
+  std::vector<uint> const COMP_Y{1};
+  std::vector<uint> const COMP_Z{2};
 
-  auto const rhs = [] (Vec3 const& p)
+  auto const rhs = [](Vec3 const & p)
   {
     FVec<dim> rhs;
-    for(uint d=0; d<dim; ++d)
-      rhs[d] = M_PI*std::sin(M_PI*p(0));
+    for (uint d = 0; d < dim; ++d)
+      rhs[d] = M_PI * std::sin(M_PI * p(0));
     return rhs;
   };
 
-  scalarFun_T const exactSol = [] (Vec3 const& p)
-  {
-    return std::sin(M_PI*p(0))/M_PI + p(0);
-  };
+  scalarFun_T const exactSol = [](Vec3 const & p)
+  { return std::sin(M_PI * p(0)) / M_PI + p(0); };
 
   MilliTimer t;
-  uint const numElems = (argc < 2)? 3 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2) ? 3 : std::stoi(argv[1]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
@@ -48,19 +48,19 @@ int main(int argc, char* argv[])
   buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
-//  // rotation matrix
-//  double theta = M_PI / 3.;
-//  FMat<3,3> R;
-//  R << std::cos(theta), std::sin(theta), 0.0,
-//      -std::sin(theta), std::cos(theta), 0.0,
-//      0.0, 0.0, 1.0;
-//  auto Rt = R.transpose();
+  //  // rotation matrix
+  //  double theta = M_PI / 3.;
+  //  FMat<3,3> R;
+  //  R << std::cos(theta), std::sin(theta), 0.0,
+  //      -std::sin(theta), std::cos(theta), 0.0,
+  //      0.0, 0.0, 1.0;
+  //  auto Rt = R.transpose();
 
-//  // rotate mesh
-//  for (auto & p: mesh->pointList)
-//  {
-//    p.coord = R * p.coord;
-//  }
+  //  // rotate mesh
+  //  for (auto & p: mesh->pointList)
+  //  {
+  //    p.coord = R * p.coord;
+  //  }
 
   t.start();
   FESpace_T feSpace(*mesh);
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   auto bcValue = [](Vec3 const &)
   {
     FVec<dim> v;
-    for (uint d=0; d<dim; ++d)
+    for (uint d = 0; d < dim; ++d)
     {
       v[d] = d;
     }
@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
   auto const bcs = std::tuple{bc};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
-
   t.start();
   auto const size = dim * feSpace.dof.size;
   AssemblyStiffness stiffness(1.0, feSpace);
@@ -90,7 +89,8 @@ int main(int argc, char* argv[])
   AssemblyAnalyticRhs f(rhs, feSpace);
   Builder builder{size};
   builder.buildLhs(std::tuple{stiffness}, bcs);
-  builder.buildRhs(std::tuple{f, AssemblyBCNatural{bcValue, side::RIGHT, feSpace}}, bcs);
+  builder.buildRhs(
+      std::tuple{f, AssemblyBCNatural{bcValue, side::RIGHT, feSpace}}, bcs);
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;
 
@@ -107,25 +107,25 @@ int main(int argc, char* argv[])
 
   std::cout << "sol:\n" << sol.data << std::endl;
 
-//  Var exact{"exact"};
-//  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
-//  // interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
-//  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
-//  Var error{"e"};
-//  error.data = sol.data - exact.data;
+  //  Var exact{"exact"};
+  //  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
+  //  // interpolateAnalyticFunction(rotatedESol, feSpace, exact.data);
+  //  interpolateAnalyticFunction(exact_sol, feSpace, exact.data);
+  //  Var error{"e"};
+  //  error.data = sol.data - exact.data;
 
   t.start();
   IOManager io{feSpace, "output_vectorfe1d/sol"};
   io.print({sol}); // io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 
-//  double norm = error.data.norm();
-//  std::cout << "the norm of the error is " << norm << std::endl;
-//  if(std::fabs(norm - 2.61664e-11) > 1.e-10)
-//  {
-//    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-//    return 1;
-//  }
+  //  double norm = error.data.norm();
+  //  std::cout << "the norm of the error is " << norm << std::endl;
+  //  if(std::fabs(norm - 2.61664e-11) > 1.e-10)
+  //  {
+  //    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
+  //    return 1;
+  //  }
 
   return 0;
 }

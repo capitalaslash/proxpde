@@ -1,15 +1,16 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembler.hpp"
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "var.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "assembler.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
+#include "var.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   constexpr uint dim = 2;
   using Elem_T = Quad;
@@ -20,8 +21,8 @@ int main(int argc, char* argv[])
   using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
-  uint const numElemsX = (argc < 3)? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3)? 4 : std::stoi(argv[2]);
+  uint const numElemsX = (argc < 3) ? 4 : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 4 : std::stoi(argv[2]);
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
@@ -33,23 +34,22 @@ int main(int argc, char* argv[])
   auto const dofVel = dim * feSpaceVel.dof.size;
   FESpaceP_T feSpaceP{*mesh, dofVel};
 
-  auto zero = [] (Vec3 const &) {return Vec2::Constant(0.);};
+  auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   auto bcsVel = std::make_tuple(
-        BCEss{feSpaceVel, side::RIGHT},
-        BCEss{feSpaceVel, side::LEFT},
-        BCEss{feSpaceVel, side::BOTTOM},
-        BCEss{feSpaceVel, side::TOP});
+      BCEss{feSpaceVel, side::RIGHT},
+      BCEss{feSpaceVel, side::LEFT},
+      BCEss{feSpaceVel, side::BOTTOM},
+      BCEss{feSpaceVel, side::TOP});
   std::get<0>(bcsVel) << zero;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
-  std::get<3>(bcsVel) << [] (Vec3 const &) { return Vec2{1.0, 0.0}; };
+  std::get<3>(bcsVel) << [](Vec3 const &) { return Vec2{1.0, 0.0}; };
   // select the point on the bottom boundary in the middle
-  DOFCoordSet pinSet{
-      feSpaceP,
-      [](Vec3 const & p){return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;}
-  };
+  DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
+                       return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;
+                     }};
   auto bcsP = std::make_tuple(BCEss{feSpaceP, pinSet.ids});
-  std::get<0>(bcsP) << [] (Vec3 const &) { return 0.; };
+  std::get<0>(bcsP) << [](Vec3 const &) { return 0.; };
 
   AssemblyStiffness stiffness{1.0, feSpaceVel};
   AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP};
@@ -95,7 +95,5 @@ int main(int argc, char* argv[])
   ioP.print({p});
 
   return checkError(
-    {uNorm, vNorm, pNorm},
-    {3.15947325663, 0.740498457205, 29.3541392171},
-    1.e-10);
+      {uNorm, vNorm, pNorm}, {3.15947325663, 0.740498457205, 29.3541392171}, 1.e-10);
 }

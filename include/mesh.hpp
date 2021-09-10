@@ -1,16 +1,17 @@
 #pragma once
 
 #include "def.hpp"
+
 #include "geo.hpp"
 
 struct MeshFlags
 {
   using T = std::bitset<4>;
-  static constexpr T NONE            = 0b0000;
+  static constexpr T NONE = 0b0000;
   static constexpr T BOUNDARY_FACETS = 0b0001;
   static constexpr T INTERNAL_FACETS = 0b0010;
-  static constexpr T NORMALS         = 0b0100;
-  static constexpr T FACET_PTRS      = 0b1000;
+  static constexpr T NORMALS = 0b0100;
+  static constexpr T FACET_PTRS = 0b1000;
 };
 
 template <typename Elem>
@@ -22,17 +23,17 @@ public:
   using PointList_T = std::vector<Point>;
   using ElementList_T = std::vector<Elem>;
   using FacetList_T = std::vector<Facet_T>;
-  using elemToPoint_T = std::vector<array<id_T,Elem::numPts>>;
-  using elemToFacet_T = std::vector<array<id_T,Elem::numFacets>>;
+  using elemToPoint_T = std::vector<array<id_T, Elem::numPts>>;
+  using elemToFacet_T = std::vector<array<id_T, Elem::numFacets>>;
 
   void buildConnectivity()
   {
     elemToPoint.reserve(elementList.size());
-    for(auto& l: elementList)
+    for (auto & l: elementList)
     {
-      array<id_T,Elem::numPts> elemConn;
+      array<id_T, Elem::numPts> elemConn;
       uint counter = 0;
-      for(auto& p: l.pointList)
+      for (auto & p: l.pointList)
       {
         elemConn[counter] = p->id;
         counter++;
@@ -50,21 +51,21 @@ public:
 };
 
 template <typename Elem>
-std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
+std::ostream & operator<<(std::ostream & out, Mesh<Elem> const & mesh)
 {
   out << "point list\n----------" << std::endl;
-  for(auto &p: mesh.pointList)
+  for (auto & p: mesh.pointList)
     out << p << std::endl;
   out << "\nelement list\n------------" << std::endl;
-  for(auto &e: mesh.elementList)
+  for (auto & e: mesh.elementList)
     out << e << std::endl;
   out << "\nfacet list\n------------" << std::endl;
-  for(auto &f: mesh.facetList)
+  for (auto & f: mesh.facetList)
     out << f << std::endl;
   out << "\nelemToFacet map\n------------" << std::endl;
-  for(auto &row: mesh.elemToFacet)
+  for (auto & row: mesh.elemToFacet)
   {
-    for(auto &clm: row)
+    for (auto & clm: row)
     {
       out << clm << " ";
     }
@@ -74,7 +75,7 @@ std::ostream& operator<<(std::ostream& out, Mesh<Elem> const & mesh)
   return out;
 }
 
-enum side: marker_T
+enum side : marker_T
 {
   BOTTOM = 1,
   RIGHT = 2,
@@ -98,10 +99,10 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
     uint side = 0;
     for (auto const & row: Mesh::Elem_T::elemToFacet)
     {
-      std::vector<Point*> facetPts(Mesh::Facet_T::numPts);
+      std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
       std::set<id_T> facetIds;
-      uint i=0;
-      for(auto const & clm: row)
+      uint i = 0;
+      for (auto const & clm: row)
       {
         facetPts[i] = e.pointList[clm];
         facetIds.insert(e.pointList[clm]->id);
@@ -137,7 +138,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
     mesh.facetList.resize(bFacetSize);
   }
   mesh.elemToFacet.resize(mesh.elementList.size());
-  for(auto & row: mesh.elemToFacet)
+  for (auto & row: mesh.elemToFacet)
   {
     row.fill(dofIdNotSet);
   }
@@ -145,17 +146,17 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   // store facets in mesh ordering boundary facets first
   iFacetCount = bFacetSize;
   uint bFacetCount = 0;
-  // check https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
-  for([[maybe_unused]] auto const & [idSet, facet]: facetMap)
+  // check
+  // https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
+  for ([[maybe_unused]] auto const & [idSet, facet]: facetMap)
   {
-    if(facet.facingElem[1].ptr == nullptr)
+    if (facet.facingElem[1].ptr == nullptr)
     {
       // this is a boundary facet
       mesh.facetList[bFacetCount] = facet;
       mesh.facetList[bFacetCount].id = bFacetCount;
-      mesh.elemToFacet
-        [facet.facingElem[0].ptr->id]
-        [facet.facingElem[0].side] = bFacetCount;
+      mesh.elemToFacet[facet.facingElem[0].ptr->id][facet.facingElem[0].side] =
+          bFacetCount;
       bFacetCount++;
     }
     else
@@ -165,12 +166,10 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
       {
         mesh.facetList[iFacetCount] = facet;
         mesh.facetList[iFacetCount].id = iFacetCount;
-        mesh.elemToFacet
-          [facet.facingElem[0].ptr->id]
-          [facet.facingElem[0].side] = iFacetCount;
-        mesh.elemToFacet
-          [facet.facingElem[1].ptr->id]
-          [facet.facingElem[1].side] = iFacetCount;
+        mesh.elemToFacet[facet.facingElem[0].ptr->id][facet.facingElem[0].side] =
+            iFacetCount;
+        mesh.elemToFacet[facet.facingElem[1].ptr->id][facet.facingElem[1].side] =
+            iFacetCount;
       }
       iFacetCount++;
     }
@@ -183,76 +182,73 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   mesh.flags |= flags & MeshFlags::INTERNAL_FACETS;
 }
 
-void buildLine(Mesh<Line> & mesh,
-               Vec3 const& origin,
-               Vec3 const& length,
-               uint const numElems,
-               MeshFlags::T flags);
+void buildLine(
+    Mesh<Line> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    uint const numElems,
+    MeshFlags::T flags);
 
-void buildSquare(Mesh<Triangle> & mesh,
-                 Vec3 const& origin,
-                 Vec3 const& length,
-                 array<uint, 2> const numElems,
-                 MeshFlags::T flags);
+void buildSquare(
+    Mesh<Triangle> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    array<uint, 2> const numElems,
+    MeshFlags::T flags);
 
-void buildSquare(Mesh<Quad> & mesh,
-                 Vec3 const& origin,
-                 Vec3 const& length,
-                 array<uint, 2> const numElems,
-                 MeshFlags::T flags);
+void buildSquare(
+    Mesh<Quad> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    array<uint, 2> const numElems,
+    MeshFlags::T flags);
 
-void buildCircleMesh(Mesh<Quad> & mesh,
-                     Vec3 const& origin,
-                     double const& radius,
-                     array<uint, 3> const numElems);
+void buildCircleMesh(
+    Mesh<Quad> & mesh,
+    Vec3 const & origin,
+    double const & radius,
+    array<uint, 3> const numElems);
 
-void buildCube(Mesh<Tetrahedron> & mesh,
-               Vec3 const& origin,
-               Vec3 const& length,
-               array<uint, 3> const numElems,
-               MeshFlags::T flags);
+void buildCube(
+    Mesh<Tetrahedron> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    array<uint, 3> const numElems,
+    MeshFlags::T flags);
 
-void buildCube(Mesh<Hexahedron> & mesh,
-               Vec3 const& origin,
-               Vec3 const& length,
-               array<uint, 3> const numElems,
-               MeshFlags::T flags);
+void buildCube(
+    Mesh<Hexahedron> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    array<uint, 3> const numElems,
+    MeshFlags::T flags);
 
 template <typename Elem>
-void buildHyperCube(Mesh<Elem> & mesh,
-               Vec3 const& origin,
-               Vec3 const& length,
-               array<uint, 3> const numElems,
-               MeshFlags::T flags = MeshFlags::NONE)
+void buildHyperCube(
+    Mesh<Elem> & mesh,
+    Vec3 const & origin,
+    Vec3 const & length,
+    array<uint, 3> const numElems,
+    MeshFlags::T flags = MeshFlags::NONE)
 {
   if constexpr (std::is_same_v<Elem, Line>)
   {
-    buildLine(mesh,
-              origin,
-              length,
-              numElems[0],
-              flags);
+    buildLine(mesh, origin, length, numElems[0], flags);
   }
   else if constexpr (std::is_same_v<Elem, Triangle> || std::is_same_v<Elem, Quad>)
   {
-    buildSquare(mesh,
-                origin,
-                length,
-                {{numElems[0], numElems[1]}},
-                flags);
+    buildSquare(mesh, origin, length, {{numElems[0], numElems[1]}}, flags);
   }
-  else if constexpr (std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
+  else if constexpr (
+      std::is_same_v<Elem, Tetrahedron> || std::is_same_v<Elem, Hexahedron>)
   {
-    buildCube(mesh,
-              origin,
-              length,
-              {{numElems[0], numElems[1], numElems[2]}},
-              flags);
+    buildCube(mesh, origin, length, {{numElems[0], numElems[1], numElems[2]}}, flags);
   }
   else
   {
     // this should never happen
-    std::cerr << "element type " << typeid(Elem{}).name() << " not recognized." << std::endl;
+    std::cerr << "element type " << typeid(Elem{}).name() << " not recognized."
+              << std::endl;
     abort();
   }
 
@@ -279,11 +275,11 @@ void referenceMesh(Mesh<Elem> & mesh)
   if constexpr (std::is_same_v<Elem, Line>)
   {
     buildHyperCube(
-      mesh,
-      {-1., 0., 0.},
-      {2., 0., 0.},
-      {1, 0, 0},
-      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
+        mesh,
+        {-1., 0., 0.},
+        {2., 0., 0.},
+        {1, 0, 0},
+        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
   }
   else if constexpr (std::is_same_v<Elem, Quad>)
   {
@@ -319,14 +315,16 @@ void buildNormals(Mesh & mesh)
       // normals on boundary facets should all point outside
       if (facet.onBoundary())
       {
-        if ((facet.midpoint() - facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
+        if ((facet.midpoint() - facet.facingElem[0].ptr->midpoint())
+                .dot(facet._normal) < 0.)
         {
           facet._normal *= -1.0;
         }
       }
       // all internal normals should point from facing elem 0 towards facing elem 1
-      else if ((facet.facingElem[1].ptr->midpoint() -
-                facet.facingElem[0].ptr->midpoint()).dot(facet._normal) < 0.)
+      else if (
+          (facet.facingElem[1].ptr->midpoint() - facet.facingElem[0].ptr->midpoint())
+              .dot(facet._normal) < 0.)
       {
         facet._normal *= -1.0;
       }
@@ -368,7 +366,7 @@ void addElemFacetList(Mesh & mesh)
   }
 }
 
-enum  GMSHElemType: int8_t
+enum GMSHElemType : int8_t
 {
   GMSHNull = 0,
   GMSHLine = 1,
@@ -376,15 +374,16 @@ enum  GMSHElemType: int8_t
   GMSHQuad = 3,
   GMSHTet = 4,
   GMSHHexa = 5,
-//  GMSHQuadraticLine = 8,
-//  GMSHQuadraticTriangle = 9,
-//  GMSHQuadraticQuad = 10,
-//  GMSHQuadraticTet = 11,
-//  GMSHQuadraticHexa = 12
+  // GMSHQuadraticLine = 8,
+  // GMSHQuadraticTriangle = 9,
+  // GMSHQuadraticQuad = 10,
+  // GMSHQuadraticTet = 11,
+  // GMSHQuadraticHexa = 12
 };
 
 template <typename Elem>
-struct ElemToGmsh {};
+struct ElemToGmsh
+{};
 
 template <>
 struct ElemToGmsh<Line>
@@ -417,9 +416,10 @@ struct ElemToGmsh<Hexahedron>
 };
 
 template <typename Elem>
-void readGMSH(Mesh<Elem> & mesh,
-              std::string_view const filename,
-              MeshFlags::T flags = MeshFlags::NONE)
+void readGMSH(
+    Mesh<Elem> & mesh,
+    std::string_view const filename,
+    MeshFlags::T flags = MeshFlags::NONE)
 {
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
@@ -455,12 +455,12 @@ void readGMSH(Mesh<Elem> & mesh,
   std::set<typename Elem::Facet_T> facets;
 
   in >> buf;
-  while(!in.eof())
+  while (!in.eof())
   {
     if (buf == "$PhysicalNames")
     {
       // TODO: stop discarding physical names
-      while(buf != "$EndPhysicalNames")
+      while (buf != "$EndPhysicalNames")
       {
         in >> buf;
       }
@@ -472,13 +472,13 @@ void readGMSH(Mesh<Elem> & mesh,
       mesh.pointList.reserve(numNodes);
 
       // format: node-number(one-based) x-coord y-coord z-coord
-      for (uint n=0; n<numNodes; n++)
+      for (uint n = 0; n < numNodes; n++)
       {
         uint id;
-        double x,y,z;
+        double x, y, z;
         in >> id >> x >> y >> z;
         // currently only sonsecutive ids are supported
-        assert(n == id-1);
+        assert(n == id - 1);
         mesh.pointList.emplace_back(Vec3{x, y, z}, n);
       }
       in >> buf;
@@ -493,15 +493,16 @@ void readGMSH(Mesh<Elem> & mesh,
       uint numElements;
       in >> numElements;
       mesh.elementList.reserve(numElements);
-      // format: elm-number(one-based) elm-type number-of-tags < tag > ... node-number-list
+      // format: elm-number(one-based) elm-type number-of-tags < tag > ...
+      // node-number-list
       uint eVol = 0, eBd = 0;
-      for (uint e=0; e<numElements; e++)
+      for (uint e = 0; e < numElements; e++)
       {
         uint id, elType, numTags;
         in >> id >> elType >> numTags;
         assert(numTags > 0);
         std::vector<uint> tags(numTags);
-        for (uint t=0; t<numTags; t++)
+        for (uint t = 0; t < numTags; t++)
         {
           in >> tags[t];
         }
@@ -511,17 +512,19 @@ void readGMSH(Mesh<Elem> & mesh,
         {
           // read connectivity from file
           array<uint, Elem::numPts> conn;
-          for (uint c=0; c<Elem::numPts; c++)
+          for (uint c = 0; c < Elem::numPts; c++)
           {
             in >> conn[c];
           }
 
           // get points pointers from connectivity
           // TODO: use array or pre-fix size
-          std::vector<Point*> connPts;
-          std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
-            connPts.push_back(&mesh.pointList[c-1]);
-          });
+          std::vector<Point *> connPts;
+          std::for_each(
+              conn.begin(),
+              conn.end(),
+              [&connPts, &mesh](uint const c)
+              { connPts.push_back(&mesh.pointList[c - 1]); });
 
           // create mesh element
           mesh.elementList.emplace_back(Elem(connPts, eVol));
@@ -531,17 +534,19 @@ void readGMSH(Mesh<Elem> & mesh,
         {
           // read connectivity from file
           array<uint, Elem::Facet_T::numPts> conn;
-          for (uint c=0; c<Elem::Facet_T::numPts; c++)
+          for (uint c = 0; c < Elem::Facet_T::numPts; c++)
           {
             in >> conn[c];
           }
 
           // get points pointers from connectivity
           // TODO: use array or pre-fix size
-          std::vector<Point*> connPts;
-          std::for_each(conn.begin(), conn.end(), [&connPts, &mesh](uint const c){
-            connPts.push_back(&mesh.pointList[c-1]);
-          });
+          std::vector<Point *> connPts;
+          std::for_each(
+              conn.begin(),
+              conn.end(),
+              [&connPts, &mesh](uint const c)
+              { connPts.push_back(&mesh.pointList[c - 1]); });
 
           // create mesh boundary element
           facets.insert(typename Elem::Facet_T(connPts, eBd, tags[0]));
@@ -564,7 +569,7 @@ void readGMSH(Mesh<Elem> & mesh,
     {
       std::cerr << "file section not recognized: " << buf << std::endl;
       // discard the whole unrecognized section
-      auto sectionEnd = "$End" + buf.substr(1, buf.length()-1);
+      auto sectionEnd = "$End" + buf.substr(1, buf.length() - 1);
       while (buf != sectionEnd)
       {
         in >> buf;
@@ -579,18 +584,19 @@ void readGMSH(Mesh<Elem> & mesh,
 
   // the file should contain all the boundary facets
   // TODO: this does not work if the mesh has internal boundaries
-  assert(std::count_if(
-           mesh.facetList.begin(),
-           mesh.facetList.end(),
-           [](typename Elem::Facet_T const & f){ return f.onBoundary(); })
-         == static_cast<long int>(facets.size()));
+  assert(
+      std::count_if(
+          mesh.facetList.begin(),
+          mesh.facetList.end(),
+          [](typename Elem::Facet_T const & f)
+          { return f.onBoundary(); }) == static_cast<long int>(facets.size()));
 
   // use file facets to set boundary flags
   for (auto & meshFacet: mesh.facetList)
   {
     for (auto it = facets.begin(); it != facets.end(); ++it)
     {
-      if(geoEqual(meshFacet, *it))
+      if (geoEqual(meshFacet, *it))
       {
         meshFacet.marker = it->marker;
         facets.erase(it);
@@ -613,19 +619,14 @@ void readGMSH(Mesh<Elem> & mesh,
 }
 
 template <typename Mesh>
-void readMesh(Mesh & mesh,
-              YAML::Node const & config,
-              MeshFlags::T flags = MeshFlags::NONE)
+void readMesh(
+    Mesh & mesh, YAML::Node const & config, MeshFlags::T flags = MeshFlags::NONE)
 {
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")
   {
-    array<uint,3> numElems =
-    {
-      config["nx"].as<uint>(),
-      config["ny"].as<uint>(),
-      config["nz"].as<uint>()
-    };
+    array<uint, 3> numElems = {
+        config["nx"].as<uint>(), config["ny"].as<uint>(), config["nz"].as<uint>()};
     // TODO: auto const origin = config["origin"].as<Vec3>();
     Vec3 const origin{0., 0., 0.};
     Vec3 const length{1., 1., 1.};

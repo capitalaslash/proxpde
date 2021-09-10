@@ -1,30 +1,34 @@
 #include "def.hpp"
-#include "mesh.hpp"
+
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "bc.hpp"
-#include "assembly.hpp"
-#include "builder.hpp"
 #include "iomanager.hpp"
+#include "mesh.hpp"
 #include "timer.hpp"
 
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T,
-                          LagrangeFE<Elem_T, 0>::RefFE_T,
-                          LagrangeFE<Elem_T, 0>::RecommendedQR>;
+using FESpace_T = FESpace<
+    Mesh_T,
+    LagrangeFE<Elem_T, 0>::RefFE_T,
+    LagrangeFE<Elem_T, 0>::RecommendedQR>;
 
 using TimeFun_T = std::function<double(double const)>;
 
-enum class TimeIntegrationMethod: char
+enum class TimeIntegrationMethod : char
 {
   BDF1 = 1,
   BDF2 = 2,
 };
 
-namespace YAML {
-template<>
-struct convert<TimeIntegrationMethod> {
+namespace YAML
+{
+template <>
+struct convert<TimeIntegrationMethod>
+{
   static Node encode(TimeIntegrationMethod const & rhs)
   {
     Node node;
@@ -34,7 +38,7 @@ struct convert<TimeIntegrationMethod> {
 
   static bool decode(Node const & node, TimeIntegrationMethod & rhs)
   {
-    if(!node.IsSequence() || node.size() != 1)
+    if (!node.IsSequence() || node.size() != 1)
     {
       return false;
     }
@@ -42,7 +46,7 @@ struct convert<TimeIntegrationMethod> {
     return true;
   }
 };
-}
+} // namespace YAML
 
 int test(YAML::Node const & config)
 {
@@ -53,15 +57,9 @@ int test(YAML::Node const & config)
 
   auto const A = config["A"].as<double>();
 
-  TimeFun_T rhs = [A] (double const t)
-  {
-    return (1. - A) * std::exp(-t) + A;
-  };
+  TimeFun_T rhs = [A](double const t) { return (1. - A) * std::exp(-t) + A; };
 
-  TimeFun_T exactSol = [] (double const t)
-  {
-    return 1. - std::exp(-t);
-  };
+  TimeFun_T exactSol = [](double const t) { return 1. - std::exp(-t); };
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -99,7 +97,8 @@ int test(YAML::Node const & config)
   Vec exactOld;
   Var error{"e"};
 
-  interpolateAnalyticFunction([&exactSol] (Vec3 const &) { return exactSol(0.); }, feSpace, exact.data);
+  interpolateAnalyticFunction(
+      [&exactSol](Vec3 const &) { return exactSol(0.); }, feSpace, exact.data);
   exactOld = exact.data;
 
   // initial conditions
@@ -119,7 +118,7 @@ int test(YAML::Node const & config)
   double time = 0.;
   Vec uTime{ntime};
   Vec exactTime{ntime};
-  for(uint itime=0; itime<ntime; itime++)
+  for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
     // std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
@@ -133,7 +132,10 @@ int test(YAML::Node const & config)
       builder.buildLhs(std::tuple{bdf2Lhs}, bcs);
       builder.buildRhs(std::tuple{bdf2Rhs1, bdf2Rhs2}, bcs);
     }
-    builder.buildRhs(std::tuple{AssemblyAnalyticRhs{[&rhs, time] (Vec3 const &) { return rhs(time); }, feSpace}}, bcs);
+    builder.buildRhs(
+        std::tuple{AssemblyAnalyticRhs{
+            [&rhs, time](Vec3 const &) { return rhs(time); }, feSpace}},
+        bcs);
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);
@@ -143,10 +145,13 @@ int test(YAML::Node const & config)
     // std::cout << "residual: " << std::setprecision(16) << res.norm() << std::endl;
     // std::cout << "A: " << builder.A << std::endl;
     // std::cout << "b: " << builder.b << std::endl;
-    //vstd::cout << "u: " << u.data << std::endl;
+    // std::cout << "u: " << u.data << std::endl;
 
     exactOld = exact.data;
-    interpolateAnalyticFunction([&exactSol, time] (Vec3 const &) { return exactSol(time); }, feSpace, exact.data);
+    interpolateAnalyticFunction(
+        [&exactSol, time](Vec3 const &) { return exactSol(time); },
+        feSpace,
+        exact.data);
     error.data = u.data - exact.data;
     uTime[itime] = u.data[0];
     exactTime[itime] = exact.data[0];
@@ -160,8 +165,10 @@ int test(YAML::Node const & config)
   // t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm << std::endl;
-  std::cout << "the norm of the time error is " << std::setprecision(16) << (uTime - exactTime).norm() << std::endl;
+  std::cout << "the norm of the error is " << std::setprecision(16) << norm
+            << std::endl;
+  std::cout << "the norm of the time error is " << std::setprecision(16)
+            << (uTime - exactTime).norm() << std::endl;
   return checkError({norm}, {config["expected error"].as<double>()});
 }
 

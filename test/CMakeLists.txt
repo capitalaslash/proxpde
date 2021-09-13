@@ -4,6 +4,7 @@ include(MiniFEMAddTest)
 minifem_add_test(hdf5write)
 minifem_add_test(io)
 minifem_add_test(iotime)
+minifem_add_test(iodisc)
 minifem_add_test(timeder)
 
 

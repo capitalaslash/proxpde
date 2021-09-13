@@ -13,6 +13,7 @@ template <
     typename RefFE,
     typename QR,
     uint Dimension = 1,
+    DofType type = DofType::CONTINUOUS,
 #ifdef DOF_INTERLEAVED
     DofOrdering ordering = DofOrdering::INTERLEAVED>
 #else
@@ -23,7 +24,7 @@ struct FESpace
   using Mesh_T = Mesh;
   using RefFE_T = RefFE;
   using QR_T = QR;
-  using DOF_T = DOF<Mesh, RefFE, Dimension, ordering>;
+  using DOF_T = DOF<Mesh, RefFE, Dimension, type, ordering>;
   using CurFE_T = CurFE<RefFE, QR>;
   static uint constexpr dim = Dimension;
 

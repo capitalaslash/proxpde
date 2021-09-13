@@ -289,6 +289,7 @@ protected:
 template <typename FESpace>
 struct IOManager
 {
+  static DofType constexpr type = FESpace::type;
   using FESpace_T = FESpace;
   using Mesh_T = typename FESpace_T::Mesh_T;
   using RefFE_T = typename FESpace_T::RefFE_T;
@@ -346,11 +347,11 @@ protected:
           mappedConn(i, j) = feSpace.dof.geoMap(i, Traits_T::mapping[j]);
         }
       }
-      h5Mesh.print<id_T, RefFE_T::numGeoFuns>(mappedConn, "connectivity");
+      h5Mesh.print(mappedConn, "connectivity");
     }
     else
     {
-      h5Mesh.print<id_T, RefFE_T::numGeoFuns>(feSpace.dof.geoMap, "connectivity");
+      h5Mesh.print(feSpace.dof.geoMap, "connectivity");
     }
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
@@ -361,7 +362,7 @@ protected:
         coords.row(feSpace.dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
       }
     }
-    h5Mesh.print<double, 3>(coords, "coords");
+    h5Mesh.print(coords, "coords");
   }
 
   void printBoundary()

@@ -4,29 +4,36 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
-enum class DofOrdering
+enum class DofOrdering : char
 {
   BLOCK,
-  INTERLEAVED
+  INTERLEAVED,
 };
 
-template <typename Mesh, typename RefFE, uint dimension, DofOrdering Ordering>
+enum class DofType : char
+{
+  CONTINUOUS,
+  DISCONTINUOUS,
+};
+
+template <typename Mesh, typename RefFE, uint dimension, DofType type, DofOrdering ord>
 struct DOF;
 
-template <typename Mesh, typename RefFE, uint dimension, DofOrdering Ordering>
+template <typename Mesh, typename RefFE, uint dimension, DofType type, DofOrdering ord>
 std::ostream &
-operator<<(std::ostream &, DOF<Mesh, RefFE, dimension, Ordering> const &);
+operator<<(std::ostream &, DOF<Mesh, RefFE, dimension, type, ord> const &);
 
-template <typename Mesh, typename RefFE, uint dimension, DofOrdering ord>
+template <typename Mesh, typename RefFE, uint dimension, DofType t, DofOrdering ord>
 struct DOF
 {
-  static uint const dim = dimension;
-  static DofOrdering const ordering = ord;
+  static DofType constexpr type = t;
+  static uint constexpr dim = dimension;
+  static DofOrdering constexpr ordering = ord;
   static uint constexpr clms = numDOFs<RefFE>();
   using RefFE_T = RefFE;
-  // using ElemMap_T = std::vector<array<DOFid_T,clms*dim>>;
+  // using ElemMap_T = std::vector<std::array<DOFid_T,clms*dim>>;
   using ElemMap_T = Table<DOFid_T, clms * dim>;
-  // using GeoMap_T = std::vector<array<DOFid_T,RefFE::numGeoFuns>>;
+  // using GeoMap_T = std::vector<std::array<DOFid_T,RefFE::numGeoFuns>>;
   using GeoMap_T = Table<DOFid_T, RefFE::numGeoFuns>;
   using PtMap_T = std::vector<DOFid_T>;
   // we need ordered sets in order to compare them avoiding permutation issues
@@ -66,7 +73,8 @@ struct DOF
         for (auto & p: e.pointList)
         {
           // check if dofs have already been assigned to this point
-          if (ptMap[p->id] == dofIdNotSet)
+          // TODO: the DISCONTINUOUS check can be static
+          if (ptMap[p->id] == dofIdNotSet || type == DofType::DISCONTINUOUS)
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
@@ -114,7 +122,8 @@ struct DOF
           }
 
           // check if dofs have already been assigned to this edge
-          if (edgeDOFs.find(edgeIDs) == edgeDOFs.end())
+          if (edgeDOFs.find(edgeIDs) == edgeDOFs.end() ||
+              type == DofType::DISCONTINUOUS)
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
@@ -161,7 +170,8 @@ struct DOF
           }
 
           // check if dofs have already been assigned to this face
-          if (faceDOFs.find(faceIDs) == faceDOFs.end())
+          if (faceDOFs.find(faceIDs) == faceDOFs.end() ||
+              type == DofType::DISCONTINUOUS)
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
@@ -200,7 +210,7 @@ struct DOF
       if constexpr (RefFE::dofPlace[0])
       {
         // check if dofs have already been assigned to this element
-        if (elemDOFs[e.id] == idNotSet)
+        if (elemDOFs[e.id] == idNotSet || type == DofType::DISCONTINUOUS)
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
@@ -343,9 +353,9 @@ public:
   uint mapSize;
 };
 
-template <typename Mesh, typename RefFE, uint dim, DofOrdering ordering>
+template <typename Mesh, typename RefFE, uint dim, DofType type, DofOrdering ordering>
 inline std::ostream &
-operator<<(std::ostream & out, DOF<Mesh, RefFE, dim, ordering> const & dof)
+operator<<(std::ostream & out, DOF<Mesh, RefFE, dim, type, ordering> const & dof)
 {
   out << "DOF map\n";
   out << "elemMap: " << dof.rows << "x" << dof.clms << "\n";

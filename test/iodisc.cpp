@@ -1,23 +1,26 @@
-#include "def.hpp"
-
 #include "builder.hpp"
+#include "def.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-using Elem_T = Hexahedron;
+using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 2>::RefFE_T, GaussQR<Elem_T, 1>>;
+using FESpace_T = FESpace<
+    Mesh_T,
+    LagrangeFE<Elem_T, 1>::RefFE_T,
+    GaussQR<Elem_T, 1>,
+    1,
+    DofType::DISCONTINUOUS>;
 
 int main(int argc, char * argv[])
 {
-  std::array<uint, 3> numElems = {{1, 1, 1}};
-  if (argc == 4)
+  std::array<uint, 3> numElems = {{2, 1, 0}};
+  if (argc == 3)
   {
     numElems[0] = static_cast<uint>(std::stoi(argv[1]));
     numElems[1] = static_cast<uint>(std::stoi(argv[2]));
-    numElems[2] = static_cast<uint>(std::stoi(argv[3]));
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -30,7 +33,7 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(
       [](Vec3 const & p) { return p(0) * p(0); }, feSpace, u.data);
 
-  IOManager io{feSpace, "output_io/u"};
+  IOManager io{feSpace, "output_iodisc/u"};
   io.print({u});
 
   return 0;

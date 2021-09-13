@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 
 project(MiniFEM
   VERSION 0.1
@@ -19,16 +19,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_DEBUG_POSTFIX "-dbg")
 
 include(FeatureSummary)
-
-include(WriteCompilerDetectionHeader)
-write_compiler_detection_header(
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/minifem_compiler_detection.h"
-  PREFIX MINIFEM
-  COMPILERS GNU Clang
-  FEATURES
-    cxx_variadic_templates
-    # cxx_if_constexpr
-)
 
 option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
 option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
@@ -85,7 +75,6 @@ target_include_directories(minifem PUBLIC
   ${HDF5_INCLUDE_DIRS}
 )
 
-# use generic c++17 dependency until specific cxx_if_constexpr is available
 target_compile_features(minifem PUBLIC cxx_std_17)
 
 target_compile_options(minifem

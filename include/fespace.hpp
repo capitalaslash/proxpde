@@ -221,17 +221,34 @@ void integrateAnalyticFunction(
   for (auto const & e: feSpace.mesh.elementList)
   {
     curFE.reinit(e);
+
+    // avoid costly integration when 0 or 1
+    FVec<FESpace::dim> sum = FVec<FESpace::dim>::Zero();
+    for (uint i = 0; i < FESpace::Mesh_T::Elem_T::numPts; ++i)
+    {
+      sum += f(e.pointList[i]->coord);
+    }
+    sum /= FESpace::Mesh_T::Elem_T::numPts;
+
     for (uint i = 0; i < FESpace::RefFE_T::numFuns; ++i)
     {
-      // auto const value = f(feSpace.curFE.dofPts[i]);
       FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
-      for (uint q = 0; q < FESpace::QR_T::numPts; ++q)
+      double const sum_norm = sum.norm();
+      if (sum_norm < 1.e-15 || sum_norm > 1.0 - 1.e-15)
       {
-        value += curFE.JxW[q] * f(curFE.qpoint[q]);
+        value = sum;
       }
-      // TODO: this is required only for color functions, should be optional
-      value /= e.volume();
+      else
+      {
+        for (uint q = 0; q < FESpace::QR_T::numPts; ++q)
+        {
+          value += curFE.JxW[q] * f(curFE.qpoint[q]);
+        }
+        // TODO: this is required only for color functions, should be optional
+        value /= e.volume();
+      }
 
+      // set the value in the output vector
       for (uint d = 0; d < FESpace::dim; ++d)
       {
         auto const dofId = feSpace.dof.getId(e.id, i, d);
@@ -244,9 +261,14 @@ void integrateAnalyticFunction(
         else if constexpr (
             family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
         {
+          std::abort();
           // the value of the dof is the flux through the face
           // u_k = u.dot(n_k)
           v[offset + dofId] = value.dot(FESpace::RefFE_T::normal(e)[i]);
+        }
+        else
+        {
+          std::abort();
         }
       }
     }

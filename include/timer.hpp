@@ -58,19 +58,19 @@ public:
 
     auto const curSettings = out.flags();
     auto const curPrecision = out.precision();
-    out << separator << "| " << std::setw(strLength) << "section"
+    out << Utils::separator << "| " << std::setw(strLength) << "section"
         << " | time (" << TimerTraits<TimeUnit>::uom << ") |     % |\n"
-        << separator;
+        << Utils::separator;
     for (auto const & [name, time]: sortedData)
     {
       out << "| " << std::setw(strLength) << name << " | " << std::setw(9) << time
           << " | " << std::fixed << std::setprecision(2) << std::setw(5)
           << 100. * time / totalTime << " |\n";
     }
-    out << separator;
+    out << Utils::separator;
     out << "| " << std::setw(static_cast<int>(strLength)) << "total"
         << " | " << std::setw(9) << totalTime << " |       |\n";
-    out << separator;
+    out << Utils::separator;
     out.flags(curSettings);
     out.precision(curPrecision);
   }

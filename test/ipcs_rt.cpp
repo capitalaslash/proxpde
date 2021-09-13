@@ -468,9 +468,9 @@ int main(int argc, char * argv[])
     timerStep.start();
     time += dt;
     std::cout << "\n"
-              << separator << "solving timestep " << itime + 1 << ", time = " << time
-              << std::endl;
-    // filelog << "\n" << separator;
+              << Utils::separator << "solving timestep " << itime + 1
+              << ", time = " << time << std::endl;
+    // filelog << "\n" << Utils::separator;
 
     t.start("build monolithic");
     velOldMonolithic = velM.data;

@@ -86,15 +86,15 @@ int main()
   // std::mt19937 gen(rd());
   std::mt19937 gen(19800513);
 
-  std::cout << "Line\n" << separator;
+  std::cout << "Line\n" << Utils::separator;
   tests[0] = test<std::mt19937, Line>(gen);
-  std::cout << "Triangle\n" << separator;
+  std::cout << "Triangle\n" << Utils::separator;
   tests[1] = test<std::mt19937, Triangle>(gen);
-  std::cout << "Quad\n" << separator;
+  std::cout << "Quad\n" << Utils::separator;
   tests[2] = test<std::mt19937, Quad>(gen);
-  std::cout << "Tetrahedron\n" << separator;
+  std::cout << "Tetrahedron\n" << Utils::separator;
   tests[3] = test<std::mt19937, Tetrahedron>(gen);
-  // std::cout << "Hexahedron\n" << separator;
+  // std::cout << "Hexahedron\n" << Utils::separator;
   // tests[4] = test<std::mt19937, Hexahedron>(gen);
   std::cout << tests << std::endl;
   return tests.any();

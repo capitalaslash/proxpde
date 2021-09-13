@@ -34,14 +34,20 @@
 #include <yaml-cpp/yaml.h>
 
 // ----------------------------------------------------------------------------
+struct Utils
+{
 #ifdef NDEBUG
-static std::ofstream debug{"/dev/null"};
+  static std::ofstream debug{"/dev/null"};
 #else
-static std::ostream & debug = std::cout;
+  static std::ostream constexpr & debug = std::cout;
 #endif
 
-static std::ofstream filelog{"minifem.log"};
-static const std::string separator = std::string(80, '=') + "\n";
+  static std::ofstream constfilelog;
+  static constexpr const char * separator =
+      "================================================"
+      "============================================\n";
+  // = std::string(88, '=') + "\n";
+};
 
 // ----------------------------------------------------------------------------
 using id_T = uint;

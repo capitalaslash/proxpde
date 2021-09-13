@@ -38,7 +38,7 @@ int test(
       typename LagrangeFE<Facet_T, 1>::RecommendedQR,
       2>;
 
-  std::cout << separator << "test " << test_id << std::endl;
+  std::cout << Utils::separator << "test " << test_id << std::endl;
   test_id++;
 
   std::unique_ptr<Mesh_T> oneElemMesh{new Mesh_T};

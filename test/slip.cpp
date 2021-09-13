@@ -266,7 +266,7 @@ int main(int argc, char * argv[])
   double normOld = 0.;
   for (uint k = 0; k < 20; ++k)
   {
-    std::cout << separator << "iteration " << k << std::endl;
+    std::cout << Utils::separator << "iteration " << k << std::endl;
 
     t.start("tangent");
     bcLeft << sol.data;

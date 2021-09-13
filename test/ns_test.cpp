@@ -133,7 +133,7 @@ int main(int argc, char * argv[])
     stepTimer.start();
 
     time += dt;
-    std::cout << separator << "solving timestep " << itime << ", time = " << time
+    std::cout << Utils::separator << "solving timestep " << itime << ", time = " << time
               << std::endl;
 
     t.start("monolithic assembly");

@@ -201,6 +201,7 @@ void test()
     {
       auto const facetId = mesh->elemToFacet[elem.id][f];
 
+  std::cout << Utils::separator << "refined mesh:\n" << *newMesh << std::endl;
       // work on facets only when we are the first facing element
       if (facetId != idNotSet &&
           mesh->facetList[facetId].facingElem[0].ptr->id == elem.id)
@@ -252,7 +253,6 @@ void test()
 
   newMesh.buildConnectivity();
 
-  std::cout << separator << "refined mesh:\n" << newMesh << std::endl;
 
   FESpace_T feSpace{newMesh};
   FEVar id{"id", feSpace};

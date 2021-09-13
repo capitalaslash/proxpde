@@ -205,52 +205,52 @@ int main(int argc, char * argv[])
 
   MilliTimer t;
 
-  std::cout << separator << "Line - order 1\n" << separator;
+  std::cout << Utils::separator << "Line - order 1\n" << Utils::separator;
   t.start("line - 1");
   tests[0] = test<std::mt19937, Line, 1>(gen, numTests, 1.e-16);
   t.stop();
 
-  std::cout << separator << "Line - order 2\n" << separator;
+  std::cout << Utils::separator << "Line - order 2\n" << Utils::separator;
   t.start("line - 2");
   tests[1] = test<std::mt19937, Line, 2>(gen, numTests, 1.e-16);
   t.stop();
 
-  std::cout << separator << "Triangle - order 1\n" << separator;
+  std::cout << Utils::separator << "Triangle - order 1\n" << Utils::separator;
   t.start("tri - 1");
   tests[2] = test<std::mt19937, Triangle, 1>(gen, numTests, 0.001871744791666685);
   t.stop();
 
-  std::cout << separator << "Triangle - order 2\n" << separator;
+  std::cout << Utils::separator << "Triangle - order 2\n" << Utils::separator;
   t.start("tri - 2");
   tests[3] = test<std::mt19937, Triangle, 2>(gen, numTests, 0.003458658854166685);
   t.stop();
 
-  std::cout << separator << "Quad - order 1\n" << separator;
+  std::cout << Utils::separator << "Quad - order 1\n" << Utils::separator;
   t.start("quad - 1");
   tests[4] = test<std::mt19937, Quad, 1>(gen, numTests, 0.00472005208333337);
   t.stop();
 
-  std::cout << separator << "Quad - order 2\n" << separator;
+  std::cout << Utils::separator << "Quad - order 2\n" << Utils::separator;
   t.start("quad - 2");
   tests[5] = test<std::mt19937, Quad, 2>(gen, numTests, 0.00358072916666663);
   t.stop();
 
-  std::cout << separator << "Tetrahedron - order 1\n" << separator;
+  std::cout << Utils::separator << "Tetrahedron - order 1\n" << Utils::separator;
   t.start("tet - 1");
   tests[6] = test<std::mt19937, Tetrahedron, 1>(gen, numTests, 0.00389811197916666);
   t.stop();
 
-  std::cout << separator << "Tetrahedron - order 2\n" << separator;
+  std::cout << Utils::separator << "Tetrahedron - order 2\n" << Utils::separator;
   t.start("tet - 2");
   tests[7] = test<std::mt19937, Tetrahedron, 2>(gen, numTests, 0.00402018229166666);
   t.stop();
 
-  std::cout << separator << "Hexahedron - order 1\n" << separator;
+  std::cout << Utils::separator << "Hexahedron - order 1\n" << Utils::separator;
   t.start("hex - 1");
   tests[8] = test<std::mt19937, Hexahedron, 1>(gen, numTests, 0.005234375000000013);
   t.stop();
 
-  std::cout << separator << "Hexahedron - order 2\n" << separator;
+  std::cout << Utils::separator << "Hexahedron - order 2\n" << Utils::separator;
   t.start("hex - 2");
   tests[9] = test<std::mt19937, Hexahedron, 2>(gen, numTests, 0.006088867187500013);
   t.stop();

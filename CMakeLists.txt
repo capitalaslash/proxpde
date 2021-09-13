@@ -64,6 +64,7 @@ include_directories("${PROJECT_BINARY_DIR}")
 add_library(minifem SHARED
   src/geo.cpp
   src/mesh.cpp
+  src/ns.cpp
   src/reffe.cpp
 )
 add_library(MiniFEM::minifem ALIAS minifem)

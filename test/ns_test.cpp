@@ -72,8 +72,8 @@ int main(int argc, char * argv[])
   auto bcsVel = std::make_tuple(
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::TOP, uComp},
-      BCEss{feSpaceVel, side::LEFT, uComp});
+      BCEss{feSpaceVel, side::TOP, Comp::u},
+      BCEss{feSpaceVel, side::LEFT, Comp::u});
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;

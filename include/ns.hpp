@@ -28,13 +28,16 @@
 // #include <amgcl/preconditioner/dummy.hpp>
 // #include <amgcl/profiler.hpp>
 
-std::vector<uint> const uComp = {0};
-std::vector<uint> const vComp = {1};
-std::vector<uint> const wComp = {2};
-std::vector<uint> const uvComp = {0, 1};
-std::vector<uint> const uwComp = {0, 2};
-std::vector<uint> const vwComp = {1, 2};
-std::vector<uint> const uvwComp = {0, 1, 2};
+struct Comp
+{
+  static const std::vector<uint> u;
+  static const std::vector<uint> v;
+  static const std::vector<uint> w;
+  static const std::vector<uint> uv;
+  static const std::vector<uint> uw;
+  static const std::vector<uint> vw;
+  static const std::vector<uint> uvw;
+};
 
 struct NSParameters
 {

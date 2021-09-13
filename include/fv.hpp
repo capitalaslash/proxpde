@@ -45,9 +45,10 @@ double pureUpwind(double const) { return 0.; }
 
 enum class LimiterType
 {
+  NONE,
   UPWIND,
   MINMOD,
-  SUPERBEE
+  SUPERBEE,
 };
 
 static const std::unordered_map<LimiterType, std::function<double(double const)>>
@@ -57,11 +58,39 @@ static const std::unordered_map<LimiterType, std::function<double(double const)>
         {LimiterType::SUPERBEE, superbee},
 };
 
-static const std::unordered_map<std::string, LimiterType> stringToLimiter = {
-    {"upwind", LimiterType::UPWIND},
-    {"minmod", LimiterType::MINMOD},
-    {"superbee", LimiterType::SUPERBEE},
-};
+std::function<double(double const)> toLimiterFun(LimiterType const type)
+{
+  switch (type)
+  {
+    // using enum LimiterType; c++20
+  case LimiterType::UPWIND:
+    return std::function{pureUpwind};
+  case LimiterType::MINMOD:
+    return std::function{minmod};
+  case LimiterType::SUPERBEE:
+    return std::function{superbee};
+  default:
+    return [](double const) { return 0.; };
+  }
+}
+
+LimiterType toLimiterType(std::string_view name)
+{
+  // using enum LimiterType; c++20
+  if (name == "upwind")
+  {
+    return LimiterType::UPWIND;
+  }
+  else if (name == "minmod")
+  {
+    return LimiterType::MINMOD;
+  }
+  else if (name == "superbee")
+  {
+    return LimiterType::SUPERBEE;
+  }
+  return LimiterType::NONE;
+}
 
 template <auto L>
 struct Limiter

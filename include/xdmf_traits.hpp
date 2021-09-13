@@ -10,10 +10,18 @@ enum class XDMFGridType : int8_t
   COLLECTION
 };
 
-static const std::unordered_map<XDMFGridType, std::string> XDMFGridTypeToString = {
-    {XDMFGridType::SINGLE, "Uniform"},
-    {XDMFGridType::COLLECTION, "Collection"},
-};
+constexpr std::string_view to_string(XDMFGridType const type)
+{
+  switch (type)
+  {
+    // using enum XDMFGridType; c++20
+  case XDMFGridType::SINGLE:
+    return "Uniform";
+  case XDMFGridType::COLLECTION:
+    return "Collection";
+  }
+  return "ERROR";
+}
 
 enum class XDMFNumberType : int8_t
 {
@@ -21,10 +29,18 @@ enum class XDMFNumberType : int8_t
   FLOAT
 };
 
-static const std::unordered_map<XDMFNumberType, char const *> XDMFNumberTypeToString = {
-    {XDMFNumberType::INT, "Int"},
-    {XDMFNumberType::FLOAT, "Float"},
-};
+constexpr std::string_view to_string(XDMFNumberType const type)
+{
+  switch (type)
+  {
+    // using enum XDMFNumberType; c++20
+  case XDMFNumberType::INT:
+    return "Int";
+  case XDMFNumberType::FLOAT:
+    return "Float";
+  }
+  return "ERROR";
+}
 
 enum class XDMFFormat : int8_t
 {
@@ -32,10 +48,18 @@ enum class XDMFFormat : int8_t
   INLINE
 };
 
-static const std::unordered_map<XDMFFormat, char const *> XDMFFormatToString = {
-    {XDMFFormat::HDF, "HDF"},
-    {XDMFFormat::INLINE, "XML"},
-};
+constexpr std::string_view to_string(XDMFFormat const format)
+{
+  switch (format)
+  {
+    // using enum XDMFFormat; c++20
+  case XDMFFormat::HDF:
+    return "HDF";
+  case XDMFFormat::INLINE:
+    return "XML";
+  }
+  return "ERROR";
+}
 
 enum class XDMFCenter : int8_t
 {
@@ -43,10 +67,18 @@ enum class XDMFCenter : int8_t
   NODE
 };
 
-static const std::unordered_map<XDMFCenter, std::string> XDMFCenterToString = {
-    {XDMFCenter::CELL, "Cell"},
-    {XDMFCenter::NODE, "Node"},
-};
+constexpr std::string_view to_string(XDMFCenter const center)
+{
+  switch (center)
+  {
+    // using enum XDMFCenter; c++20
+  case XDMFCenter::CELL:
+    return "Cell";
+  case XDMFCenter::NODE:
+    return "Node";
+  }
+  return "ERROR";
+}
 
 struct XDMFVar
 {

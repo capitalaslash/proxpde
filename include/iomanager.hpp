@@ -70,7 +70,7 @@ public:
     auto domainNode = xdmfNode.append_child("Domain");
 
     gridNode = domainNode.append_child("Grid");
-    gridNode.append_attribute("GridType") = XDMFGridTypeToString.at(gridType).data();
+    gridNode.append_attribute("GridType") = to_string(gridType).data();
     if (gridType == XDMFGridType::COLLECTION)
     {
       gridNode.append_attribute("CollectionType") = "Temporal";
@@ -124,7 +124,7 @@ public:
     varNode.append_attribute("Name") = var.name.data();
     varNode.append_attribute("Active") = 1;
     varNode.append_attribute("AttributeType") = "Scalar";
-    varNode.append_attribute("Center") = XDMFCenterToString.at(var.center).data();
+    varNode.append_attribute("Center") = to_string(var.center).data();
 
     auto const buf = filePath.filename().string() + dataSuffix + ".h5:/" + var.name;
     // auto const buf = filepath.filename().string() + ".time.h5:/" + name + "." + iter;
@@ -166,9 +166,9 @@ private:
   {
     auto node = parent.append_child("DataItem");
     node.append_attribute("Dimensions") = join(dims).c_str();
-    node.append_attribute("NumberType") = XDMFNumberTypeToString.at(type);
+    node.append_attribute("NumberType") = to_string(type).data();
     node.append_attribute("Precision") = precision;
-    node.append_attribute("Format") = XDMFFormatToString.at(format);
+    node.append_attribute("Format") = to_string(format).data();
     node.text() = ("\n" + content + "\n").data();
     return node;
   }

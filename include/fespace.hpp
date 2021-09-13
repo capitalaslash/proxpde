@@ -369,7 +369,9 @@ void getComponent(
 
 template <typename FESpaceOrig>
 void getComponents(
-    array<Vec &, FESpaceOrig::dim> dest, Vec & orig, FESpaceOrig const & feSpaceOrig)
+    std::array<Vec &, FESpaceOrig::dim> dest,
+    Vec & orig,
+    FESpaceOrig const & feSpaceOrig)
 {
   using FESpaceDest = FESpace<
       typename FESpaceOrig::Mesh_T,

@@ -6,12 +6,12 @@
 #include "var.hpp"
 #include "xdmf_traits.hpp"
 
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include <hdf5.h>
 #include <pugixml.hpp>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 template <typename T>
 std::string join(std::vector<T> const & v, std::string_view const divider = " ")

@@ -91,6 +91,7 @@ int main()
   {
     Eigen::BiCGSTAB<Mat<StorageType::RowMajor>> solver(builder.A);
     sol.data = solver.solve(builder.b);
+    break;
   }
   case SolverType::SPARSELU:
   {
@@ -101,6 +102,7 @@ int main()
     solver.factorize(builder.A);
 
     sol.data = solver.solve(builder.b);
+    break;
   }
   }
   // std::cout<< "sol:\n" << sol << std::endl;

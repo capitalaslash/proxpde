@@ -98,7 +98,7 @@ target_link_options(minifem
 )
 
 add_executable(main EXCLUDE_FROM_ALL main.cpp)
-target_link_libraries(main MiniFEM::minifem)
+target_link_libraries(main PUBLIC MiniFEM::minifem)
 # set_target_properties(main
 #   PROPERTIES
 #     CXX_CLANG_TIDY "clang-tidy;-checks=*,readability-*"
@@ -106,10 +106,10 @@ target_link_libraries(main MiniFEM::minifem)
 #   )
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
-target_link_libraries(test_eigen MiniFEM::minifem)
+target_link_libraries(test_eigen PUBLIC MiniFEM::minifem)
 
 add_executable(test_trap test_trap.cpp)
-target_link_libraries(test_trap MiniFEM::minifem)
+target_link_libraries(test_trap PUBLIC MiniFEM::minifem)
 
 install(TARGETS minifem
   EXPORT MiniFEMTargets

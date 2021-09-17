@@ -24,7 +24,7 @@ macro(minifem_add_test name)
 
   add_executable(${name} ${${name}_SOURCES})
   # TODO: support COMPONENTS
-  target_link_libraries(${name} MiniFEM::minifem)
+  target_link_libraries(${name} PUBLIC MiniFEM::minifem)
   # TODO: manage optional compile flags
   target_compile_options(${name}
     PRIVATE ${MINIFEM_COMPILE_FLAGS}

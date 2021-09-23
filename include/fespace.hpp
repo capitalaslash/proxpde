@@ -64,16 +64,16 @@ struct FESpace
     this->curFE.reinit(elem);
 
     // TODO: this needs inverse mapping
-    // FMat<RefFE_T::numFuns, RefFE_T::numFuns> jac = FMat<RefFE_T::numFuns,
-    // RefFE_T::numFuns>::Zero();
-    // for(uint n=0; n<RefFE_T::numGeoFuns; ++n)
+    // FMat<RefFE_T::numDOFs, RefFE_T::numDOFs> jac = FMat<RefFE_T::numDOFs,
+    // RefFE_T::numDOFs>::Zero();
+    // for(uint n=0; n<RefFE_T::numGeoDOFs; ++n)
     // {
     //   jac += curFE.dofPts[n] * RefFE::mapping[n](pt);
     // }
 
-    FMat<RefFE_T::numFuns, dim> localValue;
-    FMat<RefFE_T::numFuns, feDimValue<RefFE_T>()> phi;
-    for (uint n = 0; n < CurFE_T::RefFE_T::numFuns; ++n)
+    FMat<RefFE_T::numDOFs, dim> localValue;
+    FMat<RefFE_T::numDOFs, feDimValue<RefFE_T>()> phi;
+    for (uint n = 0; n < CurFE_T::RefFE_T::numDOFs; ++n)
     {
       for (uint d = 0; d < dim; ++d)
       {
@@ -157,7 +157,7 @@ void interpolateAnalyticFunction(
   for (auto const & elem: feSpace.mesh.elementList)
   {
     feSpace.curFE.reinit(elem);
-    for (uint i = 0; i < FESpace::RefFE_T::numFuns; ++i)
+    for (uint i = 0; i < FESpace::RefFE_T::numDOFs; ++i)
     {
       auto const value = fun(feSpace.curFE.dofPts[i]);
       if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
@@ -230,7 +230,7 @@ void integrateAnalyticFunction(
     }
     sum /= FESpace::Mesh_T::Elem_T::numPts;
 
-    for (uint i = 0; i < FESpace::RefFE_T::numFuns; ++i)
+    for (uint i = 0; i < FESpace::RefFE_T::numDOFs; ++i)
     {
       FVec<FESpace::dim> value = FVec<FESpace::dim>::Zero();
       double const sum_norm = sum.norm();
@@ -302,12 +302,12 @@ void reconstructGradient(
     feSpaceData.curFE.reinit(elem);
     feSpaceGrad.curFE.reinit(elem);
 
-    for (uint k = 0; k < FESpaceData::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpaceData::RefFE_T::numDOFs; ++k)
     {
       auto const baseDof = feSpaceData.dof.getId(elem.id, k);
       auto const value = data[baseDof];
       numberOfPasses[baseDof] += 1;
-      for (uint i = 0; i < FESpaceGrad::RefFE_T::numFuns; ++i)
+      for (uint i = 0; i < FESpaceGrad::RefFE_T::numDOFs; ++i)
       {
         for (auto const d: comp)
         {

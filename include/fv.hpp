@@ -19,7 +19,7 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
   {
     // feSpace.curFE.reinit(elem);
     FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
-    for (uint n = 0; n < FESpace::CurFE_T::RefFE_T::numFuns; ++n)
+    for (uint n = 0; n < FESpace::CurFE_T::RefFE_T::numDOFs; ++n)
     {
       for (uint d = 0; d < FESpace::dim; ++d)
       {
@@ -27,7 +27,7 @@ double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
         localVel[d] += vel[dofId];
       }
     }
-    localVel /= FESpace::CurFE_T::RefFE_T::numFuns;
+    localVel /= FESpace::CurFE_T::RefFE_T::numDOFs;
 
     cfl = std::max(cfl, localVel.norm() * dt / elem.hMin());
   }

@@ -113,7 +113,7 @@ int main(int argc, char * argv[])
   {
     for (uint e = 0; e < feSpaceU.dof.rows; ++e)
     {
-      for (uint k = 0; k < FESpaceU_T::RefFE_T::numFuns; ++k)
+      for (uint k = 0; k < FESpaceU_T::RefFE_T::numDOFs; ++k)
       {
         feSpaceV.dof.elemMap(e, k) += dofU;
       }
@@ -123,7 +123,7 @@ int main(int argc, char * argv[])
   {
     for (uint e = 0; e < feSpaceU.dof.rows; ++e)
     {
-      for (uint k = 0; k < FESpaceU_T::RefFE_T::numFuns; ++k)
+      for (uint k = 0; k < FESpaceU_T::RefFE_T::numDOFs; ++k)
       {
         feSpaceU.dof.elemMap(e, k) *= 2;
         feSpaceV.dof.elemMap(e, k) *= 2;
@@ -133,7 +133,7 @@ int main(int argc, char * argv[])
   }
   for (uint e = 0; e < feSpaceP.dof.rows; ++e)
   {
-    for (uint k = 0; k < FESpaceP_T::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpaceP_T::RefFE_T::numDOFs; ++k)
     {
       feSpaceP.dof.elemMap(e, k) += 2 * dofU;
     }

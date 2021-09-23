@@ -33,8 +33,8 @@ struct DOF
   using RefFE_T = RefFE;
   // using ElemMap_T = std::vector<std::array<DOFid_T,clms*dim>>;
   using ElemMap_T = Table<DOFid_T, clms * dim>;
-  // using GeoMap_T = std::vector<std::array<DOFid_T,RefFE::numGeoFuns>>;
-  using GeoMap_T = Table<DOFid_T, RefFE::numGeoFuns>;
+  // using GeoMap_T = std::vector<std::array<DOFid_T,RefFE::numGeoDOFs>>;
+  using GeoMap_T = Table<DOFid_T, RefFE::numGeoDOFs>;
   using PtMap_T = std::vector<DOFid_T>;
   // we need ordered sets in order to compare them avoiding permutation issues
   using edgeIdList_T = std::set<id_T>;
@@ -44,7 +44,7 @@ struct DOF
       rows{mesh.elementList.size()},
       elemMap(rows, clms * dim),
       ptMap(mesh.pointList.size(), dofIdNotSet),
-      geoMap(rows, RefFE::numGeoFuns)
+      geoMap(rows, RefFE::numGeoDOFs)
   {
     setupElemMap(mesh, offset);
     setupGeoMap(mesh, offset);
@@ -305,9 +305,9 @@ struct DOF
     {
       if constexpr (ordering == DofOrdering::BLOCK)
       {
-        geoMap = elemMap.block(0, 0, rows, RefFE::numGeoFuns) -
-                 Table<DOFid_T, RefFE::numGeoFuns>::Constant(
-                     rows, RefFE::numGeoFuns, offset);
+        geoMap = elemMap.block(0, 0, rows, RefFE::numGeoDOFs) -
+                 Table<DOFid_T, RefFE::numGeoDOFs>::Constant(
+                     rows, RefFE::numGeoDOFs, offset);
       }
       else
       {
@@ -360,7 +360,7 @@ operator<<(std::ostream & out, DOF<Mesh, RefFE, dim, type, ordering> const & dof
   out << "DOF map\n";
   out << "elemMap: " << dof.rows << "x" << dof.clms << "\n";
   out << dof.elemMap << "\n";
-  out << "geoMap: " << dof.rows << "x" << RefFE::numGeoFuns << "\n";
+  out << "geoMap: " << dof.rows << "x" << RefFE::numGeoDOFs << "\n";
   out << dof.geoMap;
   return out;
 }

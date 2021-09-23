@@ -26,7 +26,7 @@ struct ComputeDOFLocal
   {
     using FESpaceT =
         std::tuple_element_t<std::tuple_size_v<FESpaceTuple> - remaining, FESpaceTuple>;
-    return FESpaceT::RefFE_T::numFuns * FESpaceT::dim +
+    return FESpaceT::RefFE_T::numDOFs * FESpaceT::dim +
            ComputeDOFLocal<FESpaceTuple, remaining - 1>::sum();
   }
 };
@@ -60,7 +60,7 @@ static std::array<uint, std::tuple_size_v<FESpaceTuple>> constexpr getBlockStruc
 {
   return {
       {std::tuple_element_t<Is, FESpaceTuple>::dim *
-       std::tuple_element_t<Is, FESpaceTuple>::RefFE_T::numFuns...}};
+       std::tuple_element_t<Is, FESpaceTuple>::RefFE_T::numDOFs...}};
 }
 } // namespace details
 
@@ -100,7 +100,7 @@ struct Assembler
   Mat<StorageType::ClmMajor> matrix;
   Vec rhs;
   Vec sol;
-  BlockMatrix<FESpaces::RefFE_T::numFuns...> localMatrix;
+  BlockMatrix<FESpaces::RefFE_T::numDOFs...> localMatrix;
   FVec<dofLocalNum> localRhs;
 };
 

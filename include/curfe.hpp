@@ -10,7 +10,7 @@ struct CurFE
 {
   using RefFE_T = RefFE;
   using QR_T = QR;
-  static uint constexpr numDOFs = RefFE_T::numFuns;
+  static uint constexpr numDOFs = RefFE_T::numDOFs;
   static uint constexpr dim = RefFE_T::dim;
   using LocalMat_T = FMat<numDOFs, numDOFs>;
   using LocalVec_T = FVec<numDOFs>;
@@ -46,7 +46,7 @@ struct CurFE
           divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
         }
       }
-      for (uint i = 0; i < RefFE::numGeoFuns; ++i)
+      for (uint i = 0; i < RefFE::numGeoDOFs; ++i)
       {
         mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
       }
@@ -70,7 +70,7 @@ struct CurFE
       for (uint q = 0; q < QR::numPts; ++q)
       {
         jac[q] = JacMat_T::Zero();
-        for (uint n = 0; n < RefFE::numGeoFuns; ++n)
+        for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
         {
           jac[q] += mappingPts[n] * mapping[q].row(n);
         }
@@ -143,7 +143,7 @@ struct CurFE
   {
     JacMat_T jac = JacMat_T::Zero();
     auto const mappingPts = RefFE::mappingPts(*elem);
-    for (uint n = 0; n < RefFE::numGeoFuns; ++n)
+    for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
     {
       jac += mappingPts[n] * (RefFE::mapping[n](pt)).transpose();
     }
@@ -172,7 +172,7 @@ struct CurFE
     while (iter < maxIter)
     {
       JacMat_T jac = JacMat_T::Zero();
-      for (uint n = 0; n < RefFE::numGeoFuns; ++n)
+      for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
       {
         jac += mappingPts[n] * (RefFE::mapping[n](approxPt)).transpose();
       }
@@ -217,7 +217,7 @@ struct CurFE
   std::array<FMat<numDOFs, 3>, QR::numPts> phiVect;
   std::array<FVec<numDOFs>, QR::numPts> divphiRef;
   std::array<FVec<numDOFs>, QR::numPts> divphi;
-  std::array<FMat<RefFE::numGeoFuns, dim>, QR::numPts> mapping;
+  std::array<FMat<RefFE::numGeoDOFs, dim>, QR::numPts> mapping;
 };
 
 template <typename QR>
@@ -234,7 +234,7 @@ struct CurFE<RefPointP1, QR>
   }
 
   GeoElem const * elem;
-  std::array<Vec3, RefFE_T::numFuns> dofPts;
+  std::array<Vec3, RefFE_T::numDOFs> dofPts;
   std::array<double, QR::numPts> JxW = {{1.L}};
   std::array<Vec3, QR::numPts> qpoint;
   std::array<FVec<1>, QR::numPts> phi = {{FVec<1>(1.L)}};

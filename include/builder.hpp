@@ -76,11 +76,11 @@ struct Builder
                 std::is_same_v<FESpace_T, typename BC_T::FESpace_T>,
                 "the fespace of the assembly and the one of the bc do not coincide");
 
-            for (uint i = 0; i < CurFE_T::RefFE_T::numFuns; ++i)
+            for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
             {
               for (uint d = 0; d < FESpace_T::dim; ++d)
               {
-                auto const pos = i + d * FESpace_T::RefFE_T::numFuns;
+                auto const pos = i + d * FESpace_T::RefFE_T::numDOFs;
                 DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
                 if (bc.isConstrained(id))
                 {
@@ -96,9 +96,9 @@ struct Builder
 
       for (uint d = 0; d < FESpace_T::dim; ++d)
       {
-        for (uint i = 0; i < CurFE_T::RefFE_T::numFuns; ++i)
+        for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
         {
-          auto const pos = i + d * FESpace_T::RefFE_T::numFuns;
+          auto const pos = i + d * FESpace_T::RefFE_T::numDOFs;
           DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
 
           static_for(
@@ -122,14 +122,14 @@ struct Builder
       // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
-      for (uint i = 0; i < CurFE_T::RefFE_T::numFuns; ++i)
+      for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
       {
         for (uint d1 = 0; d1 < FESpace_T::dim; ++d1)
         {
           DOFid_T const idI = refAssembly.feSpace.dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1 * FESpace_T::CurFE_T::numDOFs];
 
-          for (uint j = 0; j < CurFE_T::RefFE_T::numFuns; ++j)
+          for (uint j = 0; j < CurFE_T::RefFE_T::numDOFs; ++j)
           {
             for (uint d2 = 0; d2 < FESpace_T::dim; ++d2)
             {
@@ -200,9 +200,9 @@ struct Builder
                 "the fespace of the assembly and the one of the bc do not coincide");
             for (uint d = 0; d < FESpace1::dim; ++d)
             {
-              for (uint i = 0; i < CurFE1_T::RefFE_T::numFuns; ++i)
+              for (uint i = 0; i < CurFE1_T::RefFE_T::numDOFs; ++i)
               {
-                auto const pos = i + d * FESpace1::RefFE_T::numFuns;
+                auto const pos = i + d * FESpace1::RefFE_T::numDOFs;
                 DOFid_T const id = assembly.feSpace1.dof.getId(elem.id, i, d);
                 if (bc.isConstrained(id))
                 {
@@ -222,11 +222,11 @@ struct Builder
                 std::is_same_v<std::remove_cv_t<FESpace2>, typename BC2_T::FESpace_T>,
                 "the fespace of the assembly and the one of the bc do not coincide");
 
-            for (uint i = 0; i < CurFE2_T::RefFE_T::numFuns; ++i)
+            for (uint i = 0; i < CurFE2_T::RefFE_T::numDOFs; ++i)
             {
               for (uint d = 0; d < FESpace2::dim; ++d)
               {
-                auto const pos = i + d * FESpace2::RefFE_T::numFuns;
+                auto const pos = i + d * FESpace2::RefFE_T::numDOFs;
                 DOFid_T const id = assembly.feSpace2.dof.getId(elem.id, i, d);
                 if (bc.isConstrained(id))
                 {
@@ -241,14 +241,14 @@ struct Builder
       Ke = Crow * Ke * Cclm;
 
       // --- store local values in global matrix and rhs ---
-      for (uint i = 0; i < CurFE1_T::RefFE_T::numFuns; ++i)
+      for (uint i = 0; i < CurFE1_T::RefFE_T::numDOFs; ++i)
       {
         for (uint d1 = 0; d1 < FESpace1::dim; ++d1)
         {
           DOFid_T const idI = assembly.feSpace1.dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1 * FESpace1::CurFE_T::numDOFs];
 
-          for (uint j = 0; j < CurFE2_T::RefFE_T::numFuns; ++j)
+          for (uint j = 0; j < CurFE2_T::RefFE_T::numDOFs; ++j)
           {
             for (uint d2 = 0; d2 < FESpace2::dim; ++d2)
             {
@@ -317,9 +317,9 @@ struct Builder
 
             for (uint d = 0; d < FESpace_T::dim; ++d)
             {
-              for (uint i = 0; i < CurFE_T::RefFE_T::numFuns; ++i)
+              for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
               {
-                auto const pos = i + d * FESpace_T::RefFE_T::numFuns;
+                auto const pos = i + d * FESpace_T::RefFE_T::numDOFs;
                 DOFid_T const id = refAssembly.feSpace.dof.getId(elem.id, i, d);
                 if (bc.isConstrained(id))
                 {
@@ -334,7 +334,7 @@ struct Builder
       // filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
-      for (uint i = 0; i < CurFE_T::RefFE_T::numFuns; ++i)
+      for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
       {
         for (uint d = 0; d < FESpace_T::dim; ++d)
         {

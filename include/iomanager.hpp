@@ -100,7 +100,7 @@ public:
         filePath.filename().string() + meshSuffix + ".h5:/" + connName.data();
     createDataItem(
         topoNode,
-        {numElems, RefFE::numGeoFuns},
+        {numElems, RefFE::numGeoDOFs},
         XDMFNumberType::INT,
         8,
         XDMFFormat::HDF,
@@ -338,11 +338,11 @@ protected:
 
     if constexpr (Traits_T::needsMapping == true)
     {
-      Table<DOFid_T, RefFE_T::numGeoFuns> mappedConn(
-          feSpace.mesh.elementList.size(), RefFE_T::numGeoFuns);
+      Table<DOFid_T, RefFE_T::numGeoDOFs> mappedConn(
+          feSpace.mesh.elementList.size(), RefFE_T::numGeoDOFs);
       for (uint i = 0; i < feSpace.mesh.elementList.size(); ++i)
       {
-        for (uint j = 0; j < RefFE_T::numGeoFuns; ++j)
+        for (uint j = 0; j < RefFE_T::numGeoDOFs; ++j)
         {
           mappedConn(i, j) = feSpace.dof.geoMap(i, Traits_T::mapping[j]);
         }
@@ -357,7 +357,7 @@ protected:
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
     for (auto const & e: feSpace.mesh.elementList)
     {
-      for (uint p = 0; p < RefFE_T::numGeoFuns; ++p)
+      for (uint p = 0; p < RefFE_T::numGeoDOFs; ++p)
       {
         coords.row(feSpace.dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
       }

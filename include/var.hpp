@@ -94,7 +94,7 @@ struct FEVar
   {
     for (uint d = 0; d < FESpace_T::dim; ++d)
     {
-      for (uint n = 0; n < FESpace_T::RefFE_T::numFuns; ++n)
+      for (uint n = 0; n < FESpace_T::RefFE_T::numDOFs; ++n)
       {
         auto const id = feSpace.dof.getId(elemId, n, d);
         _localData(n, d) = data[id];
@@ -158,7 +158,7 @@ struct FEVar
   auto evaluateOnRef(FVec<FESpace_T::RefFE_T::dim> const & p) const
   {
     FVec<FESpace_T::dim> value = FVec<FESpace_T::dim>::Zero();
-    for (uint k = 0; k < FESpace_T::RefFE_T::numFuns; ++k)
+    for (uint k = 0; k < FESpace_T::RefFE_T::numDOFs; ++k)
     {
       value += FESpace_T::RefFE_T::phiFun[k](p) * _localData.row(k);
     }
@@ -190,7 +190,7 @@ struct FEVar
   Vec data;
 
 private:
-  FMat<FESpace_T::RefFE_T::numFuns, FESpace_T::dim> _localData;
+  FMat<FESpace_T::RefFE_T::numDOFs, FESpace_T::dim> _localData;
 };
 
 // template <typename FEList>

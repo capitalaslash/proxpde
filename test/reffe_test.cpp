@@ -23,7 +23,7 @@ int test()
   referenceMesh(*mesh);
   FESpace_T feSpace{*mesh};
 
-  auto const size = RefFE_T::numFuns;
+  auto const size = RefFE_T::numDOFs;
   FMat<size, size> matPhi = FMat<size, size>::Zero();
   FMat<size, 3> matDPhi = FMat<size, 3>::Zero();
   auto & cfe = feSpace.curFE;

@@ -575,7 +575,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       FVec<3> localVel = FVec<3>::Zero();
       if constexpr (family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::LAGRANGE)
       {
-        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numFuns; ++n)
+        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
         {
           for (uint d = 0; d < FESpaceVel_T::dim; ++d)
           {
@@ -587,7 +587,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       else if constexpr (
           family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
-        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numFuns; ++n)
+        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
         {
           id_T const dofId = feSpaceVel.dof.getId(this->feSpace.curFE.elem->id, n);
           localVel += vel[dofId] * this->feSpace.curFE.phiVect[q].row(n).transpose();
@@ -884,7 +884,7 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
     for (auto const c: this->comp)
     {
       FVec<CurFERhs_T::numDOFs> localRhs;
-      for (uint n = 0; n < CurFERhs_T::RefFE_T::numFuns; ++n)
+      for (uint n = 0; n < CurFERhs_T::RefFE_T::numDOFs; ++n)
       {
         id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.elem->id, n, c);
         localRhs[n] = rhs[dofId];
@@ -998,7 +998,7 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
     using CurFERhs_T = typename FESpaceRhs_T::CurFE_T;
 
     FVec<CurFERhs_T::numDOFs> localRhs;
-    for (uint n = 0; n < CurFERhs_T::RefFE_T::numFuns; ++n)
+    for (uint n = 0; n < CurFERhs_T::RefFE_T::numDOFs; ++n)
     {
       id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.elem->id, n);
       localRhs[n] = rhs[dofId];
@@ -1462,7 +1462,7 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
     using CurFEVel_T = typename FESpaceVel_T::CurFE_T;
 
     FMat<FESpaceData_T::dim, CurFEData_T::numDOFs> localData;
-    for (uint n = 0; n < CurFEData_T::RefFE_T::numFuns; ++n)
+    for (uint n = 0; n < CurFEData_T::RefFE_T::numDOFs; ++n)
     {
       for (uint d2 = 0; d2 < FESpaceData_T::dim; ++d2)
       {
@@ -1564,7 +1564,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
           auto const value = rhs(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
-            for (uint i = 0; i < FacetFE_T::numFuns; ++i)
+            for (uint i = 0; i < FacetFE_T::numDOFs; ++i)
             {
               auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
@@ -1623,7 +1623,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
           for (auto const d: this->comp)
           {
             auto const value = rhs(facetCurFE.qpoint[q]);
-            for (uint i = 0; i < FacetFE_T::numFuns; ++i)
+            for (uint i = 0; i < FacetFE_T::numDOFs; ++i)
             {
               auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
@@ -1680,11 +1680,11 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
           auto const localCoef = coef(facetCurFE.qpoint[q]);
           for (uint const d: this->comp)
           {
-            for (uint i = 0; i < FacetFE_T::numFuns; ++i)
+            for (uint i = 0; i < FacetFE_T::numDOFs; ++i)
             {
               auto const idI =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
-              for (uint j = 0; j < FacetFE_T::numFuns; ++j)
+              for (uint j = 0; j < FacetFE_T::numDOFs; ++j)
               {
                 auto const idJ = CurFE_T::RefFE_T::dofOnFacet[facetCounter][j] +
                                  d * CurFE_T::numDOFs;

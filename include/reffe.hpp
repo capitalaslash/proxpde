@@ -19,29 +19,29 @@ struct RefPointP1
   using FacetFE_T = NullElem;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 1U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 1U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static std::array<std::array<uint, 1>, 1> constexpr dofOnFacet = {{{{0}}}};
   using Vec_T = FVec<dim>;
   using LocalVec_T = FVec<1>;
 
-  static std::array<Vec_T, numFuns> const points;
-  static std::array<scalarOnedFun_T, numFuns> const phiFun;
-  static std::array<onedFun_T, numFuns> const dphiFun;
-  static std::array<onedFun_T, numGeoFuns> const mapping;
+  static std::array<Vec_T, numDOFs> const points;
+  static std::array<scalarOnedFun_T, numDOFs> const phiFun;
+  static std::array<onedFun_T, numDOFs> const dphiFun;
+  static std::array<onedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 1.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts = {{e.pointList[0]->coord}};
+    std::array<Vec3, numDOFs> dofPts = {{e.pointList[0]->coord}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts = {{e.pointList[0]->coord}};
+    std::array<Vec3, numGeoDOFs> mappingPts = {{e.pointList[0]->coord}};
     return mappingPts;
   }
 
@@ -54,8 +54,8 @@ struct RefLineP0
   using FacetFE_T = RefPointP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 2U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 2U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -65,25 +65,25 @@ struct RefLineP0
   //  using LocalVec_T = FVec<2>;
   //  using LocalMat_T = FMat<2,2>;
 
-  static std::array<Vec_T, numFuns> const points;
-  static std::array<scalarOnedFun_T, numFuns> const phiFun;
-  static std::array<onedFun_T, numFuns> const dphiFun;
-  static std::array<onedFun_T, numFuns * dim> const d2phiFun;
-  static std::array<onedFun_T, numGeoFuns> const mapping;
+  static std::array<Vec_T, numDOFs> const points;
+  static std::array<scalarOnedFun_T, numDOFs> const phiFun;
+  static std::array<onedFun_T, numDOFs> const dphiFun;
+  static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
+  static std::array<onedFun_T, numGeoDOFs> const mapping;
   // static LocalMat_T const massMat;
   // static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {.5 * (e.pointList[0]->coord + e.pointList[1]->coord)}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts = {
+    std::array<Vec3, numGeoDOFs> mappingPts = {
         {e.pointList[0]->coord, e.pointList[1]->coord}};
     return mappingPts;
   }
@@ -100,8 +100,8 @@ struct RefLineP1
   using FacetFE_T = RefPointP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
-  static uint constexpr numFuns = 2U;
-  static uint constexpr numGeoFuns = 2U;
+  static uint constexpr numDOFs = 2U;
+  static uint constexpr numGeoDOFs = 2U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static std::array<std::array<uint, 1>, 2> constexpr dofOnFacet = {{{{0}}, {{1}}}};
@@ -110,25 +110,25 @@ struct RefLineP1
   using LocalVec_T = FVec<2>;
   using LocalMat_T = FMat<2, 2>;
 
-  static std::array<Vec_T, numFuns> const points;
-  static std::array<scalarOnedFun_T, numFuns> const phiFun;
-  static std::array<onedFun_T, numFuns> const dphiFun;
-  static std::array<onedFun_T, numFuns * dim> const d2phiFun;
-  static std::array<onedFun_T, numGeoFuns> const mapping;
+  static std::array<Vec_T, numDOFs> const points;
+  static std::array<scalarOnedFun_T, numDOFs> const phiFun;
+  static std::array<onedFun_T, numDOFs> const dphiFun;
+  static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
+  static std::array<onedFun_T, numGeoDOFs> const mapping;
   // static LocalMat_T const massMat;
   // static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts = {{
+    std::array<Vec3, numDOFs> dofPts = {{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
     }};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -145,33 +145,33 @@ struct RefLineP2
   using FacetFE_T = RefPointP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
-  static uint constexpr numFuns = 3U;
-  static uint constexpr numGeoFuns = 3U;
+  static uint constexpr numDOFs = 3U;
+  static uint constexpr numGeoDOFs = 3U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 1}};
   static uint constexpr dofPerFacet = 1U;
   static std::array<std::array<uint, 1>, 2> constexpr dofOnFacet = {{{{0}}, {{1}}}};
   static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<Vec_T, numFuns> const points;
-  static std::array<scalarOnedFun_T, numFuns> const phiFun;
-  static std::array<onedFun_T, numFuns> const dphiFun;
-  static std::array<onedFun_T, numFuns * dim> const d2phiFun;
-  static std::array<onedFun_T, numGeoFuns> const mapping;
+  static std::array<Vec_T, numDOFs> const points;
+  static std::array<scalarOnedFun_T, numDOFs> const phiFun;
+  static std::array<onedFun_T, numDOFs> const dphiFun;
+  static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
+  static std::array<onedFun_T, numGeoDOFs> const mapping;
   static LocalMat_T const massMat;
   static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord, e.pointList[1]->coord, e.midpoint()}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -188,8 +188,8 @@ struct RefTriangleP0
   using FacetFE_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 3U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 3U;
   static std::array<uint, 4> constexpr dofPlace{{0, 1, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -197,23 +197,23 @@ struct RefTriangleP0
       {{{0}}, {{0}}, {{0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.5L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{{e.midpoint()}};
+    std::array<Vec3, numDOFs> dofPts{{e.midpoint()}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{
+    std::array<Vec3, numGeoDOFs> mappingPts{
         {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
     return mappingPts;
   }
@@ -230,30 +230,30 @@ struct RefTriangleP1
   using FacetFE_T = RefLineP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 3U;
-  static uint constexpr numGeoFuns = 3U;
+  static uint constexpr numDOFs = 3U;
+  static uint constexpr numGeoDOFs = 3U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 2U;
   static std::array<std::array<uint, 2>, 3> constexpr dofOnFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.5L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -270,8 +270,8 @@ struct RefTriangleP2
   using FacetFE_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 6U;
-  static uint constexpr numGeoFuns = 6U;
+  static uint constexpr numDOFs = 6U;
+  static uint constexpr numGeoDOFs = 6U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 1}};
   static uint constexpr dofPerFacet = 3U;
   static uint constexpr numEdges = 3U;
@@ -280,17 +280,17 @@ struct RefTriangleP2
       {{{0, 1, 3}}, {{1, 2, 4}}, {{2, 0, 5}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.5L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -300,7 +300,7 @@ struct RefTriangleP2
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -317,8 +317,8 @@ struct RefTriangleCR1
   using FacetFE_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 3U;
-  static uint constexpr numGeoFuns = 3U;
+  static uint constexpr numDOFs = 3U;
+  static uint constexpr numGeoDOFs = 3U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -326,25 +326,25 @@ struct RefTriangleCR1
       {{{0}}, {{1}}, {{2}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.5L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    return std::array<Vec3, numFuns>{
+    return std::array<Vec3, numDOFs>{
         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
         0.5 * (e.pointList[2]->coord + e.pointList[0]->coord)};
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{
+    std::array<Vec3, numGeoDOFs> mappingPts{
         {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
     return mappingPts;
   }
@@ -361,8 +361,8 @@ struct RefTriangleRT0
   using FacetFE_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 3U;
-  static uint constexpr numGeoFuns = 3U;
+  static uint constexpr numDOFs = 3U;
+  static uint constexpr numGeoDOFs = 3U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -370,25 +370,25 @@ struct RefTriangleRT0
       {{{0}}, {{1}}, {{2}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<twodFun_T, numFuns> const phiVectFun;
-  static std::array<scalarTwodFun_T, numFuns> const divphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<twodFun_T, numDOFs> const phiVectFun;
+  static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.5L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    return std::array<Vec3, numFuns>{
+    return std::array<Vec3, numDOFs>{
         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
         0.5 * (e.pointList[2]->coord + e.pointList[0]->coord)};
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{
+    std::array<Vec3, numGeoDOFs> mappingPts{
         {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
     return mappingPts;
   }
@@ -405,8 +405,8 @@ struct RefQuadP0
   using FacetFE_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{0, 1, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -414,23 +414,23 @@ struct RefQuadP0
       {{{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 4.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{{e.midpoint()}};
+    std::array<Vec3, numDOFs> dofPts{{e.midpoint()}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{{
+    std::array<Vec3, numGeoDOFs> mappingPts{{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -452,25 +452,25 @@ struct RefQuadQ1
   using FacetFE_T = RefLineP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 4U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 4U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 2U;
   static std::array<std::array<uint, 2>, 4> constexpr dofOnFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 4.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -478,7 +478,7 @@ struct RefQuadQ1
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -496,25 +496,25 @@ struct RefQuadP2
   using FacetFE_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 8U;
-  static uint constexpr numGeoFuns = 8U;
+  static uint constexpr numDOFs = 8U;
+  static uint constexpr numGeoDOFs = 8U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 1}};
   static uint constexpr dofPerFacet = 3U;
   static std::array<std::array<uint, 3>, 4> constexpr dofOnFacet = {
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 4.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -526,7 +526,7 @@ struct RefQuadP2
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -544,25 +544,25 @@ struct RefQuadQ2
   using FacetFE_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 9U;
-  static uint constexpr numGeoFuns = 9U;
+  static uint constexpr numDOFs = 9U;
+  static uint constexpr numGeoDOFs = 9U;
   static std::array<uint, 4> constexpr dofPlace{{0, 1, 1, 1}};
   static uint constexpr dofPerFacet = 3U;
   static std::array<std::array<uint, 3>, 4> constexpr dofOnFacet = {
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarTwodFun_T, numFuns> const phiFun;
-  static std::array<twodFun_T, numFuns> const dphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<scalarTwodFun_T, numDOFs> const phiFun;
+  static std::array<twodFun_T, numDOFs> const dphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 4.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -575,7 +575,7 @@ struct RefQuadQ2
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -593,8 +593,8 @@ struct RefQuadRT0
   using FacetFE_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
-  static uint constexpr numFuns = 4U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 4U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -602,17 +602,17 @@ struct RefQuadRT0
       {{0}, {1}, {2}, {3}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<twodFun_T, numFuns> const phiVectFun;
-  static std::array<scalarTwodFun_T, numFuns> const divphiFun;
-  static std::array<twodFun_T, numGeoFuns> const mapping;
+  static std::array<twodFun_T, numDOFs> const phiVectFun;
+  static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 4.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    return std::array<Vec3, numFuns>{
+    return std::array<Vec3, numDOFs>{
         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
         0.5 * (e.pointList[2]->coord + e.pointList[3]->coord),
@@ -620,9 +620,9 @@ struct RefQuadRT0
     };
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    return std::array<Vec3, numGeoFuns>{
+    return std::array<Vec3, numGeoDOFs>{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -643,8 +643,8 @@ struct RefTetrahedronP0
   using FacetFE_T = RefTriangleP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{1, 0, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -652,23 +652,23 @@ struct RefTetrahedronP0
       {{{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 1. / 6;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{{e.midpoint()}};
+    std::array<Vec3, numDOFs> dofPts{{e.midpoint()}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{{
+    std::array<Vec3, numGeoDOFs> mappingPts{{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -690,25 +690,25 @@ struct RefTetrahedronP1
   using FacetFE_T = RefTriangleP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 4U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 4U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 3U;
   static std::array<std::array<uint, 3>, 4> constexpr dofOnFacet = {
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 1. / 6;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{
+    std::array<Vec3, numDOFs> dofPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -716,7 +716,7 @@ struct RefTetrahedronP1
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -734,8 +734,8 @@ struct RefTetrahedronP2
   using FacetFE_T = RefTriangleP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 10U;
-  static uint constexpr numGeoFuns = 10U;
+  static uint constexpr numDOFs = 10U;
+  static uint constexpr numGeoDOFs = 10U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 1}};
   static uint constexpr dofPerFacet = 6U;
   static std::array<std::array<uint, 6>, 4> constexpr dofOnFacet = {
@@ -745,17 +745,17 @@ struct RefTetrahedronP2
        {{1, 2, 3, 5, 9, 8}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 1. / 6;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts = {{
+    std::array<Vec3, numDOFs> dofPts = {{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -770,7 +770,7 @@ struct RefTetrahedronP2
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -788,8 +788,8 @@ struct RefTetrahedronRT0
   using FacetFE_T = RefTriangleP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 4U;
-  static uint constexpr numGeoFuns = 4U;
+  static uint constexpr numDOFs = 4U;
+  static uint constexpr numGeoDOFs = 4U;
   static std::array<uint, 4> constexpr dofPlace{{0, 1, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -797,17 +797,17 @@ struct RefTetrahedronRT0
       {{{0}}, {{1}}, {{2}}, {{3}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<threedFun_T, numFuns> const phiVectFun;
-  static std::array<scalarThreedFun_T, numFuns> const divphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<threedFun_T, numDOFs> const phiVectFun;
+  static std::array<scalarThreedFun_T, numDOFs> const divphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 0.1666666666666667L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    return std::array<Vec3, numFuns>{
+    return std::array<Vec3, numDOFs>{
         (e.pointList[0]->coord + e.pointList[2]->coord + e.pointList[1]->coord) / 3.,
         (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[3]->coord) / 3.,
         (e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord) / 3.,
@@ -815,9 +815,9 @@ struct RefTetrahedronRT0
     };
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{
+    std::array<Vec3, numGeoDOFs> mappingPts{
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -838,8 +838,8 @@ struct RefHexahedronP0
   using FacetFE_T = RefQuadP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 1U;
-  static uint constexpr numGeoFuns = 8U;
+  static uint constexpr numDOFs = 1U;
+  static uint constexpr numGeoDOFs = 8U;
   static std::array<uint, 4> constexpr dofPlace{{1, 0, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -847,23 +847,23 @@ struct RefHexahedronP0
       {{{0}}, {{0}}, {{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 8.;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts{{e.midpoint()}};
+    std::array<Vec3, numDOFs> dofPts{{e.midpoint()}};
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoFuns> mappingPts{{
+    std::array<Vec3, numGeoDOFs> mappingPts{{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -889,8 +889,8 @@ struct RefHexahedronQ1
   using FacetFE_T = RefQuadQ1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 8U;
-  static uint constexpr numGeoFuns = 8U;
+  static uint constexpr numDOFs = 8U;
+  static uint constexpr numGeoDOFs = 8U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 4U;
   static std::array<std::array<uint, 4>, 6> constexpr dofOnFacet = {
@@ -902,17 +902,17 @@ struct RefHexahedronQ1
        {{4, 5, 6, 7}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 8.;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts = {{
+    std::array<Vec3, numDOFs> dofPts = {{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,
@@ -925,7 +925,7 @@ struct RefHexahedronQ1
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -943,8 +943,8 @@ struct RefHexahedronQ2
   using FacetFE_T = RefQuadQ2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 27U;
-  static uint constexpr numGeoFuns = 27U;
+  static uint constexpr numDOFs = 27U;
+  static uint constexpr numGeoDOFs = 27U;
   static std::array<uint, 4> constexpr dofPlace{{1, 1, 1, 1}};
   static uint constexpr dofPerFacet = 9U;
   static std::array<std::array<uint, 9>, 6> constexpr dofOnFacet = {
@@ -956,17 +956,17 @@ struct RefHexahedronQ2
        {{4, 5, 6, 7, 16, 17, 18, 19, 25}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<scalarThreedFun_T, numFuns> const phiFun;
-  static std::array<threedFun_T, numFuns> const dphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<scalarThreedFun_T, numDOFs> const phiFun;
+  static std::array<threedFun_T, numDOFs> const dphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 8.;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numFuns> dofPts = {
+    std::array<Vec3, numDOFs> dofPts = {
         {e.pointList[0]->coord,
          e.pointList[1]->coord,
          e.pointList[2]->coord,
@@ -1003,7 +1003,7 @@ struct RefHexahedronQ2
     return dofPts;
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return dofPts(e);
   }
@@ -1021,8 +1021,8 @@ struct RefHexahedronRT0
   using FacetFE_T = RefQuadP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
-  static uint constexpr numFuns = 6U;
-  static uint constexpr numGeoFuns = 8U;
+  static uint constexpr numDOFs = 6U;
+  static uint constexpr numGeoDOFs = 8U;
   static std::array<uint, 4> constexpr dofPlace{{0, 1, 0, 0}};
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
@@ -1030,17 +1030,17 @@ struct RefHexahedronRT0
       {{0}, {1}, {2}, {3}, {4}, {5}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numFuns>;
-  using LocalMat_T = FMat<numFuns, numFuns>;
+  using LocalVec_T = FVec<numDOFs>;
+  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
-  static std::array<threedFun_T, numFuns> const phiVectFun;
-  static std::array<scalarThreedFun_T, numFuns> const divphiFun;
-  static std::array<threedFun_T, numGeoFuns> const mapping;
+  static std::array<threedFun_T, numDOFs> const phiVectFun;
+  static std::array<scalarThreedFun_T, numDOFs> const divphiFun;
+  static std::array<threedFun_T, numGeoDOFs> const mapping;
   static double constexpr volume = 8.L;
 
-  static std::array<Vec3, numFuns> dofPts(GeoElem const & e)
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    return std::array<Vec3, numFuns>{
+    return std::array<Vec3, numDOFs>{
         0.25 * (e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord +
                 e.pointList[1]->coord),
         0.25 * (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[5]->coord +
@@ -1056,9 +1056,9 @@ struct RefHexahedronRT0
     };
   }
 
-  static std::array<Vec3, numGeoFuns> mappingPts(GeoElem const & e)
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    return std::array<Vec3, numGeoFuns>{
+    return std::array<Vec3, numGeoDOFs>{
         e.pointList[0]->coord,
         e.pointList[1]->coord,
         e.pointList[2]->coord,

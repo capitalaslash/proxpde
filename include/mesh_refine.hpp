@@ -32,7 +32,7 @@ struct RefineHelper<Quad>
 };
 
 template <typename Mesh>
-void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
+void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
 {
   static_assert(Mesh::Elem_T::dim == 2, "the mesh dimension is not 2.");
 
@@ -64,7 +64,7 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
   uint ptCounter = mesh.pointList.size();
   auto localPts = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
 
-  for (auto const & elem: mesh.elementList)
+  for (auto & elem: mesh.elementList)
   {
     for (uint k = 0; k < Elem_T::numPts; ++k)
     {
@@ -101,6 +101,8 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
       localPts[8] = ptCounter++;
     }
 
+    elem.children.reserve(4);
+
     // add new elements
     if constexpr (std::is_same_v<Elem_T, Triangle>)
     {
@@ -110,24 +112,35 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
            &newMesh.pointList[localPts[5]]},
           4 * elem.id,
           elem.marker});
+      newMesh.elementList.back().parent = ChildElem{&elem, 0};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 0});
+
       newMesh.elementList.emplace_back(Triangle{
           {&newMesh.pointList[localPts[3]],
            &newMesh.pointList[localPts[1]],
            &newMesh.pointList[localPts[4]]},
           4 * elem.id + 1,
           elem.marker});
+      newMesh.elementList.back().parent = ChildElem{&elem, 1};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 1});
+
       newMesh.elementList.emplace_back(Triangle{
           {&newMesh.pointList[localPts[5]],
            &newMesh.pointList[localPts[4]],
            &newMesh.pointList[localPts[2]]},
           4 * elem.id + 2,
           elem.marker});
+      newMesh.elementList.back().parent = ChildElem{&elem, 2};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 2});
+
       newMesh.elementList.emplace_back(Triangle{
           {&newMesh.pointList[localPts[4]],
            &newMesh.pointList[localPts[3]],
            &newMesh.pointList[localPts[5]]},
           4 * elem.id + 3,
           elem.marker});
+      newMesh.elementList.back().parent = ChildElem{&elem, 3};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 3});
     }
     else if constexpr (std::is_same_v<Elem_T, Quad>)
     {
@@ -139,6 +152,9 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
               &newMesh.pointList[localPts[7]],
           },
           4 * elem.id});
+      newMesh.elementList.back().parent = ChildElem{&elem, 0};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 0});
+
       newMesh.elementList.emplace_back(Quad{
           {
               &newMesh.pointList[localPts[4]],
@@ -147,6 +163,9 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
               &newMesh.pointList[localPts[8]],
           },
           4 * elem.id + 1});
+      newMesh.elementList.back().parent = ChildElem{&elem, 1};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 1});
+
       newMesh.elementList.emplace_back(Quad{
           {
               &newMesh.pointList[localPts[8]],
@@ -155,6 +174,9 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
               &newMesh.pointList[localPts[6]],
           },
           4 * elem.id + 2});
+      newMesh.elementList.back().parent = ChildElem{&elem, 2};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 2});
+
       newMesh.elementList.emplace_back(Quad{
           {
               &newMesh.pointList[localPts[7]],
@@ -163,6 +185,8 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
               &newMesh.pointList[localPts[3]],
           },
           4 * elem.id + 3});
+      newMesh.elementList.back().parent = ChildElem{&elem, 3};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 3});
     }
     else
     {

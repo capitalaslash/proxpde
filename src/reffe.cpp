@@ -86,7 +86,6 @@ std::array<onedFun_T, RefLineP2::numDOFs * RefLineP2::dim> const RefLineP2::d2ph
 std::array<onedFun_T, RefLineP2::numGeoDOFs> const RefLineP2::mapping =
     RefLineP2::dphiFun;
 
-
 // ----------------------------------------------------------------------------
 Vec2 const RefTriangleP1::refMidpoint = Vec2{1. / 3, 1. / 3};
 
@@ -197,6 +196,28 @@ std::array<twodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::dphiFun = {
 
 std::array<twodFun_T, RefQuadQ1::numGeoDOFs> const RefQuadQ1::mapping =
     RefQuadQ1::dphiFun;
+
+// clang-format off
+std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 4>, 4>{{
+    (FMat<4, 4>{} << 1.0,  0.0,  0.0,  0.0,              // 0
+                     0.5,  0.5,  0.0,  0.0,              // 4
+                     0.25, 0.25, 0.25, 0.25,             // 8
+                     0.5,  0.0,  0.0,  0.5).finished(),  // 7
+    (FMat<4, 4>{} << 0.5,  0.5,  0.0,  0.0,              // 4
+                     0.0,  1.0,  0.0,  0.0,              // 1
+                     0.0,  0.5,  0.5,  0.0,              // 5
+                     0.25, 0.25, 0.25, 0.25).finished(), // 8
+    (FMat<4, 4>{} << 0.25, 0.25, 0.25, 0.25,             // 8
+                     0.0,  0.5,  0.5,  0.0,              // 5
+                     0.0,  0.0,  1.0,  0.0,              // 2
+                     0.0,  0.0,  0.5,  0.5).finished(),  // 6
+    (FMat<4, 4>{} << 0.5,  0.0,  0.0,  0.5,              // 7
+                     0.25, 0.25, 0.25, 0.25,             // 8
+                     0.0,  0.0,  0.5,  0.5,              // 6
+                     0.0,  0.0,  0.0,  1.0).finished(),  // 3
+                     
+}};
+// clang-format on
 
 // ----------------------------------------------------------------------------
 Vec2 const RefQuadP2::refMidpoint = Vec2{0., 0.};

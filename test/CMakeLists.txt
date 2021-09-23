@@ -25,6 +25,7 @@ minifem_add_test(vectorfe1d)
 
 # linear algebra
 minifem_add_test(blockmatrix)
+minifem_add_test(prolongation)
 minifem_add_test(solver_test)
 
 

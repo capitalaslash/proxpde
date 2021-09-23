@@ -442,6 +442,8 @@ struct RefQuadQ1
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
   static std::array<twodFun_T, numGeoDOFs> const mapping;
+  static short_T constexpr numChildren = 4U;
+  static std::array<FMat<numDOFs, numDOFs>, numChildren> const embeddingMatrix;
 
   static double constexpr volume = 4.L;
 

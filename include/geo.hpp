@@ -35,6 +35,12 @@ struct FacingElem
   short_T side;
 };
 
+struct ChildElem
+{
+  GeoElem * ptr;
+  short_T corner;
+};
+
 struct GeoElem
 {
   using PointList_T = std::vector<Point *>;
@@ -91,6 +97,8 @@ struct GeoElem
   FacetList_T facetList = {};
   id_T id = idNotSet;
   marker_T marker = markerNotSet;
+  ChildElem parent = ChildElem{nullptr, shortNotSet};
+  std::vector<ChildElem> children = {};
   // stores internal and external (element, facet side) pairs
   std::array<FacingElem, 2> facingElem = {
       FacingElem{nullptr, shortNotSet}, FacingElem{nullptr, shortNotSet}};
@@ -120,6 +128,19 @@ inline std::ostream & operator<<(std::ostream & out, GeoElem const & e)
     {
       out << ", on boundary";
     }
+  }
+  if (e.parent.ptr)
+  {
+    out << ", parent id: " << e.parent.ptr->id;
+  }
+  else
+  {
+    out << ", no parent";
+  }
+  out << ", children ids (" << e.children.size() << "): ";
+  for (auto const ch: e.children)
+  {
+    out << ch.ptr->id << " ";
   }
   return out;
 }

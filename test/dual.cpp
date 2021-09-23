@@ -92,9 +92,7 @@ int main()
   //       {{numElemsX, numElemsY, 0}},
   //       MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
 
-  // readGMSH(*mesh, "square_uns.msh");
-  // buildFacets(*mesh, MeshFlags::INTERNAL_FACETS);
-  // buildNormals(*mesh);
+  // readGMSH(*mesh, "square_uns.msh", MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS);
   t.stop();
 
   t.start("fe spaces");

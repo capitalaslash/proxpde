@@ -153,8 +153,8 @@ int main(int argc, char * argv[])
   // };
   auto bcBottom = BCEssNormal{feSpaceVel, side::BOTTOM};
   // bcBottom << inlet;
-  bcBottom << [](double const & s) { return 1. /*6. * s * (1. - s)*/; };
-  auto const bcsVel = std::make_tuple(bcBottom);
+  bcBottom << [](double const & /*s*/) { return 1. /*6. * s * (1. - s)*/; };
+  auto const bcsVel = std::tuple{bcBottom};
 
   // auto const pinPt = bend(Vec3{0.5, 1., 0.}, totalAngle);
   // auto const toll = 1.e-12;

@@ -135,7 +135,7 @@ int main()
   std::bitset<16> tests;
 
   auto const constFun = [](Vec3 const &) { return Vec3{1.0, 2.0, 3.0}; };
-  auto const linearFun = [](Vec3 const & p)
+  auto const linearFun = [](Vec3 const & /*p*/)
   {
     // return Vec3{
     //   3. + p[0],

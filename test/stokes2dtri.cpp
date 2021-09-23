@@ -19,7 +19,7 @@ int main(int /*argc*/, char * /*argv*/[])
   using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
   using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
-  using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+  // using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   // uint const numElemsX = (argc < 3)? 2 : std::stoi(argv[1]);

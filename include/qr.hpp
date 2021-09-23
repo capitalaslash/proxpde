@@ -289,12 +289,12 @@ miniNodes()
   else if constexpr (std::is_same_v<GeoElem, Triangle>)
   {
     // k is the number of stripes of triangles
-    for (short_T k = 0; k < N; ++k)
+    for (uint k = 0; k < N; ++k)
     {
       auto const f = 2 * (k + 1) - 1;
-      for (short_T i = 0; i < f; ++i)
+      for (uint i = 0; i < f; ++i)
       {
-        pts[pow(k, 2) + i] = FVec<2>{
+        pts[k * k + i] = FVec<2>{
             static_cast<double>(i + 1 + i / 2) / (3 * N),
             static_cast<double>(f - i + (f - i - 1) / 2) / (3 * N)};
       }
@@ -303,9 +303,9 @@ miniNodes()
   else if constexpr (std::is_same_v<GeoElem, Quad>)
   {
     auto const h = 2. / N;
-    for (short_T i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
-      for (short_T j = 0; j < N; ++j)
+      for (uint j = 0; j < N; ++j)
       {
         pts[i * N + j] = FVec<2>(-1. + (i + .5) * h, -1. + (j + .5) * h);
       }

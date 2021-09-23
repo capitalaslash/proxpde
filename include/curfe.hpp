@@ -12,8 +12,6 @@ struct CurFE
   using QR_T = QR;
   static uint constexpr numDOFs = RefFE_T::numDOFs;
   static uint constexpr dim = RefFE_T::dim;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
-  using LocalVec_T = FVec<numDOFs>;
   using JacMat_T = FMat<3, dim>;
   using JacTMat_T = FMat<dim, 3>;
   using RefVec_T = typename RefFE_T::Vec_T;

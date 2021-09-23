@@ -58,13 +58,6 @@ std::array<onedFun_T, RefLineP1::numDOFs * RefLineP1::dim> const RefLineP1::d2ph
 std::array<onedFun_T, RefLineP1::numGeoDOFs> const RefLineP1::mapping =
     RefLineP1::dphiFun;
 
-// RefLineP1::LocalMat_T const RefLineP1::massMat =
-//  (RefLineP1::LocalMat_T() << 2.L/3, 1.L/3,
-//                        1.L/3, 2.L/3 ).finished();
-// RefLineP1::LocalMat_T const RefLineP1::gradMat =
-//  (RefLineP1::LocalMat_T() <<  0.5L, -0.5L,
-//                        -0.5L,  0.5L ).finished();
-
 // ----------------------------------------------------------------------------
 Vec1 const RefLineP2::refMidpoint = Vec1{0.};
 
@@ -93,14 +86,6 @@ std::array<onedFun_T, RefLineP2::numDOFs * RefLineP2::dim> const RefLineP2::d2ph
 std::array<onedFun_T, RefLineP2::numGeoDOFs> const RefLineP2::mapping =
     RefLineP2::dphiFun;
 
-// RefLineP2::LocalMat_T const RefLineP2::massMat =
-//  (RefLineP2::LocalMat_T() << 0., 0., 0.,
-//                        0., 0., 0.,
-//                        0., 0., 0. ).finished();
-// RefLineP2::LocalMat_T const RefLineP2::gradMat =
-//  (RefLineP2::LocalMat_T() << 0., 0., 0.,
-//                        0., 0., 0.,
-//                        0., 0., 0. ).finished();
 
 // ----------------------------------------------------------------------------
 Vec2 const RefTriangleP1::refMidpoint = Vec2{1. / 3, 1. / 3};

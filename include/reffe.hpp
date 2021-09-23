@@ -25,7 +25,6 @@ struct RefPointP1
   static uint constexpr dofPerFacet = 1U;
   static std::array<std::array<uint, 1>, 1> constexpr dofOnFacet = {{{{0}}}};
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<1>;
 
   static std::array<Vec_T, numDOFs> const points;
   static std::array<scalarOnedFun_T, numDOFs> const phiFun;
@@ -62,16 +61,13 @@ struct RefLineP0
   static std::array<std::array<uint, 1>, 2> constexpr dofOnFacet = {{{{0}}, {{0}}}};
   static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
-  //  using LocalVec_T = FVec<2>;
-  //  using LocalMat_T = FMat<2,2>;
 
   static std::array<Vec_T, numDOFs> const points;
   static std::array<scalarOnedFun_T, numDOFs> const phiFun;
   static std::array<onedFun_T, numDOFs> const dphiFun;
   static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
   static std::array<onedFun_T, numGeoDOFs> const mapping;
-  // static LocalMat_T const massMat;
-  // static LocalMat_T const gradMat;
+
   static double constexpr volume = 2.L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
@@ -107,16 +103,13 @@ struct RefLineP1
   static std::array<std::array<uint, 1>, 2> constexpr dofOnFacet = {{{{0}}, {{1}}}};
   static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<2>;
-  using LocalMat_T = FMat<2, 2>;
 
   static std::array<Vec_T, numDOFs> const points;
   static std::array<scalarOnedFun_T, numDOFs> const phiFun;
   static std::array<onedFun_T, numDOFs> const dphiFun;
   static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
   static std::array<onedFun_T, numGeoDOFs> const mapping;
-  // static LocalMat_T const massMat;
-  // static LocalMat_T const gradMat;
+
   static double constexpr volume = 2.L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
@@ -152,16 +145,12 @@ struct RefLineP2
   static std::array<std::array<uint, 1>, 2> constexpr dofOnFacet = {{{{0}}, {{1}}}};
   static Vec1 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<Vec_T, numDOFs> const points;
   static std::array<scalarOnedFun_T, numDOFs> const phiFun;
   static std::array<onedFun_T, numDOFs> const dphiFun;
   static std::array<onedFun_T, numDOFs * dim> const d2phiFun;
   static std::array<onedFun_T, numGeoDOFs> const mapping;
-  static LocalMat_T const massMat;
-  static LocalMat_T const gradMat;
   static double constexpr volume = 2.L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
@@ -197,8 +186,6 @@ struct RefTriangleP0
       {{{0}}, {{0}}, {{0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -238,8 +225,6 @@ struct RefTriangleP1
       {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -280,8 +265,6 @@ struct RefTriangleP2
       {{{0, 1, 3}}, {{1, 2, 4}}, {{2, 0, 5}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -326,8 +309,6 @@ struct RefTriangleCR1
       {{{0}}, {{1}}, {{2}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -370,8 +351,6 @@ struct RefTriangleRT0
       {{{0}}, {{1}}, {{2}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<twodFun_T, numDOFs> const phiVectFun;
   static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
@@ -414,8 +393,6 @@ struct RefQuadP0
       {{{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -450,6 +427,7 @@ struct RefQuadQ1
 {
   using GeoElem_T = Quad;
   using FacetFE_T = RefLineP1;
+
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 4U;
@@ -460,12 +438,11 @@ struct RefQuadQ1
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
   static std::array<twodFun_T, numGeoDOFs> const mapping;
+
   static double constexpr volume = 4.L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
@@ -504,8 +481,6 @@ struct RefQuadP2
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -552,8 +527,6 @@ struct RefQuadQ2
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
@@ -602,8 +575,6 @@ struct RefQuadRT0
       {{0}, {1}, {2}, {3}}};
   static Vec2 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<twodFun_T, numDOFs> const phiVectFun;
   static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
@@ -652,8 +623,6 @@ struct RefTetrahedronP0
       {{{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -698,8 +667,6 @@ struct RefTetrahedronP1
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -745,8 +712,6 @@ struct RefTetrahedronP2
        {{1, 2, 3, 5, 9, 8}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -797,8 +762,6 @@ struct RefTetrahedronRT0
       {{{0}}, {{1}}, {{2}}, {{3}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<threedFun_T, numDOFs> const phiVectFun;
   static std::array<scalarThreedFun_T, numDOFs> const divphiFun;
@@ -847,8 +810,6 @@ struct RefHexahedronP0
       {{{0}}, {{0}}, {{0}}, {{0}}, {{0}}, {{0}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -902,8 +863,6 @@ struct RefHexahedronQ1
        {{4, 5, 6, 7}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -956,8 +915,6 @@ struct RefHexahedronQ2
        {{4, 5, 6, 7, 16, 17, 18, 19, 25}}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
   static std::array<threedFun_T, numDOFs> const dphiFun;
@@ -1030,8 +987,6 @@ struct RefHexahedronRT0
       {{0}, {1}, {2}, {3}, {4}, {5}}};
   static Vec3 const refMidpoint;
   using Vec_T = FVec<dim>;
-  using LocalVec_T = FVec<numDOFs>;
-  using LocalMat_T = FMat<numDOFs, numDOFs>;
 
   static std::array<threedFun_T, numDOFs> const phiVectFun;
   static std::array<scalarThreedFun_T, numDOFs> const divphiFun;

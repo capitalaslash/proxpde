@@ -34,23 +34,23 @@ int main(int /*argc*/, char * /*argv*/[])
   FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
   // std::cout << feSpaceVel.dof << std::endl;
 
-  auto feList = std::make_tuple(feSpaceVel, feSpaceP);
+  auto feList = std::tuple{feSpaceVel, feSpaceP};
   auto assembler = make_assembler(feList);
   // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU,
   // feSpaceP));
 
   auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   auto inlet = [](Vec3 const & p) { return Vec2(0., 0.5 * (1. - p(0) * p(0))); };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::TOP, {0}},
-      BCEss{feSpaceVel, side::LEFT, {0}});
+      BCEss{feSpaceVel, side::LEFT, {0}}};
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
   std::get<3>(bcsVel) << zero;
-  auto const bcsP = std::make_tuple();
+  auto const bcsP = std::tuple{};
 
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;

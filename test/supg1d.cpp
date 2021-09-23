@@ -351,10 +351,10 @@ int main(int argc, char * argv[])
   // auto const zero = [] (Vec3 const & ) { return 0.; };
   auto bcLeftCG = BCEss{feSpaceCG, side::LEFT};
   bcLeftCG << one;
-  auto const bcsCG = std::make_tuple(bcLeftCG);
+  auto const bcsCG = std::tuple{bcLeftCG};
   auto bcLeftFV = BCEss{feSpaceFV, side::LEFT};
   bcLeftFV << one;
-  auto const bcsFV = std::make_tuple(bcLeftFV);
+  auto const bcsFV = std::tuple{bcLeftFV};
   t.stop();
 
   auto const dt = config["dt"].as<double>();

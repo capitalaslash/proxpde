@@ -24,7 +24,7 @@ int main()
   FESpace1_T feSpace1{*mesh};
   FESpace2_T feSpace2{*mesh};
 
-  auto const bcs2 = std::make_tuple();
+  auto const bcs2 = std::tuple{};
 
   Var u1{"u1"};
   Var u2{"u2"};

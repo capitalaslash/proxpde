@@ -40,7 +40,7 @@ int main()
   FESpace_T feSpace{*mesh};
 
   // bc setup
-  auto const bcs = std::make_tuple();
+  auto const bcs = std::tuple{};
 
   AssemblyScalarMass mass{1.0, feSpace};
 

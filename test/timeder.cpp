@@ -72,7 +72,7 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   // we don't need any boundary condition
-  auto const bcs = std::make_tuple();
+  auto const bcs = std::tuple{};
   t.stop();
 
   t.start("fe build");

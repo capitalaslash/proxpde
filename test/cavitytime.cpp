@@ -47,11 +47,11 @@ int main(int argc, char * argv[])
 
   t.start();
   auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::LEFT},
       BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::TOP});
+      BCEss{feSpaceVel, side::TOP}};
   std::get<0>(bcsVel) << zero;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;

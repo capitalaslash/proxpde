@@ -115,7 +115,7 @@ int main(int argc, char * argv[])
       BCPeriodic{feSpace, side::LEFT, side::RIGHT, [](Vec3 const &) {
                    return Vec3{1.0, 0., 0.};
                  }};
-  auto const bcs = std::make_tuple(/*bcLeft, bcRight*/);
+  auto const bcs = std::tuple{/*bcLeft, bcRight*/};
   t.stop();
 
   auto const dt = config["dt"].as<double>();

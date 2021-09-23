@@ -91,7 +91,7 @@ int main(int argc, char * argv[])
 
   t.start("output");
   IOManager io{feSpace, "output/sol_fevar"};
-  io.print(std::make_tuple(sol, exact, error));
+  io.print(std::tuple{sol, exact, error});
   t.stop();
 
   t.print();

@@ -67,10 +67,10 @@ int main(int argc, char * argv[])
   // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
   // last essential bc wins on corners
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::LEFT, {0}});
+      BCEss{feSpaceVel, side::LEFT, {0}}};
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zeroV;
   std::get<2>(bcsVel) << zeroV;
@@ -81,17 +81,17 @@ int main(int argc, char * argv[])
   // DofSet_T pinSet = {1};
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
-  auto bcsUStar = std::make_tuple(
+  auto bcsUStar = std::tuple{
       BCEss{feSpaceU, side::BOTTOM},
       BCEss{feSpaceU, side::RIGHT},
-      BCEss{feSpaceU, side::LEFT});
+      BCEss{feSpaceU, side::LEFT}};
   std::get<0>(bcsUStar) << inlet0;
   std::get<1>(bcsUStar) << zeroS;
   std::get<2>(bcsUStar) << zeroS;
 
   // last essential bc wins on corners
   auto bcsVStar =
-      std::make_tuple(BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT});
+      std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
   std::get<0>(bcsVStar) << inlet1;
   std::get<1>(bcsVStar) << zeroS;
 
@@ -141,42 +141,42 @@ int main(int argc, char * argv[])
   // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt
   // (uStar, \phi) / dt + ((vel \cdot \nabla) uStar, \phi) + nu (\nabla uStar, \nabla
   // \phi) = (u, \phi) / dt
-  auto const uStarLhs = std::make_tuple(
+  auto const uStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-      AssemblyStiffness{nu, feSpaceU});
-  auto const uStarRhs = std::make_tuple(AssemblyProjection{1. / dt, u.data, feSpaceU});
+      AssemblyStiffness{nu, feSpaceU}};
+  auto const uStarRhs = std::tuple{AssemblyProjection{1. / dt, u.data, feSpaceU}};
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt
   // (vStar, \phi) / dt + ((vel \cdot \nabla) vStar, \phi) + nu (\nabla vStar, \nabla
   // \phi) = (v, \phi) / dt
-  auto const vStarLhs = std::make_tuple(
+  auto const vStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-      AssemblyStiffness{nu, feSpaceU});
-  auto const vStarRhs = std::make_tuple(AssemblyProjection{1. / dt, v.data, feSpaceU});
+      AssemblyStiffness{nu, feSpaceU}};
+  auto const vStarRhs = std::tuple{AssemblyProjection{1. / dt, v.data, feSpaceU}};
 
   // dt \nabla^2 p = \nabla \cdot velStar
   // dt (\nabla p, \nabla q) = - (\nabla \cdot velStar, q)
-  auto const pLhs = std::make_tuple(AssemblyStiffness{dt, feSpacePSplit});
+  auto const pLhs = std::tuple{AssemblyStiffness{dt, feSpacePSplit}};
   auto const pRhs =
-      std::make_tuple(AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit});
+      std::tuple{AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit}};
   // eqnP lhs does not change in time, we can pre-compute and factorize it
 
   // u = uStar - dt dp / dx
   // (u, \phi) = (uStar, \phi) - dt (dp / dx, \phi)
   // (u, \phi) = (uStar, \phi) + dt (p, d \phi / dx)
-  auto const uLhs = std::make_tuple(AssemblyScalarMass{1.0, feSpaceU});
-  auto const uRhs = std::make_tuple(
+  auto const uLhs = std::tuple{AssemblyScalarMass{1.0, feSpaceU}};
+  auto const uRhs = std::tuple{
       AssemblyProjection{1.0, uStar.data, feSpaceU},
-      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}});
+      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}}};
 
   // v = vStar - dt dp / dy
   // (v, \phi) = (vStar, \phi) - dt (dp / dy, \phi)
-  auto const vLhs = std::make_tuple(AssemblyScalarMass{1.0, feSpaceU});
-  auto const vRhs = std::make_tuple(
+  auto const vLhs = std::tuple{AssemblyScalarMass{1.0, feSpaceU}};
+  auto const vRhs = std::tuple{
       AssemblyProjection{1.0, vStar.data, feSpaceU},
-      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}});
+      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}}};
 
   t.start("eqn");
   Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::RowMajor>()};
@@ -187,11 +187,11 @@ int main(int argc, char * argv[])
   eqnP.buildLhs();
   eqnP.compute();
 
-  Eqn eqnU{u, uLhs, uRhs, std::make_tuple()};
+  Eqn eqnU{u, uLhs, uRhs, std::tuple{}};
   // eqnU lhs does not change in time, we can pre-compute and factorize it
   eqnU.buildLhs();
   eqnU.compute();
-  Eqn eqnV{v, vLhs, vRhs, std::make_tuple()};
+  Eqn eqnV{v, vLhs, vRhs, std::tuple{}};
   // eqnV lhs does not change in time, we can pre-compute and factorize it
   eqnV.buildLhs();
   eqnV.compute();

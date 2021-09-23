@@ -47,10 +47,10 @@ int main(int argc, char * argv[])
 
   t.start("bcs");
   auto const zeroFun = [](Vec3 const &) { return Vec2{0., 0.}; };
-  auto bcsU = std::make_tuple(
+  auto bcsU = std::tuple{
       BCEss{feSpaceU, side::CIRCLE},
       BCEss{feSpaceU, side::TOP, {0}},
-      BCEss{feSpaceU, side::LEFT, {1}});
+      BCEss{feSpaceU, side::LEFT, {1}}};
   std::get<0>(bcsU) << zeroFun;
   std::get<1>(bcsU) << zeroFun;
   std::get<2>(bcsU) << zeroFun;

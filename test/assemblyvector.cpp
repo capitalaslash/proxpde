@@ -27,7 +27,7 @@ compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2
   DbT db;
   for (auto const & t: v1)
   {
-    auto key = std::make_pair(t.row(), t.col());
+    auto key = std::pair{t.row(), t.col()};
     if (db.find(key) != db.end())
     {
       db[key] += t.value();
@@ -41,7 +41,7 @@ compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2
   DbT missing;
   for (auto const & t: v2)
   {
-    auto key = std::make_pair(t.row(), t.col());
+    auto key = std::pair{t.row(), t.col()};
     if (db.find(key) != db.end())
     {
       db[key] -= t.value();
@@ -143,37 +143,36 @@ int main(int argc, char * argv[])
   auto const one = [](Vec3 const &) { return 1.; };
   auto const zero2d = [](Vec3 const &) { return Vec2{0., 0.}; };
   auto const inlet = [](Vec3 const &) { return Vec2{1., 0.}; };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::TOP},
-      BCEss{feSpaceVel, side::LEFT});
+      BCEss{feSpaceVel, side::LEFT}};
   std::get<0>(bcsVel) << zero2d;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << inlet;
   std::get<3>(bcsVel) << zero2d;
-  auto bcsU = std::make_tuple(
+  auto bcsU = std::tuple{
       BCEss{feSpaceU, side::BOTTOM},
       BCEss{feSpaceU, side::RIGHT},
       BCEss{feSpaceU, side::TOP},
-      BCEss{feSpaceU, side::LEFT});
+      BCEss{feSpaceU, side::LEFT}};
   std::get<0>(bcsU) << zero1d;
   std::get<1>(bcsU) << zero1d;
   std::get<2>(bcsU) << one;
   std::get<3>(bcsU) << zero1d;
-  auto bcsV = std::make_tuple(
+  auto bcsV = std::tuple{
       BCEss{feSpaceV, side::BOTTOM},
       BCEss{feSpaceV, side::RIGHT},
       BCEss{feSpaceV, side::TOP},
-      BCEss{feSpaceV, side::LEFT});
+      BCEss{feSpaceV, side::LEFT}};
   std::get<0>(bcsU) << zero1d;
   std::get<1>(bcsU) << zero1d;
   std::get<2>(bcsU) << zero1d;
   std::get<3>(bcsU) << zero1d;
-  auto const bcsP = std::make_tuple();
-  // DofSet_T pinSet = {1};
-  // auto const bcsP = std::make_tuple(
-  //       BCEss{feSpaceP, pinSet, zero1d});
+  auto const bcsP = std::tuple{};
+  DofSet_T pinSet = {1};
+  // auto const bcsP = std::tuple{BCEss{feSpaceP, pinSet, zero1d}};
 
   Builder builder{numDOFs};
   builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpaceVel}}, bcsVel);

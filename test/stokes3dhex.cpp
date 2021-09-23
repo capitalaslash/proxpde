@@ -42,20 +42,20 @@ int main(int argc, char * argv[])
   t.start("bcs");
   auto zero = [](Vec3 const &) { return Vec3::Constant(0.); };
   auto inlet = [](Vec3 const & p) { return Vec3(0., 0.5 * (1. - p(0) * p(0)), 0.); };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::TOP, {0, 2}},
       BCEss{feSpaceVel, side::LEFT, {0, 2}},
       BCEss{feSpaceVel, side::BACK, {2}},
-      BCEss{feSpaceVel, side::FRONT, {2}});
+      BCEss{feSpaceVel, side::FRONT, {2}}};
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
   std::get<3>(bcsVel) << zero;
   std::get<4>(bcsVel) << zero;
   std::get<5>(bcsVel) << zero;
-  auto const bcsP = std::make_tuple();
+  auto const bcsP = std::tuple{};
   t.stop();
 
   t.start("assembly");

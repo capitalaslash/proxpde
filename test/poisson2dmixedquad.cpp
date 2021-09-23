@@ -61,7 +61,7 @@ int test(YAML::Node const & config)
   FESpaceRT0_T feSpaceW{*mesh};
   FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
 
-  auto const bcsU = std::make_tuple();
+  auto const bcsU = std::tuple{};
 
   // the function is multiplied by the normal in the bc
   // TODO: half of the value since it is applied two times in VectorMass and VectorDiv
@@ -90,7 +90,7 @@ int test(YAML::Node const & config)
   //                      side::RIGHT,
   //                      feSpaceW), bcsW);
   FESpaceP0Vec_T feSpaceP0Vec{*mesh};
-  auto const bcsDummy = std::make_tuple();
+  auto const bcsDummy = std::tuple{};
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) -
   // p(0)); }, feSpaceP0Vec, rhsW); builder.buildRhs(AssemblyS2VProjection(1.0, rhsW,

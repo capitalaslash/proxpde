@@ -69,37 +69,35 @@ int main(int argc, char * argv[])
   auto const inletX = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
   auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   auto const zero = [](Vec3 const &) { return 0.0; };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::TOP, Comp::u},
-      BCEss{feSpaceVel, side::LEFT, Comp::u});
+      BCEss{feSpaceVel, side::LEFT, Comp::u}};
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;
   std::get<3>(bcsVel) << zero2d;
-  auto const bcsP = std::make_tuple();
-  // auto const bcsP = std::make_tuple(
-  //       BCEss{feSpaceP, side::TOP, zero});
+  auto const bcsP = std::tuple{};
+  // auto const bcsP = std::tuple{BCEss{feSpaceP, side::TOP, zero}};
   t.stop();
 
   t.start("split bc");
-  auto bcsU = std::make_tuple(
+  auto bcsU = std::tuple{
       BCEss{feSpaceU, side::BOTTOM},
       BCEss{feSpaceU, side::RIGHT},
       BCEss{feSpaceU, side::TOP, {0}},
-      BCEss{feSpaceU, side::LEFT, {0}});
+      BCEss{feSpaceU, side::LEFT, {0}}};
   std::get<0>(bcsU) << inletX;
   std::get<1>(bcsU) << zero;
   std::get<2>(bcsU) << zero;
   std::get<3>(bcsU) << zero;
-  auto bcsV =
-      std::make_tuple(BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT});
+  auto bcsV = std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
   std::get<0>(bcsV) << inletY;
   std::get<1>(bcsV) << zero;
   auto bcTopP = BCEss{feSpacePSplit, side::TOP};
   bcTopP << zero;
-  auto const bcsPSplit = std::make_tuple(bcTopP);
+  auto const bcsPSplit = std::tuple{bcTopP};
 
   t.stop();
 

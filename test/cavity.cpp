@@ -35,11 +35,11 @@ int main(int argc, char * argv[])
   FESpaceP_T feSpaceP{*mesh, dofVel};
 
   auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
-  auto bcsVel = std::make_tuple(
+  auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::LEFT},
       BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::TOP});
+      BCEss{feSpaceVel, side::TOP}};
   std::get<0>(bcsVel) << zero;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
   DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
                        return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;
                      }};
-  auto bcsP = std::make_tuple(BCEss{feSpaceP, pinSet.ids});
+  auto bcsP = std::tuple{BCEss{feSpaceP, pinSet.ids}};
   std::get<0>(bcsP) << [](Vec3 const &) { return 0.; };
 
   AssemblyStiffness stiffness{1.0, feSpaceVel};

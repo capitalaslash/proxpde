@@ -64,6 +64,7 @@ configure_file(
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_library(minifem SHARED
+  src/def.cpp
   src/fespace.cpp
   src/geo.cpp
   src/mesh.cpp

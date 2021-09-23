@@ -37,16 +37,17 @@
 struct Utils
 {
 #ifdef NDEBUG
-  static std::ofstream debug{"/dev/null"};
+  static std::ofstream debug;
 #else
   static std::ostream constexpr & debug = std::cout;
 #endif
 
-  static std::ofstream constfilelog;
-  static constexpr const char * separator =
-      "================================================"
-      "============================================\n";
-  // = std::string(88, '=') + "\n";
+  static std::ofstream filelog;
+
+  // static constexpr const char * separator =
+  //     "================================================"
+  //     "============================================\n";
+  inline static const std::string separator = std::string(88, '=') + "\n";
 };
 
 // ----------------------------------------------------------------------------

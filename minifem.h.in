@@ -1,5 +1,7 @@
 #pragma once
 
-#cmakedefine DOF_INTERLEAVED
+#cmakedefine MINIFEM_DOF_INTERLEAVED
 
-#cmakedefine ENABLE_SECONDDERIV
+#cmakedefine MINIFEM_ENABLE_SECONDDERIV
+
+#cmakedefine MINIFEM_EXPLICIT_INSTANTIATION

@@ -14,7 +14,7 @@ template <
     typename QR,
     uint Dimension = 1,
     DofType type = DofType::CONTINUOUS,
-#ifdef DOF_INTERLEAVED
+#ifdef MINIFEM_DOF_INTERLEAVED
     DofOrdering ordering = DofOrdering::INTERLEAVED>
 #else
     DofOrdering ordering = DofOrdering::BLOCK>
@@ -450,7 +450,6 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
   return integral;
 }
 
-// template <typename Mesh, typename refFE, typename QR, uint dim>
 template <typename FESpaceVec>
 using Scalar_T = FESpace<
     typename FESpaceVec::Mesh_T,

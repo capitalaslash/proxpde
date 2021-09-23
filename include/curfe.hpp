@@ -29,7 +29,7 @@ struct CurFE
           phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
           dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
 
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
           if constexpr (enableSecondDeriv_v<RefFE_T>)
           {
             for (uint d = 0; d < dim; ++d)
@@ -92,7 +92,7 @@ struct CurFE
           phi[q] = phiRef[q];
           dphi[q] = dphiRef[q] * jacPlus[q];
 
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
           if constexpr (enableSecondDeriv_v<RefFE_T>)
           {
             d2phi[q] = FMat<numDOFs * 3, 3>::Zero();
@@ -208,7 +208,7 @@ struct CurFE
   std::array<FVec<numDOFs>, QR::numPts> phi;
   std::array<FMat<numDOFs, dim>, QR::numPts> dphiRef;
   std::array<FMat<numDOFs, 3>, QR::numPts> dphi;
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
   std::array<FMat<numDOFs * dim, dim>, QR::numPts> d2phiRef;
   std::array<FMat<numDOFs * 3, 3>, QR::numPts> d2phi;
 #endif

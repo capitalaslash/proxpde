@@ -1,5 +1,14 @@
 #include "mesh.hpp"
 
+// explicit instantiations
+#ifdef MINIFEM_EXPLICIT_INSTANTIATION
+template class Mesh<Line>;
+template class Mesh<Triangle>;
+template class Mesh<Quad>;
+template class Mesh<Tetrahedron>;
+template class Mesh<Hexahedron>;
+#endif
+
 void buildLine(
     Mesh<Line> & mesh,
     Vec3 const & origin,

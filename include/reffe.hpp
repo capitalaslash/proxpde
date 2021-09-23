@@ -1486,7 +1486,7 @@ struct EnableSecondDeriv
   bool static constexpr value = false;
 };
 
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
 template <>
 struct EnableSecondDeriv<RefLineP1>
 {

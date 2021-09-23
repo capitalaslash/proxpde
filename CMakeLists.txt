@@ -20,10 +20,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FeatureSummary)
 
-option(DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
-option(ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
-option(ENABLE_TESTS "compile all testsuite" ON)
-option(ENABLE_LTO "enable link time optimizations (only in Release mode)" ON)
+option(MINIFEM_DOF_INTERLEAVED "DOF ordered by block or interleaved" ON)
+option(MINIFEM_ENABLE_LTO "enable link time optimizations (only in Release mode)" ON)
+option(MINIFEM_ENABLE_SECONDDERIV "enable computation of second derivatives for scalar shape functions." OFF)
+option(MINIFEM_ENABLE_TESTS "compile all testsuite" ON)
+option(MINIFEM_EXPLICIT_INSTANTIATION "add commonly used instantiations to library" OFF)
 
 string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
 string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
@@ -33,7 +34,7 @@ string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_STATIC_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
-if (ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES RELEASE)
+if (MINIFEM_ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES RELEASE)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
@@ -43,16 +44,17 @@ include(Contrib)
 
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_FLAGS)
 message(STATUS "=== COMPILER OPTIONS ===========================================")
-message(STATUS "compiler id     : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "compiler id:      ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "build type      : ${CMAKE_BUILD_TYPE}")
-message(STATUS "compile flags   : ${MINIFEM_COMPILE_FLAGS}")
-message(STATUS "link flags      : ${MINIFEM_LINK_FLAGS}")
+message(STATUS "build type:       ${CMAKE_BUILD_TYPE}")
+message(STATUS "compile flags:    ${MINIFEM_COMPILE_FLAGS}")
+message(STATUS "link flags:       ${MINIFEM_LINK_FLAGS}")
 message(STATUS "=== CONFIG OPTIONS =============================================")
-message(STATUS "DOF_INTERLEAVED:    ${DOF_INTERLEAVED}")
-message(STATUS "ENABLE_SECONDDERIV: ${ENABLE_SECONDDERIV}")
-message(STATUS "ENABLE_TESTS:       ${ENABLE_TESTS}")
-message(STATUS "ENABLE_LTO:         ${ENABLE_LTO}")
+message(STATUS "DOF_INTERLEAVED:        ${MINIFEM_DOF_INTERLEAVED}")
+message(STATUS "ENABLE_LTO:             ${MINIFEM_ENABLE_LTO}")
+message(STATUS "ENABLE_SECONDDERIV:     ${MINIFEM_ENABLE_SECONDDERIV}")
+message(STATUS "ENABLE_TESTS:           ${MINIFEM_ENABLE_TESTS}")
+message(STATUS "EXPLICIT_INSTANTIATION: ${MINIFEM_EXPLICIT_INSTANTIATION}")
 message(STATUS "================================================================")
 
 configure_file(
@@ -62,6 +64,7 @@ configure_file(
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_library(minifem SHARED
+  src/fespace.cpp
   src/geo.cpp
   src/mesh.cpp
   src/ns.cpp
@@ -161,7 +164,7 @@ export(EXPORT MiniFEMTargets
 
 export(PACKAGE MiniFEM)
 
-if (ENABLE_TESTS)
+if (MINIFEM_ENABLE_TESTS)
   # include(CTest)
   enable_testing()
   add_subdirectory(test)

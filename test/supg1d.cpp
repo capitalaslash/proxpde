@@ -185,7 +185,7 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
 
       FVec<RefFE_T::numFuns> phiSUPG =
           .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
           + sigma * eps *
                 (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
                  curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +
@@ -195,7 +195,7 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
 
       auto const res =
           idt * curFE.phi[q] + curFE.dphi[q] * velQPoint
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
           + eps * (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
                    curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +
                    curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(2, 0).col(2))
@@ -266,7 +266,7 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
 
       FVec<RefFE_T::numFuns> phiSUPG =
           .5 * curFE.elem->hMin() * iVelNorm * (curFE.dphi[q] * velQPoint)
-#ifdef ENABLE_SECONDDERIV
+#ifdef MINIFEM_ENABLE_SECONDDERIV
           + sigma * eps *
                 (curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(0, 0).col(0) +
                  curFE.d2phi[q].template block<RefFE_T::numFuns, 3>(1, 0).col(1) +

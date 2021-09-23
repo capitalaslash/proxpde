@@ -26,7 +26,7 @@ struct FESpace
   using QR_T = QR;
   using DOF_T = DOF<Mesh, RefFE, Dimension, type, ordering>;
   using CurFE_T = CurFE<RefFE, QR>;
-  static uint constexpr dim = Dimension;
+  static short_T constexpr dim = Dimension;
 
   explicit FESpace(Mesh const & m, uint offset = 0): mesh(m), dof(m, offset)
   {
@@ -289,7 +289,7 @@ void reconstructGradient(
     FESpaceGrad & feSpaceGrad,
     Vec const & data,
     FESpaceData & feSpaceData,
-    std::vector<uint> const & comp = allComp<FESpaceGrad>(),
+    std::vector<short_T> const & comp = allComp<FESpaceGrad>(),
     uint const offset = 0)
 {
   auto const size = feSpaceData.dof.size;

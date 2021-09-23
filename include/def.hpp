@@ -51,19 +51,21 @@ struct Utils
 };
 
 // ----------------------------------------------------------------------------
-using id_T = uint;
-using marker_T = short unsigned;
-using DOFid_T = uint;
+using id_T = unsigned int;
+using marker_T = unsigned short;
+using DOFid_T = unsigned int;
+using short_T = unsigned char;
 id_T constexpr idNotSet = static_cast<id_T>(-1);
 DOFid_T constexpr dofIdNotSet = static_cast<DOFid_T>(-1);
 marker_T constexpr markerNotSet = static_cast<marker_T>(-1);
+short_T constexpr shortNotSet = static_cast<short_T>(-1);
 
 // ----------------------------------------------------------------------------
 // TODO: maybe use an std::integer_sequence
 template <typename FESpace>
-std::vector<uint> allComp()
+std::vector<short_T> allComp()
 {
-  std::vector<uint> comp(FESpace::dim);
+  std::vector<short_T> comp(FESpace::dim);
   std::iota(comp.begin(), comp.end(), 0);
   return comp;
 }

@@ -173,7 +173,7 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
     // add new facets
     // TODO: this works only for boundary facets, internal facets require
     // additional care since they are transversed twice
-    for (uint f = 0; f < Elem_T::numFacets; ++f)
+    for (short_T f = 0; f < Elem_T::numFacets; ++f)
     {
       auto const facetId = mesh.elemToFacet[elem.id][f];
 
@@ -203,15 +203,16 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
         newMesh.facetList[2 * facetId + 1].facingElem[0] =
             FacingElem{&newMesh.elementList[4 * elem.id + (f + 1) % Elem_T::numPts], f};
 
-        auto const otherElem = mesh.facetList[facetId].facingElem[1];
+        auto const & otherElem = mesh.facetList[facetId].facingElem[1];
         if (otherElem.ptr)
         {
           newMesh.facetList[2 * facetId].facingElem[1] = FacingElem{
               &newMesh.elementList[4 * otherElem.ptr->id + (f - 1) % Elem_T::numPts],
-              (f - 2) % Elem_T::numPts};
+              static_cast<short_T>((f - 2) % Elem_T::numPts)};
           newMesh.facetList[2 * facetId + 1].facingElem[1] = FacingElem{
-              &newMesh.elementList[4 * otherElem.ptr->id + (f - 2) % Elem_T::numPts],
-              (f - 2) % Elem_T::numPts};
+              &newMesh.elementList
+                   [4 * otherElem.ptr->id + (f + Elem_T::numPts - 2) % Elem_T::numPts],
+              static_cast<short_T>((f - 2) % Elem_T::numPts)};
         }
         newMesh.elemToFacet[4 * elem.id + f][f] = 2 * facetId;
         newMesh.elemToFacet[4 * elem.id + (f + 1) % Elem_T::numPts][f] =

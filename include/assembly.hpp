@@ -13,18 +13,18 @@ struct ScalarCoef
 
   void reinit(GeoElem const & /*elem*/) {}
 
-  double evaluate(uint const /*q*/) const { return coef; }
+  double evaluate(short_T const /*q*/) const { return coef; }
 
   double coef;
 };
 
 struct AssemblyBase
 {
-  using CompList = std::vector<uint>;
+  using CompList = std::vector<short_T>;
 
   CompList const comp = {};
 
-  bool hasComp(uint c) const
+  bool hasComp(short_T c) const
   {
     return std::find(comp.begin(), comp.end(), c) != comp.end();
   }
@@ -127,9 +127,9 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
-      for (uint d = 0; d < FESpace_T::dim; ++d)
+      for (short_T d = 0; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
@@ -498,17 +498,17 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   AssemblyAnalyticRhs(
       Fun<FESpace::physicalDim(), 3> const r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, std::move(cmp)),
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+      AssemblyVector<FESpace_T>(fe, cmp),
       rhs(std::move(r))
   {}
 
   AssemblyAnalyticRhs(
       scalarFun_T const r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
       AssemblyAnalyticRhs<FESpace_T>(
-          [r](Vec3 const & p) { return Vec1(r(p)); }, fe, std::move(cmp))
+          [r](Vec3 const & p) { return Vec1(r(p)); }, fe, cmp)
   {
     static_assert(
         FESpace_T::dim == 1, "this ctor is available only for scalar fe spaces.");
@@ -1529,8 +1529,8 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
       Fun<FESpace_T::dim, 3> const r,
       marker_T const m,
       FESpace_T const & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, std::move(cmp)),
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+      AssemblyVector<FESpace_T>(fe, cmp),
       rhs(std::move(r)),
       marker(m)
   {}
@@ -1539,7 +1539,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
       scalarFun_T const r,
       marker_T const m,
       FESpace_T const & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace_T>()):
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
       AssemblyBCNatural<FESpace_T>(
           [r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
   {
@@ -1598,8 +1598,8 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
       scalarFun_T const r,
       marker_T const m,
       FESpace & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace>()):
-      AssemblyVector<FESpace>(fe, std::move(cmp)),
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      AssemblyVector<FESpace>(fe, cmp),
       rhs(std::move(r)),
       marker(m)
   {}
@@ -1657,8 +1657,8 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
       scalarFun_T const c,
       marker_T const m,
       FESpace & fe,
-      AssemblyBase::CompList const cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, std::move(cmp)),
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>(fe, cmp),
       coef(std::move(c)),
       marker(m)
   {}

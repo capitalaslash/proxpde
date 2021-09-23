@@ -5,9 +5,9 @@
 #include "blockmatrix.hpp"
 
 template <typename FESpaceTuple>
-constexpr uint computeDOFTotalNum(FESpaceTuple & list)
+constexpr id_T computeDOFTotalNum(FESpaceTuple & list)
 {
-  uint num = 0;
+  id_T num = 0;
   static_for(
       list,
       [&num](auto /*id*/, auto const & feSpace)

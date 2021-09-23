@@ -37,7 +37,7 @@ public:
   BCEss(
       FESpace_T const & fe,
       marker_T const m,
-      std::vector<uint> const & c = allComp<FESpace>()):
+      std::vector<short_T> const & c = allComp<FESpace>()):
       feSpace(fe),
       marker(m),
       comp(c)
@@ -217,7 +217,7 @@ public:
 public:
   FESpace_T const & feSpace;
   marker_T const marker = markerNotSet;
-  std::vector<uint> const comp = {};
+  std::vector<short_T> const comp = allComp<FESpace>();
   double diag = 1.0;
 
   // protected:
@@ -238,19 +238,16 @@ struct BCNat
 
   BCNat(
       marker_T const m,
-      Fun<FESpace::dim, 3> const f,
-      std::vector<uint> const c = allComp<FESpace>()):
+      Fun<FESpace::dim, 3> const & f,
+      std::vector<short_T> const & c = allComp<FESpace>()):
       marker(m),
-      value(std::move(f)),
-      comp(std::move(c))
+      value(f),
+      comp(c)
   {
     // TODO: create a list of constrained faces at the beginning?
   }
 
-  BCNat(
-      marker_T const m,
-      scalarFun_T const f,
-      std::vector<uint> const c = allComp<FESpace>()):
+  BCNat(marker_T const m, scalarFun_T const f, std::vector<short_T> const c):
       BCNat{m, [f](Vec3 const & p) { return Vec1(f(p)); }, c}
   {
     static_assert(
@@ -262,7 +259,7 @@ struct BCNat
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace::dim, 3> const value;
-  std::vector<uint> const comp;
+  std::vector<short_T> const comp = allComp<FESpace>();
 };
 
 // this class deals only with the matrix part of the mixed bc, the rhs part is
@@ -279,10 +276,10 @@ struct BCMixed
   explicit BCMixed(
       marker_T m,
       Fun<FESpace_T::dim, 3> const f,
-      std::vector<uint> const c = allComp<FESpace>()):
+      std::vector<short_T> const c = allComp<FESpace>()):
       marker(m),
-      coef(std::move(f)),
-      comp(std::move(c))
+      coef(f),
+      comp(c)
   {
     // TODO: create a list of constrained faces at the beginning?
   }
@@ -292,7 +289,7 @@ struct BCMixed
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace_T::dim, 3> const coef;
-  std::vector<uint> const comp;
+  std::vector<short_T> const comp = allComp<FESpace>();
 };
 
 template <typename FESpace>

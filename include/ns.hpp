@@ -30,13 +30,13 @@
 
 struct Comp
 {
-  static const std::vector<uint> u;
-  static const std::vector<uint> v;
-  static const std::vector<uint> w;
-  static const std::vector<uint> uv;
-  static const std::vector<uint> uw;
-  static const std::vector<uint> vw;
-  static const std::vector<uint> uvw;
+  static const std::vector<short_T> u;
+  static const std::vector<short_T> v;
+  static const std::vector<short_T> w;
+  static const std::vector<short_T> uv;
+  static const std::vector<short_T> uw;
+  static const std::vector<short_T> vw;
+  static const std::vector<short_T> uvw;
 };
 
 struct NSParameters

@@ -13,7 +13,7 @@ public:
 
   Point() = default;
 
-  double operator[](uint const i) const { return this->coord[i]; }
+  double operator[](short_T const i) const { return this->coord[i]; }
 
   Vec3 coord = Vec3::Zero();
   id_T id = dofIdNotSet;
@@ -32,7 +32,7 @@ struct GeoElem;
 struct FacingElem
 {
   GeoElem * ptr;
-  id_T side;
+  short_T side;
 };
 
 struct GeoElem
@@ -93,7 +93,7 @@ struct GeoElem
   marker_T marker = markerNotSet;
   // stores internal and external (element, facet side) pairs
   std::array<FacingElem, 2> facingElem = {
-      FacingElem{nullptr, idNotSet}, FacingElem{nullptr, idNotSet}};
+      FacingElem{nullptr, shortNotSet}, FacingElem{nullptr, shortNotSet}};
   Vec3 _normal;
 };
 
@@ -126,20 +126,20 @@ inline std::ostream & operator<<(std::ostream & out, GeoElem const & e)
 
 struct NullElem: public GeoElem
 {
-  static int constexpr dim = -1;
-  static uint constexpr numPts = 0U;
-  static uint constexpr numEdges = 0U;
-  static uint constexpr numFaces = 0U;
-  static uint constexpr numFacets = 0U;
+  static short_T constexpr dim = shortNotSet;
+  static short_T constexpr numPts = 0U;
+  static short_T constexpr numEdges = 0U;
+  static short_T constexpr numFaces = 0U;
+  static short_T constexpr numFacets = 0U;
 };
 
 struct PointElem: public GeoElem
 {
-  static int constexpr dim = 0;
-  static uint constexpr numPts = 1U;
-  static uint constexpr numEdges = 0U;
-  static uint constexpr numFaces = 0U;
-  static uint constexpr numFacets = 0U;
+  static short_T constexpr dim = 0;
+  static short_T constexpr numPts = 1U;
+  static short_T constexpr numEdges = 0U;
+  static short_T constexpr numFaces = 0U;
+  static short_T constexpr numFacets = 0U;
 
   PointElem(
       std::initializer_list<Point *> const & pList,
@@ -177,14 +177,14 @@ public:
   using Facet_T = PointElem;
   using Face_T = NullElem;
   using Edge_T = Line;
-  static int constexpr dim = 1;
-  static uint constexpr numPts = 2U;
-  static uint constexpr numEdges = 1U;
-  static uint constexpr numFaces = 0U;
-  static uint constexpr numFacets = 2U;
-  static std::array<std::array<id_T, 1>, 2> constexpr elemToFacet = {{{{0}}, {{1}}}};
-  static std::array<std::array<id_T, 0>, 0> constexpr elemToFace = {{}};
-  static std::array<std::array<id_T, 2>, 1> constexpr elemToEdge = {{{{0, 1}}}};
+  static short_T constexpr dim = 1;
+  static short_T constexpr numPts = 2U;
+  static short_T constexpr numEdges = 1U;
+  static short_T constexpr numFaces = 0U;
+  static short_T constexpr numFacets = 2U;
+  static std::array<std::array<short_T, 1>, 2> constexpr elemToFacet = {{{{0}}, {{1}}}};
+  static std::array<std::array<short_T, 0>, 0> constexpr elemToFace = {{}};
+  static std::array<std::array<short_T, 2>, 1> constexpr elemToEdge = {{{{0, 1}}}};
   static double constexpr refVolume = 2.;
 
   explicit Line(
@@ -240,15 +240,15 @@ public:
   using Facet_T = Line;
   using Face_T = Triangle;
   using Edge_T = Line;
-  static int constexpr dim = 2;
-  static uint constexpr numPts = 3U;
-  static uint constexpr numEdges = 3U;
-  static uint constexpr numFaces = 1U;
-  static uint constexpr numFacets = 3U;
-  static std::array<std::array<id_T, 2>, 3> constexpr elemToFacet = {
+  static short_T constexpr dim = 2;
+  static short_T constexpr numPts = 3U;
+  static short_T constexpr numEdges = 3U;
+  static short_T constexpr numFaces = 1U;
+  static short_T constexpr numFacets = 3U;
+  static std::array<std::array<short_T, 2>, 3> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
-  static std::array<std::array<id_T, 2>, 3> constexpr elemToEdge = elemToFacet;
-  static std::array<std::array<id_T, 3>, 1> constexpr elemToFace = {{{{0, 1, 2}}}};
+  static std::array<std::array<short_T, 2>, 3> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<short_T, 3>, 1> constexpr elemToFace = {{{{0, 1, 2}}}};
   static double constexpr refVolume = 0.5;
 
   Triangle(
@@ -329,15 +329,16 @@ public:
   using Facet_T = Line;
   using Face_T = Quad;
   using Edge_T = Line;
-  static int constexpr dim = 2;
-  static uint constexpr numPts = 4U;
-  static uint constexpr numEdges = 4U;
-  static uint constexpr numFaces = 1U;
-  static uint constexpr numFacets = 4U;
-  static std::array<std::array<id_T, 2>, 4> constexpr elemToFacet = {
+  static short_T constexpr dim = 2;
+  static short_T constexpr numPts = 4U;
+  static short_T constexpr numEdges = 4U;
+  static short_T constexpr numFaces = 1U;
+  static short_T constexpr numFacets = 4U;
+  static std::array<std::array<short_T, 2>, 4> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
-  static std::array<std::array<id_T, 2>, 4> constexpr elemToEdge = elemToFacet;
-  static std::array<std::array<id_T, 4>, 1> constexpr elemToFace = {{{{0, 1, 2, 3}}}};
+  static std::array<std::array<short_T, 2>, 4> constexpr elemToEdge = elemToFacet;
+  static std::array<std::array<short_T, 4>, 1> constexpr elemToFace = {
+      {{{0, 1, 2, 3}}}};
   static double constexpr refVolume = 4.;
 
   Quad(
@@ -427,16 +428,16 @@ public:
   using Facet_T = Triangle;
   using Face_T = Triangle;
   using Edge_T = Line;
-  static int constexpr dim = 3;
-  static uint constexpr numPts = 4U;
-  static uint constexpr numEdges = 6U;
-  static uint constexpr numFaces = 4U;
-  static uint constexpr numFacets = 4U;
-  static std::array<std::array<id_T, 3>, 4> constexpr elemToFacet = {
+  static short_T constexpr dim = 3;
+  static short_T constexpr numPts = 4U;
+  static short_T constexpr numEdges = 6U;
+  static short_T constexpr numFaces = 4U;
+  static short_T constexpr numFacets = 4U;
+  static std::array<std::array<short_T, 3>, 4> constexpr elemToFacet = {
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
-  static std::array<std::array<id_T, 2>, 6> constexpr elemToEdge = {
+  static std::array<std::array<short_T, 2>, 6> constexpr elemToEdge = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
-  static std::array<std::array<id_T, 3>, 4> constexpr elemToFace = elemToFacet;
+  static std::array<std::array<short_T, 3>, 4> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 1. / 6;
 
   Tetrahedron(
@@ -494,19 +495,19 @@ public:
   using Facet_T = Quad;
   using Face_T = Quad;
   using Edge_T = Line;
-  static int constexpr dim = 3;
-  static uint constexpr numPts = 8U;
-  static uint constexpr numEdges = 12U;
-  static uint constexpr numFaces = 6U;
-  static uint constexpr numFacets = 6U;
-  static std::array<std::array<id_T, 4>, 6> constexpr elemToFacet = {
+  static short_T constexpr dim = 3;
+  static short_T constexpr numPts = 8U;
+  static short_T constexpr numEdges = 12U;
+  static short_T constexpr numFaces = 6U;
+  static short_T constexpr numFacets = 6U;
+  static std::array<std::array<short_T, 4>, 6> constexpr elemToFacet = {
       {{{0, 3, 2, 1}},
        {{0, 1, 5, 4}},
        {{1, 2, 6, 5}},
        {{2, 3, 7, 6}},
        {{3, 0, 4, 7}},
        {{4, 5, 6, 7}}}};
-  static std::array<std::array<id_T, 2>, 12> constexpr elemToEdge = {
+  static std::array<std::array<short_T, 2>, 12> constexpr elemToEdge = {
       {{{0, 1}},
        {{1, 2}},
        {{2, 3}},
@@ -519,7 +520,7 @@ public:
        {{5, 6}},
        {{6, 7}},
        {{7, 4}}}};
-  static std::array<std::array<id_T, 4>, 6> constexpr elemToFace = elemToFacet;
+  static std::array<std::array<short_T, 4>, 6> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 8.;
 
   Hexahedron(

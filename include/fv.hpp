@@ -255,10 +255,9 @@ struct FVSolver
       //           << facet._normal[0] << ", " << facet._normal[1] << " -> "
       //           << fluxes[facet.id] << std::endl;
     }
-    // TODO: overwrite the bc fixed fluxes here ?
-    // auto const bcIt = bcs.fixedMarkers.find(facet.marker);
+    // // TODO: overwrite the bc fixed fluxes here ?
     // // set flux according to upwind bcs
-    // if (bcIt != bcs.fixedMarkers.end())
+    // if (bcs.fixedMarkers.contains(facet.marker))
     // {
     //   // TODO: use all facet points
     //   Point const & p = *facet.pointList[0];

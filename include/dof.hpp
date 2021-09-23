@@ -122,8 +122,7 @@ struct DOF
           }
 
           // check if dofs have already been assigned to this edge
-          if (edgeDOFs.find(edgeIDs) == edgeDOFs.end() ||
-              type == DofType::DISCONTINUOUS)
+          if (!edgeDOFs.contains(edgeIDs) || type == DofType::DISCONTINUOUS)
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {
@@ -170,8 +169,7 @@ struct DOF
           }
 
           // check if dofs have already been assigned to this face
-          if (faceDOFs.find(faceIDs) == faceDOFs.end() ||
-              type == DofType::DISCONTINUOUS)
+          if (!faceDOFs.contains(faceIDs) || type == DofType::DISCONTINUOUS)
           {
             if constexpr (ordering == DofOrdering::BLOCK)
             {

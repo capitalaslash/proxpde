@@ -594,6 +594,7 @@ void readGMSH(
   // use file facets to set boundary flags
   for (auto & meshFacet: mesh.facetList)
   {
+    // iterator loop required to use std::set::erase()?
     for (auto it = facets.begin(); it != facets.end(); ++it)
     {
       if (geoEqual(meshFacet, *it))

@@ -259,6 +259,7 @@ struct BCNat
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace::dim, 3> const value;
+  // TODO: convert to std::unordered_set
   std::vector<short_T> const comp = allComp<FESpace>();
 };
 
@@ -289,6 +290,7 @@ struct BCMixed
   CurFE_T curFE;
   marker_T marker;
   Fun<FESpace_T::dim, 3> const coef;
+  // TODO: convert to std::unordered_set
   std::vector<short_T> const comp = allComp<FESpace>();
 };
 
@@ -308,7 +310,7 @@ public:
         "this BC does not use the same FESpace");
     if (bc.marker != markerNotSet)
     {
-      if (checkMarkerFixed(bc.marker))
+      if (fixedMarkers.contains(bc.marker))
       {
         std::cerr << "the marker " << bc.marker << " has already been fixed."
                   << std::endl;
@@ -329,16 +331,6 @@ public:
       std::abort();
     }
   }
-
-  bool checkMarkerFixed(marker_T const m) const
-  {
-    return fixedMarkers.find(m) != fixedMarkers.end();
-  }
-
-  // bool checkDofFixed(id_T const id) const
-  // {
-  //   return fixedDofs.find(id) != fixedDofs.end();
-  // }
 
   FESpace const & feSpace;
   std::unordered_set<marker_T> fixedMarkers;

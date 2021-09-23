@@ -13,10 +13,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-#set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-# set(CMAKE_DEBUG_POSTFIX "-dbg")
 
 include(FeatureSummary)
 
@@ -28,9 +25,6 @@ option(MINIFEM_EXPLICIT_INSTANTIATION "add commonly used instantiations to libra
 
 string(APPEND MINIFEM_COMPILE_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
 string(APPEND MINIFEM_LINK_FLAGS "-Wall;-Wpedantic;-Wextra;$<$<CONFIG:RELEASE>:-march=native;-mtune=native>")
-#add_compile_options(-Wall -Wpedantic)
-# set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-# set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_STATIC_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
@@ -81,7 +75,7 @@ target_include_directories(minifem PUBLIC
   ${HDF5_INCLUDE_DIRS}
 )
 
-target_compile_features(minifem PUBLIC cxx_std_17)
+target_compile_features(minifem PUBLIC cxx_std_20)
 
 target_compile_options(minifem
   # PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wpedantic -Wextra -flto>

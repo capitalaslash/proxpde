@@ -75,7 +75,7 @@ void uniform_refine_2d(Mesh const & mesh, Mesh & newMesh)
       // new points are idenfied by the ordered connected vertices' ids
       auto const key = std::set{curId, nextId};
       // check if point has already been added
-      if (newPtsFinder.find(key) == newPtsFinder.end())
+      if (!newPtsFinder.contains(key))
       {
         // not yet added
         auto const midPtCoords =

@@ -491,7 +491,7 @@ void computeElemWSS(
 
   for (auto & facet: feSpaceWSS.mesh.facetList)
   {
-    if (markers.find(facet.marker) != markers.end())
+    if (markers.contains(facet.marker))
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();
@@ -544,7 +544,7 @@ void computeFEWSS(
 
   for (auto & facet: feSpaceWSS.mesh.facetList)
   {
-    if (markers.find(facet.marker) != markers.end())
+    if (markers.contains(facet.marker))
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();

@@ -145,6 +145,7 @@ void interpolateOnFacets(
     FESpaceOut const & feSpaceOut,
     Vec const & in,
     FESpaceIn const & feSpaceIn,
+    // TODO: replace with a proper list of all markers
     std::unordered_set<marker_T> const & markers =
         std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
     double const coef = 1.0)
@@ -169,7 +170,7 @@ void interpolateOnFacets(
   for (auto & facet: feSpaceOut.mesh.elementList)
   {
     if (markers == std::unordered_set<marker_T>({marker_T(-1)}) ||
-        (markers.find(facet.marker) != markers.end()))
+        (markers.contains(facet.marker)))
     {
       // std::cout << "facet " << facet.id << std::endl;
       curFEFacet.reinit(facet);

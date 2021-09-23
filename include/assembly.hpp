@@ -20,6 +20,7 @@ struct ScalarCoef
 
 struct AssemblyBase
 {
+  // TODO: convert to std::unordered_set
   using CompList = std::vector<short_T>;
 
   CompList const comp = {};

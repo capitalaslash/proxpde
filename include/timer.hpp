@@ -26,7 +26,7 @@ public:
   {
     _start = std::chrono::time_point_cast<TimeUnit>(Clock_T::now());
     _tmpName = name;
-    if (_data.find(_tmpName) == _data.end())
+    if (!_data.contains(_tmpName))
     {
       _data[_tmpName].id = _currentId;
       _currentId++;

@@ -28,7 +28,7 @@ compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2
   for (auto const & t: v1)
   {
     auto key = std::pair{t.row(), t.col()};
-    if (db.find(key) != db.end())
+    if (db.contains(key))
     {
       db[key] += t.value();
     }
@@ -42,7 +42,7 @@ compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2
   for (auto const & t: v2)
   {
     auto key = std::pair{t.row(), t.col()};
-    if (db.find(key) != db.end())
+    if (db.contains(key))
     {
       db[key] -= t.value();
     }

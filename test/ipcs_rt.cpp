@@ -38,7 +38,7 @@ void interpolateOnBoundary(
 
   for (auto const & facet: feSpaceOut.mesh.facetList)
   {
-    if (markers.find(facet.marker) != markers.end())
+    if (markers.contains(facet.marker))
     {
       curFEFacet.reinit(facet);
 

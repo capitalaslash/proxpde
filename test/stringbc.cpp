@@ -1,23 +1,24 @@
-#include <minifem/def.hpp>
+#include "def.hpp"
 
-#include <minifem/assembly.hpp>
-#include <minifem/bc.hpp>
-#include <minifem/builder.hpp>
-#include <minifem/fe.hpp>
-#include <minifem/fespace.hpp>
-#include <minifem/iomanager.hpp>
-#include <minifem/mesh.hpp>
-#include <minifem/timer.hpp>
-#include <minifem/var.hpp>
+#include "assembly.hpp"
+#include "bc.hpp"
+#include "builder.hpp"
+#include "fe.hpp"
+#include "fespace.hpp"
+#include "geo.hpp"
+#include "iomanager.hpp"
+#include "mesh.hpp"
+#include "timer.hpp"
+#include "var.hpp"
 
 #include <yaml-cpp/yaml.h>
 
 static constexpr uint dim = 3;
 using Elem_T = Tetrahedron;
 using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = FEType<Elem_T, 2>::RefFE_T;
-using LinearRefFE = FEType<Elem_T, 1>::RefFE_T;
-using QuadraticQR = FEType<Elem_T, 2>::RecommendedQR;
+using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
 using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
 

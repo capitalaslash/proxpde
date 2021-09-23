@@ -212,7 +212,8 @@ void buildCircleMesh(
     double const & radius,
     std::array<uint, 3> const numElems)
 {
-  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {
+      numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.resize(
       numPts[0] * numPts[1] + numPts[0] * numElems[2] + numElems[1] * numElems[2]);
   //    l0  r0
@@ -386,7 +387,8 @@ void buildCube(
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
   Vec3 const h = {
       length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {
+      numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
   for (uint k = 0; k < numPts[2]; ++k)
   {
@@ -485,7 +487,8 @@ void buildCube(
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
   Vec3 const h = {
       length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  std::array<uint, 3> const numPts = {numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
+  std::array<uint, 3> const numPts = {
+      numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
   mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
   for (uint k = 0; k < numPts[2]; ++k)
   {

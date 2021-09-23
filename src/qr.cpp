@@ -380,7 +380,6 @@ std::array<SideGaussQR<Quad, 3>::Vec_T, 3 * 4> const SideGaussQR<Quad, 3>::node 
 }};
 // clang-format on
 
-
 // TrapQR ==============================================================================
 
 // 1D ----------------------------------------------------------------------------------
@@ -423,7 +422,6 @@ std::array<TrapQR<Hexahedron>::Vec_T, 8> const TrapQR<Hexahedron>::node = {
      TrapQR<Hexahedron>::Vec_T( 1., -1.,  1.),
      TrapQR<Hexahedron>::Vec_T( 1.,  1.,  1.)}};
 // clang-format on
-
 
 // SimpsonQR ===========================================================================
 

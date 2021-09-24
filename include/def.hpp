@@ -71,6 +71,12 @@ std::vector<short_T> allComp()
 }
 
 // ----------------------------------------------------------------------------
+template <typename T, short_T M, short_T N>
+using array2d = std::array<std::array<T, M>, N>;
+
+template <typename T, short_T M, short_T N, short_T O>
+using array3d = std::array<std::array<std::array<T, M>, N>, O>;
+
 template <int N, typename T>
 static constexpr std::array<T, N> fillArray(T const & t)
 {

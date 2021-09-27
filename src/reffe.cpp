@@ -129,6 +129,22 @@ std::array<twodFun_T, RefTriangleP2::numGeoDOFs> const RefTriangleP2::mapping =
     RefTriangleP2::dphiFun;
 
 // ----------------------------------------------------------------------------
+Vec2 const RefTriangleCR1::refMidpoint = Vec2{1. / 3, 1. / 3};
+
+std::array<scalarTwodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::phiFun = {
+    {[](Vec_T const & p) { return 2. * p(0) + 2. * p(1) - 1.; },
+     [](Vec_T const & p) { return 1. - 2. * p(1); },
+     [](Vec_T const & p) { return 1. - 2. * p(0); }}};
+
+std::array<twodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::dphiFun = {
+    {[](Vec_T const &) { return Vec_T(2.L, 2.L); },
+     [](Vec_T const &) { return Vec_T(0.L, -2.L); },
+     [](Vec_T const &) { return Vec_T(-2.L, 0.L); }}};
+
+std::array<twodFun_T, RefTriangleCR1::numGeoDOFs> const RefTriangleCR1::mapping =
+    RefTriangleP1::dphiFun;
+
+// ----------------------------------------------------------------------------
 Vec2 const RefTriangleP0::refMidpoint = Vec2{1. / 3, 1. / 3};
 
 std::array<scalarTwodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::phiFun = {
@@ -215,7 +231,7 @@ std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 
                      0.25, 0.25, 0.25, 0.25,             // 8
                      0.0,  0.0,  0.5,  0.5,              // 6
                      0.0,  0.0,  0.0,  1.0).finished(),  // 3
-                     
+
 }};
 // clang-format on
 

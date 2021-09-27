@@ -49,6 +49,7 @@ minifem_add_test(supg1d)
 # pde 2d tri
 minifem_add_test(advection2dtri)
 minifem_add_test(dual)
+minifem_add_test(poisson2dcr)
 minifem_add_test(poisson2dmixedtri)
 minifem_add_test(poisson2dtri)
 minifem_add_test(poisson2dtri_p2)

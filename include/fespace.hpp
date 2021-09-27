@@ -183,6 +183,25 @@ void interpolateAnalyticFunction(
         auto const dofId = feSpace.dof.getId(elem.id, i);
         v[offset + dofId] = value.dot(facet.normal()) * facet.volume();
       }
+      else if constexpr (
+          family_v<typename FESpace::RefFE_T> == FamilyType::CROUZEIX_RAVIART)
+      {
+        // the value of the dof is the integral on the opposite facet
+        // u = \sum_i u_i \phi^CR_i
+        // \frac{1}{|f_k|} \int_{f_k} u ds =
+        // \frac{1}{|f_k|} \int_{f_k} sum_i u_i \phi^CR_i ds =
+        // \sum_i \frac{u_i}{|f_k|} \int_{f_k} \phi^CR_i ds =
+        // \frac{u_k}{|f_k|} \int_{f_k} \phi^CR_k
+        // => u_k = \frac{1}{|f_k|} \int_{f_k} u ds
+        // TODO: do a real integral.
+        // approximating it with the mean value changes the element to a a Lagrange type
+        // with different interpolating space (see Guermond TAMU 2015 ch. 3)
+        for (uint d = 0; d < FESpace::dim; ++d)
+        {
+          auto const dofId = feSpace.dof.getId(elem.id, i, d);
+          v[offset + dofId] = value[d];
+        }
+      }
       else
       {
         std::abort();

@@ -102,6 +102,31 @@ std::array<twodFun_T, RefTriangleP1::numDOFs> const RefTriangleP1::dphiFun = {
 std::array<twodFun_T, RefTriangleP1::numGeoDOFs> const RefTriangleP1::mapping =
     RefTriangleP1::dphiFun;
 
+// children indices:
+// 2
+// | 2 +
+// 5   -   4
+// | 0 + 3 | 1 +
+// 0   -   3   -   1
+// TODO; this MUST be consistent with refinement ordering!!!
+// clang-format off
+std::array<FMat<3, 3>, 4> const RefTriangleP1::embeddingMatrix =
+    std::array<FMat<3, 3>, 4>{{
+    (FMat<3, 3>{} << 1.0, 0.0, 0.0,             // 0
+                     0.5, 0.5, 0.0,             // 3
+                     0.5, 0.0, 0.5).finished(), // 5
+    (FMat<3, 3>{} << 0.0, 1.0, 0.0,             // 1
+                     0.0, 0.5, 0.5,             // 4
+                     0.5, 0.5, 0.0).finished(), // 3
+    (FMat<3, 3>{} << 0.0, 0.0, 1.0,             // 2
+                     0.5, 0.0, 0.5,             // 5
+                     0.0, 0.5, 0.5).finished(), // 4
+    (FMat<3, 3>{} << 0.5, 0.5, 0.0,             // 3
+                     0.0, 0.5, 0.5,             // 4
+                     0.5, 0.0, 0.5).finished(), // 5
+}};
+// clang-format on
+
 // ----------------------------------------------------------------------------
 Vec2 const RefTriangleP2::refMidpoint = Vec2{1. / 3, 1. / 3};
 
@@ -213,6 +238,12 @@ std::array<twodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::dphiFun = {
 std::array<twodFun_T, RefQuadQ1::numGeoDOFs> const RefQuadQ1::mapping =
     RefQuadQ1::dphiFun;
 
+// children indices:
+// 3 - 6 - 2
+// | 3 | 2 |
+// 7 - 8 - 5
+// | 0 | 1 |
+// 0 - 4 - 1
 // clang-format off
 std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 4>, 4>{{
     (FMat<4, 4>{} << 1.0,  0.0,  0.0,  0.0,              // 0

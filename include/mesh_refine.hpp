@@ -1,4 +1,5 @@
 #include "def.hpp"
+
 #include "geo.hpp"
 #include "mesh.hpp"
 
@@ -37,6 +38,7 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
   static_assert(Mesh::Elem_T::dim == 2, "the mesh dimension is not 2.");
 
   using Elem_T = typename Mesh::Elem_T;
+  using Facet_T = typename Elem_T::Facet_T;
 
   auto const numFacets =
       (mesh.flags & MeshFlags::INTERNAL_FACETS).any()
@@ -46,201 +48,129 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
   auto const predPts = RefineHelper<Elem_T>::totalPts(
       mesh.pointList.size(), numFacets, mesh.elementList.size());
   newMesh.pointList.reserve(predPts);
-  std::copy(
-      mesh.pointList.begin(),
-      mesh.pointList.end(),
-      std::back_inserter(newMesh.pointList));
 
-  newMesh.elementList.reserve(4 * mesh.elementList.size());
+  newMesh.elementList.reserve(Elem_T::numChildren * mesh.elementList.size());
   // if (newMesh.flags::INTERNAL_FACETS)
-  newMesh.facetList.resize(2 * mesh.facetList.size());
-  newMesh.elemToFacet.resize(4 * mesh.elementList.size());
-  for (auto & row: newMesh.elemToFacet)
-  {
-    row.fill(dofIdNotSet);
-  }
+  newMesh.facetList.resize(Facet_T::numChildren * mesh.facetList.size());
+  newMesh.elemToFacet.resize(
+      Elem_T::numChildren * mesh.elementList.size(),
+      fillArray<Elem_T::numFacets>(dofIdNotSet));
 
-  auto newPtsFinder = std::map<std::set<id_T>, id_T>{};
-  uint ptCounter = mesh.pointList.size();
+  auto newPtsMap = std::map<std::set<id_T>, id_T>{};
+  uint ptCounter = 0;
   auto localPts = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
 
   for (auto & elem: mesh.elementList)
   {
-    for (uint k = 0; k < Elem_T::numPts; ++k)
+    for (short_T c = 0; c < Elem_T::numChildren; ++c)
     {
-      auto const curId = elem.pointList[k]->id;
-      auto const nextId = elem.pointList[(k + 1) % Elem_T::numPts]->id;
-      // set original pts in local std::array
-      localPts[k] = curId;
-      // new points are idenfied by the ordered connected vertices' ids
-      auto const key = std::set{curId, nextId};
-      // check if point has already been added
-      if (!newPtsFinder.contains(key))
+      for (short_T pFine = 0; pFine < Elem_T::numPts; ++pFine)
       {
-        // not yet added
-        auto const midPtCoords =
-            0.5 * (elem.pointList[k]->coord +
-                   elem.pointList[(k + 1) % Elem_T::numPts]->coord);
-        newMesh.pointList.emplace_back(Point{midPtCoords, ptCounter});
-        newPtsFinder[key] = ptCounter;
-        localPts[Elem_T::numPts + k] = ptCounter++;
-      }
-      else
-      {
-        // already added
-        localPts[Elem_T::numPts + k] = newPtsFinder[key];
+        auto parentIds = std::set<id_T>{};
+        Vec3 newPtCoords = Vec3::Zero();
+        for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+        {
+          auto const weight = Elem_T::embeddingMatrix[c](pFine, pCoarse);
+          newPtCoords += weight * elem.pointList[pCoarse]->coord;
+          // TODO: this is a bit shady, it can be improved using a bool indicator in the
+          // RefFE that tells if the value is meaningful
+          if (std::fabs(weight) > 1.e-12)
+          {
+            parentIds.insert(elem.pointList[pCoarse]->id);
+          }
+        }
+        if (newPtsMap.contains(parentIds))
+        {
+          // the new point has already been added, reuse its id
+          localPts[Elem_T::elemToChild[c][pFine]] = newPtsMap[parentIds];
+        }
+        else
+        {
+          // the point is new
+          newMesh.pointList.emplace_back(Point{newPtCoords, ptCounter});
+          newPtsMap.insert(std::pair{parentIds, ptCounter});
+          localPts[Elem_T::elemToChild[c][pFine]] = ptCounter++;
+        }
       }
     }
-    // the quad adds a point in the middle
-    if constexpr (std::is_same_v<Elem_T, Quad>)
-    {
-      auto const midPtCoords =
-          0.25 * (elem.pointList[0]->coord + elem.pointList[1]->coord +
-                  elem.pointList[2]->coord + elem.pointList[3]->coord);
-      newMesh.pointList.emplace_back(Point{midPtCoords, ptCounter});
-      localPts[8] = ptCounter++;
-    }
-
-    elem.children.reserve(4);
 
     // add new elements
-    if constexpr (std::is_same_v<Elem_T, Triangle>)
+    elem.children.reserve(Elem_T::numChildren);
+    for (short_T c = 0; c < Elem_T::numChildren; ++c)
     {
-      newMesh.elementList.emplace_back(Triangle{
-          {&newMesh.pointList[localPts[0]],
-           &newMesh.pointList[localPts[3]],
-           &newMesh.pointList[localPts[5]]},
-          4 * elem.id,
-          elem.marker});
-      newMesh.elementList.back().parent = ChildElem{&elem, 0};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 0});
-
-      newMesh.elementList.emplace_back(Triangle{
-          {&newMesh.pointList[localPts[3]],
-           &newMesh.pointList[localPts[1]],
-           &newMesh.pointList[localPts[4]]},
-          4 * elem.id + 1,
-          elem.marker});
-      newMesh.elementList.back().parent = ChildElem{&elem, 1};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 1});
-
-      newMesh.elementList.emplace_back(Triangle{
-          {&newMesh.pointList[localPts[5]],
-           &newMesh.pointList[localPts[4]],
-           &newMesh.pointList[localPts[2]]},
-          4 * elem.id + 2,
-          elem.marker});
-      newMesh.elementList.back().parent = ChildElem{&elem, 2};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 2});
-
-      newMesh.elementList.emplace_back(Triangle{
-          {&newMesh.pointList[localPts[4]],
-           &newMesh.pointList[localPts[3]],
-           &newMesh.pointList[localPts[5]]},
-          4 * elem.id + 3,
-          elem.marker});
-      newMesh.elementList.back().parent = ChildElem{&elem, 3};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 3});
-    }
-    else if constexpr (std::is_same_v<Elem_T, Quad>)
-    {
-      newMesh.elementList.emplace_back(Quad{
-          {
-              &newMesh.pointList[localPts[0]],
-              &newMesh.pointList[localPts[4]],
-              &newMesh.pointList[localPts[8]],
-              &newMesh.pointList[localPts[7]],
-          },
-          4 * elem.id});
-      newMesh.elementList.back().parent = ChildElem{&elem, 0};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 0});
-
-      newMesh.elementList.emplace_back(Quad{
-          {
-              &newMesh.pointList[localPts[4]],
-              &newMesh.pointList[localPts[1]],
-              &newMesh.pointList[localPts[5]],
-              &newMesh.pointList[localPts[8]],
-          },
-          4 * elem.id + 1});
-      newMesh.elementList.back().parent = ChildElem{&elem, 1};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 1});
-
-      newMesh.elementList.emplace_back(Quad{
-          {
-              &newMesh.pointList[localPts[8]],
-              &newMesh.pointList[localPts[5]],
-              &newMesh.pointList[localPts[2]],
-              &newMesh.pointList[localPts[6]],
-          },
-          4 * elem.id + 2});
-      newMesh.elementList.back().parent = ChildElem{&elem, 2};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 2});
-
-      newMesh.elementList.emplace_back(Quad{
-          {
-              &newMesh.pointList[localPts[7]],
-              &newMesh.pointList[localPts[8]],
-              &newMesh.pointList[localPts[6]],
-              &newMesh.pointList[localPts[3]],
-          },
-          4 * elem.id + 3});
-      newMesh.elementList.back().parent = ChildElem{&elem, 3};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), 3});
-    }
-    else
-    {
-      // should never reach this point
-      std::abort();
+      std::vector<Point *> conn(Elem_T::numPts);
+      for (short_T p = 0; p < Elem_T::numPts; ++p)
+      {
+        conn[p] = &newMesh.pointList[localPts[Elem_T::elemToChild[c][p]]];
+      }
+      newMesh.elementList.emplace_back(
+          Elem_T{conn, Elem_T::numChildren * elem.id + c, elem.marker});
+      newMesh.elementList.back().parent = ChildElem{&elem, c};
+      elem.children.push_back(ChildElem{&newMesh.elementList.back(), c});
     }
 
     // add new facets
     // TODO: this works only for boundary facets, internal facets require
-    // additional care since they are transversed twice
+    // additional care since they are crossed twice
     for (short_T f = 0; f < Elem_T::numFacets; ++f)
     {
       auto const facetId = mesh.elemToFacet[elem.id][f];
 
-      // work on facets only when we are the first facing element
-      if (facetId != idNotSet &&
-          mesh.facetList[facetId].facingElem[0].ptr->id == elem.id)
+      // refine only facets coming from the coarse mesh
+      if (facetId != idNotSet)
       {
-        newMesh.facetList[2 * facetId] = Line{
-            {
-                &newMesh.pointList[localPts[Elem_T::elemToFacet[f][0]]],
-                &newMesh.pointList[localPts[Elem_T::numPts + f]],
-            },
-            2 * facetId,
-            mesh.facetList[facetId].marker};
-        // keep the same convention for new facet and new element
-        newMesh.facetList[2 * facetId].facingElem[0] =
-            FacingElem{&newMesh.elementList[4 * elem.id + f], f};
-
-        newMesh.facetList[2 * facetId + 1] = Line{
-            {
-                &newMesh.pointList[localPts[Elem_T::numPts + f]],
-                &newMesh.pointList[localPts[Elem_T::elemToFacet[f][1]]],
-            },
-            2 * facetId + 1,
-            mesh.facetList[facetId].marker};
-        // keep the same convention for new facet and new element
-        newMesh.facetList[2 * facetId + 1].facingElem[0] =
-            FacingElem{&newMesh.elementList[4 * elem.id + (f + 1) % Elem_T::numPts], f};
-
-        auto const & otherElem = mesh.facetList[facetId].facingElem[1];
-        if (otherElem.ptr)
+        auto & facet = mesh.facetList[facetId];
+        facet.children.reserve(Facet_T::numChildren);
+        // create facet only when we are the first facing element
+        if (facet.facingElem[0].ptr->id == elem.id)
         {
-          newMesh.facetList[2 * facetId].facingElem[1] = FacingElem{
-              &newMesh.elementList[4 * otherElem.ptr->id + (f - 1) % Elem_T::numPts],
-              static_cast<short_T>((f - 2) % Elem_T::numPts)};
-          newMesh.facetList[2 * facetId + 1].facingElem[1] = FacingElem{
-              &newMesh.elementList
-                   [4 * otherElem.ptr->id + (f + Elem_T::numPts - 2) % Elem_T::numPts],
-              static_cast<short_T>((f - 2) % Elem_T::numPts)};
+          for (short_T fc = 0; fc < Facet_T::numChildren; ++fc)
+          {
+            std::vector<Point *> conn(Facet_T::numPts);
+            for (short_T p = 0; p < Facet_T::numPts; ++p)
+            {
+              conn[p] =
+                  &newMesh.pointList[localPts[Elem_T::elemToFacetChild[f][fc][p]]];
+            }
+            auto const newFacetId = Facet_T::numChildren * facetId + fc;
+            newMesh.facetList[newFacetId] = Facet_T{conn, newFacetId, facet.marker};
+
+            newMesh.facetList[newFacetId].parent = ChildElem{&facet, fc};
+            facet.children.push_back(ChildElem{&newMesh.facetList[newFacetId], fc});
+
+            // keep the same convention for new facet and new element
+            newMesh.facetList[newFacetId].facingElem[0] = FacingElem{
+                &newMesh.elementList
+                     [Elem_T::numChildren * elem.id +
+                      Elem_T::elemToFacetChildFacing[f][fc][0]],
+                Elem_T::elemToFacetChildFacing[f][fc][1]};
+
+            // TODO: the elem child id works only in 2D!!!
+            newMesh.elemToFacet
+                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
+                [(f + fc) % Elem_T::numChildren] = newFacetId;
+          }
         }
-        newMesh.elemToFacet[4 * elem.id + f][f] = 2 * facetId;
-        newMesh.elemToFacet[4 * elem.id + (f + 1) % Elem_T::numPts][f] =
-            2 * facetId + 1;
+        else
+        {
+          for (short_T fc = 0; fc < Facet_T::numChildren; ++fc)
+          {
+            // loop backwards on facets since an internal facet is crossed alternatively
+            // from the two sides
+            // TODO: this is true in 2D, but 3D should be checked!!
+            auto const newFacetId =
+                Facet_T::numChildren * facetId + (Facet_T::numChildren - 1 - fc);
+            newMesh.facetList[newFacetId].facingElem[1] = FacingElem{
+                &newMesh.elementList
+                     [Elem_T::numChildren * elem.id +
+                      Elem_T::elemToFacetChildFacing[f][fc][0]],
+                Elem_T::elemToFacetChildFacing[f][fc][1]};
+
+            newMesh.elemToFacet
+                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
+                [(f + fc) % Elem_T::numChildren] = newFacetId;
+          }
+        }
       }
       // if (newMesh.flags::INTERNAL_FACETS)
     }

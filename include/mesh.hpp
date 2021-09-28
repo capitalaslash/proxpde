@@ -148,7 +148,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   // https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
   for ([[maybe_unused]] auto const & [idSet, facet]: facetMap)
   {
-    if (facet.facingElem[1].ptr == nullptr)
+    if (!facet.facingElem[1])
     {
       // this is a boundary facet
       mesh.facetList[bFacetCount] = facet;

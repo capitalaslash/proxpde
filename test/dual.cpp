@@ -30,7 +30,7 @@ struct DualCell //: public GeoElem
       // points.row(n) = edge.midpoint();
       volumes[n] = areaTriangle(
           center->coord, edge.midpoint(), edge.facingElem[0].ptr->midpoint());
-      if (edge.facingElem[1].ptr != nullptr)
+      if (edge.facingElem[1])
       {
         volumes[n] += areaTriangle(
             center->coord, edge.midpoint(), edge.facingElem[1].ptr->midpoint());

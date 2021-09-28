@@ -28,12 +28,16 @@ struct FacingElem
 {
   GeoElem * ptr;
   short_T side;
+
+  explicit operator bool() const { return ptr; }
 };
 
 struct ChildElem
 {
   GeoElem * ptr;
   short_T corner;
+
+  explicit operator bool() const { return ptr; }
 };
 
 struct GeoElem
@@ -166,6 +170,10 @@ public:
       {{{0}}, {{1}}}};
   static array2d<short_T, 0, 0> constexpr elemToFace = {{}};
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {{{{0, 1}}}};
+  static short_T constexpr numChildren = 2U;
+  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
+      {{{0, 2}}, {{2, 1}}}};
+  static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
   static double constexpr refVolume = 2.;
 
   explicit Line(
@@ -231,6 +239,28 @@ public:
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
   static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
       {{{0, 1, 2}}}};
+  static short_T constexpr numChildren = 4U;
+  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
+      {{{0, 3, 5}}, {{1, 4, 3}}, {{2, 5, 4}}, {{3, 4, 5}}}};
+  static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
+  static array3d<
+      short_T,
+      numFacets,
+      Facet_T::numChildren,
+      Facet_T::numPts> constexpr elemToFacetChild = {{
+      {{{{0, 3}}, {{3, 1}}}},
+      {{{{1, 4}}, {{4, 2}}}},
+      {{{{2, 5}}, {{5, 0}}}},
+  }};
+  static array3d<
+      short_T,
+      numFacets,
+      Facet_T::numChildren,
+      2> constexpr elemToFacetChildFacing = {{
+      {{{{0, 0}}, {{1, 2}}}},
+      {{{{1, 0}}, {{2, 2}}}},
+      {{{{2, 0}}, {{0, 2}}}},
+  }};
   static double constexpr refVolume = 0.5;
 
   Triangle(
@@ -321,6 +351,30 @@ public:
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
   static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
       {{{0, 1, 2, 3}}}};
+  static short_T constexpr numChildren = 4U;
+  static array2d<short_T, numPts, numChildren> constexpr elemToChild = {
+      {{{0, 4, 8, 7}}, {{4, 1, 5, 8}}, {{8, 5, 2, 6}}, {{7, 8, 6, 3}}}};
+  static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
+  static array3d<
+      short_T,
+      numFacets,
+      Facet_T::numChildren,
+      Facet_T::numPts> constexpr elemToFacetChild = {{
+      {{{{0, 4}}, {{4, 1}}}},
+      {{{{1, 5}}, {{5, 2}}}},
+      {{{{2, 6}}, {{6, 3}}}},
+      {{{{3, 7}}, {{7, 0}}}},
+  }};
+  static array3d<
+      short_T,
+      numFacets,
+      Facet_T::numChildren,
+      Facet_T::numPts> constexpr elemToFacetChildFacing = {{
+      {{{{0, 0}}, {{1, 0}}}},
+      {{{{1, 1}}, {{2, 1}}}},
+      {{{{2, 2}}, {{3, 2}}}},
+      {{{{3, 3}}, {{0, 3}}}},
+  }};
   static double constexpr refVolume = 4.;
 
   Quad(

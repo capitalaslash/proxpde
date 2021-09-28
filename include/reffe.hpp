@@ -227,6 +227,11 @@ struct RefTriangleP1
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
   static std::array<twodFun_T, numDOFs> const dphiFun;
   static std::array<twodFun_T, numGeoDOFs> const mapping;
+  static short_T constexpr numChildren = 4U;
+  static array2d<short_T, numChildren, numDOFs> constexpr childrenIndices = {
+      {{{0, 3, 5}}, {{1, 4, 3}}, {{2, 5, 4}}, {{3, 4, 5}}}};
+  static std::array<FMat<numDOFs, numDOFs>, numChildren> const embeddingMatrix;
+
   static double constexpr volume = 0.5L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)

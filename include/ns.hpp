@@ -243,7 +243,7 @@ struct NSSolverMonolithic
   AssemblyAdvection<FESpaceVel_T, FESpaceVel_T> assemblyAdvection;
   typename Builder<StorageType::RowMajor>::Mat_T matFixed;
   Vec rhsFixed;
-  // std::vector<char> pMask;
+  // std::vector<uint8_t> pMask;
   // SolverParams solverParams;
   SchurSolver solver;
   IOManager<FESpaceVel_T> ioVel;

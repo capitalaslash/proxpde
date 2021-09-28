@@ -4,13 +4,13 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
-enum class DofOrdering : char
+enum class DofOrdering : uint8_t
 {
   BLOCK,
   INTERLEAVED,
 };
 
-enum class DofType : char
+enum class DofType : uint8_t
 {
   CONTINUOUS,
   DISCONTINUOUS,

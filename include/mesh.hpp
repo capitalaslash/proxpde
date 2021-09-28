@@ -29,11 +29,11 @@ public:
   void buildConnectivity()
   {
     elemToPoint.reserve(elementList.size());
-    for (auto & l: elementList)
+    for (auto const & e: elementList)
     {
       std::array<id_T, Elem::numPts> elemConn;
       uint counter = 0;
-      for (auto & p: l.pointList)
+      for (auto const & p: e.pointList)
       {
         elemConn[counter] = p->id;
         counter++;
@@ -89,6 +89,7 @@ enum side : marker_T
 template <typename Mesh>
 void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
 {
+  using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Mesh::Facet_T;
   std::map<std::set<id_T>, Facet_T> facetMap;
 
@@ -97,7 +98,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   for (auto & e: mesh.elementList)
   {
     uint side = 0;
-    for (auto const & row: Mesh::Elem_T::elemToFacet)
+    for (auto const & row: Elem_T::elemToFacet)
     {
       std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
       std::set<id_T> facetIds;
@@ -366,7 +367,7 @@ void addElemFacetList(Mesh & mesh)
   }
 }
 
-enum GMSHElemType : int8_t
+enum GMSHElemType : short_T
 {
   GMSHNull = 0,
   GMSHLine = 1,
@@ -520,6 +521,7 @@ void readGMSH(
           // get points pointers from connectivity
           // TODO: use std::array or pre-fix size
           std::vector<Point *> connPts;
+          connPts.reserve(Elem::numPts);
           std::for_each(
               conn.begin(),
               conn.end(),
@@ -527,7 +529,7 @@ void readGMSH(
               { connPts.push_back(&mesh.pointList[c - 1]); });
 
           // create mesh element
-          mesh.elementList.emplace_back(Elem(connPts, eVol));
+          mesh.elementList.emplace_back(Elem{connPts, eVol});
           eVol++;
         }
         else if (ElemToGmsh<typename Elem::Facet_T>::value == elType)

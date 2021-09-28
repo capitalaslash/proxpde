@@ -51,10 +51,10 @@ struct Utils
 };
 
 // ----------------------------------------------------------------------------
-using id_T = unsigned int;
-using marker_T = unsigned short;
-using DOFid_T = unsigned int;
-using short_T = unsigned char;
+using id_T = uint32_t;
+using marker_T = uint16_t;
+using DOFid_T = uint32_t;
+using short_T = uint8_t;
 id_T constexpr idNotSet = static_cast<id_T>(-1);
 DOFid_T constexpr dofIdNotSet = static_cast<DOFid_T>(-1);
 marker_T constexpr markerNotSet = static_cast<marker_T>(-1);
@@ -88,7 +88,7 @@ static constexpr std::array<T, N> fillArray(T const & t)
 // ----------------------------------------------------------------------------
 // ColMajor is better for UMFPack
 // RowMajor is better for iterative solvers
-enum class StorageType : char
+enum class StorageType : uint8_t
 {
   RowMajor,
   ClmMajor,

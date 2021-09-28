@@ -120,7 +120,7 @@ void computeGradient(
   grad = solverGrad.solve(builderGrad.b);
 }
 
-enum class Component : char
+enum class Component : uint8_t
 {
   SCALAR,
   NORMAL,

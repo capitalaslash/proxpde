@@ -230,7 +230,7 @@ std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 
     (FMat<4, 4>{} << 0.5,  0.0,  0.0,  0.5,              // 7
                      0.25, 0.25, 0.25, 0.25,             // 8
                      0.0,  0.0,  0.5,  0.5,              // 6
-                     0.0,  0.0,  0.0,  1.0).finished(),  // 3
+                     0.0,  0.0,  0.0,  1.0).finished(),  // 3                     
 
 }};
 // clang-format on

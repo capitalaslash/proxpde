@@ -20,12 +20,7 @@ public:
   marker_T marker = markerNotSet;
 };
 
-inline std::ostream & operator<<(std::ostream & out, Point const & p)
-{
-  out << "(" << p[0] << "," << p[1] << "," << p[2] << "), id: " << p.id
-      << ", m: " << p.marker;
-  return out;
-}
+std::ostream & operator<<(std::ostream & out, Point const & p);
 
 struct GeoElem;
 
@@ -107,43 +102,7 @@ struct GeoElem
 
 inline bool operator<(GeoElem const & e1, GeoElem const & e2) { return e1.id < e2.id; }
 
-inline std::ostream & operator<<(std::ostream & out, GeoElem const & e)
-{
-  out << "pts: ";
-  for (auto & p: e.pointList)
-  {
-    out << p->id << " ";
-  }
-  out << "id: " << e.id << ", m: " << e.marker;
-  auto const & [insideFacePtr, insideFaceLoc] = e.facingElem[0];
-  if (insideFacePtr)
-  {
-    out << ", fe: (" << insideFacePtr->id << ", " << insideFaceLoc << ")";
-    auto const [outsideFacePtr, outsideFaceLoc] = e.facingElem[1];
-    if (outsideFacePtr)
-    {
-      out << ", (" << outsideFacePtr->id << ", " << outsideFaceLoc << ")";
-    }
-    else
-    {
-      out << ", on boundary";
-    }
-  }
-  if (e.parent.ptr)
-  {
-    out << ", parent id: " << e.parent.ptr->id;
-  }
-  else
-  {
-    out << ", no parent";
-  }
-  out << ", children ids (" << e.children.size() << "): ";
-  for (auto const ch: e.children)
-  {
-    out << ch.ptr->id << " ";
-  }
-  return out;
-}
+std::ostream & operator<<(std::ostream & out, GeoElem const & e);
 
 struct NullElem: public GeoElem
 {

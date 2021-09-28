@@ -72,10 +72,10 @@ std::vector<short_T> allComp()
 
 // ----------------------------------------------------------------------------
 template <typename T, short_T M, short_T N>
-using array2d = std::array<std::array<T, M>, N>;
+using array2d = std::array<std::array<T, N>, M>;
 
 template <typename T, short_T M, short_T N, short_T O>
-using array3d = std::array<std::array<std::array<T, M>, N>, O>;
+using array3d = std::array<std::array<std::array<T, O>, N>, M>;
 
 // https://stackoverflow.com/questions/57756557/initializing-a-stdarray-with-a-constant-value
 namespace detail

@@ -203,9 +203,10 @@ public:
   static short_T constexpr numEdges = 1U;
   static short_T constexpr numFaces = 0U;
   static short_T constexpr numFacets = 2U;
-  static array2d<short_T, 1, 2> constexpr elemToFacet = {{{{0}}, {{1}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
+      {{{0}}, {{1}}}};
   static array2d<short_T, 0, 0> constexpr elemToFace = {{}};
-  static array2d<short_T, 2, 1> constexpr elemToEdge = {{{{0, 1}}}};
+  static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {{{{0, 1}}}};
   static double constexpr refVolume = 2.;
 
   explicit Line(
@@ -266,10 +267,11 @@ public:
   static short_T constexpr numEdges = 3U;
   static short_T constexpr numFaces = 1U;
   static short_T constexpr numFacets = 3U;
-  static array2d<short_T, 2, 3> constexpr elemToFacet = {
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
-  static array2d<short_T, 2, 3> constexpr elemToEdge = elemToFacet;
-  static array2d<short_T, 3, 1> constexpr elemToFace = {{{{0, 1, 2}}}};
+  static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
+      {{{0, 1, 2}}}};
   static double constexpr refVolume = 0.5;
 
   Triangle(
@@ -355,10 +357,11 @@ public:
   static short_T constexpr numEdges = 4U;
   static short_T constexpr numFaces = 1U;
   static short_T constexpr numFacets = 4U;
-  static array2d<short_T, 2, 4> constexpr elemToFacet = {
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
-  static array2d<short_T, 2, 4> constexpr elemToEdge = elemToFacet;
-  static array2d<short_T, 4, 1> constexpr elemToFace = {{{{0, 1, 2, 3}}}};
+  static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
+      {{{0, 1, 2, 3}}}};
   static double constexpr refVolume = 4.;
 
   Quad(
@@ -453,11 +456,11 @@ public:
   static short_T constexpr numEdges = 6U;
   static short_T constexpr numFaces = 4U;
   static short_T constexpr numFacets = 4U;
-  static array2d<short_T, 3, 4> constexpr elemToFacet = {
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
-  static array2d<short_T, 2, 6> constexpr elemToEdge = {
+  static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
-  static array2d<short_T, 3, 4> constexpr elemToFace = elemToFacet;
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 1. / 6;
 
   Tetrahedron(
@@ -520,14 +523,14 @@ public:
   static short_T constexpr numEdges = 12U;
   static short_T constexpr numFaces = 6U;
   static short_T constexpr numFacets = 6U;
-  static array2d<short_T, 4, 6> constexpr elemToFacet = {
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
       {{{0, 3, 2, 1}},
        {{0, 1, 5, 4}},
        {{1, 2, 6, 5}},
        {{2, 3, 7, 6}},
        {{3, 0, 4, 7}},
        {{4, 5, 6, 7}}}};
-  static array2d<short_T, 2, 12> constexpr elemToEdge = {
+  static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {
       {{{0, 1}},
        {{1, 2}},
        {{2, 3}},
@@ -540,7 +543,7 @@ public:
        {{5, 6}},
        {{6, 7}},
        {{7, 4}}}};
-  static array2d<short_T, 4, 6> constexpr elemToFace = elemToFacet;
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = elemToFacet;
   static double constexpr refVolume = 8.;
 
   Hexahedron(

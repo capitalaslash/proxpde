@@ -28,7 +28,7 @@ void test()
 
   std::unique_ptr<Mesh_T> newMesh{new Mesh_T};
 
-  uniform_refine_2d(*mesh, *newMesh);
+  uniformRefine2d(*mesh, *newMesh);
 
   std::cout << Utils::separator << "refined mesh:\n" << *newMesh << std::endl;
 

@@ -77,12 +77,21 @@ using array2d = std::array<std::array<T, M>, N>;
 template <typename T, short_T M, short_T N, short_T O>
 using array3d = std::array<std::array<std::array<T, M>, N>, O>;
 
-template <int N, typename T>
-static constexpr std::array<T, N> fillArray(T const & t)
+// https://stackoverflow.com/questions/57756557/initializing-a-stdarray-with-a-constant-value
+namespace detail
 {
-  std::array<T, N> a;
-  a.fill(t);
-  return a;
+template <typename T, std::size_t... Is>
+constexpr std::array<T, sizeof...(Is)> fillArray(T value, std::index_sequence<Is...>)
+{
+  // cast Is to void to remove the warning: unused value
+  return {{(static_cast<void>(Is), value)...}};
+}
+} // namespace detail
+
+template <std::size_t N, typename T>
+constexpr std::array<T, N> fillArray(const T & value)
+{
+  return detail::fillArray(value, std::make_index_sequence<N>());
 }
 
 // ----------------------------------------------------------------------------

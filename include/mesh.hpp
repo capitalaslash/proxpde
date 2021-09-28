@@ -138,11 +138,8 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   {
     mesh.facetList.resize(bFacetSize);
   }
-  mesh.elemToFacet.resize(mesh.elementList.size());
-  for (auto & row: mesh.elemToFacet)
-  {
-    row.fill(dofIdNotSet);
-  }
+  mesh.elemToFacet.resize(
+      mesh.elementList.size(), fillArray<Elem_T::numFacets>(dofIdNotSet));
 
   // store facets in mesh ordering boundary facets first
   iFacetCount = bFacetSize;

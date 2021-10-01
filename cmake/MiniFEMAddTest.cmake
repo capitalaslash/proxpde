@@ -2,7 +2,7 @@ macro(minifem_add_test name)
   # check arguments
   set(options EXCLUDE_FROM_ALL)
   set(one_value_args HEADER_ROOT)
-  set(multi_value_args SOURCES HEADERS DATA DEPENDENCIES COMPONENT_DEPENDENCIES COMPILE_FLAGS LINK_FLAGS)
+  set(multi_value_args COMPILE_FLAGS COMPONENT_DEPENDENCIES DATA DEPENDENCIES HEADERS LABELS LINK_FLAGS LIBRARIES SOURCES)
   cmake_parse_arguments(${name} "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   # message(STATUS "name = ${name}")
@@ -32,10 +32,16 @@ macro(minifem_add_test name)
   target_link_options(${name}
     PRIVATE ${MINIFEM_LINK_FLAGS}
   )
+  if(${name}_LIBRARIES)
+    target_link_libraries(${name} PUBLIC ${${name}_LIBRARIES})
+  endif()
   add_test(
     NAME MiniFEM.${name}
     COMMAND ${name}
   )
+  if(${name}_LABELS)
+      set_property(TEST MiniFEM.${name} PROPERTY LABELS ${${name}_LABELS})
+  endif()
 
   foreach(datafile ${${name}_DATA})
     message(STATUS "copying ${datafile}")

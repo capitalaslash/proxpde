@@ -1,94 +1,62 @@
 include(MiniFEMAddTest)
 
-# general
-minifem_add_test(hdf5write)
-minifem_add_test(io)
-minifem_add_test(iodisc)
-minifem_add_test(iotime)
-minifem_add_test(timeder)
+# available labels:
+# 1d 2d 3d bc cr fe fv geometry hex io linalg monolithic ode parallel pde quad rt split
+# stokes tet th tri utils
 
-
-# geometry
-minifem_add_test(mesh_refine)
-minifem_add_test(normal)
-
-
-# finite elements
-minifem_add_test(assemblyvector)
-minifem_add_test(fevar)
-minifem_add_test(inside_test)
-minifem_add_test(inverse_mapping)
-minifem_add_test(qr)
-minifem_add_test(reffe_test)
-minifem_add_test(vectorfe1d)
-
-
-# linear algebra
-minifem_add_test(blockmatrix)
-minifem_add_test(prolongation)
-minifem_add_test(solver_test)
-
-
-# bc
-minifem_add_test(fourier_nb)
-minifem_add_test(neumann)
-minifem_add_test(robin_bc)
-minifem_add_test(periodic)
-minifem_add_test(projection_p1top2)
-minifem_add_test(projection_p2top1)
-minifem_add_test(projection_rt0)
-
-
-# pde 1d
-minifem_add_test(advection1d DATA advection1d.yaml)
-minifem_add_test(poisson1d)
-minifem_add_test(poisson1d_p2)
-minifem_add_test(supg1d)
-
-
-# pde 2d tri
-minifem_add_test(advection2dtri)
-minifem_add_test(dual)
-minifem_add_test(poisson2dcr)
-minifem_add_test(poisson2dmixedtri)
-minifem_add_test(poisson2dtri)
-minifem_add_test(poisson2dtri_p2)
-
-
-# pde 2d quad
-minifem_add_test(advection2dquad DATA square_q.msh)
-minifem_add_test(dr2dquad)
-minifem_add_test(poisson2dmixedquad)
-minifem_add_test(poisson2dquad)
-minifem_add_test(poisson2dquad_q2)
-
-
-# pde 3d tet
-minifem_add_test(poisson3dtet DATA poisson3dtet.yaml cube_uns.msh)
-minifem_add_test(poisson3dtet_p2)
-
-
-# pde 3d hex
-minifem_add_test(poisson3dhex)
-minifem_add_test(poisson3dhex_q2)
-
-
-# stokes monolithic 2d
-minifem_add_test(cavity)
-minifem_add_test(cavitytime DATA cavitytime.yaml)
-minifem_add_test(ns_test)
-minifem_add_test(stokes2dquad)
-minifem_add_test(slip)
-minifem_add_test(steptime DATA steptime.yaml)
-minifem_add_test(stokes2dtri DATA square_uns.msh)
-minifem_add_test(stokes2dcircle)
-
-# stokes split 2d
-minifem_add_test(ipcs)
-minifem_add_test(ipcs_rt)
-minifem_add_test(nipcs)
-
-
-# stokes monolithic 3d
-minifem_add_test(stokes3dtet)
-minifem_add_test(stokes3dhex)
+minifem_add_test(advection1d DATA advection1d.yaml LABELS 1d fv pde)
+minifem_add_test(advection2dquad DATA square_q.msh LABELS 2d fv pde quad)
+minifem_add_test(advection2dtri LABELS 2d fv tri)
+minifem_add_test(assemblyvector LABELS fe)
+minifem_add_test(blockmatrix LABELS linalg)
+minifem_add_test(cavity LABELS 2d monolithic pde quad stokes)
+minifem_add_test(cavitytime DATA cavitytime.yaml LABELS 2d monolithic pde quad stokes)
+minifem_add_test(dr2dquad LABELS 2d pde quad)
+minifem_add_test(dual LABELS 2d fv tri)
+minifem_add_test(fevar LABELS fe)
+minifem_add_test(fourier_nb LABELS bc)
+minifem_add_test(hdf5write LABELS io)
+minifem_add_test(inside_test LABELS fe)
+minifem_add_test(inverse_mapping LABELS fe)
+minifem_add_test(io LABELS io)
+minifem_add_test(iodisc LABELS io)
+minifem_add_test(iotime LABELS io)
+minifem_add_test(ipcs LABELS 2d pde split stokes)
+minifem_add_test(ipcs_rt LABELS 2d pde rt split stokes)
+minifem_add_test(mesh_refine LABELS geometry mg)
+minifem_add_test(neumann LABELS bc)
+minifem_add_test(nipcs LABELS 2d pde split stokes)
+minifem_add_test(normal LABELS geometry)
+minifem_add_test(ns_test LABELS 2d monolithic pde quad stokes)
+minifem_add_test(periodic LABELS bc)
+minifem_add_test(poisson1d LABELS 1d pde)
+minifem_add_test(poisson1d_p2 LABELS 1d pde)
+minifem_add_test(poisson2dcr LABELS 2d cr tri)
+minifem_add_test(poisson2dmixedquad LABELS 2d pde quad rt)
+minifem_add_test(poisson2dmixedtri LABELS 2d rt tri)
+minifem_add_test(poisson2dquad LABELS 2d pde quad)
+minifem_add_test(poisson2dquad_q2 LABELS 2d pde quad)
+minifem_add_test(poisson2dtri LABELS 2d tri)
+minifem_add_test(poisson2dtri_p2 LABELS 2d tri)
+minifem_add_test(poisson3dhex LABELS 3d hex pde)
+minifem_add_test(poisson3dhex_q2 LABELS 3d hex pde)
+minifem_add_test(poisson3dtet DATA poisson3dtet.yaml cube_uns.msh LABELS 3d pde tet)
+minifem_add_test(poisson3dtet_p2 LABELS 3d pde tet)
+minifem_add_test(projection_p1top2 LABELS 2d fe)
+minifem_add_test(projection_p2top1 LABELS 2d fe)
+minifem_add_test(projection_rt0 LABELS 2d 3d fe rt)
+minifem_add_test(prolongation LABELS 2d linalg)
+minifem_add_test(qr LABELS fe)
+minifem_add_test(reffe_test LABELS fe)
+minifem_add_test(robin_bc LABELS bc)
+minifem_add_test(solver_test LABELS linalg)
+minifem_add_test(slip LABELS 2d monolithic pde quad stokes)
+minifem_add_test(steptime DATA steptime.yaml LABELS 2d monolithic pde quad stokes)
+minifem_add_test(stokes2dcircle LABELS 2d monolithic pde quad stokes)
+minifem_add_test(stokes2dquad LABELS 2d monolithic pde quad stokes)
+minifem_add_test(stokes2dtri DATA square_uns.msh LABELS 2d monolithic pde stokes tri)
+minifem_add_test(stokes3dhex LABELS 3d hex pde stokes)
+minifem_add_test(stokes3dtet LABELS 3d pde stokes test)
+minifem_add_test(supg1d LABELS 1d pde)
+minifem_add_test(timeder LABELS ode)
+minifem_add_test(vectorfe1d LABELS fe)

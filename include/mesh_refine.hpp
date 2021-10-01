@@ -71,12 +71,12 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
         for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
         {
           auto const weight = Elem_T::embeddingMatrix[c](pFine, pCoarse);
-          newPtCoords += weight * elem.pointList[pCoarse]->coord;
+          newPtCoords += weight * elem.pts[pCoarse]->coord;
           // TODO: this is a bit shady, it can be improved using a bool indicator in the
           // RefFE that tells if the value is meaningful
           if (std::fabs(weight) > 1.e-12)
           {
-            parentIds.insert(elem.pointList[pCoarse]->id);
+            parentIds.insert(elem.pts[pCoarse]->id);
           }
         }
         if (newPtsMap.contains(parentIds))

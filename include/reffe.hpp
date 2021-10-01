@@ -34,19 +34,20 @@ struct RefPointP1
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numDOFs> dofPts = {{e.pointList[0]->coord}};
+    std::array<Vec3, numDOFs> dofPts = {{e.pts[0]->coord}};
     return dofPts;
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoDOFs> mappingPts = {{e.pointList[0]->coord}};
+    std::array<Vec3, numGeoDOFs> mappingPts = {{e.pts[0]->coord}};
     return mappingPts;
   }
 
   static bool inside(Vec_T const & p) { return p[0] == 0.; }
 };
 
+// Line ================================================================================
 struct RefLineP0
 {
   using GeoElem_T = Line;
@@ -72,15 +73,13 @@ struct RefLineP0
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numDOFs> dofPts{
-        {.5 * (e.pointList[0]->coord + e.pointList[1]->coord)}};
+    std::array<Vec3, numDOFs> dofPts{{.5 * (e.pts[0]->coord + e.pts[1]->coord)}};
     return dofPts;
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
-    std::array<Vec3, numGeoDOFs> mappingPts = {
-        {e.pointList[0]->coord, e.pointList[1]->coord}};
+    std::array<Vec3, numGeoDOFs> mappingPts = {{e.pts[0]->coord, e.pts[1]->coord}};
     return mappingPts;
   }
 
@@ -115,8 +114,8 @@ struct RefLineP1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts = {{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
     }};
     return dofPts;
   }
@@ -155,8 +154,7 @@ struct RefLineP2
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
-    std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord, e.pointList[1]->coord, e.midpoint()}};
+    std::array<Vec3, numDOFs> dofPts{{e.pts[0]->coord, e.pts[1]->coord, e.midpoint()}};
     return dofPts;
   }
 
@@ -200,7 +198,7 @@ struct RefTriangleP0
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{
-        {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
     return mappingPts;
   }
 
@@ -237,7 +235,7 @@ struct RefTriangleP1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
     return dofPts;
   }
 
@@ -277,12 +275,12 @@ struct RefTriangleP2
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-         0.5 * (e.pointList[2]->coord + e.pointList[0]->coord)}};
+        {e.pts[0]->coord,
+         e.pts[1]->coord,
+         e.pts[2]->coord,
+         0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+         0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+         0.5 * (e.pts[2]->coord + e.pts[0]->coord)}};
     return dofPts;
   }
 
@@ -320,15 +318,15 @@ struct RefTriangleCR1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     return std::array<Vec3, numDOFs>{
-        0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-        0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-        0.5 * (e.pointList[2]->coord + e.pointList[0]->coord)};
+        0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+        0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+        0.5 * (e.pts[2]->coord + e.pts[0]->coord)};
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{
-        {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
     return mappingPts;
   }
 
@@ -361,15 +359,15 @@ struct RefTriangleRT0
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     return std::array<Vec3, numDOFs>{
-        0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-        0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-        0.5 * (e.pointList[2]->coord + e.pointList[0]->coord)};
+        0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+        0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+        0.5 * (e.pts[2]->coord + e.pts[0]->coord)};
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{
-        {e.pointList[0]->coord, e.pointList[1]->coord, e.pointList[2]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
     return mappingPts;
   }
 
@@ -408,10 +406,10 @@ struct RefQuadP0
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
     }};
     return mappingPts;
   }
@@ -450,10 +448,7 @@ struct RefQuadQ1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord, e.pts[3]->coord}};
     return dofPts;
   }
 
@@ -492,14 +487,14 @@ struct RefQuadP2
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord,
-         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-         0.5 * (e.pointList[2]->coord + e.pointList[3]->coord),
-         0.5 * (e.pointList[3]->coord + e.pointList[0]->coord)}};
+        {e.pts[0]->coord,
+         e.pts[1]->coord,
+         e.pts[2]->coord,
+         e.pts[3]->coord,
+         0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+         0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+         0.5 * (e.pts[2]->coord + e.pts[3]->coord),
+         0.5 * (e.pts[3]->coord + e.pts[0]->coord)}};
     return dofPts;
   }
 
@@ -538,14 +533,14 @@ struct RefQuadQ2
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord,
-         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-         0.5 * (e.pointList[2]->coord + e.pointList[3]->coord),
-         0.5 * (e.pointList[3]->coord + e.pointList[0]->coord),
+        {e.pts[0]->coord,
+         e.pts[1]->coord,
+         e.pts[2]->coord,
+         e.pts[3]->coord,
+         0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+         0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+         0.5 * (e.pts[2]->coord + e.pts[3]->coord),
+         0.5 * (e.pts[3]->coord + e.pts[0]->coord),
          e.midpoint()}};
     return dofPts;
   }
@@ -585,20 +580,20 @@ struct RefQuadRT0
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     return std::array<Vec3, numDOFs>{
-        0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-        0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-        0.5 * (e.pointList[2]->coord + e.pointList[3]->coord),
-        0.5 * (e.pointList[3]->coord + e.pointList[0]->coord),
+        0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+        0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+        0.5 * (e.pts[2]->coord + e.pts[3]->coord),
+        0.5 * (e.pts[3]->coord + e.pts[0]->coord),
     };
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return std::array<Vec3, numGeoDOFs>{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
     };
   }
 
@@ -638,10 +633,10 @@ struct RefTetrahedronP0
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
     }};
     return mappingPts;
   }
@@ -676,10 +671,7 @@ struct RefTetrahedronP1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord, e.pts[3]->coord}};
     return dofPts;
   }
 
@@ -721,16 +713,16 @@ struct RefTetrahedronP2
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts = {{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
-        .5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-        .5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-        .5 * (e.pointList[2]->coord + e.pointList[0]->coord),
-        .5 * (e.pointList[0]->coord + e.pointList[3]->coord),
-        .5 * (e.pointList[1]->coord + e.pointList[3]->coord),
-        .5 * (e.pointList[2]->coord + e.pointList[3]->coord),
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
+        .5 * (e.pts[0]->coord + e.pts[1]->coord),
+        .5 * (e.pts[1]->coord + e.pts[2]->coord),
+        .5 * (e.pts[2]->coord + e.pts[0]->coord),
+        .5 * (e.pts[0]->coord + e.pts[3]->coord),
+        .5 * (e.pts[1]->coord + e.pts[3]->coord),
+        .5 * (e.pts[2]->coord + e.pts[3]->coord),
     }};
     return dofPts;
   }
@@ -770,20 +762,17 @@ struct RefTetrahedronRT0
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     return std::array<Vec3, numDOFs>{
-        (e.pointList[0]->coord + e.pointList[2]->coord + e.pointList[1]->coord) / 3.,
-        (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[3]->coord) / 3.,
-        (e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord) / 3.,
-        (e.pointList[1]->coord + e.pointList[2]->coord + e.pointList[3]->coord) / 3.,
+        (e.pts[0]->coord + e.pts[2]->coord + e.pts[1]->coord) / 3.,
+        (e.pts[0]->coord + e.pts[1]->coord + e.pts[3]->coord) / 3.,
+        (e.pts[0]->coord + e.pts[3]->coord + e.pts[2]->coord) / 3.,
+        (e.pts[1]->coord + e.pts[2]->coord + e.pts[3]->coord) / 3.,
     };
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord}};
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord, e.pts[3]->coord}};
     return mappingPts;
   }
 
@@ -824,14 +813,14 @@ struct RefHexahedronP0
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     std::array<Vec3, numGeoDOFs> mappingPts{{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
-        e.pointList[4]->coord,
-        e.pointList[5]->coord,
-        e.pointList[6]->coord,
-        e.pointList[7]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
+        e.pts[4]->coord,
+        e.pts[5]->coord,
+        e.pts[6]->coord,
+        e.pts[7]->coord,
     }};
     return mappingPts;
   }
@@ -871,14 +860,14 @@ struct RefHexahedronQ1
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts = {{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
-        e.pointList[4]->coord,
-        e.pointList[5]->coord,
-        e.pointList[6]->coord,
-        e.pointList[7]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
+        e.pts[4]->coord,
+        e.pts[5]->coord,
+        e.pts[6]->coord,
+        e.pts[7]->coord,
     }};
     return dofPts;
   }
@@ -923,38 +912,32 @@ struct RefHexahedronQ2
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     std::array<Vec3, numDOFs> dofPts = {
-        {e.pointList[0]->coord,
-         e.pointList[1]->coord,
-         e.pointList[2]->coord,
-         e.pointList[3]->coord,
-         e.pointList[4]->coord,
-         e.pointList[5]->coord,
-         e.pointList[6]->coord,
-         e.pointList[7]->coord,
-         0.5 * (e.pointList[0]->coord + e.pointList[1]->coord),
-         0.5 * (e.pointList[1]->coord + e.pointList[2]->coord),
-         0.5 * (e.pointList[2]->coord + e.pointList[3]->coord),
-         0.5 * (e.pointList[3]->coord + e.pointList[0]->coord),
-         0.5 * (e.pointList[0]->coord + e.pointList[4]->coord),
-         0.5 * (e.pointList[1]->coord + e.pointList[5]->coord),
-         0.5 * (e.pointList[2]->coord + e.pointList[6]->coord),
-         0.5 * (e.pointList[3]->coord + e.pointList[7]->coord),
-         0.5 * (e.pointList[4]->coord + e.pointList[5]->coord),
-         0.5 * (e.pointList[5]->coord + e.pointList[6]->coord),
-         0.5 * (e.pointList[6]->coord + e.pointList[7]->coord),
-         0.5 * (e.pointList[7]->coord + e.pointList[4]->coord),
-         0.25 * (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[2]->coord +
-                 e.pointList[3]->coord),
-         0.25 * (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[5]->coord +
-                 e.pointList[4]->coord),
-         0.25 * (e.pointList[1]->coord + e.pointList[2]->coord + e.pointList[6]->coord +
-                 e.pointList[5]->coord),
-         0.25 * (e.pointList[2]->coord + e.pointList[3]->coord + e.pointList[7]->coord +
-                 e.pointList[6]->coord),
-         0.25 * (e.pointList[3]->coord + e.pointList[0]->coord + e.pointList[4]->coord +
-                 e.pointList[7]->coord),
-         0.25 * (e.pointList[4]->coord + e.pointList[5]->coord + e.pointList[6]->coord +
-                 e.pointList[7]->coord),
+        {e.pts[0]->coord,
+         e.pts[1]->coord,
+         e.pts[2]->coord,
+         e.pts[3]->coord,
+         e.pts[4]->coord,
+         e.pts[5]->coord,
+         e.pts[6]->coord,
+         e.pts[7]->coord,
+         0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+         0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+         0.5 * (e.pts[2]->coord + e.pts[3]->coord),
+         0.5 * (e.pts[3]->coord + e.pts[0]->coord),
+         0.5 * (e.pts[0]->coord + e.pts[4]->coord),
+         0.5 * (e.pts[1]->coord + e.pts[5]->coord),
+         0.5 * (e.pts[2]->coord + e.pts[6]->coord),
+         0.5 * (e.pts[3]->coord + e.pts[7]->coord),
+         0.5 * (e.pts[4]->coord + e.pts[5]->coord),
+         0.5 * (e.pts[5]->coord + e.pts[6]->coord),
+         0.5 * (e.pts[6]->coord + e.pts[7]->coord),
+         0.5 * (e.pts[7]->coord + e.pts[4]->coord),
+         0.25 * (e.pts[0]->coord + e.pts[1]->coord + e.pts[2]->coord + e.pts[3]->coord),
+         0.25 * (e.pts[0]->coord + e.pts[1]->coord + e.pts[5]->coord + e.pts[4]->coord),
+         0.25 * (e.pts[1]->coord + e.pts[2]->coord + e.pts[6]->coord + e.pts[5]->coord),
+         0.25 * (e.pts[2]->coord + e.pts[3]->coord + e.pts[7]->coord + e.pts[6]->coord),
+         0.25 * (e.pts[3]->coord + e.pts[0]->coord + e.pts[4]->coord + e.pts[7]->coord),
+         0.25 * (e.pts[4]->coord + e.pts[5]->coord + e.pts[6]->coord + e.pts[7]->coord),
          e.midpoint()}};
     return dofPts;
   }
@@ -994,32 +977,26 @@ struct RefHexahedronRT0
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
   {
     return std::array<Vec3, numDOFs>{
-        0.25 * (e.pointList[0]->coord + e.pointList[3]->coord + e.pointList[2]->coord +
-                e.pointList[1]->coord),
-        0.25 * (e.pointList[0]->coord + e.pointList[1]->coord + e.pointList[5]->coord +
-                e.pointList[4]->coord),
-        0.25 * (e.pointList[1]->coord + e.pointList[2]->coord + e.pointList[6]->coord +
-                e.pointList[5]->coord),
-        0.25 * (e.pointList[2]->coord + e.pointList[3]->coord + e.pointList[7]->coord +
-                e.pointList[6]->coord),
-        0.25 * (e.pointList[3]->coord + e.pointList[0]->coord + e.pointList[4]->coord +
-                e.pointList[7]->coord),
-        0.25 * (e.pointList[4]->coord + e.pointList[5]->coord + e.pointList[6]->coord +
-                e.pointList[7]->coord),
+        0.25 * (e.pts[0]->coord + e.pts[3]->coord + e.pts[2]->coord + e.pts[1]->coord),
+        0.25 * (e.pts[0]->coord + e.pts[1]->coord + e.pts[5]->coord + e.pts[4]->coord),
+        0.25 * (e.pts[1]->coord + e.pts[2]->coord + e.pts[6]->coord + e.pts[5]->coord),
+        0.25 * (e.pts[2]->coord + e.pts[3]->coord + e.pts[7]->coord + e.pts[6]->coord),
+        0.25 * (e.pts[3]->coord + e.pts[0]->coord + e.pts[4]->coord + e.pts[7]->coord),
+        0.25 * (e.pts[4]->coord + e.pts[5]->coord + e.pts[6]->coord + e.pts[7]->coord),
     };
   }
 
   static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
   {
     return std::array<Vec3, numGeoDOFs>{
-        e.pointList[0]->coord,
-        e.pointList[1]->coord,
-        e.pointList[2]->coord,
-        e.pointList[3]->coord,
-        e.pointList[4]->coord,
-        e.pointList[5]->coord,
-        e.pointList[6]->coord,
-        e.pointList[7]->coord,
+        e.pts[0]->coord,
+        e.pts[1]->coord,
+        e.pts[2]->coord,
+        e.pts[3]->coord,
+        e.pts[4]->coord,
+        e.pts[5]->coord,
+        e.pts[6]->coord,
+        e.pts[7]->coord,
     };
   }
 

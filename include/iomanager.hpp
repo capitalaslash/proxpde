@@ -385,7 +385,7 @@ protected:
     {
       for (uint p = 0; p < Facet_T::numPts; ++p)
       {
-        conn(f.id, p) = f.pointList[p]->id;
+        conn(f.id, p) = f.pts[p]->id;
       }
     }
     h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity_bd");

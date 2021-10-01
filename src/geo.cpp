@@ -12,7 +12,7 @@ std::ostream & operator<<(std::ostream & out, Point const & p)
 std::ostream & operator<<(std::ostream & out, GeoElem const & e)
 {
   out << "pts: ";
-  for (auto & p: e.pointList)
+  for (auto & p: e.pts)
   {
     out << p->id << " ";
   }
@@ -111,3 +111,22 @@ std::array<FMat<4, 4>, 4> const Quad::embeddingMatrix = std::array<FMat<4, 4>, 4
                      0.0,  0.0,  0.0,  1.0).finished(),  // 3                     
 }};
 // clang-format on
+
+// -------------------------------------------------------------------------------------
+bool geoEqual(GeoElem const & e1, GeoElem const & e2)
+{
+  assert(e1.pts.size() == e2.pts.size());
+  std::vector<id_T> ids1(e1.pts.size()), ids2(e2.pts.size());
+  uint counter = 0;
+  std::for_each(
+      e1.pts.begin(),
+      e1.pts.end(),
+      [&ids1, &counter](Point const * p) { ids1[counter++] = p->id; });
+  counter = 0;
+  std::for_each(
+      e2.pts.begin(),
+      e2.pts.end(),
+      [&ids2, &counter](Point const * p) { ids2[counter++] = p->id; });
+
+  return std::is_permutation(ids1.begin(), ids1.end(), ids2.begin());
+}

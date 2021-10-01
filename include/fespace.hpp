@@ -243,9 +243,9 @@ void integrateAnalyticFunction(
 
     // avoid costly integration when 0 or 1
     FVec<FESpace::dim> sum = FVec<FESpace::dim>::Zero();
-    for (uint i = 0; i < FESpace::Mesh_T::Elem_T::numPts; ++i)
+    for (auto const & pt: e.pts)
     {
-      sum += f(e.pointList[i]->coord);
+      sum += f(pt->coord);
     }
     sum /= FESpace::Mesh_T::Elem_T::numPts;
 

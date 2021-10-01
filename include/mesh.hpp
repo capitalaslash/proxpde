@@ -33,7 +33,7 @@ public:
     {
       std::array<id_T, Elem::numPts> elemConn;
       uint counter = 0;
-      for (auto const & p: e.pointList)
+      for (auto const & p: e.pts)
       {
         elemConn[counter] = p->id;
         counter++;
@@ -342,18 +342,18 @@ void addElemFacetList(Mesh & mesh)
   {
     for (auto & elem: mesh.elementList)
     {
-      elem.facetList.resize(Mesh::Elem_T::numFacets);
+      elem.facets.resize(Mesh::Elem_T::numFacets);
     }
     for (auto & facet: mesh.facetList)
     {
       auto insideElem = facet.facingElem[0].ptr;
       auto const insidePos = facet.facingElem[0].side;
-      insideElem->facetList[insidePos] = &facet;
+      insideElem->facets[insidePos] = &facet;
       auto outsideElem = facet.facingElem[1].ptr;
       if (outsideElem)
       {
         auto const outsidePos = facet.facingElem[1].side;
-        outsideElem->facetList[outsidePos] = &facet;
+        outsideElem->facets[outsidePos] = &facet;
       }
     }
     mesh.flags |= MeshFlags::FACET_PTRS;

@@ -42,16 +42,16 @@ struct ChildElem
 
 struct GeoElem
 {
-  using PointList_T = std::vector<Point *>;
-  using FacetList_T = std::vector<GeoElem *>;
+  using Pts_T = std::vector<Point *>;
+  using Facets_T = std::vector<GeoElem *>;
   GeoElem(std::initializer_list<Point *> const & pList, id_T const i, marker_T const m):
-      pointList{pList},
+      pts{pList},
       id{i},
       marker{m}
   {}
 
-  GeoElem(PointList_T const pList, id_T const i, marker_T const m):
-      pointList{std::move(pList)},
+  GeoElem(Pts_T const pList, id_T const i, marker_T const m):
+      pts{std::move(pList)},
       id{i},
       marker{m}
   {}
@@ -72,7 +72,7 @@ struct GeoElem
   {
     Vec3 min = Vec3::Constant(std::numeric_limits<double>::max());
     Vec3 max = Vec3::Constant(std::numeric_limits<double>::min());
-    for (auto const & p: pointList)
+    for (auto const & p: pts)
     {
       for (uint c = 0; c < 3; ++c)
       {
@@ -92,8 +92,8 @@ struct GeoElem
     return facingElem[1].ptr == nullptr;
   }
 
-  PointList_T pointList = {};
-  FacetList_T facetList = {};
+  Pts_T pts = {};
+  Facets_T facets = {};
   id_T id = idNotSet;
   marker_T marker = markerNotSet;
   ChildElem parent = ChildElem{nullptr, shortNotSet};
@@ -106,6 +106,9 @@ struct GeoElem
 
 inline bool operator<(GeoElem const & e1, GeoElem const & e2) { return e1.id < e2.id; }
 
+// this method checks only to see if the 2 elems are equivalent from the geometric pov,
+// i.e. they have the same point ids (or a permutation of it)
+bool geoEqual(GeoElem const & e1, GeoElem const & e2);
 std::ostream & operator<<(std::ostream & out, GeoElem const & e);
 
 struct NullElem: public GeoElem
@@ -132,7 +135,7 @@ struct PointElem: public GeoElem
       GeoElem{pList, i, m}
   {}
 
-  PointElem(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  PointElem(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -140,9 +143,9 @@ struct PointElem: public GeoElem
 
   ~PointElem() override = default;
 
-  Vec3 midpoint() const final { return pointList[0]->coord; }
+  Vec3 midpoint() const final { return pts[0]->coord; }
 
-  Vec3 origin() const final { return pointList[0]->coord; }
+  Vec3 origin() const final { return pts[0]->coord; }
 
   double volume() const final { return 1.; }
 
@@ -183,7 +186,7 @@ public:
       GeoElem{pList, i, m}
   {}
 
-  Line(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  Line(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -191,28 +194,22 @@ public:
 
   ~Line() override = default;
 
-  Vec3 midpoint() const final
-  {
-    return Vec3(0.5 * (pointList[1]->coord + pointList[0]->coord));
-  }
+  Vec3 midpoint() const final { return Vec3(0.5 * (pts[1]->coord + pts[0]->coord)); }
 
   Vec3 origin() const final { return this->midpoint(); }
 
-  double volume() const final
-  {
-    return (pointList[1]->coord - pointList[0]->coord).norm();
-  }
+  double volume() const final { return (pts[1]->coord - pts[0]->coord).norm(); }
 
   void buildNormal() final
   {
-    Vec3 const length = pointList[1]->coord - pointList[0]->coord;
+    Vec3 const length = pts[1]->coord - pts[0]->coord;
     _normal = Vec3{length[1], -length[0], 0.0};
     _normal.normalize();
   }
 
   Vec3 normal() const final
   {
-    Vec3 const length = pointList[1]->coord - pointList[0]->coord;
+    Vec3 const length = pts[1]->coord - pts[0]->coord;
     auto n = Vec3{length[1], -length[0], 0.0};
     n.normalize();
     return n;
@@ -270,7 +267,7 @@ public:
       GeoElem{pList, i, m}
   {}
 
-  Triangle(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  Triangle(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -280,30 +277,30 @@ public:
 
   Vec3 midpoint() const final
   {
-    return Vec3{(pointList[0]->coord + pointList[1]->coord + pointList[2]->coord) / 3.};
+    return Vec3{(pts[0]->coord + pts[1]->coord + pts[2]->coord) / 3.};
   }
 
-  Vec3 origin() const final { return pointList[0]->coord; }
+  Vec3 origin() const final { return pts[0]->coord; }
 
   double volume() const final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
     return .5 * v1.cross(v2).norm();
   }
 
   void buildNormal() final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
     _normal = v1.cross(v2);
     _normal.normalize();
   }
 
   Vec3 normal() const final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
     auto n = v1.cross(v2);
     n.normalize();
     return n;
@@ -311,9 +308,9 @@ public:
 
   double perimeter() const
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[1]->coord;
-    auto const v3 = pointList[0]->coord - pointList[2]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[1]->coord;
+    auto const v3 = pts[0]->coord - pts[2]->coord;
 
     return v1.norm() + v2.norm() + v3.norm();
   }
@@ -326,9 +323,9 @@ public:
 
   double hMax() const final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[1]->coord;
-    auto const v3 = pointList[0]->coord - pointList[2]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[1]->coord;
+    auto const v3 = pts[0]->coord - pts[2]->coord;
 
     // diameter of the circumscribed circle
     return v1.norm() * v2.norm() * v3.norm() / (v2.cross(v3).norm());
@@ -384,7 +381,7 @@ public:
       GeoElem{pList, i, m}
   {}
 
-  Quad(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  Quad(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -394,26 +391,24 @@ public:
 
   Vec3 midpoint() const final
   {
-    return Vec3{
-        0.25 * (pointList[0]->coord + pointList[1]->coord + pointList[2]->coord +
-                pointList[3]->coord)};
+    return Vec3{0.25 * (pts[0]->coord + pts[1]->coord + pts[2]->coord + pts[3]->coord)};
   }
 
   Vec3 origin() const final { return midpoint(); }
 
   double volume() const final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
-    auto const v3 = pointList[3]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
+    auto const v3 = pts[3]->coord - pts[0]->coord;
     return .5 * (v2.cross(v1).norm() + v2.cross(v3).norm());
   }
 
   void buildNormal() final
   {
     // TODO: we consider only planar quads
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
     _normal = v1.cross(v2);
     _normal.normalize();
   }
@@ -421,8 +416,8 @@ public:
   Vec3 normal() const final
   {
     // TODO: we consider only planar quads
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
     auto n = v1.cross(v2);
     n.normalize();
     return n;
@@ -430,10 +425,10 @@ public:
 
   double perimeter() const
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[1]->coord;
-    auto const v3 = pointList[3]->coord - pointList[2]->coord;
-    auto const v4 = pointList[0]->coord - pointList[3]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[1]->coord;
+    auto const v3 = pts[3]->coord - pts[2]->coord;
+    auto const v4 = pts[0]->coord - pts[3]->coord;
 
     return v1.norm() + v2.norm() + v3.norm() + v4.norm();
   }
@@ -441,18 +436,18 @@ public:
   double hMin() const final
   {
     return 4. * volume() / perimeter();
-    // auto const d1 = pointList[2]->coord - pointList[0]->coord;
-    // auto const d2 = pointList[3]->coord - pointList[1]->coord;
+    // auto const d1 = pts[2]->coord - pts[0]->coord;
+    // auto const d2 = pts[3]->coord - pts[1]->coord;
     // return std::min(d1.norm(), d2.norm());
   }
 
   double hMax() const final
   {
     // this holds only for cyclic quads
-    auto const d1 = pointList[2]->coord - pointList[0]->coord;
-    auto const d2 = pointList[3]->coord - pointList[1]->coord;
-    auto const m1 = 0.5 * (pointList[2]->coord + pointList[0]->coord);
-    auto const m2 = 0.5 * (pointList[3]->coord + pointList[1]->coord);
+    auto const d1 = pts[2]->coord - pts[0]->coord;
+    auto const d2 = pts[3]->coord - pts[1]->coord;
+    auto const m1 = 0.5 * (pts[2]->coord + pts[0]->coord);
+    auto const m2 = 0.5 * (pts[3]->coord + pts[1]->coord);
     auto const x = m1 - m2;
     return std::sqrt(0.5 * (d1.squaredNorm() + d2.squaredNorm() + x.squaredNorm()));
   }
@@ -483,7 +478,7 @@ public:
       GeoElem{pList, i, m}
   {}
 
-  Tetrahedron(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  Tetrahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -493,18 +488,16 @@ public:
 
   Vec3 midpoint() const final
   {
-    return Vec3{
-        .25 * (pointList[0]->coord + pointList[1]->coord + pointList[2]->coord +
-               pointList[3]->coord)};
+    return Vec3{.25 * (pts[0]->coord + pts[1]->coord + pts[2]->coord + pts[3]->coord)};
   }
 
-  Vec3 origin() const final { return pointList[0]->coord; }
+  Vec3 origin() const final { return pts[0]->coord; }
 
   double volume() const final
   {
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[2]->coord - pointList[0]->coord;
-    auto const v3 = pointList[3]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[2]->coord - pts[0]->coord;
+    auto const v3 = pts[3]->coord - pts[0]->coord;
     return std::fabs((v1.cross(v2)).dot(v3)) / 6.;
   }
 
@@ -566,7 +559,7 @@ public:
       GeoElem{pList, i, m}
   {}
 
-  Hexahedron(PointList_T const & pList, id_T const i, marker_T const m = markerNotSet):
+  Hexahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
       GeoElem{pList, i, m}
   {}
 
@@ -577,9 +570,8 @@ public:
   Vec3 midpoint() const final
   {
     return Vec3{
-        .125 * (pointList[0]->coord + pointList[1]->coord + pointList[2]->coord +
-                pointList[3]->coord + pointList[4]->coord + pointList[5]->coord +
-                pointList[6]->coord + pointList[7]->coord)};
+        .125 * (pts[0]->coord + pts[1]->coord + pts[2]->coord + pts[3]->coord +
+                pts[4]->coord + pts[5]->coord + pts[6]->coord + pts[7]->coord)};
   }
 
   Vec3 origin() const final { return this->midpoint(); }
@@ -588,9 +580,9 @@ public:
   {
     // TODO: this is not correct for general hexahedrons, just for parallelepids
     // a better way is to split the hexahedron in tetrahedra and sum their volumes
-    auto const v1 = pointList[1]->coord - pointList[0]->coord;
-    auto const v2 = pointList[3]->coord - pointList[0]->coord;
-    auto const v3 = pointList[4]->coord - pointList[0]->coord;
+    auto const v1 = pts[1]->coord - pts[0]->coord;
+    auto const v2 = pts[3]->coord - pts[0]->coord;
+    auto const v3 = pts[4]->coord - pts[0]->coord;
     return std::fabs((v1.cross(v2)).dot(v3));
   }
 
@@ -610,26 +602,6 @@ public:
     return 0;
   }
 };
-
-// this method checks only to see if the 2 elems are equivalent from the geometric pov,
-// i.e. they have the same point ids (or a permutation of it)
-template <typename Elem>
-bool geoEqual(Elem const & e1, Elem const & e2)
-{
-  std::array<id_T, Elem::numPts> ids1, ids2;
-  uint counter = 0;
-  std::for_each(
-      e1.pointList.begin(),
-      e1.pointList.end(),
-      [&ids1, &counter](Point const * p) { ids1[counter++] = p->id; });
-  counter = 0;
-  std::for_each(
-      e2.pointList.begin(),
-      e2.pointList.end(),
-      [&ids2, &counter](Point const * p) { ids2[counter++] = p->id; });
-
-  return std::is_permutation(ids1.begin(), ids1.end(), ids2.begin());
-}
 
 // rotation matrix from axis and angle
 // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
@@ -680,16 +652,16 @@ bool inside(Elem const & e, Vec3 const & pt)
 {
   if constexpr (std::is_same_v<Elem, Line>)
   {
-    Vec3 const & p0 = e.pointList[0]->coord;
-    Vec3 const & p1 = e.pointList[1]->coord;
+    Vec3 const & p0 = e.pts[0]->coord;
+    Vec3 const & p1 = e.pts[1]->coord;
     if (pt[0] >= p0[0] && pt[0] <= p1[0])
       return true;
   }
   else if constexpr (std::is_same_v<Elem, Triangle>)
   {
-    Vec3 const & p0 = e.pointList[0]->coord;
-    Vec3 const & p1 = e.pointList[1]->coord;
-    Vec3 const & p2 = e.pointList[2]->coord;
+    Vec3 const & p0 = e.pts[0]->coord;
+    Vec3 const & p1 = e.pts[1]->coord;
+    Vec3 const & p2 = e.pts[2]->coord;
     // check that the point is on the same side of each edge wrt to the third point
     if (sameSide2d(pt, p0, {p1, p2}) && sameSide2d(pt, p1, {p2, p0}) &&
         sameSide2d(pt, p2, {p0, p1}))
@@ -699,28 +671,28 @@ bool inside(Elem const & e, Vec3 const & pt)
   {
     // this approach requires 3 + 0.5 * 3 checks asymptotically
     // // split in two triangles and check for them
-    // if (inside(Triangle{{e.pointList[0], e.pointList[1], e.pointList[2]}, idNotSet},
+    // if (inside(Triangle{{e.pts[0], e.pts[1], e.pts[2]}, idNotSet},
     // pt))
     //   return true;
-    // else if (inside(Triangle{{e.pointList[2], e.pointList[3], e.pointList[0]},
+    // else if (inside(Triangle{{e.pts[2], e.pts[3], e.pts[0]},
     // idNotSet}, pt))
     //   return true;
 
     // this approach always requires 4 checks
-    Vec3 const & p0 = e.pointList[0]->coord;
-    Vec3 const & p1 = e.pointList[1]->coord;
-    Vec3 const & p2 = e.pointList[2]->coord;
-    Vec3 const & p3 = e.pointList[3]->coord;
+    Vec3 const & p0 = e.pts[0]->coord;
+    Vec3 const & p1 = e.pts[1]->coord;
+    Vec3 const & p2 = e.pts[2]->coord;
+    Vec3 const & p3 = e.pts[3]->coord;
     if (sameSide2d(pt, p0, {p2, p3}) && sameSide2d(pt, p2, {p0, p1}) &&
         sameSide2d(pt, p3, {p1, p2}) && sameSide2d(pt, p1, {p3, p0}))
       return true;
   }
   else if constexpr (std::is_same_v<Elem, Tetrahedron>)
   {
-    Vec3 const & p0 = e.pointList[0]->coord;
-    Vec3 const & p1 = e.pointList[1]->coord;
-    Vec3 const & p2 = e.pointList[2]->coord;
-    Vec3 const & p3 = e.pointList[3]->coord;
+    Vec3 const & p0 = e.pts[0]->coord;
+    Vec3 const & p1 = e.pts[1]->coord;
+    Vec3 const & p2 = e.pts[2]->coord;
+    Vec3 const & p3 = e.pts[3]->coord;
     // check that the point is on the same side of each face wrt to the forth point
     if (sameSide3d(pt, p3, {p0, p1, p2}) && sameSide3d(pt, p0, {p1, p2, p3}) &&
         sameSide3d(pt, p1, {p2, p3, p0}) && sameSide3d(pt, p2, {p3, p0, p1}))
@@ -736,48 +708,32 @@ bool inside(Elem const & e, Vec3 const & pt)
     // asymptotic cost:
     //   (largest tet first)
     //   4 * (1 + 2/3 * 1/6 + 1/2 * 1/6 + 1/3 * 1/6 + 1/6 * 1/6) = 4 * 23 / 18 = 5.11111
-    if (inside(
-            Tetrahedron{
-                {e.pointList[0], e.pointList[2], e.pointList[5], e.pointList[7]},
-                idNotSet},
-            pt))
+    if (inside(Tetrahedron{{e.pts[0], e.pts[2], e.pts[5], e.pts[7]}, idNotSet}, pt))
       return true;
     else if (inside(
-                 Tetrahedron{
-                     {e.pointList[1], e.pointList[2], e.pointList[0], e.pointList[5]},
-                     idNotSet},
-                 pt))
+                 Tetrahedron{{e.pts[1], e.pts[2], e.pts[0], e.pts[5]}, idNotSet}, pt))
       return true;
     else if (inside(
-                 Tetrahedron{
-                     {e.pointList[3], e.pointList[0], e.pointList[2], e.pointList[7]},
-                     idNotSet},
-                 pt))
+                 Tetrahedron{{e.pts[3], e.pts[0], e.pts[2], e.pts[7]}, idNotSet}, pt))
       return true;
     else if (inside(
-                 Tetrahedron{
-                     {e.pointList[4], e.pointList[5], e.pointList[7], e.pointList[0]},
-                     idNotSet},
-                 pt))
+                 Tetrahedron{{e.pts[4], e.pts[5], e.pts[7], e.pts[0]}, idNotSet}, pt))
       return true;
     else if (inside(
-                 Tetrahedron{
-                     {e.pointList[6], e.pointList[7], e.pointList[5], e.pointList[2]},
-                     idNotSet},
-                 pt))
+                 Tetrahedron{{e.pts[6], e.pts[7], e.pts[5], e.pts[2]}, idNotSet}, pt))
       return true;
 
     // // minimum cost: 6 checks (1 per face)
     // // split each face in 2: 12 checks
     // // split each face in 8: 48 checks
-    // Vec3 const & p0 = e.pointList[0]->coord;
-    // Vec3 const & p1 = e.pointList[1]->coord;
-    // Vec3 const & p2 = e.pointList[2]->coord;
-    // Vec3 const & p3 = e.pointList[3]->coord;
-    // Vec3 const & p4 = e.pointList[0]->coord;
-    // Vec3 const & p5 = e.pointList[1]->coord;
-    // Vec3 const & p6 = e.pointList[2]->coord;
-    // Vec3 const & p7 = e.pointList[3]->coord;
+    // Vec3 const & p0 = e.pts[0]->coord;
+    // Vec3 const & p1 = e.pts[1]->coord;
+    // Vec3 const & p2 = e.pts[2]->coord;
+    // Vec3 const & p3 = e.pts[3]->coord;
+    // Vec3 const & p4 = e.pts[0]->coord;
+    // Vec3 const & p5 = e.pts[1]->coord;
+    // Vec3 const & p6 = e.pts[2]->coord;
+    // Vec3 const & p7 = e.pts[3]->coord;
     // if (sameSide3d(pt, p0, {p1, p2, p5}) &&
     //     sameSide3d(pt, p1, {p0, p3, p4}) &&
     //     sameSide3d(pt, p0, {p2, p3, p7}) &&

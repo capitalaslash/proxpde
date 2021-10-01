@@ -108,7 +108,7 @@ int main()
   }
   for (auto const & e: mesh->elementList)
   {
-    for (auto const & p: e.pointList)
+    for (auto const & p: e.pts)
     {
       dualCellList[p->id].elemNeighbors.push_back(&e);
     }
@@ -116,8 +116,8 @@ int main()
   // TODO: should be using edges (both in 2d and 3d)
   for (auto const & f: mesh->facetList)
   {
-    dualCellList[f.pointList[0]->id].edgeNeighbors.push_back(&f);
-    dualCellList[f.pointList[1]->id].edgeNeighbors.push_back(&f);
+    dualCellList[f.pts[0]->id].edgeNeighbors.push_back(&f);
+    dualCellList[f.pts[1]->id].edgeNeighbors.push_back(&f);
   }
 
   Var dualVolumes("dual_volumes", mesh->pointList.size());

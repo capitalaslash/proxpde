@@ -495,8 +495,7 @@ void computeElemWSS(
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();
-      Vec3 const tangent =
-          (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      Vec3 const tangent = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
       auto elem = facet.facingElem[0].ptr;
       auto const id = feSpaceWSS.dof.getId(elem->id);
       velFE.reinit(*elem);
@@ -548,8 +547,7 @@ void computeFEWSS(
     {
       // std::cout << "facet " << facet.id << std::endl;
       Vec3 const normal = facet.normal();
-      Vec3 const tangent =
-          (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+      Vec3 const tangent = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
       facetCurFEVel.reinit(facet);
       auto elem = facet.facingElem[0].ptr;
       auto const side = facet.facingElem[0].side;

@@ -113,10 +113,10 @@ struct CurFE
           double detJInv = 1. / detJ[q];
           phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
           divphi[q] = detJInv * divphiRef[q];
-          // adjust signs based on normal going from lower id to greater id
+          // adjust signs based on normal going from lower to higher id
           for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
           {
-            if (elem->facetList[f]->facingElem[0].ptr->id != elem->id)
+            if (elem->facets[f]->facingElem[0].ptr->id != elem->id)
             {
               phiVect[q].row(f) *= -1.;
               divphi[q](f) *= -1.;

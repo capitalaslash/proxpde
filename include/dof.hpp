@@ -70,7 +70,7 @@ struct DOF
       // dofs on points
       if constexpr (RefFE::dofPlace[3])
       {
-        for (auto & p: e.pointList)
+        for (auto & p: e.pts)
         {
           // check if dofs have already been assigned to this point
           // TODO: the DISCONTINUOUS check can be static
@@ -118,7 +118,7 @@ struct DOF
           // edges can always be identified by 2 points
           for (uint j = 0; j < 2; j++)
           {
-            edgeIDs.insert(e.pointList[Mesh::Elem_T::elemToEdge[i][j]]->id);
+            edgeIDs.insert(e.pts[Mesh::Elem_T::elemToEdge[i][j]]->id);
           }
 
           // check if dofs have already been assigned to this edge
@@ -165,7 +165,7 @@ struct DOF
           faceIdList_T faceIDs;
           for (uint j = 0; j < Mesh::Elem_T::Face_T::numPts; j++)
           {
-            faceIDs.insert(e.pointList[Mesh::Elem_T::elemToFace[i][j]]->id);
+            faceIDs.insert(e.pts[Mesh::Elem_T::elemToFace[i][j]]->id);
           }
 
           // check if dofs have already been assigned to this face
@@ -280,7 +280,7 @@ struct DOF
         static_assert(RefFE::geoPlace[3] == 1);
         {
           uint localMapCount = 0;
-          for (auto & p: e.pointList)
+          for (auto & p: e.pts)
           {
             // check if dofs have already been assigned to this point
             if (geoPtMap[p->id] == dofIdNotSet)

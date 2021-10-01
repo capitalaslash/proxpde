@@ -167,7 +167,7 @@ void interpolateOnFacets(
   FEVar inFacet{feSpaceFacet};
   inFacet.data = in;
 
-  for (auto & facet: feSpaceOut.mesh.elementList)
+  for (auto const & facet: feSpaceOut.mesh.elementList)
   {
     if (markers == std::unordered_set<marker_T>({marker_T(-1)}) ||
         (markers.contains(facet.marker)))
@@ -192,7 +192,7 @@ void interpolateOnFacets(
       {
         // TODO: make the tangent a class method and extend to 3d
         static_assert(FESpaceIn::Mesh_T::Elem_T::dim == 2);
-        comp = (facet.pointList[1]->coord - facet.pointList[0]->coord).normalized();
+        comp = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
       }
 
       for (uint q = 0; q < QRFacet_T::numPts; ++q)

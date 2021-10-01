@@ -356,20 +356,20 @@ void buildCircleMesh(
   buildFacets(mesh);
   for (auto & f: mesh.facetList)
   {
-    if (std::fabs(f.pointList[0]->coord[1] - origin[1]) < 1e-6 * radius &&
-        std::fabs(f.pointList[1]->coord[1] - origin[1]) < 1e-6 * radius)
+    if (std::fabs(f.pts[0]->coord[1] - origin[1]) < 1e-6 * radius &&
+        std::fabs(f.pts[1]->coord[1] - origin[1]) < 1e-6 * radius)
     {
       f.marker = side::TOP;
     }
     else if (
-        std::fabs(f.pointList[0]->coord[0] - origin[0]) < 1e-6 * radius &&
-        std::fabs(f.pointList[1]->coord[0] - origin[0]) < 1e-6 * radius)
+        std::fabs(f.pts[0]->coord[0] - origin[0]) < 1e-6 * radius &&
+        std::fabs(f.pts[1]->coord[0] - origin[0]) < 1e-6 * radius)
     {
       f.marker = side::LEFT;
     }
     else if (
-        std::fabs((f.pointList[0]->coord - origin).norm() - radius) < 1e-6 * radius &&
-        std::fabs((f.pointList[1]->coord - origin).norm() - radius) < 1e-6 * radius)
+        std::fabs((f.pts[0]->coord - origin).norm() - radius) < 1e-6 * radius &&
+        std::fabs((f.pts[1]->coord - origin).norm() - radius) < 1e-6 * radius)
     {
       f.marker = side::CIRCLE;
     }
@@ -667,7 +667,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
     if (facet.onBoundary())
     {
       facet.marker = 1;
-      for (auto point: facet.pointList)
+      for (auto point: facet.pts)
       {
         point->marker = 1;
       }

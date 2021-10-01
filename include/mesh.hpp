@@ -91,25 +91,50 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
 {
   using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Mesh::Facet_T;
-  std::map<std::set<id_T>, Facet_T> facetMap;
+  // facets are identified by the ordered set of their point ids
+  using FacetMapKey_T = std::set<id_T>;
+  using FacetMap_T = std::map<FacetMapKey_T, Facet_T>;
+
+  // store facets already present in the mesh
+  FacetMap_T oldFacetMap;
+  for (auto const & facet: mesh.facetList)
+  {
+    FacetMapKey_T facetIds;
+    for (short_T p = 0; p < Mesh::Facet_T::numPts; ++p)
+    {
+      facetIds.insert(facet.pts[p]->id);
+    }
+    oldFacetMap.insert(std::pair{facetIds, facet});
+  }
 
   uint facetCount = 0;
   uint iFacetCount = 0;
+  uint oldFacetCount = 0;
+  FacetMap_T facetMap;
   for (auto & e: mesh.elementList)
   {
     uint side = 0;
-    for (auto const & row: Elem_T::elemToFacet)
+    for (auto const & f: Elem_T::elemToFacet)
     {
       std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
-      std::set<id_T> facetIds;
-      uint i = 0;
-      for (auto const & clm: row)
+      FacetMapKey_T facetIds;
+      for (short_T p = 0; p < Mesh::Facet_T::numPts; ++p)
       {
-        facetPts[i] = e.pointList[clm];
-        facetIds.insert(e.pointList[clm]->id);
-        i++;
+        facetPts[p] = e.pts[f[p]];
+        facetIds.insert(e.pts[f[p]]->id);
       }
-      Facet_T facet{facetPts, facetCount};
+      Facet_T facet;
+      // check if this facet was already present, create it otherwise
+      if (auto it = oldFacetMap.find(facetIds); it != oldFacetMap.end())
+      {
+        facet = it->second;
+        oldFacetCount++;
+      }
+      else
+      {
+        facet.pts = facetPts;
+        facet.id = facetCount;
+      }
       auto && [it, inserted] = facetMap.insert(std::pair(facetIds, facet));
       if (inserted)
       {
@@ -128,6 +153,11 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
       side++;
     }
   }
+  uint oldBd = std::count_if(
+      mesh.facetList.begin(),
+      mesh.facetList.end(),
+      [](Facet_T const & f) { return f.onBoundary(); });
+  assert(oldFacetCount == oldBd + 2 * (mesh.facetList.size() - oldBd));
 
   uint bFacetSize = facetCount - iFacetCount;
   if ((flags & MeshFlags::INTERNAL_FACETS).any())

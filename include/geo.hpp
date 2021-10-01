@@ -32,6 +32,11 @@ struct FacingElem
   explicit operator bool() const { return ptr; }
 };
 
+inline bool operator==(FacingElem const & e1, FacingElem const & e2)
+{
+  return e1.ptr == e2.ptr && e1.side == e2.side;
+}
+
 struct ChildElem
 {
   GeoElem * ptr;
@@ -39,6 +44,11 @@ struct ChildElem
 
   explicit operator bool() const { return ptr; }
 };
+
+inline bool operator==(ChildElem const & e1, ChildElem const & e2)
+{
+  return e1.ptr == e2.ptr && e1.corner == e2.corner;
+}
 
 struct GeoElem
 {
@@ -109,6 +119,61 @@ inline bool operator<(GeoElem const & e1, GeoElem const & e2) { return e1.id < e
 // this method checks only to see if the 2 elems are equivalent from the geometric pov,
 // i.e. they have the same point ids (or a permutation of it)
 bool geoEqual(GeoElem const & e1, GeoElem const & e2);
+
+inline bool operator==(GeoElem const & e1, GeoElem const & e2)
+{
+  if (!geoEqual(e1, e2))
+  {
+    return false;
+  }
+
+  for (short_T f = 0; f < e1.facets.size(); ++f)
+  {
+    if (e1.facets[f] != e2.facets[f])
+    {
+      return false;
+    }
+  }
+
+  if (e1.id != e2.id)
+  {
+    return false;
+  }
+
+  if (e1.marker != e2.marker)
+  {
+    return false;
+  }
+
+  if (e1.parent != e2.parent)
+  {
+    return false;
+  }
+
+  for (short_T c = 0; c < e1.children.size(); ++c)
+  {
+    if (e1.children[c] != e2.children[c])
+    {
+      return false;
+    }
+  }
+
+  for (short_T f = 0; f < 2; ++f)
+  {
+    if (e1.facingElem[f] != e2.facingElem[f])
+    {
+      return false;
+    }
+  }
+
+  if (e1._normal != e2._normal)
+  {
+    return false;
+  }
+
+  return true;
+}
+
 std::ostream & operator<<(std::ostream & out, GeoElem const & e);
 
 struct NullElem: public GeoElem

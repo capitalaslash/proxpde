@@ -1,7 +1,9 @@
 #include "geo.hpp"
 
+// -------------------------------------------------------------------------------------
 GeoElem::~GeoElem() = default;
 
+// -------------------------------------------------------------------------------------
 std::ostream & operator<<(std::ostream & out, Point const & p)
 {
   out << "(" << p[0] << "," << p[1] << "," << p[2] << "), id: " << p.id
@@ -9,6 +11,7 @@ std::ostream & operator<<(std::ostream & out, Point const & p)
   return out;
 }
 
+// -------------------------------------------------------------------------------------
 std::ostream & operator<<(std::ostream & out, GeoElem const & e)
 {
   out << "pts: ";
@@ -47,9 +50,11 @@ std::ostream & operator<<(std::ostream & out, GeoElem const & e)
   return out;
 }
 
-// children indices:
-// 0 - 2 - 1
-//   0   1
+// -------------------------------------------------------------------------------------
+// children dofs:
+// coarse: 0 - 1
+// fine: 0 - 2 - 1
+// child: 0:  0 - 2  1: 2 - 1
 // clang-format off
 std::array<FMat<2, 2>, 2> const Line::embeddingMatrix =
     std::array<FMat<2, 2>, 2>{{
@@ -60,12 +65,19 @@ std::array<FMat<2, 2>, 2> const Line::embeddingMatrix =
     }};
 // clang-format on
 
-// children indices:
-// 2
-// | 2 +
-// 5   -   4
-// | 0 + 3 | 1 +
-// 0   -   3   -   1
+// -------------------------------------------------------------------------------------
+// children dofs:
+// coarse: 2
+//         | +
+//         0 - 1
+// fine: 2
+//       | +
+//       5 - 4
+//       | + | +
+//       0 - 3 - 1
+// child: 0: 5      1: 4      2: 2      3: 5 - 4
+//           | +       | +       | +         + |
+//           0 - 3     3 - 1     5 - 4         3
 // TODO; this MUST be consistent with refinement ordering!!!
 // clang-format off
 std::array<FMat<3, 3>, 4> const Triangle::embeddingMatrix =
@@ -85,12 +97,19 @@ std::array<FMat<3, 3>, 4> const Triangle::embeddingMatrix =
     }};
 // clang-format on
 
-// children indices:
-// 3 - 6 - 2
-// | 3 | 2 |
-// 7 - 8 - 5
-// | 0 | 1 |
-// 0 - 4 - 1
+// -------------------------------------------------------------------------------------
+// children dofs:
+// coarse: 3 - 2
+//         |   |
+//         0 - 1
+// fine: 3 - 6 - 2
+//       |   |   |
+//       7 - 8 - 5
+//       |   |   |
+//       0 - 4 - 1
+// child: 0: 7 - 8  1: 8 - 5  2: 6 - 2  3: 3 - 6
+//           |   |     |   |     |   |     |   |
+//           0 - 4     4 - 1     8 - 5     7 - 8
 // clang-format off
 std::array<FMat<4, 4>, 4> const Quad::embeddingMatrix = std::array<FMat<4, 4>, 4>{{
     (FMat<4, 4>{} << 1.0,  0.0,  0.0,  0.0,              // 0

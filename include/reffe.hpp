@@ -13,6 +13,7 @@ uint constexpr numDOFs()
          RefElem::GeoElem_T::numPts * RefElem::dofPlace[3];
 }
 
+// Point ===============================================================================
 struct RefPointP1
 {
   using GeoElem_T = PointElem;
@@ -169,6 +170,7 @@ struct RefLineP2
   }
 };
 
+// Triangle ============================================================================
 struct RefTriangleP0
 {
   using GeoElem_T = Triangle;
@@ -226,7 +228,8 @@ struct RefTriangleP1
   static std::array<twodFun_T, numDOFs> const dphiFun;
   static std::array<twodFun_T, numGeoDOFs> const mapping;
   static short_T constexpr numChildren = 4U;
-  static array2d<short_T, numChildren, numDOFs> constexpr childrenIndices = {
+  // this must be coherent with GeoElem::elemToChild
+  static array2d<short_T, numChildren, numDOFs> constexpr childDOFs = {
       {{{0, 3, 5}}, {{1, 4, 3}}, {{2, 5, 4}}, {{3, 4, 5}}}};
   static std::array<FMat<numDOFs, numDOFs>, numChildren> const embeddingMatrix;
 
@@ -295,6 +298,52 @@ struct RefTriangleP2
   }
 };
 
+struct RefTriangleRT0
+{
+  using GeoElem_T = Triangle;
+  using FacetFE_T = RefLineP0;
+  static GeoElem_T const geoElem;
+  static int constexpr dim = 2;
+  static uint constexpr numDOFs = 3U;
+  static uint constexpr numGeoDOFs = 3U;
+  static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
+  static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
+  static uint constexpr dofPerFacet = 1U;
+  static array2d<uint, 3, 1> constexpr dofOnFacet = {{{{0}}, {{1}}, {{2}}}};
+  static Vec2 const refMidpoint;
+  using Vec_T = FVec<dim>;
+
+  static std::array<twodFun_T, numDOFs> const phiVectFun;
+  static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
+  static std::array<twodFun_T, numGeoDOFs> const mapping;
+  static short_T constexpr numChildren = 4U;
+  // this must be coherent with GeoElem::elemToChild
+  static array2d<short_T, numChildren, numDOFs> constexpr childDOFs = {
+      {{{0, 8, 5}}, {{2, 6, 1}}, {{4, 7, 3}}, {{6, 7, 8}}}};
+  static std::array<FMat<numDOFs, numDOFs>, numChildren> const embeddingMatrix;
+  static double constexpr volume = 0.5L;
+
+  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
+  {
+    return std::array<Vec3, numDOFs>{
+        0.5 * (e.pts[0]->coord + e.pts[1]->coord),
+        0.5 * (e.pts[1]->coord + e.pts[2]->coord),
+        0.5 * (e.pts[2]->coord + e.pts[0]->coord)};
+  }
+
+  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
+  {
+    std::array<Vec3, numGeoDOFs> mappingPts{
+        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
+    return mappingPts;
+  }
+
+  static bool inside(Vec_T const & p)
+  {
+    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
+  }
+};
+
 struct RefTriangleCR1
 {
   using GeoElem_T = Triangle;
@@ -336,47 +385,7 @@ struct RefTriangleCR1
   }
 };
 
-struct RefTriangleRT0
-{
-  using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP0;
-  static GeoElem_T const geoElem;
-  static int constexpr dim = 2;
-  static uint constexpr numDOFs = 3U;
-  static uint constexpr numGeoDOFs = 3U;
-  static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 0}};
-  static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
-  static uint constexpr dofPerFacet = 1U;
-  static array2d<uint, 3, 1> constexpr dofOnFacet = {{{{0}}, {{1}}, {{2}}}};
-  static Vec2 const refMidpoint;
-  using Vec_T = FVec<dim>;
-
-  static std::array<twodFun_T, numDOFs> const phiVectFun;
-  static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
-  static std::array<twodFun_T, numGeoDOFs> const mapping;
-  static double constexpr volume = 0.5L;
-
-  static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
-  {
-    return std::array<Vec3, numDOFs>{
-        0.5 * (e.pts[0]->coord + e.pts[1]->coord),
-        0.5 * (e.pts[1]->coord + e.pts[2]->coord),
-        0.5 * (e.pts[2]->coord + e.pts[0]->coord)};
-  }
-
-  static std::array<Vec3, numGeoDOFs> mappingPts(GeoElem const & e)
-  {
-    std::array<Vec3, numGeoDOFs> mappingPts{
-        {e.pts[0]->coord, e.pts[1]->coord, e.pts[2]->coord}};
-    return mappingPts;
-  }
-
-  static bool inside(Vec_T const & p)
-  {
-    return p[0] > 0. - 1.e-16 && p[1] > 0. - 1.e-16 && p[0] + p[1] < 1. + 1.e-16;
-  }
-};
-
+// Quad ================================================================================
 struct RefQuadP0
 {
   using GeoElem_T = Quad;
@@ -575,6 +584,11 @@ struct RefQuadRT0
   static std::array<twodFun_T, numDOFs> const phiVectFun;
   static std::array<scalarTwodFun_T, numDOFs> const divphiFun;
   static std::array<twodFun_T, numGeoDOFs> const mapping;
+  static short_T constexpr numChildren = 4U;
+  // this must be coherent with GeoElem::elemToChild
+  static array2d<short_T, numChildren, numDOFs> constexpr childDOFs = {
+      {{{0, 8, 11, 7}}, {{1, 2, 9, 8}}, {{9, 3, 4, 10}}, {{11, 10, 5, 6}}}};
+  static std::array<FMat<numDOFs, numDOFs>, numChildren> const embeddingMatrix;
   static double constexpr volume = 4.L;
 
   static std::array<Vec3, numDOFs> dofPts(GeoElem const & e)
@@ -604,6 +618,7 @@ struct RefQuadRT0
   }
 };
 
+// Tetrahedron =========================================================================
 struct RefTetrahedronP0
 {
   using GeoElem_T = Tetrahedron;
@@ -783,6 +798,7 @@ struct RefTetrahedronRT0
   }
 };
 
+// Hexahedron ==========================================================================
 struct RefHexahedronP0
 {
   using GeoElem_T = Hexahedron;
@@ -1007,7 +1023,7 @@ struct RefHexahedronRT0
   }
 };
 
-// ----------------------------------------------------------------------------
+// =====================================================================================
 template <typename RefFE>
 struct Order
 {
@@ -1432,3 +1448,32 @@ struct EnableSecondDeriv<RefLineP2>
 
 template <typename RefFE>
 inline bool static constexpr enableSecondDeriv_v = EnableSecondDeriv<RefFE>::value;
+
+// -------------------------------------------------------------------------------------
+template <typename RefFE>
+struct RefFEtoString
+{};
+
+template <>
+struct RefFEtoString<RefTriangleP1>
+{
+  static constexpr char const name[] = "triP1";
+};
+
+template <>
+struct RefFEtoString<RefTriangleRT0>
+{
+  static constexpr char const name[] = "triRT0";
+};
+
+template <>
+struct RefFEtoString<RefQuadQ1>
+{
+  static constexpr char const name[] = "quadQ1";
+};
+
+template <>
+struct RefFEtoString<RefQuadRT0>
+{
+  static constexpr char const name[] = "quadRT0";
+};

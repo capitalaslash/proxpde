@@ -153,7 +153,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
       side++;
     }
   }
-  uint oldBd = std::count_if(
+  uint const oldBd = std::count_if(
       mesh.facetList.begin(),
       mesh.facetList.end(),
       [](Facet_T const & f) { return f.onBoundary(); });

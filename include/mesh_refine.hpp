@@ -172,7 +172,6 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
           }
         }
       }
-      // if (newMesh.flags::INTERNAL_FACETS)
     }
   }
 
@@ -181,4 +180,17 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
   assert(predPts == newMesh.pointList.size());
 
   newMesh.buildConnectivity();
+
+  buildFacets(newMesh, mesh.flags);
+
+  if ((mesh.flags & MeshFlags::NORMALS).any())
+  {
+    buildNormals(newMesh);
+  }
+  if ((mesh.flags & MeshFlags::FACET_PTRS).any())
+  {
+    addElemFacetList(newMesh);
+  }
+
+  newMesh.flags = mesh.flags;
 }

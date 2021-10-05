@@ -102,12 +102,18 @@ std::array<twodFun_T, RefTriangleP1::numDOFs> const RefTriangleP1::dphiFun = {
 std::array<twodFun_T, RefTriangleP1::numGeoDOFs> const RefTriangleP1::mapping =
     RefTriangleP1::dphiFun;
 
-// children indices:
-// 2
-// | 2 +
-// 5   -   4
-// | 0 + 3 | 1 +
-// 0   -   3   -   1
+// children dofs:
+// coarse: 2
+//         | +
+//         0 - 1
+// fine: 2
+//       | +
+//       5 - 4
+//       | + | +
+//       0 - 3 - 1
+// child: 0: 5      1: 4      2: 2      3: 5 - 4
+//           | +       | +       | +         + |
+//           0 - 3     3 - 1     5 - 4         3
 // TODO; this MUST be consistent with refinement ordering!!!
 // clang-format off
 std::array<FMat<3, 3>, 4> const RefTriangleP1::embeddingMatrix =
@@ -126,6 +132,19 @@ std::array<FMat<3, 3>, 4> const RefTriangleP1::embeddingMatrix =
                      0.5, 0.0, 0.5).finished(), // 5
 }};
 // clang-format on
+
+// ----------------------------------------------------------------------------
+Vec2 const RefTriangleP0::refMidpoint = Vec2{1. / 3, 1. / 3};
+
+std::array<scalarTwodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::phiFun = {
+    {[](Vec_T const &) { return 1.; }}};
+
+std::array<twodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::dphiFun = {
+    {[](Vec_T const &) { return Vec_T::Constant(0.); }}};
+
+// linear mapping - requires RefTriangleP1::mapping to be implemented
+std::array<twodFun_T, RefTriangleP0::numGeoDOFs> const RefTriangleP0::mapping =
+    RefTriangleP1::mapping;
 
 // ----------------------------------------------------------------------------
 Vec2 const RefTriangleP2::refMidpoint = Vec2{1. / 3, 1. / 3};
@@ -154,35 +173,6 @@ std::array<twodFun_T, RefTriangleP2::numGeoDOFs> const RefTriangleP2::mapping =
     RefTriangleP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleCR1::refMidpoint = Vec2{1. / 3, 1. / 3};
-
-std::array<scalarTwodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::phiFun = {
-    {[](Vec_T const & p) { return 2. * p(0) + 2. * p(1) - 1.; },
-     [](Vec_T const & p) { return 1. - 2. * p(1); },
-     [](Vec_T const & p) { return 1. - 2. * p(0); }}};
-
-std::array<twodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::dphiFun = {
-    {[](Vec_T const &) { return Vec_T(2.L, 2.L); },
-     [](Vec_T const &) { return Vec_T(0.L, -2.L); },
-     [](Vec_T const &) { return Vec_T(-2.L, 0.L); }}};
-
-std::array<twodFun_T, RefTriangleCR1::numGeoDOFs> const RefTriangleCR1::mapping =
-    RefTriangleP1::dphiFun;
-
-// ----------------------------------------------------------------------------
-Vec2 const RefTriangleP0::refMidpoint = Vec2{1. / 3, 1. / 3};
-
-std::array<scalarTwodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::phiFun = {
-    {[](Vec_T const &) { return 1.; }}};
-
-std::array<twodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::dphiFun = {
-    {[](Vec_T const &) { return Vec_T::Constant(0.); }}};
-
-// linear mapping
-std::array<twodFun_T, RefTriangleP0::numGeoDOFs> const RefTriangleP0::mapping =
-    RefTriangleP1::mapping;
-
-// ----------------------------------------------------------------------------
 Vec2 const RefTriangleRT0::refMidpoint = Vec2{1. / 3, 1. / 3};
 
 std::array<twodFun_T, RefTriangleRT0::numDOFs> const RefTriangleRT0::phiVectFun = {{
@@ -198,9 +188,56 @@ std::array<scalarTwodFun_T, RefTriangleRT0::numDOFs> const RefTriangleRT0::divph
         [](Vec_T const &) { return 2.; },
     }};
 
+// children dofs:
+// coarse: .
+//         2 1
+//         . 0 .
+// fine: .
+//       4 3
+//       . 7 .
+//       5 8 6 2
+//       . 0 . 1 .
+// child: 0: .      1: .      2: .      3:  .-7 .
+//           5 8       6 2       4 3         -8 -6
+//           . 0 .     . 1 .     . 7 .          .
+// TODO; this MUST be consistent with refinement ordering!!!
+// clang-format off
+std::array<FMat<3, 3>, 4> const RefTriangleRT0::embeddingMatrix =
+    std::array<FMat<3, 3>, 4>{{
+        (FMat<3, 3>{} <<  0.5,  0.0,  0.0,             // 0
+                          0.0,  0.5,  0.0,             // 8
+                          0.0,  0.0,  0.5).finished(), // 5
+        (FMat<3, 3>{} <<  0.0,  0.5,  0.0,             // 2
+                          0.0,  0.0,  0.5,             // 6
+                          0.5,  0.0,  0.0).finished(), // 1
+        (FMat<3, 3>{} <<  0.0,  0.0,  0.5,             // 4
+                          0.5,  0.0,  0.0,             // 7
+                          0.0,  0.5,  0.0).finished(), // 3
+        (FMat<3, 3>{} <<  0.0,  0.0, -0.5,             // -6
+                         -0.5,  0.0,  0.0,             // -7
+                          0.0, -0.5,  0.0).finished(), // -8
+    }};
+// clang-format on
+
 // linear mapping
 std::array<twodFun_T, RefTriangleRT0::numGeoDOFs> const RefTriangleRT0::mapping =
     RefTriangleP1::mapping;
+
+// ----------------------------------------------------------------------------
+Vec2 const RefTriangleCR1::refMidpoint = Vec2{1. / 3, 1. / 3};
+
+std::array<scalarTwodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::phiFun = {
+    {[](Vec_T const & p) { return 2. * p(0) + 2. * p(1) - 1.; },
+     [](Vec_T const & p) { return 1. - 2. * p(1); },
+     [](Vec_T const & p) { return 1. - 2. * p(0); }}};
+
+std::array<twodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::dphiFun = {
+    {[](Vec_T const &) { return Vec_T(2.L, 2.L); },
+     [](Vec_T const &) { return Vec_T(0.L, -2.L); },
+     [](Vec_T const &) { return Vec_T(-2.L, 0.L); }}};
+
+std::array<twodFun_T, RefTriangleCR1::numGeoDOFs> const RefTriangleCR1::mapping =
+    RefTriangleP1::dphiFun;
 
 // ----------------------------------------------------------------------------
 using feFun_T = std::function<double(double const)>;
@@ -238,12 +275,18 @@ std::array<twodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::dphiFun = {
 std::array<twodFun_T, RefQuadQ1::numGeoDOFs> const RefQuadQ1::mapping =
     RefQuadQ1::dphiFun;
 
-// children indices:
-// 3 - 6 - 2
-// | 3 | 2 |
-// 7 - 8 - 5
-// | 0 | 1 |
-// 0 - 4 - 1
+// children dofs:
+// coarse: 3 - 2
+//         |   |
+//         0 - 1
+// fine: 3 - 6 - 2
+//       |   |   |
+//       7 - 8 - 5
+//       |   |   |
+//       0 - 4 - 1
+// child: 0: 7 - 8  1: 8 - 5  2: 6 - 2  3: 3 - 6
+//           |   |     |   |     |   |     |   |
+//           0 - 4     4 - 1     8 - 5     7 - 8
 // clang-format off
 std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 4>, 4>{{
     (FMat<4, 4>{} << 1.0,  0.0,  0.0,  0.0,              // 0
@@ -408,6 +451,41 @@ std::array<scalarTwodFun_T, RefQuadRT0::numDOFs> const RefQuadRT0::divphiFun = {
     [](Vec_T const &) { return 0.25; },
     [](Vec_T const &) { return 0.25; },
 }};
+
+// children dofs:
+// coarse: . 2 .
+//         3   1
+//         . 0 .
+// fine: . 5 . 4 .
+//       6  10   3
+//       .11 . 9 .
+//       7   8   2
+//       . 0 . 1 .
+// child: 0: .11 .  1: . 9 .  2: . 4 .  3:  . 5 .
+//           7   8     8   2    10   3      6  10
+//           . 0 .     . 1 .     . 9 .      .11 .
+// TODO; this MUST be consistent with refinement ordering!!!
+// clang-format off
+std::array<FMat<4, 4>, 4> const RefQuadRT0::embeddingMatrix =
+    std::array<FMat<4, 4>, 4>{{
+        (FMat<4, 4>{} <<  0.5,  0.0,  0.0, 0.0,             // 0
+                          0.0, 0.25,  0.0, -0.25,           // 8
+                        -0.25,  0.0, 0.25, 0.0,             // 11
+                          0.0,  0.0,  0.0, 0.5).finished(), // 7
+        (FMat<4, 4>{} <<  0.5,   0.0,  0.0, 0.0,              // 1
+                          0.0,   0.5,  0.0, 0.0,              // 2
+                        -0.25,   0.0, 0.25, 0.0,              // 9
+                          0.0, -0.25,  0.0, 0.25).finished(), // 8
+        (FMat<4, 4>{} << 0.25,   0.0, -0.25, 0.0,              // 9
+                          0.0,   0.5,   0.0, 0.0,              // 3
+                          0.0,   0.0,   0.5, 0.0,              // 4
+                          0.0, -0.25,   0.0, 0.25).finished(), // 10
+        (FMat<4, 4>{} << 0.25,  0.0, -0.25,  0.0,            // 11
+                          0.0, 0.25,   0.0, -0.25,           // 10
+                          0.0,  0.0,   0.5, 0.0,             // 5
+                          0.0,  0.0,   0.0, 0.5).finished(), // 6
+    }};
+// clang-format on
 
 // bi-linear mapping
 std::array<twodFun_T, RefQuadRT0::numGeoDOFs> const RefQuadRT0::mapping =

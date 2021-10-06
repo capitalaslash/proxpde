@@ -10,6 +10,7 @@ template <typename Elem>
 void test()
 {
   using Elem_T = Elem;
+  using Facet_T = typename Elem_T::Facet_T;
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<
       Mesh_T,
@@ -36,16 +37,36 @@ void test()
 
   std::cout << Utils::separator << "mesh fine:\n" << *meshFine << std::endl;
 
+  uint checked = 0;
   for (auto const & f: meshFine->facetList)
   {
     // check that our facing elem is the child of the facing elem of our parent
-    assert(f.facingElem[0].ptr->parent.ptr->id == f.parent.ptr->facingElem[0].ptr->id);
-    if (f.facingElem[1])
+    // new internal facets cannot have a parent, so exclude them
+    if (f.parent)
     {
-      assert(
-          f.facingElem[1].ptr->parent.ptr->id == f.parent.ptr->facingElem[1].ptr->id);
+      auto const inParent = f.facingElem[0].ptr->parent.ptr;
+      auto const parentIn = f.parent.ptr->facingElem[0].ptr;
+      assert(inParent->id == parentIn->id);
+      checked++;
+      if (f.facingElem[1])
+      {
+        auto const outParent = f.facingElem[1].ptr->parent.ptr;
+        auto const parentOut = f.parent.ptr->facingElem[1].ptr;
+        assert(outParent->id == parentOut->id);
+        checked++;
+      }
     }
   }
+  uint const bdSize = std::count_if(
+      meshCoarse->facetList.begin(),
+      meshCoarse->facetList.end(),
+      [](Facet_T const & f) { return f.onBoundary(); });
+  // we do 1 check for each boundary facet on the fine mesh + 2 checks for each internal
+  // facets on the fine mesh
+  assert(
+      checked ==
+      Facet_T::numChildren * (bdSize + 2 * (meshCoarse->facetList.size() - bdSize)));
+  std::cout << "facet checks performed: " << checked << std::endl;
 
   FESpace_T feSpace{*meshFine};
   FEVar id{"id", feSpace};

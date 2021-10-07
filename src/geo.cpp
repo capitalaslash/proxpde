@@ -12,6 +12,61 @@ std::ostream & operator<<(std::ostream & out, Point const & p)
 }
 
 // -------------------------------------------------------------------------------------
+bool operator==(GeoElem const & e1, GeoElem const & e2)
+{
+  if (!geoEqual(e1, e2))
+  {
+    return false;
+  }
+
+  for (short_T f = 0; f < e1.facets.size(); ++f)
+  {
+    if (e1.facets[f] != e2.facets[f])
+    {
+      return false;
+    }
+  }
+
+  if (e1.id != e2.id)
+  {
+    return false;
+  }
+
+  if (e1.marker != e2.marker)
+  {
+    return false;
+  }
+
+  if (e1.parent != e2.parent)
+  {
+    return false;
+  }
+
+  for (short_T c = 0; c < e1.children.size(); ++c)
+  {
+    if (e1.children[c] != e2.children[c])
+    {
+      return false;
+    }
+  }
+
+  for (short_T f = 0; f < 2; ++f)
+  {
+    if (e1.facingElem[f] != e2.facingElem[f])
+    {
+      return false;
+    }
+  }
+
+  if (e1._normal != e2._normal)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+// -------------------------------------------------------------------------------------
 std::ostream & operator<<(std::ostream & out, GeoElem const & e)
 {
   out << "pts: ";

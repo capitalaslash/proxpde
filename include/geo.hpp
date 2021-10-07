@@ -187,6 +187,7 @@ struct NullElem: public GeoElem
 
 struct PointElem: public GeoElem
 {
+  using Facet_T = NullElem;
   static short_T constexpr dim = 0;
   static short_T constexpr numPts = 1U;
   static short_T constexpr numEdges = 0U;

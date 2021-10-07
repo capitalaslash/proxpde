@@ -42,7 +42,7 @@ int test(Function const & f)
   for (auto const & eFine: meshFine->elementList)
   {
     auto const & eCoarse = *eFine.parent.ptr;
-    auto const posCoarse = eFine.parent.corner;
+    auto const childId = eFine.parent.corner;
 
     for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
     {
@@ -58,7 +58,7 @@ int test(Function const & f)
         auto const dofFine = feSpaceFine.dof.getId(eFine.id, iFine);
         if (!done.contains(std::pair{dofFine, dofCoarse}))
         {
-          double const value = RefFE_T::embeddingMatrix[posCoarse](iFine, iCoarse);
+          double const value = RefFE_T::embeddingMatrix[childId](iFine, iCoarse);
           triplets.emplace_back(dofFine, dofCoarse, sign * value);
           done.insert(std::pair{dofFine, dofCoarse});
         }
@@ -84,76 +84,32 @@ int test(Function const & f)
         feSpaceCoarse,
         std::string{"output_prol/coarse_"} + RefFEtoString<RefFE_T>::name};
     ioCoarse.print(std::tuple{uCoarse});
+
     IOManager ioFine{
         feSpaceFine, std::string{"output_prol/fine_"} + RefFEtoString<RefFE_T>::name};
     ioFine.print(std::tuple{uFine});
   }
   else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
   {
-    // project on P0
-    using FESpaceP0_T = FESpace<
-        Mesh_T,
-        typename LagrangeFE<Elem_T, 0>::RefFE_T,
-        typename LagrangeFE<Elem_T, 1>::RecommendedQR,
-        Elem_T::dim>;
-
-    FESpaceP0_T feSpaceP0Coarse{*meshCoarse};
-    Var uP0Coarse{"uP0Coarse"};
-    l2Projection(uP0Coarse.data, feSpaceP0Coarse, uCoarse.data, feSpaceCoarse);
-
-    IOManager ioCoarse{
-        feSpaceP0Coarse,
+    IOManagerP0 ioCoarse{
+        feSpaceCoarse,
         std::string{"output_prol/coarse_"} + RefFEtoString<RefFE_T>::name};
-    ioCoarse.print(std::tuple{uP0Coarse});
+    ioCoarse.print(std::tuple{uCoarse});
 
-    FESpaceP0_T feSpaceP0Fine{*meshFine};
-    Var uP0Fine{"uP0Fine"};
-    l2Projection(uP0Fine.data, feSpaceP0Fine, uFine.data, feSpaceFine);
-    // std::cout << "uP0Fine: " << uP0Fine.data.transpose() << std::endl;
-
-    IOManager ioFine{
-        feSpaceP0Fine, std::string{"output_prol/fine_"} + RefFEtoString<RefFE_T>::name};
-    ioFine.print(std::tuple{uP0Fine});
+    IOManagerP0 ioFine{
+        feSpaceFine, std::string{"output_prol/fine_"} + RefFEtoString<RefFE_T>::name};
+    ioFine.print(std::tuple{uFine});
 
     // print facet mesh
-    using Facet_T = typename Elem_T::Facet_T;
-    using MeshFacet_T = Mesh<Facet_T>;
-    using FESpaceFacet_T = FESpace<
-        MeshFacet_T,
-        typename LagrangeFE<Facet_T, 0>::RefFE_T,
-        typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
-
-    std::unique_ptr<MeshFacet_T> facetMeshCoarse{new MeshFacet_T};
-    buildFacetMesh(*facetMeshCoarse, *meshCoarse);
-    FESpaceFacet_T feSpaceFacetCoarse{*facetMeshCoarse};
-    IOManager ioFluxCoarse{
-        feSpaceFacetCoarse,
+    IOManagerFacet ioFacetCoarse{
+        feSpaceCoarse,
         std::string{"output_prol/flux_coarse_"} + RefFEtoString<RefFE_T>::name};
-    Var fluxCoarse{"fluxCoarse"};
-    fluxCoarse.data = Vec::Zero(static_cast<uint>(facetMeshCoarse->elementList.size()));
-    for (auto const & facet: meshCoarse->facetList)
-    {
-      auto const [insideElemPtr, side] = facet.facingElem[0];
-      auto const dofId = feSpaceCoarse.dof.getId(insideElemPtr->id, side);
-      fluxCoarse.data[facet.id] = uCoarse[dofId];
-    }
-    ioFluxCoarse.print({fluxCoarse});
+    ioFacetCoarse.print(std::tuple{uCoarse});
 
-    std::unique_ptr<MeshFacet_T> facetMeshFine{new MeshFacet_T};
-    buildFacetMesh(*facetMeshFine, *meshFine);
-    FESpaceFacet_T feSpaceFacetFine{*facetMeshFine};
-    IOManager ioFluxFine{
-        feSpaceFacetFine,
+    IOManagerFacet ioFacetFine{
+        feSpaceFine,
         std::string{"output_prol/flux_fine_"} + RefFEtoString<RefFE_T>::name};
-    Var fluxFine{"fluxFine"};
-    fluxFine.data = Vec::Zero(static_cast<uint>(facetMeshFine->elementList.size()));
-    for (auto const & facet: meshFine->facetList)
-    {
-      auto const [insideElemPtr, side] = facet.facingElem[0];
-      auto const dofId = feSpaceFine.dof.getId(insideElemPtr->id, side);
-      fluxFine.data[facet.id] = uFine[dofId];
-    }
-    ioFluxFine.print({fluxFine});
+    ioFacetFine.print(std::tuple{uFine});
   }
 
   return 0;

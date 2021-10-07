@@ -3,6 +3,7 @@
 #include "def.hpp"
 
 #include "fe.hpp"
+#include "feutils.hpp"
 #include "var.hpp"
 #include "xdmf_traits.hpp"
 
@@ -548,3 +549,150 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
       });
   iter++;
 }
+
+template <typename FESpaceOrig>
+struct ToP0
+{
+  using FESpaceOrig_T = FESpaceOrig;
+  using Mesh_T = typename FESpaceOrig_T::Mesh_T;
+  using Elem_T = typename Mesh_T::Elem_T;
+  using type = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 0>::RefFE_T,
+      typename FESpaceOrig_T::QR_T,
+      Elem_T::dim>;
+};
+
+template <typename FESpaceOrig>
+using ToP0_T = typename ToP0<FESpaceOrig>::type;
+
+template <typename T>
+struct ToVar
+{
+  using type = Var;
+};
+
+template <typename T>
+using ToVar_T = typename ToVar<T>::type;
+
+template <typename FESpaceOrig>
+struct IOManagerP0
+{
+  using FESpaceOrig_T = FESpaceOrig;
+  using FESpaceP0_T = ToP0_T<FESpaceOrig>;
+
+  IOManagerP0(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
+      feSpaceOrig{fe},
+      feSpaceP0{fe.mesh},
+      io{feSpaceP0, fp, it},
+      l2Projector{feSpaceP0, feSpaceOrig}
+  {}
+
+  void print(std::vector<Var> const && data, double const t = 0.0)
+  {
+    std::vector<Var> dataP0(data.size());
+    for (short_T i = 0; i < data.size(); ++i)
+    {
+      dataP0[i].name = data[i].name + "P0";
+      l2Projection(dataP0[i].data, feSpaceP0, data[i].data, feSpaceOrig);
+    }
+    io.print(dataP0, t);
+  }
+
+  template <typename... Vars>
+  void print(std::tuple<Vars...> const && data, double const t = 0.0)
+  {
+    // std::tuple<FEVar<ToP0_T<typename Vars::FESpace_T>...>> dataP0{
+    //     FEVar<ToP0_T<typename Vars::FESpace_T>>{"none"}...};
+    std::tuple<ToVar_T<Vars>...> dataP0{};
+    static_for(
+        dataP0,
+        data,
+        [this](uint const /*i*/, auto & vP0, auto const & v)
+        {
+          using Var_T = std::decay_t<decltype(v)>;
+          if constexpr (!std::is_same_v<Var_T, Var>)
+          {
+            // we need only the mesh and reffe to be the same, no need to check the
+            // qr
+            static_assert(std::is_same_v<
+                          typename Var_T::FESpace_T::Mesh_T,
+                          typename FESpaceOrig_T::Mesh_T>);
+            static_assert(std::is_same_v<
+                          typename Var_T::FESpace_T::RefFE_T,
+                          typename FESpaceOrig::RefFE_T>);
+          }
+          vP0.name = v.name + "P0";
+          // l2Projection(vP0.data, this->feSpaceP0, v.data, v.feSpace);
+          l2Projector.setRhs(v.data);
+          vP0.data = l2Projector.apply();
+        });
+
+    io.print(std::move(dataP0), t);
+  }
+
+  FESpaceOrig_T const & feSpaceOrig;
+  FESpaceP0_T feSpaceP0;
+  IOManager<FESpaceP0_T> io;
+  L2Projector<FESpaceP0_T, FESpaceOrig_T> l2Projector;
+};
+
+template <typename FESpaceOrig>
+struct IOManagerFacet
+{
+  using FESpaceOrig_T = FESpaceOrig;
+  using Mesh_T = typename FESpaceOrig_T::Mesh_T;
+  using Elem_T = typename Mesh_T::Elem_T;
+  using Facet_T = typename Elem_T::Facet_T;
+  using MeshFacet_T = Mesh<Facet_T>;
+  using FESpaceFacet_T = FESpace<
+      MeshFacet_T,
+      typename LagrangeFE<Facet_T, 0>::RefFE_T,
+      typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
+
+  IOManagerFacet(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
+      feSpaceOrig{fe},
+      meshFacet{new MeshFacet_T{fe.mesh.buildFacetMesh()}},
+      feSpaceFacet{*meshFacet},
+      io{feSpaceFacet, fp, it}
+  {}
+
+  template <typename... Vars>
+  void print(std::tuple<Vars...> const && data, double const t = 0.0)
+  {
+    std::tuple<ToVar_T<Vars>...> dataFacet{};
+    static_for(
+        dataFacet,
+        data,
+        [this](uint const /*i*/, auto & vFacet, auto const & v)
+        {
+          using Var_T = std::decay_t<decltype(v)>;
+          if constexpr (!std::is_same_v<Var_T, Var>)
+          {
+            // we need only the mesh and reffe to be the same, no need to check the
+            // qr
+            static_assert(std::is_same_v<
+                          typename Var_T::FESpace_T::Mesh_T,
+                          typename FESpaceOrig_T::Mesh_T>);
+            static_assert(std::is_same_v<
+                          typename Var_T::FESpace_T::RefFE_T,
+                          typename FESpaceOrig::RefFE_T>);
+          }
+          vFacet.name = v.name + "Facet";
+          vFacet.data = Vec::Zero(static_cast<uint>(meshFacet->elementList.size()));
+          for (auto const & facet: v.feSpace.mesh.facetList)
+          {
+            auto const [insideElemPtr, side] = facet.facingElem[0];
+            auto const dofId = v.feSpace.dof.getId(insideElemPtr->id, side);
+            vFacet.data[facet.id] = v.data[dofId];
+          }
+        });
+
+    io.print(std::move(dataFacet), t);
+  }
+
+  FESpaceOrig_T const & feSpaceOrig;
+  std::unique_ptr<MeshFacet_T> meshFacet;
+  FESpaceFacet_T feSpaceFacet;
+  IOManager<FESpaceFacet_T> io;
+};

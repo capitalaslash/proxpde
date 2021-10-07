@@ -6,7 +6,7 @@
 
 struct Var
 {
-  explicit Var(std::string_view const n, unsigned long const size = 0):
+  explicit Var(std::string_view const n = "none", unsigned long const size = 0):
       name{n},
       data(size)
   {}

@@ -42,6 +42,15 @@ public:
     }
   }
 
+  Mesh<Facet_T> buildFacetMesh() const
+  {
+    Mesh<Facet_T> facetMesh;
+    facetMesh.pointList = pointList;
+    facetMesh.elementList = facetList;
+    facetMesh.buildConnectivity();
+    return facetMesh;
+  }
+
   PointList_T pointList;
   ElementList_T elementList;
   FacetList_T facetList;

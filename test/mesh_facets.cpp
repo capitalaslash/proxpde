@@ -40,7 +40,7 @@ void test()
   std::cout << Utils::separator << "mesh after\n" << *mesh << std::endl;
 
   // check that buildFacets() has preserved an internal facet
-  for (auto const & facet: mesh->facetList)
+  for ([[maybe_unused]] auto const & facet: mesh->facetList)
   {
     assert(facet == facetsOrig[facet.id]);
   }

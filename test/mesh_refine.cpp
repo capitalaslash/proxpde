@@ -44,20 +44,20 @@ void test()
     // new internal facets cannot have a parent, so exclude them
     if (f.parent)
     {
-      auto const inParent = f.facingElem[0].ptr->parent.ptr;
-      auto const parentIn = f.parent.ptr->facingElem[0].ptr;
+      [[maybe_unused]] auto const inParent = f.facingElem[0].ptr->parent.ptr;
+      [[maybe_unused]] auto const parentIn = f.parent.ptr->facingElem[0].ptr;
       assert(inParent->id == parentIn->id);
       checked++;
       if (f.facingElem[1])
       {
-        auto const outParent = f.facingElem[1].ptr->parent.ptr;
-        auto const parentOut = f.parent.ptr->facingElem[1].ptr;
+        [[maybe_unused]] auto const outParent = f.facingElem[1].ptr->parent.ptr;
+        [[maybe_unused]] auto const parentOut = f.parent.ptr->facingElem[1].ptr;
         assert(outParent->id == parentOut->id);
         checked++;
       }
     }
   }
-  uint const bdSize = std::count_if(
+  [[maybe_unused]] uint const bdSize = std::count_if(
       meshCoarse->facetList.begin(),
       meshCoarse->facetList.end(),
       [](Facet_T const & f) { return f.onBoundary(); });

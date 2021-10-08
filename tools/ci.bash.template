@@ -35,7 +35,7 @@ git clone $repo >> $logfile || quit "clone failed in $tmp_dir" 3
 pushd minifem/
 
 message "loading environment..."
-source $envfile
+source $envfile || quit "env failed" 4
 module list 2>> $logfile
 
 for build in Release Debug; do
@@ -43,18 +43,20 @@ for build in Release Debug; do
   pushd build/
 
   message "configuring $build build..."
-  cmake .. -DCMAKE_BUILD_TYPE=$build >> $logfile || quit "cmake failed" 4
+  cmake .. \
+    -DCMAKE_BUILD_TYPE=$build \
+    -DMINIFEM_DOF_INTERLEAVED=ON >> $logfile || quit "cmake failed" 5
 
   message "compiling..."
-  make -j$parallel >> $logfile || quit "make failed" 5
+  make -j$parallel >> $logfile || quit "make failed" 6
 
   pushd test/
   message "testing..."
-  ctest -j$parallel --output-on-failure >> $logfile || quit "test failed" 6
+  ctest -j$parallel --output-on-failure >> $logfile || quit "test failed" 7
   popd
 
   popd
-  rm -r build || quit "build rm failed" 7
+  rm -r build || quit "build rm failed" 8
 
   echo | tee -a $logfile
   echo | tee -a $logfile
@@ -62,7 +64,7 @@ done
 
 popd
 message "cleaning up..."
-rm -r minifem || quit "clean up failed" 8
+rm -r minifem || quit "clean up failed" 9
 popd
 
 quit "execution end: $(date)" 0

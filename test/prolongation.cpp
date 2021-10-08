@@ -10,7 +10,7 @@
 #include "var.hpp"
 
 template <typename RefFE, typename Function>
-int test(Function const & f)
+int test(Function const & f, double const expectedNorm)
 {
   using Elem_T = typename RefFE::GeoElem_T;
   using Mesh_T = Mesh<Elem_T>;
@@ -23,7 +23,7 @@ int test(Function const & f)
       *meshCoarse,
       {0.0, 0.0, 0.0},
       {1.0, 1.0, 0.0},
-      {1, 2, 0},
+      {3, 2, 0},
       MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
   // readGMSH(
   //     *meshCoarse,
@@ -56,11 +56,11 @@ int test(Function const & f)
       for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
       {
         auto const dofFine = feSpaceFine.dof.getId(eFine.id, iFine);
-        if (!done.contains(std::pair{dofFine, dofCoarse}))
+        if (!done.contains({dofFine, dofCoarse}))
         {
           double const value = RefFE_T::embeddingMatrix[childId](iFine, iCoarse);
           triplets.emplace_back(dofFine, dofCoarse, sign * value);
-          done.insert(std::pair{dofFine, dofCoarse});
+          done.insert({dofFine, dofCoarse});
         }
       }
     }
@@ -70,11 +70,11 @@ int test(Function const & f)
   prol.setFromTriplets(triplets.begin(), triplets.end());
   // std::cout << prol << std::endl;
 
-  FEVar uCoarse{"uCoarse", feSpaceCoarse};
+  FEVar uCoarse{"u", feSpaceCoarse};
   interpolateAnalyticFunction(f, feSpaceCoarse, uCoarse.data);
   // std::cout << "uCoarse: " << uCoarse.data.transpose() << std::endl;
 
-  FEVar uFine{"uFine", feSpaceFine};
+  FEVar uFine{"u", feSpaceFine};
   uFine.data = prol * uCoarse.data;
   // std::cout << "uFine: " << uFine.data.transpose() << std::endl;
 
@@ -112,7 +112,7 @@ int test(Function const & f)
     ioFacetFine.print(std::tuple{uFine});
   }
 
-  return 0;
+  return checkError({uFine.data.norm()}, {expectedNorm});
 }
 
 int main()
@@ -122,10 +122,10 @@ int main()
   auto const fScalar = [](Vec3 const & p) { return pow(1. - p(0), 2); };
   auto const fVector = [](Vec3 const & p) { return Vec3{p[0], -p[1], 0.0}; };
 
-  tests[0] = test<RefTriangleP1>(fScalar);
-  tests[1] = test<RefTriangleRT0>(fVector);
-  tests[2] = test<RefQuadQ1>(fScalar);
-  tests[3] = test<RefQuadRT0>(fVector);
+  tests[0] = test<RefTriangleP1>(fScalar, 3.009757793463e+00);
+  tests[1] = test<RefTriangleRT0>(fVector, 1.359125535858e+00);
+  tests[2] = test<RefQuadQ1>(fScalar, 3.009757793463e+00);
+  tests[3] = test<RefQuadRT0>(fVector, 9.718253158076e-01);
 
   return tests.any();
 }

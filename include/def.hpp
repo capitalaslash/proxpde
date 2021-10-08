@@ -292,6 +292,27 @@ constexpr void static_for(Tup & t, Func && f)
       std::make_index_sequence<std::tuple_size_v<std::decay_t<Tup>>>{});
 }
 
+template <class Tup1, class Tup2, class Func, std::size_t... Is>
+constexpr void
+static_for_impl(Tup1 && tup1, Tup2 && tup2, Func && f, std::index_sequence<Is...>)
+{
+  (f(std::integral_constant<std::size_t, Is>{}, std::get<Is>(tup1), std::get<Is>(tup2)),
+   ...);
+}
+
+template <class Tup1, class Tup2, class Func>
+constexpr void static_for(Tup1 & tup1, Tup2 & tup2, Func && f)
+{
+  static_assert(
+      std::tuple_size_v<std::decay_t<Tup1>> == std::tuple_size_v<std::decay_t<Tup2>>,
+      "the 2 tuples have different sizes.");
+  static_for_impl(
+      tup1,
+      tup2,
+      std::forward<Func>(f),
+      std::make_index_sequence<std::tuple_size_v<std::decay_t<Tup1>>>{});
+}
+
 // ----------------------------------------------------------------------------
 static constexpr int ERROR_GMSH = 1;
 

@@ -92,7 +92,7 @@ enum side : marker_T
   LEFT = 4,
   BACK = 5,
   FRONT = 6,
-  CIRCLE = 101
+  CIRCLE = 101,
 };
 
 template <typename Mesh>
@@ -490,16 +490,32 @@ void readGMSH(
   }
 
   std::set<typename Elem::Facet_T> facets;
+  std::set<marker_T> volumeMarkers;
+  std::set<marker_T> facetMarkers;
+  std::map<marker_T, std::string> physicalNames;
 
   in >> buf;
   while (!in.eof())
   {
     if (buf == "$PhysicalNames")
     {
-      // TODO: stop discarding physical names
-      while (buf != "$EndPhysicalNames")
+      int numNames;
+      in >> numNames;
+      for (short_T n = 0; n < numNames; ++n)
       {
-        in >> buf;
+        int dim;
+        marker_T marker;
+        std::string name;
+        in >> dim >> marker >> name;
+        name = name.substr(1, name.size() - 2);
+        assert(dim == Elem::dim || dim == Elem::dim - 1);
+        physicalNames[marker] = name;
+      }
+      in >> buf;
+      if (buf != "$EndPhysicalNames")
+      {
+        std::cerr << "error reading physical names" << std::endl;
+        std::exit(ERROR_GMSH);
       }
     }
     else if (buf == "$Nodes")
@@ -514,7 +530,7 @@ void readGMSH(
         uint id;
         double x, y, z;
         in >> id >> x >> y >> z;
-        // currently only sonsecutive ids are supported
+        // currently only consecutive ids are supported
         assert(n == id - 1);
         mesh.pointList.emplace_back(Vec3{x, y, z}, n);
       }
@@ -547,6 +563,8 @@ void readGMSH(
         // check if volume or boundary element
         if (ElemToGmsh<Elem>::value == elType)
         {
+          volumeMarkers.insert(tags[0]);
+
           // read connectivity from file
           std::array<uint, Elem::numPts> conn;
           for (uint c = 0; c < Elem::numPts; c++)
@@ -570,6 +588,8 @@ void readGMSH(
         }
         else if (ElemToGmsh<typename Elem::Facet_T>::value == elType)
         {
+          facetMarkers.insert(tags[0]);
+
           // read connectivity from file
           std::array<uint, Elem::Facet_T::numPts> conn;
           for (uint c = 0; c < Elem::Facet_T::numPts; c++)
@@ -617,11 +637,32 @@ void readGMSH(
     // get next section
     in >> buf;
   }
+  std::cout << "available volume markers: ";
+  for (auto const marker: volumeMarkers)
+  {
+    std::cout << marker << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "available facet markers: ";
+  for (auto const marker: facetMarkers)
+  {
+    std::cout << marker << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "physical names:\n";
+  for (auto const & [marker, name]: physicalNames)
+  {
+    std::cout << marker << ": " << name << "\n";
+  }
+  std::cout << std::flush;
+  // TODO: store physical names in the mesh
+
   mesh.buildConnectivity();
-  buildFacets(mesh, flags);
 
   // the file should contain all the boundary facets
   // TODO: this does not work if the mesh has internal boundaries
+  buildFacets(mesh, flags);
+
   assert(
       std::count_if(
           mesh.facetList.begin(),

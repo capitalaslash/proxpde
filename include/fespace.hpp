@@ -13,17 +13,19 @@ template <
     typename RefFE,
     typename QR,
     uint Dimension = 1,
-    DofType type = DofType::CONTINUOUS,
+    DofType t = DofType::CONTINUOUS,
 #ifdef MINIFEM_DOF_INTERLEAVED
-    DofOrdering ordering = DofOrdering::INTERLEAVED>
+    DofOrdering o = DofOrdering::INTERLEAVED>
 #else
-    DofOrdering ordering = DofOrdering::BLOCK>
+    DofOrdering o = DofOrdering::BLOCK>
 #endif
 struct FESpace
 {
   using Mesh_T = Mesh;
   using RefFE_T = RefFE;
   using QR_T = QR;
+  static constexpr DofType type = t;
+  static constexpr DofOrdering ordering = o;
   using DOF_T = DOF<Mesh, RefFE, Dimension, type, ordering>;
   using CurFE_T = CurFE<RefFE, QR>;
   static short_T constexpr dim = Dimension;
@@ -461,7 +463,8 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
       uFacet.reinit(*elem);
       for (uint q = 0; q < FacetQR_T::numPts; ++q)
       {
-        double const value = uFacet.evaluate(side * FacetQR_T::numPts + q)[0];
+        double const value =
+            uFacet.evaluate(side * FacetQR_T::numPts + q).dot(facet._normal);
         integral += facetCurFE.JxW[q] * value;
       }
     }
@@ -474,4 +477,6 @@ using Scalar_T = FESpace<
     typename FESpaceVec::Mesh_T,
     typename FESpaceVec::RefFE_T,
     typename FESpaceVec::QR_T,
-    1>;
+    1,
+    FESpaceVec::type,
+    FESpaceVec::ordering>;

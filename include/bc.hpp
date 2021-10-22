@@ -42,8 +42,6 @@ public:
       marker(m),
       comp(c)
   {
-    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
-              << " dofs" << std::endl;
     id_T counter = 0;
     for (auto const & facet: feSpace.mesh.facetList)
     {
@@ -84,6 +82,8 @@ public:
       }
     }
     data = Vec::Zero(_constrainedDofMap.size());
+    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
+              << " dofs" << std::endl;
   }
 
   BCEss<FESpace> & operator<<(Fun<FESpace::physicalDim(), 3> const & fun)

@@ -411,46 +411,95 @@ enum GMSHElemType : short_T
   GMSHQuad = 3,
   GMSHTet = 4,
   GMSHHexa = 5,
-  // GMSHQuadraticLine = 8,
-  // GMSHQuadraticTriangle = 9,
-  // GMSHQuadraticQuad = 10,
-  // GMSHQuadraticTet = 11,
-  // GMSHQuadraticHexa = 12
+  GMSHQuadraticLine = 8,
+  GMSHQuadraticTriangle = 9,
+  GMSHQuadraticQuad = 10,
+  GMSHQuadraticTet = 11,
+  GMSHQuadraticHexa = 12
 };
 
-template <typename Elem>
+template <typename Elem, short_T Order = 1>
 struct ElemToGmsh
 {};
 
 template <>
-struct ElemToGmsh<Line>
+struct ElemToGmsh<Line, 1>
 {
   static GMSHElemType constexpr value = GMSHLine;
 };
 
 template <>
-struct ElemToGmsh<Triangle>
+struct ElemToGmsh<Line, 2>
+{
+  static GMSHElemType constexpr value = GMSHQuadraticLine;
+  static short_T constexpr connSize = 3U;
+};
+
+template <>
+struct ElemToGmsh<Triangle, 1>
 {
   static GMSHElemType constexpr value = GMSHTriangle;
 };
 
 template <>
-struct ElemToGmsh<Quad>
+struct ElemToGmsh<Triangle, 2>
+{
+  static GMSHElemType constexpr value = GMSHQuadraticTriangle;
+  static short_T constexpr connSize = 6U;
+};
+
+template <>
+struct ElemToGmsh<Quad, 1>
 {
   static GMSHElemType constexpr value = GMSHQuad;
 };
 
 template <>
-struct ElemToGmsh<Tetrahedron>
+struct ElemToGmsh<Quad, 2>
+{
+  static GMSHElemType constexpr value = GMSHQuadraticQuad;
+  static short_T constexpr connSize = 9U;
+};
+
+template <>
+struct ElemToGmsh<Tetrahedron, 1>
 {
   static GMSHElemType constexpr value = GMSHTet;
 };
 
 template <>
-struct ElemToGmsh<Hexahedron>
+struct ElemToGmsh<Tetrahedron, 2>
+{
+  static GMSHElemType constexpr value = GMSHQuadraticTet;
+  static short_T constexpr connSize = 10U;
+};
+
+template <>
+struct ElemToGmsh<Hexahedron, 1>
 {
   static GMSHElemType constexpr value = GMSHHexa;
 };
+
+template <>
+struct ElemToGmsh<Hexahedron, 2>
+{
+  static GMSHElemType constexpr value = GMSHQuadraticHexa;
+  static short_T constexpr connSize = 27U;
+};
+
+template <typename Elem>
+struct ElemStub
+{
+  std::array<id_T, Elem::numPts> conn;
+  id_T id = idNotSet;
+  marker_T marker = markerNotSet;
+};
+
+template <typename Elem>
+inline bool operator<(ElemStub<Elem> const & e1, ElemStub<Elem> const & e2)
+{
+  return e1.id < e2.id;
+}
 
 template <typename Elem>
 void readGMSH(
@@ -458,6 +507,8 @@ void readGMSH(
     std::string_view const filename,
     MeshFlags::T flags = MeshFlags::NONE)
 {
+  using Facet_T = typename Elem::Facet_T;
+
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
   {
@@ -489,7 +540,9 @@ void readGMSH(
     std::exit(ERROR_GMSH);
   }
 
-  std::set<typename Elem::Facet_T> facets;
+  std::vector<Point> points;
+  std::vector<ElemStub<Elem>> elems;
+  std::set<ElemStub<Facet_T>> facets;
   std::set<marker_T> volumeMarkers;
   std::set<marker_T> facetMarkers;
   std::map<marker_T, std::string> physicalNames;
@@ -522,7 +575,7 @@ void readGMSH(
     {
       uint numNodes;
       in >> numNodes;
-      mesh.pointList.reserve(numNodes);
+      points.resize(numNodes);
 
       // format: node-number(one-based) x-coord y-coord z-coord
       for (uint n = 0; n < numNodes; n++)
@@ -532,7 +585,7 @@ void readGMSH(
         in >> id >> x >> y >> z;
         // currently only consecutive ids are supported
         assert(n == id - 1);
-        mesh.pointList.emplace_back(Vec3{x, y, z}, n);
+        points[n] = Point{Vec3{x, y, z}, n};
       }
       in >> buf;
       if (buf != "$EndNodes")
@@ -545,7 +598,7 @@ void readGMSH(
     {
       uint numElements;
       in >> numElements;
-      mesh.elementList.reserve(numElements);
+      elems.reserve(numElements);
       // format: elm-number(one-based) elm-type number-of-tags < tag > ...
       // node-number-list
       uint eVol = 0, eBd = 0;
@@ -560,8 +613,9 @@ void readGMSH(
           in >> tags[t];
         }
 
-        // check if volume or boundary element
-        if (ElemToGmsh<Elem>::value == elType)
+        // check element type (volume or boundary, linear or quadratic
+        if (ElemToGmsh<Elem, 1>::value == elType ||
+            ElemToGmsh<Elem, 2>::value == elType)
         {
           volumeMarkers.insert(tags[0]);
 
@@ -570,44 +624,50 @@ void readGMSH(
           for (uint c = 0; c < Elem::numPts; c++)
           {
             in >> conn[c];
+            // gmsh starts from 1
+            conn[c]--;
+            // register element is point
+            points[conn[c]].neighboringElemSize++;
+          }
+          // read eventual additional connectivity from quadratic elements
+          if (ElemToGmsh<Elem, 2>::value == elType)
+          {
+            for (uint c = Elem::numPts; c < ElemToGmsh<Elem, 2>::connSize; ++c)
+            {
+              in >> buf;
+            }
           }
 
-          // get points pointers from connectivity
-          // TODO: use std::array or pre-fix size
-          std::vector<Point *> connPts;
-          connPts.reserve(Elem::numPts);
-          std::for_each(
-              conn.begin(),
-              conn.end(),
-              [&connPts, &mesh](uint const c)
-              { connPts.push_back(&mesh.pointList[c - 1]); });
-
           // create mesh element
-          mesh.elementList.emplace_back(Elem{connPts, eVol});
+          // elems.emplace_back(connPts, eVol, tags[0]);
+          elems.emplace_back(conn, eVol, tags[0]);
           eVol++;
         }
-        else if (ElemToGmsh<typename Elem::Facet_T>::value == elType)
+        else if (
+            ElemToGmsh<Facet_T, 1>::value == elType ||
+            ElemToGmsh<Facet_T, 2>::value == elType)
         {
           facetMarkers.insert(tags[0]);
 
           // read connectivity from file
-          std::array<uint, Elem::Facet_T::numPts> conn;
-          for (uint c = 0; c < Elem::Facet_T::numPts; c++)
+          std::array<uint, Facet_T::numPts> conn;
+          for (uint c = 0; c < Facet_T::numPts; c++)
           {
             in >> conn[c];
+            // gmsh starts from 1
+            conn[c]--;
+          }
+          // read eventual additional connectivity from quadratic elements
+          if (ElemToGmsh<Facet_T, 2>::value == elType)
+          {
+            for (uint c = Facet_T::numPts; c < ElemToGmsh<Facet_T, 2>::connSize; ++c)
+            {
+              in >> buf;
+            }
           }
 
-          // get points pointers from connectivity
-          // TODO: use std::array or pre-fix size
-          std::vector<Point *> connPts;
-          std::for_each(
-              conn.begin(),
-              conn.end(),
-              [&connPts, &mesh](uint const c)
-              { connPts.push_back(&mesh.pointList[c - 1]); });
-
           // create mesh boundary element
-          facets.insert(typename Elem::Facet_T(connPts, eBd, tags[0]));
+          facets.insert(ElemStub<Facet_T>{conn, eBd, static_cast<marker_T>(tags[0])});
           eBd++;
         }
         else
@@ -657,6 +717,31 @@ void readGMSH(
   std::cout << std::flush;
   // TODO: store physical names in the mesh
 
+  id_T ptCount = 0;
+  std::unordered_map<id_T, id_T> ptIdMap;
+  mesh.pointList.reserve(points.size());
+  for (auto const & p: points)
+  {
+    if (p.neighboringElemSize > 0)
+    {
+      mesh.pointList.emplace_back(p.coord, ptCount, p.marker, p.neighboringElemSize);
+      ptIdMap[p.id] = ptCount;
+      ptCount++;
+    }
+  };
+
+  mesh.elementList.reserve(elems.size());
+  for (auto const & e: elems)
+  {
+    std::vector<Point *> connPts;
+    connPts.reserve(Elem::numPts);
+    for (auto const c: e.conn)
+    {
+      connPts.push_back(&mesh.pointList[ptIdMap.at(c)]);
+    };
+    mesh.elementList.emplace_back(connPts, e.id, e.marker);
+  };
+
   mesh.buildConnectivity();
 
   // the file should contain all the boundary facets
@@ -667,7 +752,7 @@ void readGMSH(
       std::count_if(
           mesh.facetList.begin(),
           mesh.facetList.end(),
-          [](typename Elem::Facet_T const & f)
+          [](Facet_T const & f)
           { return f.onBoundary(); }) == static_cast<long int>(facets.size()));
 
   // use file facets to set boundary flags
@@ -676,7 +761,14 @@ void readGMSH(
     // iterator loop required to use std::set::erase()?
     for (auto it = facets.begin(); it != facets.end(); ++it)
     {
-      if (geoEqual(meshFacet, *it))
+      std::vector<Point *> connPts;
+      connPts.reserve(Facet_T::numPts);
+      for (auto const c: it->conn)
+      {
+        connPts.push_back(&mesh.pointList[ptIdMap.at(c)]);
+      };
+      Facet_T tempFacet{connPts, it->id, it->marker};
+      if (geoEqual(meshFacet, tempFacet))
       {
         meshFacet.marker = it->marker;
         facets.erase(it);

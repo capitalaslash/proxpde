@@ -192,15 +192,15 @@ bool geoEqual(GeoElem const & e1, GeoElem const & e2)
   assert(e1.pts.size() == e2.pts.size());
   std::vector<id_T> ids1(e1.pts.size()), ids2(e2.pts.size());
   uint counter = 0;
-  std::for_each(
-      e1.pts.begin(),
-      e1.pts.end(),
-      [&ids1, &counter](Point const * p) { ids1[counter++] = p->id; });
+  for (auto const & p: e1.pts)
+  {
+    ids1[counter++] = p->id;
+  }
   counter = 0;
-  std::for_each(
-      e2.pts.begin(),
-      e2.pts.end(),
-      [&ids2, &counter](Point const * p) { ids2[counter++] = p->id; });
+  for (auto const & p: e2.pts)
+  {
+    ids2[counter++] = p->id;
+  }
 
   return std::is_permutation(ids1.begin(), ids1.end(), ids2.begin());
 }

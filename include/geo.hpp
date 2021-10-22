@@ -2,22 +2,14 @@
 
 #include "def.hpp"
 
-class Point
+struct Point
 {
-public:
-  Point(Vec3 const c, id_T const i, marker_T const m = markerNotSet):
-      coord(std::move(c)),
-      id(i),
-      marker(m)
-  {}
-
-  Point() = default;
-
   double operator[](short_T const i) const { return this->coord[i]; }
 
   Vec3 coord = Vec3::Zero();
-  id_T id = dofIdNotSet;
+  id_T id = idNotSet;
   marker_T marker = markerNotSet;
+  short_T neighboringElemSize = 0;
 };
 
 std::ostream & operator<<(std::ostream & out, Point const & p);

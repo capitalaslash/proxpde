@@ -33,34 +33,35 @@ struct RefineHelper<Quad>
 };
 
 template <typename Mesh>
-void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
+void uniformRefine2d(Mesh & meshCoarse, Mesh & meshFine)
 {
   static_assert(Mesh::Elem_T::dim == 2, "the mesh dimension is not 2.");
 
   using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
 
-  auto const numFacets =
-      (mesh.flags & MeshFlags::INTERNAL_FACETS).any()
-          ? mesh.facetList.size()
-          : (Elem_T::numFacets * mesh.elementList.size() + mesh.facetList.size()) / 2;
+  auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS).any()
+                             ? meshCoarse.facetList.size()
+                             : (Elem_T::numFacets * meshCoarse.elementList.size() +
+                                meshCoarse.facetList.size()) /
+                                   2;
 
   auto const predPts = RefineHelper<Elem_T>::totalPts(
-      mesh.pointList.size(), numFacets, mesh.elementList.size());
-  newMesh.pointList.reserve(predPts);
+      meshCoarse.pointList.size(), numFacets, meshCoarse.elementList.size());
+  meshFine.pointList.reserve(predPts);
 
-  newMesh.elementList.reserve(Elem_T::numChildren * mesh.elementList.size());
+  meshFine.elementList.reserve(Elem_T::numChildren * meshCoarse.elementList.size());
   // if (newMesh.flags::INTERNAL_FACETS)
-  newMesh.facetList.resize(Facet_T::numChildren * mesh.facetList.size());
-  newMesh.elemToFacet.resize(
-      Elem_T::numChildren * mesh.elementList.size(),
+  meshFine.facetList.resize(Facet_T::numChildren * meshCoarse.facetList.size());
+  meshFine.elemToFacet.resize(
+      Elem_T::numChildren * meshCoarse.elementList.size(),
       fillArray<Elem_T::numFacets>(dofIdNotSet));
 
   auto newPtsMap = std::map<std::set<id_T>, id_T>{};
   uint ptCounter = 0;
   auto localPts = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
 
-  for (auto & elem: mesh.elementList)
+  for (auto & elem: meshCoarse.elementList)
   {
     for (short_T c = 0; c < Elem_T::numChildren; ++c)
     {
@@ -87,7 +88,7 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
         else
         {
           // the point is new
-          newMesh.pointList.emplace_back(Point{newPtCoords, ptCounter});
+          meshFine.pointList.emplace_back(Point{newPtCoords, ptCounter});
           newPtsMap.insert(std::pair{parentIds, ptCounter});
           localPts[Elem_T::elemToChild[c][pFine]] = ptCounter++;
         }
@@ -101,12 +102,12 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
       std::vector<Point *> conn(Elem_T::numPts);
       for (short_T p = 0; p < Elem_T::numPts; ++p)
       {
-        conn[p] = &newMesh.pointList[localPts[Elem_T::elemToChild[c][p]]];
+        conn[p] = &meshFine.pointList[localPts[Elem_T::elemToChild[c][p]]];
       }
-      newMesh.elementList.emplace_back(
+      meshFine.elementList.emplace_back(
           Elem_T{conn, Elem_T::numChildren * elem.id + c, elem.marker});
-      newMesh.elementList.back().parent = ChildElem{&elem, c};
-      elem.children.push_back(ChildElem{&newMesh.elementList.back(), c});
+      meshFine.elementList.back().parent = ChildElem{&elem, c};
+      elem.children.push_back(ChildElem{&meshFine.elementList.back(), c});
     }
 
     // add new facets
@@ -114,12 +115,12 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
     // additional care since they are crossed twice
     for (short_T f = 0; f < Elem_T::numFacets; ++f)
     {
-      auto const facetId = mesh.elemToFacet[elem.id][f];
+      auto const facetId = meshCoarse.elemToFacet[elem.id][f];
 
       // refine only facets coming from the coarse mesh
       if (facetId != idNotSet)
       {
-        auto & facet = mesh.facetList[facetId];
+        auto & facet = meshCoarse.facetList[facetId];
         facet.children.reserve(Facet_T::numChildren);
         // create facet only when we are the first facing element
         if (facet.facingElem[0].ptr->id == elem.id)
@@ -130,23 +131,23 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
             for (short_T p = 0; p < Facet_T::numPts; ++p)
             {
               conn[p] =
-                  &newMesh.pointList[localPts[Elem_T::elemToFacetChild[f][fc][p]]];
+                  &meshFine.pointList[localPts[Elem_T::elemToFacetChild[f][fc][p]]];
             }
             auto const newFacetId = Facet_T::numChildren * facetId + fc;
-            newMesh.facetList[newFacetId] = Facet_T{conn, newFacetId, facet.marker};
+            meshFine.facetList[newFacetId] = Facet_T{conn, newFacetId, facet.marker};
 
-            newMesh.facetList[newFacetId].parent = ChildElem{&facet, fc};
-            facet.children.push_back(ChildElem{&newMesh.facetList[newFacetId], fc});
+            meshFine.facetList[newFacetId].parent = ChildElem{&facet, fc};
+            facet.children.push_back(ChildElem{&meshFine.facetList[newFacetId], fc});
 
             // keep the same convention for new facet and new element
-            newMesh.facetList[newFacetId].facingElem[0] = FacingElem{
-                &newMesh.elementList
+            meshFine.facetList[newFacetId].facingElem[0] = FacingElem{
+                &meshFine.elementList
                      [Elem_T::numChildren * elem.id +
                       Elem_T::elemToFacetChildFacing[f][fc][0]],
                 Elem_T::elemToFacetChildFacing[f][fc][1]};
 
             // TODO: the elem child id works only in 2D!!!
-            newMesh.elemToFacet
+            meshFine.elemToFacet
                 [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
                 [(f + fc) % Elem_T::numChildren] = newFacetId;
           }
@@ -160,13 +161,13 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
             // TODO: this is true in 2D, but 3D should be checked!!
             auto const newFacetId =
                 Facet_T::numChildren * facetId + (Facet_T::numChildren - 1 - fc);
-            newMesh.facetList[newFacetId].facingElem[1] = FacingElem{
-                &newMesh.elementList
+            meshFine.facetList[newFacetId].facingElem[1] = FacingElem{
+                &meshFine.elementList
                      [Elem_T::numChildren * elem.id +
                       Elem_T::elemToFacetChildFacing[f][fc][0]],
                 Elem_T::elemToFacetChildFacing[f][fc][1]};
 
-            newMesh.elemToFacet
+            meshFine.elemToFacet
                 [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
                 [(f + fc) % Elem_T::numChildren] = newFacetId;
           }
@@ -177,20 +178,20 @@ void uniformRefine2d(Mesh & mesh, Mesh & newMesh)
 
   // the prediction must be correct otherwise the pointList vector is resized
   // and all pointers are invalidated
-  assert(predPts == newMesh.pointList.size());
+  assert(predPts == meshFine.pointList.size());
 
-  newMesh.buildConnectivity();
+  meshFine.buildConnectivity();
 
-  buildFacets(newMesh, mesh.flags);
+  buildFacets(meshFine, meshCoarse.flags);
 
-  if ((mesh.flags & MeshFlags::NORMALS).any())
+  if ((meshCoarse.flags & MeshFlags::NORMALS).any())
   {
-    buildNormals(newMesh);
+    buildNormals(meshFine);
   }
-  if ((mesh.flags & MeshFlags::FACET_PTRS).any())
+  if ((meshCoarse.flags & MeshFlags::FACET_PTRS).any())
   {
-    addElemFacetList(newMesh);
+    addElemFacetList(meshFine);
   }
 
-  newMesh.flags = mesh.flags;
+  meshFine.flags = meshCoarse.flags;
 }

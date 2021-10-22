@@ -42,16 +42,19 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uniformRefine2d(*meshCoarse, *mesh);
-  // *mesh = *meshCoarse;
+  // uniformRefine2d(*meshCoarse, *mesh);
+  *mesh = *meshCoarse;
 
   using QR_T = typename RaviartThomasFE<Elem_T, 0>::RecommendedQR;
   using FESpaceRT0_T =
       FESpace<Mesh_T, typename RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
   FESpaceRT0_T feSpaceRT0{*mesh};
 
-  auto bcU = std::tuple{BCEss{feSpaceRT0, 3}};
+  // auto bcU = std::tuple{BCEss{feSpaceRT0, 3}};
+  // std::get<0>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  auto bcU = std::tuple{BCEss{feSpaceRT0, 2}, BCEss{feSpaceRT0, 5}};
   std::get<0>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  std::get<1>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
 
   using FESpaceLambda_T =
       FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
@@ -78,7 +81,7 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   lambda.data = sol.block(feSpaceRT0.dof.size, 0, feSpaceLambda.dof.size, 1);
 
   double sum = 0.;
-  for (marker_T const marker: {1, 2, 3})
+  for (marker_T const marker: {1, 2, 3, 5})
   {
     auto const flux = integrateOnBoundary(uRT0.data, feSpaceRT0, marker);
     std::cout << "flux on marker " << marker << ": " << flux << std::endl;
@@ -121,7 +124,7 @@ int main()
   {
     ParameterDict config;
     config["mesh"]["type"] = "gmsh";
-    config["mesh"]["filename"] = "elbow_q.msh";
+    config["mesh"]["filename"] = "elbow_qq.msh";
     // config["mesh"]["type"] = "structured";
     // config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
     // config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};

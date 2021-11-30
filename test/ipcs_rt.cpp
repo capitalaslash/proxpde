@@ -79,28 +79,18 @@ int main(int argc, char * argv[])
   // using LinearQR = LagrangeFE<Elem_T,1>::RecommendedQR;
 
   // monolithic
-  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
   // split
   using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
 
   // split RT
-  // using FESpaceUStarRT_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR>;
-  // using FESpaceVelStarRT_T = FESpace<Mesh_T,QuadraticRefFE,QuadraticQR, 2>;
   using FESpaceUStarRT_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-  using FESpaceVelStarRT_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR, 2>;
+  using FESpaceVelStarRT_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR, Elem_T::dim>;
   using FESpaceRT0_T =
       FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QuadraticQR>;
   using FESpaceLambda_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QuadraticQR>;
-
-  // split RT postpro
-  using FESpaceVel0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QuadraticQR, 2>;
-  using MeshFacet_T = Mesh<typename Elem_T::Facet_T>;
-  using FESpaceFacet_T = FESpace<
-      MeshFacet_T,
-      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RefFE_T,
-      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RecommendedQR>;
 
   MilliTimer t;
 
@@ -112,28 +102,25 @@ int main(int argc, char * argv[])
   }
   else
   {
-    config["nx"] = 4U;
-    config["ny"] = 8U;
+    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+    config["mesh"]["length"] = Vec3{1.0, 10.0, 0.0};
+    config["mesh"]["n"] = std::array{4U, 8U, 0U};
+    config["mesh"]["flags"] =
+        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS;
     config["dt"] = 0.2;
     config["ntime"] = 50U;
     config["nu"] = 0.01;
     config["printStep"] = 1U;
+    config["monolithic"] = true;
+    config["split"] = false;
+    config["split_rt"] = true;
   }
-  config.validate({"nx", "ny", "dt", "ntime", "nu", "printStep"});
+  config.validate(
+      {"mesh", "dt", "ntime", "nu", "printStep", "monolithic", "split", "split_rt"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(
-      *mesh,
-      Vec3{0., 0., 0.},
-      Vec3{1., 10., 0.},
-      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0},
-      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
-  t.stop();
-
-  t.start("facet mesh");
-  std::unique_ptr<MeshFacet_T> facetMesh{new MeshFacet_T};
-  buildFacetMesh(*facetMesh, *mesh);
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
   t.stop();
 
   t.start("fespace");
@@ -150,10 +137,6 @@ int main(int argc, char * argv[])
   FESpaceVelStarRT_T feSpaceVelStarRT{*mesh};
   FESpaceRT0_T feSpaceVelRT{*mesh};
   FESpaceLambda_T feSpaceLambda{*mesh, feSpaceVelRT.dof.size};
-
-  // split RT postpro
-  FESpaceVel0_T feSpaceVel0{*mesh};
-  FESpaceFacet_T feSpaceFacet{*facetMesh};
   t.stop();
 
   t.start("bc");
@@ -274,8 +257,8 @@ int main(int argc, char * argv[])
   Vec pOld = Vec::Zero(dofP);
   Vec vel{dofU * FESpaceVel_T::dim};
 
-  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d
-  // pOld / dx
+  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) =
+  // u / dt - d pOld / dx
   auto const uStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
@@ -284,8 +267,8 @@ int main(int argc, char * argv[])
       AssemblyProjection{1. / dt, u.data, feSpaceU},
       AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}}};
 
-  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d
-  // pOld / dy
+  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
+  // v / dt - d pOld / dy
   auto const vStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
@@ -316,8 +299,8 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("eqn");
-  Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::RowMajor>()};
-  Eqn eqnVstar{vStar, vStarLhs, vStarRhs, bcsVStar, EqnSolver<StorageType::RowMajor>()};
+  Eqn eqnUstar{uStar, uStarLhs, uStarRhs, bcsUStar, EqnSolver<StorageType::ClmMajor>()};
+  Eqn eqnVstar{vStar, vStarLhs, vStarRhs, bcsVStar, EqnSolver<StorageType::ClmMajor>()};
 
   Eqn eqnP{p, pLhs, pRhs, bcsPSplit};
   // eqnP lhs does not change in time, we can pre-compute and factorize it
@@ -337,30 +320,30 @@ int main(int argc, char * argv[])
   t.start("assembly RT");
   Var uStarRT{"uStarRT", feSpaceUStarRT.dof.size};
   Var vStarRT{"vStarRT", feSpaceUStarRT.dof.size};
-  Vec velStarRT = Vec::Zero(2 * feSpaceUStarRT.dof.size);
-  Vec velRT = Vec::Zero(feSpaceVelRT.dof.size);
-  // Vec lambda = Vec::Zero(feSpaceLambda.dof.size);
+  Vec velStarRT = Vec::Zero(feSpaceUStarRT.dof.size * Elem_T::dim);
+  FEVar velRT{"velRT", feSpaceVelRT};
+  Var lambda{"lambda", feSpaceLambda.dof.size};
 
-  // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt - d
-  // pOld / dx
+  // uStar / dt + (velRT \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) =
+  // 2 * uRT / dt - uStar / dt
   auto const uStarRTLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceUStarRT},
-      AssemblyAdvection{1.0, velRT, feSpaceVelRT, feSpaceUStarRT},
+      AssemblyAdvection{1.0, velRT.data, feSpaceVelRT, feSpaceUStarRT},
       AssemblyStiffness{nu, feSpaceUStarRT}};
   auto const uStarRTRhs = std::tuple{
-      AssemblyProjection{2. / dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}},
+      AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {0}},
       AssemblyProjection{-1. / dt, uStarRT.data, feSpaceUStarRT}
       // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}}
   };
 
-  // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) = v / dt - d
-  // pOld / dy
+  // vStar / dt + (velRT \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
+  // 2 * vRT / dt - vStar / dt
   auto const vStarRTLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceUStarRT},
-      AssemblyAdvection{1.0, velRT, feSpaceVelRT, feSpaceUStarRT},
+      AssemblyAdvection{1.0, velRT.data, feSpaceVelRT, feSpaceUStarRT},
       AssemblyStiffness{nu, feSpaceUStarRT}};
   auto const vStarRTRhs = std::tuple{
-      AssemblyProjection{2. / dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}},
+      AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {1}},
       AssemblyProjection{-1. / dt, vStarRT.data, feSpaceUStarRT}
       // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}}
   };
@@ -386,18 +369,9 @@ int main(int argc, char * argv[])
   builderRT.closeMatrix();
   auto const velRTRhsFixed = builderRT.b;
   builderRT.clearRhs();
-  IterSolver solverRT;
+  // IterSolver solverRT;
+  LUSolver solverRT;
   solverRT.compute(builderRT.A);
-  t.stop();
-
-  t.start("eqn RT pp");
-  Builder<StorageType::RowMajor> builderVel0{feSpaceVel0.dof.size * FESpaceVel0_T::dim};
-  builderVel0.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceVel0}}, std::tuple{});
-  auto const vel0Rhs =
-      std::tuple{AssemblyProjection{1.0, velRT, feSpaceVelRT, feSpaceVel0}};
-  builderVel0.closeMatrix();
-  IterSolver solverVel0;
-  solverVel0.compute(builderVel0.A);
   t.stop();
 
   t.start("ic");
@@ -422,41 +396,37 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(ic0, feSpaceUStarRT, uStarRT.data);
   interpolateAnalyticFunction(ic1, feSpaceUStarRT, vStarRT.data);
   auto const ic3d = [&ic](Vec3 const & p) { return promote<3>(ic(p)); };
-  interpolateAnalyticFunction(ic3d, feSpaceVelRT, velRT);
+  interpolateAnalyticFunction(ic3d, feSpaceVelRT, velRT.data);
   t.stop();
 
   t.start("print");
-  // monolithic
   IOManager ioVelM{feSpaceVel, "output_ipcs_rt/velm"};
-  ioVelM.print({velM});
   IOManager ioPM{feSpaceP, "output_ipcs_rt/pm"};
   Var pM{"pM", velM.data.block(dofU * FESpaceVel_T::dim, 0, dofP, 1)};
-  ioPM.print({pM});
-
-  // split
-  IOManager ioUsplit{feSpaceU, "output_ipcs_rt/usplit"};
-  ioUsplit.print({eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
-  IOManager ioPsplit{feSpaceP, "output_ipcs_rt/psplit"};
-  Var pSplit{"p"};
-  pSplit.data = Vec::Zero(feSpacePSplit.dof.size);
-  ioPsplit.print({pSplit});
-
-  // split RT
-  IOManager ioUsplitRT{feSpaceUStarRT, "output_ipcs_rt/usplit_rt"};
-  ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol});
-  IOManager ioVel0{feSpaceVel0, "output_ipcs_rt/vel0"};
-  Var vel0{"vel0", feSpaceVel0.dof.size * FESpaceVel0_T::dim};
-  ioVel0.print({vel0});
-  IOManager ioFlux{feSpaceFacet, "output_ipcs_rt/flux"};
-  Var flux{"flux"};
-  flux.data = Vec::Zero(static_cast<uint>(facetMesh->elementList.size()));
-  for (auto const & facet: mesh->facetList)
+  if (config["monolithic"].as<bool>())
   {
-    auto const [insideElemPtr, side] = facet.facingElem[0];
-    auto const dofId = feSpaceVelRT.dof.getId(insideElemPtr->id, side);
-    flux.data[facet.id] = velRT[dofId];
+    ioVelM.print({velM});
+    ioPM.print({pM});
   }
-  ioFlux.print({flux});
+
+  IOManager ioUsplit{feSpaceU, "output_ipcs_rt/usplit"};
+  IOManager ioPsplit{feSpaceP, "output_ipcs_rt/psplit"};
+  Var pSplit{"p", feSpacePSplit.dof.size};
+  if (config["split"].as<bool>())
+  {
+    ioUsplit.print({eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
+    ioPsplit.print({pSplit});
+  }
+
+  IOManager ioUsplitRT{feSpaceUStarRT, "output_ipcs_rt/usplit_rt"};
+  IOManagerP0 ioVelRT{feSpaceVelRT, "output_ipcs_rt/velrt"};
+  IOManagerFacet ioFacet{feSpaceVelRT, "output_ipcs_rt/facet"};
+  if (config["split_rt"].as<bool>())
+  {
+    ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol});
+    ioVelRT.print(std::tuple{velRT});
+    ioFacet.print(std::tuple{velRT});
+  }
   t.stop();
 
   MilliTimer timerStep;
@@ -472,163 +442,169 @@ int main(int argc, char * argv[])
               << ", time = " << time << std::endl;
     // filelog << "\n" << Utils::separator;
 
-    t.start("build monolithic");
-    velOldMonolithic = velM.data;
+    if (config["monolithic"].as<bool>())
+    {
+      t.start("build monolithic");
+      velOldMonolithic = velM.data;
 
-    builderM.buildLhs(std::tuple{timeder, advection, stiffness}, bcsVel);
-    builderM.buildCoupling(grad, bcsVel, bcsP);
-    builderM.buildCoupling(div, bcsP, bcsVel);
-    builderM.buildRhs(std::tuple{timederRhs}, bcsVel);
-    builderM.closeMatrix();
-    t.stop();
+      builderM.buildLhs(std::tuple{timeder, advection, stiffness}, bcsVel);
+      builderM.buildCoupling(grad, bcsVel, bcsP);
+      builderM.buildCoupling(div, bcsP, bcsVel);
+      builderM.buildRhs(std::tuple{timederRhs}, bcsVel);
+      builderM.closeMatrix();
+      t.stop();
 
-    t.start("solve monolithic");
-    solverM.compute(builderM.A);
-    velM.data = solverM.solve(builderM.b);
-    auto const res = builderM.A * velM.data - builderM.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
-    t.stop();
+      t.start("solve monolithic");
+      solverM.compute(builderM.A);
+      velM.data = solverM.solve(builderM.b);
+      auto const res = builderM.A * velM.data - builderM.b;
+      std::cout << "residual norm: " << res.norm() << std::endl;
+      t.stop();
 
-    t.start("build ustar");
-    setComponent(vel, feSpaceVel, u.data, feSpaceU, 0);
-    setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
-    pOld += eqnP.sol.data;
-    eqnUstar.build();
-    eqnVstar.build();
-    t.stop();
+      t.start("clear monolithic");
+      builderM.clear();
+      t.stop();
+    }
 
-    t.start("solve ustar");
-    eqnUstar.compute();
-    eqnUstar.solve();
-    std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
-    eqnVstar.compute();
-    eqnVstar.solve();
-    std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
-    t.stop();
+    if (config["split"].as<bool>())
+    {
+      t.start("build ustar");
+      setComponent(vel, feSpaceVel, u.data, feSpaceU, 0);
+      setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
+      pOld += eqnP.sol.data;
+      eqnUstar.build();
+      eqnVstar.build();
+      t.stop();
 
-    t.start("build p");
-    setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
-    setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
-    eqnP.buildRhs();
-    t.stop();
+      t.start("solve ustar");
+      eqnUstar.compute();
+      eqnUstar.solve();
+      std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+      eqnVstar.compute();
+      eqnVstar.solve();
+      std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+      t.stop();
 
-    t.start("solve p");
-    eqnP.solve();
-    std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
-    t.stop();
+      t.start("build p");
+      setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
+      setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
+      eqnP.buildRhs();
+      t.stop();
 
-    t.start("build u");
-    eqnU.buildRhs();
-    eqnV.buildRhs();
-    t.stop();
+      t.start("solve p");
+      eqnP.solve();
+      std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
+      t.stop();
 
-    t.start("solve u");
-    eqnU.solve();
-    std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
-    eqnV.solve();
-    std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
-    t.stop();
+      t.start("build u");
+      eqnU.buildRhs();
+      eqnV.buildRhs();
+      t.stop();
 
-    t.start("build ustarRT");
-    eqnUstarRT.build();
-    eqnVstarRT.build();
-    t.stop();
+      t.start("solve u");
+      eqnU.solve();
+      std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
+      eqnV.solve();
+      std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
+      t.stop();
 
-    t.start("solve ustarRT");
-    eqnUstarRT.compute();
-    eqnUstarRT.solve();
-    std::cout << "eqnUstarRT residual norm: " << eqnUstar.residualNorm() << std::endl;
-    eqnVstarRT.compute();
-    eqnVstarRT.solve();
-    std::cout << "eqnVstarRT residual norm: " << eqnVstar.residualNorm() << std::endl;
-    t.stop();
+      t.start("clear split");
+      eqnUstar.builder.clear();
+      eqnVstar.builder.clear();
+      eqnP.builder.clear();
+      eqnU.builder.clear();
+      eqnV.builder.clear();
+      t.stop();
+    }
 
-    t.start("build proj RT");
-    setComponent(velStarRT, feSpaceVelStarRT, uStarRT.data, feSpaceUStarRT, 0);
-    setComponent(velStarRT, feSpaceVelStarRT, vStarRT.data, feSpaceUStarRT, 1);
-    builderRT.buildRhs(velRTRhs, bcsVelRT);
-    builderRT.b += velRTRhsFixed;
-    std::cout << "RT rhs norm: " << builderRT.b.norm() << std::endl;
-    t.stop();
+    if (config["split_rt"].as<bool>())
+    {
+      t.start("build ustarRT");
+      eqnUstarRT.build();
+      eqnVstarRT.build();
+      t.stop();
 
-    t.start("solve RT");
-    // std::cout << "ART:\n" << builderRT.A << std::endl;
-    auto const solRT = solverRT.solve(builderRT.b);
-    velRT = solRT.block(0, 0, feSpaceVelRT.dof.size, 1);
-    std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
-              << std::endl;
-    t.stop();
+      t.start("solve ustarRT");
+      eqnUstarRT.compute();
+      eqnUstarRT.solve();
+      std::cout << "eqnUstarRT residual norm: " << eqnUstar.residualNorm() << std::endl;
+      eqnVstarRT.compute();
+      eqnVstarRT.solve();
+      std::cout << "eqnVstarRT residual norm: " << eqnVstar.residualNorm() << std::endl;
+      t.stop();
 
-    t.start("build RT pp");
-    builderVel0.buildRhs(vel0Rhs, std::tuple{});
-    t.stop();
+      t.start("build proj RT");
+      setComponent(velStarRT, feSpaceVelStarRT, uStarRT.data, feSpaceUStarRT, 0);
+      setComponent(velStarRT, feSpaceVelStarRT, vStarRT.data, feSpaceUStarRT, 1);
+      builderRT.buildRhs(velRTRhs, bcsVelRT);
+      builderRT.b += velRTRhsFixed;
+      std::cout << "RT rhs norm: " << builderRT.b.norm() << std::endl;
+      t.stop();
 
-    t.start("solve RT pp");
-    vel0.data = solverVel0.solve(builderVel0.b);
-    t.stop();
+      t.start("solve RT");
+      // std::cout << "ART:\n" << builderRT.A << std::endl;
+      auto const solRT = solverRT.solve(builderRT.b);
+      velRT.data = solRT.block(0, 0, feSpaceVelRT.dof.size, 1);
+      std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
+                << std::endl;
+      t.stop();
 
-    t.start("clear monolithic");
-    builderM.clear();
-    t.stop();
-
-    t.start("clear split");
-    eqnUstar.builder.clear();
-    eqnVstar.builder.clear();
-    eqnP.builder.clear();
-    eqnU.builder.clear();
-    eqnV.builder.clear();
-    t.stop();
-
-    t.start("clear RT");
-    eqnUstarRT.builder.clear();
-    eqnVstarRT.builder.clear();
-    builderRT.clearRhs();
-    t.stop();
-
-    t.start("clear RT pp");
-    builderVel0.clearRhs();
-    t.stop();
+      t.start("clear RT");
+      eqnUstarRT.builder.clear();
+      eqnVstarRT.builder.clear();
+      builderRT.clearRhs();
+      t.stop();
+    }
 
     t.start("print");
-    pSplit.data += eqnP.sol.data;
+    if (config["split"].as<bool>())
+    {
+      pSplit.data += eqnP.sol.data;
+    }
     if ((itime + 1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
-      // monolithic
-      ioVelM.print({velM}, time);
-      pM.data = velM.data.block(dofU * FESpaceVel_T::dim, 0, dofP, 1);
-      ioPM.print({pM}, time);
-
-      // split
-      ioUsplit.print({eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
-      ioPsplit.print({pSplit}, time);
-
-      // splitRT
-      ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol}, time);
-      ioVel0.print({vel0}, time);
-      for (auto const & facet: mesh->facetList)
+      if (config["monolithic"].as<bool>())
       {
-        auto const [insideElemPtr, side] = facet.facingElem[0];
-        auto const dofId = feSpaceVelRT.dof.getId(insideElemPtr->id, side);
-        flux.data[facet.id] = velRT[dofId];
+        ioVelM.print({velM}, time);
+        pM.data = velM.data.block(dofU * FESpaceVel_T::dim, 0, dofP, 1);
+        ioPM.print({pM}, time);
       }
-      ioFlux.print({flux}, time);
+
+      if (config["split"].as<bool>())
+      {
+        ioUsplit.print({eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
+        ioPsplit.print({pSplit}, time);
+      }
+
+      if (config["split_rt"].as<bool>())
+      {
+        ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol}, time);
+        ioVelRT.print(std::tuple{velRT}, time);
+        ioFacet.print(std::tuple{velRT}, time);
+      }
     }
     t.stop();
 
     std::cout << "time required: " << timerStep << " ms" << std::endl;
   }
 
-  using Facet_T = typename Elem_T::Facet_T;
-  using MeshFacet_T = Mesh<Facet_T>;
-  // using FESpaceFacet_T = FESpace<MeshFacet_T,
-  //                                typename LagrangeFE<Facet_T,1>::RefFE_T,
-  //                                typename LagrangeFE<Facet_T,1>::RecommendedQR, 2>;
+  t.start("boundary postpro");
+  using MeshFacet_T = Mesh<typename Elem_T::Facet_T>;
+  using FESpaceFacet_T = FESpace<
+      MeshFacet_T,
+      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RefFE_T,
+      typename LagrangeFE<typename Elem_T::Facet_T, 0>::RecommendedQR>;
+  std::unique_ptr<MeshFacet_T> facetMesh{new MeshFacet_T};
+  buildFacetMesh(*facetMesh, *mesh);
+
   FESpaceFacet_T feSpaceBd{*facetMesh};
-  Var bd{"bd"};
-  interpolateOnFacets<Component::TANGENTIAL>(bd.data, feSpaceBd, velRT, feSpaceVelRT);
-  std::cout << bd.data.transpose() << std::endl;
-  ioFlux.print({bd}, time);
+  FEVar bd{"bd", feSpaceBd};
+  interpolateOnFacets<Component::TANGENTIAL>(
+      bd.data, feSpaceBd, velRT.data, feSpaceVelRT);
+  if (bd.data.size() < 100)
+    std::cout << bd.data.transpose() << std::endl;
+  t.stop();
 
   t.print();
 

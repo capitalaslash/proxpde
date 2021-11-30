@@ -12,7 +12,78 @@ struct MeshFlags
   static constexpr T INTERNAL_FACETS = 0b0010;
   static constexpr T NORMALS = 0b0100;
   static constexpr T FACET_PTRS = 0b1000;
+  static constexpr std::array<T, 4> ALL = {
+      {BOUNDARY_FACETS, INTERNAL_FACETS, NORMALS, FACET_PTRS}};
 };
+
+static const std::string to_string(MeshFlags::T const flag)
+{
+  if (flag == MeshFlags::BOUNDARY_FACETS)
+    return "BOUNDARY_FACETS";
+  else if (flag == MeshFlags::INTERNAL_FACETS)
+    return "INTERNAL_FACETS";
+  else if (flag == MeshFlags::NORMALS)
+    return "NORMALS";
+  else if (flag == MeshFlags::FACET_PTRS)
+    return "FACET_PTRS";
+  abort();
+  return "ERROR";
+}
+
+static const MeshFlags::T to_MeshFlags(std::string_view str)
+{
+  if (str == "BOUNDARY_FACETS")
+    return MeshFlags::BOUNDARY_FACETS;
+  else if (str == "INTERNAL_FACETS")
+    return MeshFlags::INTERNAL_FACETS;
+  else if (str == "NORMALS")
+    return MeshFlags::NORMALS;
+  else if (str == "FACET_PTRS")
+    return MeshFlags::FACET_PTRS;
+  abort();
+  return MeshFlags::NONE;
+}
+
+namespace YAML
+{
+template <>
+struct convert<MeshFlags::T>
+{
+  static Node encode(MeshFlags::T const & rhs)
+  {
+    // string array implementation
+    Node node;
+    for (auto const flag: MeshFlags::ALL)
+    {
+      if ((rhs & flag).any())
+        node.push_back(to_string(flag));
+    }
+    return node;
+
+    // ulong implementation
+    // return Node{rhs.to_ulong()};
+  }
+
+  static bool decode(Node const & node, MeshFlags::T & rhs)
+  {
+    // string array implementation
+    if (!node.IsSequence())
+      return false;
+
+    for (auto const & flag: node)
+    {
+      rhs |= to_MeshFlags(flag.as<std::string>());
+    }
+    return true;
+
+    // ulong implementation
+    // if (!node.IsScalar())
+    //   return false;
+    // rhs = node.as<ulong>();
+    // return true;
+  }
+};
+} // namespace YAML
 
 template <typename Elem>
 class Mesh
@@ -297,6 +368,18 @@ void buildHyperCube(
   {
     addElemFacetList(mesh);
   }
+}
+
+template <typename Elem>
+void buildHyperCube(Mesh<Elem> & mesh, ParameterDict const & config)
+{
+  config.validate({"origin", "length", "n", "flags"});
+  buildHyperCube(
+      mesh,
+      config["origin"].as<Vec3>(),
+      config["length"].as<Vec3>(),
+      config["n"].as<std::array<uint, 3>>(),
+      config["flags"].as<MeshFlags::T>());
 }
 
 void refTriangleMesh(Mesh<Triangle> & mesh);

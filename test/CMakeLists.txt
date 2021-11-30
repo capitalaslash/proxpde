@@ -2,7 +2,7 @@ include(MiniFEMAddTest)
 
 # available labels:
 # 1d 2d 3d bc cr fe fv geometry hex io linalg monolithic ode parallel pde quad rt split
-# stokes tet th tri utils
+# stokes tet tri utils
 
 minifem_add_test(advection1d DATA advection1d.yaml LABELS 1d fv pde)
 minifem_add_test(advection2dquad DATA square_q.msh LABELS 2d fv pde quad)
@@ -26,6 +26,7 @@ minifem_add_test(ipcs LABELS 2d pde split stokes)
 minifem_add_test(ipcs_rt LABELS 2d pde rt split stokes)
 minifem_add_test(mesh_facets LABELS geometry)
 minifem_add_test(mesh_refine LABELS geometry)
+minifem_add_test(mesh_yaml LABELS geometry io utils)
 minifem_add_test(neumann LABELS bc)
 minifem_add_test(nipcs LABELS 2d pde split stokes)
 minifem_add_test(normal LABELS geometry)

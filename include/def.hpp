@@ -330,7 +330,7 @@ struct ParameterDict: public YAML::Node
 
   ParameterDict(YAML::Node const & n): YAML::Node{n} {}
 
-  bool validate(std::vector<std::string> const & requiredPars)
+  bool validate(std::vector<std::string> const & requiredPars) const
   {
     for (auto const & required: requiredPars)
     {

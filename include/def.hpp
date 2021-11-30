@@ -42,7 +42,7 @@ struct Utils
   static std::ostream constexpr & debug = std::cout;
 #endif
 
-  static std::ofstream filelog;
+  inline static std::ofstream filelog = std::ofstream{"minifem.log"};
 
   // static constexpr const char * separator =
   //     "================================================"

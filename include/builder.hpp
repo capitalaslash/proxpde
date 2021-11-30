@@ -117,9 +117,9 @@ struct Builder
         }
       }
 
-      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
-      // filelog << "Ke:\n" << Ke << std::endl;
-      // filelog << "Fe:\n" << Fe << std::endl;
+      // Utils::filelog << "\nelement" << elem.id << "\n---------------" << std::endl;
+      // Utils::filelog << "Ke:\n" << Ke << std::endl;
+      // Utils::filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
@@ -240,6 +240,10 @@ struct Builder
       Fe = -Crow * Ke * h;
       Ke = Crow * Ke * Cclm;
 
+      // Utils::filelog << "\nelement" << elem.id << "\n---------------" << std::endl;
+      // Utils::filelog << "Ke:\n" << Ke << std::endl;
+      // Utils::filelog << "Fe:\n" << Fe << std::endl;
+
       // --- store local values in global matrix and rhs ---
       for (uint i = 0; i < CurFE1_T::RefFE_T::numDOFs; ++i)
       {
@@ -330,8 +334,8 @@ struct Builder
           });
       Fe = C * Fe;
 
-      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
-      // filelog << "Fe:\n" << Fe << std::endl;
+      // Utils::filelog << "\nelement" << elem.id << "\n---------------" << std::endl;
+      // Utils::filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
       for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)

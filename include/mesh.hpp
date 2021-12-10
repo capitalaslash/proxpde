@@ -26,6 +26,7 @@ static const std::string to_string(MeshFlags::T const flag)
     return "NORMALS";
   else if (flag == MeshFlags::FACET_PTRS)
     return "FACET_PTRS";
+  std::cerr << "mesh flag not recognized: " << flag << std::endl;
   abort();
   return "ERROR";
 }
@@ -40,6 +41,7 @@ static const MeshFlags::T to_MeshFlags(std::string_view str)
     return MeshFlags::NORMALS;
   else if (str == "FACET_PTRS")
     return MeshFlags::FACET_PTRS;
+  std::cerr << "mesh flag not recognized: " << str << std::endl;
   abort();
   return MeshFlags::NONE;
 }

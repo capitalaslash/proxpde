@@ -179,8 +179,8 @@ struct Builder
       // --- build local matrix and rhs ---
       assembly.build(Ke);
 
-      // filelog << "\nelement" << e.id << "\n---------------" << std::endl;
-      // filelog << "Ke:\n" << Ke << std::endl;
+      // Utils::filelog << "\nelement" << elem.id << "\n---------------" << std::endl;
+      // Utils::filelog << "Ke:\n" << Ke << std::endl;
 
       // --- apply bc ---
       // A_constrained = C^T A C

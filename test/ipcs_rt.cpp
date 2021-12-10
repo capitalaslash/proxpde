@@ -103,8 +103,8 @@ int main(int argc, char * argv[])
   else
   {
     config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
-    config["mesh"]["length"] = Vec3{1.0, 10.0, 0.0};
-    config["mesh"]["n"] = std::array{4U, 8U, 0U};
+    config["mesh"]["length"] = Vec3{1.0, 2.0, 0.0};
+    config["mesh"]["n"] = std::array{5U, 5U, 0U};
     config["mesh"]["flags"] =
         MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS;
     config["dt"] = 0.2;
@@ -112,7 +112,7 @@ int main(int argc, char * argv[])
     config["nu"] = 0.01;
     config["printStep"] = 1U;
     config["monolithic"] = true;
-    config["split"] = false;
+    config["split"] = true;
     config["split_rt"] = true;
   }
   config.validate(
@@ -136,7 +136,8 @@ int main(int argc, char * argv[])
   FESpaceUStarRT_T feSpaceUStarRT{*mesh};
   FESpaceVelStarRT_T feSpaceVelStarRT{*mesh};
   FESpaceRT0_T feSpaceVelRT{*mesh};
-  FESpaceLambda_T feSpaceLambda{*mesh, feSpaceVelRT.dof.size};
+  FESpaceLambda_T feSpaceLambda{*mesh};
+  FESpaceLambda_T feSpaceLambdaCoupling{*mesh, feSpaceVelRT.dof.size};
   t.stop();
 
   t.start("bc");
@@ -144,7 +145,12 @@ int main(int argc, char * argv[])
   // auto const inlet = [] (Vec3 const &) { return Vec2(0.0, 1.0); };
   auto const zeroV = [](Vec3 const &) { return Vec2{0., 0.}; };
   auto const zeroS = [](Vec3 const &) { return 0.; };
-  auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0] * p[0])}; };
+  // auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0] * p[0])};
+  // };
+  auto const inlet = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
+  auto const inlet0 = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
+  auto const inlet1 = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
+
   // last essential bc wins on corners
   auto bcsVel = std::tuple{
       BCEss{feSpaceVel, side::BOTTOM},
@@ -161,8 +167,6 @@ int main(int argc, char * argv[])
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
   // split
-  auto const inlet0 = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
-  auto const inlet1 = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   auto bcsUStar = std::tuple{
       BCEss{feSpaceU, side::BOTTOM},
       BCEss{feSpaceU, side::RIGHT},
@@ -218,11 +222,17 @@ int main(int argc, char * argv[])
 
   auto const dt = config["dt"].as<double>();
   auto const nu = config["nu"].as<double>();
+  auto const g = [](Vec3 const &) { return Vec2{0.0, -1.0}; };
+  auto const g0 = [&g](Vec3 const & p) { return g(p)[0]; };
+  auto const g1 = [&g](Vec3 const & p) { return g(p)[1]; };
 
   t.start("assembly monolithic");
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
 
+  // vel / dt + (velOld \cdot \nabla) vel - \nabla \cdot (nu \nabla vel) + \nabla p =
+  // velOld / dt
+  // - \nabla \cdot vel = 0
   Vec velOldMonolithic{dofU * FESpaceVel_T::dim};
   AssemblyScalarMass timeder(1. / dt, feSpaceVel);
   AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel, feSpaceVel);
@@ -230,9 +240,7 @@ int main(int argc, char * argv[])
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
   AssemblyProjection timederRhs(1. / dt, velOldMonolithic, feSpaceVel);
-  // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
-  // to apply bc on pressure
-  // AssemblyDummy dummy{feSpaceP};
+  AssemblyAnalyticRhs gravity(g, feSpaceVel);
 
   Builder<StorageType::RowMajor> builderM{dofU * FESpaceVel_T::dim + dofP};
   // builderM.buildLhs(dummy, bcsP);
@@ -262,40 +270,55 @@ int main(int argc, char * argv[])
   auto const uStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-      AssemblyStiffness{nu, feSpaceU}};
+      AssemblyStiffness{nu, feSpaceU},
+  };
   auto const uStarRhs = std::tuple{
       AssemblyProjection{1. / dt, u.data, feSpaceU},
-      AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}}};
+      AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}},
+      AssemblyAnalyticRhs{g0, feSpaceU},
+  };
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
   // v / dt - d pOld / dy
   auto const vStarLhs = std::tuple{
       AssemblyScalarMass{1. / dt, feSpaceU},
       AssemblyAdvection{1.0, vel, feSpaceVel, feSpaceU},
-      AssemblyStiffness{nu, feSpaceU}};
+      AssemblyStiffness{nu, feSpaceU},
+  };
   auto const vStarRhs = std::tuple{
       AssemblyProjection{1. / dt, v.data, feSpaceU},
-      AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {1}}};
+      AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {1}},
+      AssemblyAnalyticRhs{g1, feSpaceU},
+  };
   // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
   // dt \nabla^2 \delta p = \nabla \cdot velStar
-  auto const pLhs = std::tuple{AssemblyStiffness{dt, feSpacePSplit}};
-  auto const pRhs =
-      std::tuple{AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit}};
+  auto const pLhs = std::tuple{
+      AssemblyStiffness{dt, feSpacePSplit},
+  };
+  auto const pRhs = std::tuple{
+      AssemblyDivRhs{-1.0, velStar, feSpaceVel, feSpacePSplit},
+  };
   // AssemblyStiffnessRhs{-dt, pOld, feSpaceP});
 
   // pOld += \delta p
   // u = uStar - dt d \delta p / dx
-  auto const uLhs = std::tuple{AssemblyScalarMass{1.0, feSpaceU}};
+  auto const uLhs = std::tuple{
+      AssemblyScalarMass{1.0, feSpaceU},
+  };
   auto const uRhs = std::tuple{
       AssemblyProjection{1.0, uStar.data, feSpaceU},
-      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}}};
+      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {0}},
+  };
 
   // v = vStar - dt d \delta p / dy
-  auto const vLhs = std::tuple{AssemblyScalarMass{1.0, feSpaceU}};
+  auto const vLhs = std::tuple{
+      AssemblyScalarMass{1.0, feSpaceU},
+  };
   auto const vRhs = std::tuple{
       AssemblyProjection{1.0, vStar.data, feSpaceU},
-      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}}};
+      AssemblyGradRhs{-dt, p.data, feSpacePSplit, feSpaceU, {1}},
+  };
   t.stop();
 
   t.start("eqn");
@@ -323,29 +346,35 @@ int main(int argc, char * argv[])
   Vec velStarRT = Vec::Zero(feSpaceUStarRT.dof.size * Elem_T::dim);
   FEVar velRT{"velRT", feSpaceVelRT};
   Var lambda{"lambda", feSpaceLambda.dof.size};
+  Vec lambdaOld = Vec::Zero(feSpaceLambda.dof.size);
+  Vec dLambda = Vec::Zero(feSpaceLambda.dof.size);
 
-  // uStar / dt + (velRT \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) =
-  // 2 * uRT / dt - uStar / dt
+  // 2 * uStar / dt + (velRT \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) =
+  // 2 * uRT / dt
   auto const uStarRTLhs = std::tuple{
-      AssemblyScalarMass{1. / dt, feSpaceUStarRT},
+      AssemblyScalarMass{2. / dt, feSpaceUStarRT},
       AssemblyAdvection{1.0, velRT.data, feSpaceVelRT, feSpaceUStarRT},
-      AssemblyStiffness{nu, feSpaceUStarRT}};
+      AssemblyStiffness{nu, feSpaceUStarRT},
+  };
   auto const uStarRTRhs = std::tuple{
       AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {0}},
-      AssemblyProjection{-1. / dt, uStarRT.data, feSpaceUStarRT}
-      // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {0}}
+      // AssemblyProjection{-1. / dt, uStarRT.data, feSpaceUStarRT},
+      AssemblyGradRhs2{-1.0, lambdaOld, feSpaceLambda, feSpaceUStarRT, {0}},
+      AssemblyAnalyticRhs{g0, feSpaceUStarRT},
   };
 
-  // vStar / dt + (velRT \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
-  // 2 * vRT / dt - vStar / dt
+  // 2 * vStar / dt + (velRT \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
+  // 2 * vRT / dt
   auto const vStarRTLhs = std::tuple{
-      AssemblyScalarMass{1. / dt, feSpaceUStarRT},
+      AssemblyScalarMass{2. / dt, feSpaceUStarRT},
       AssemblyAdvection{1.0, velRT.data, feSpaceVelRT, feSpaceUStarRT},
-      AssemblyStiffness{nu, feSpaceUStarRT}};
+      AssemblyStiffness{nu, feSpaceUStarRT},
+  };
   auto const vStarRTRhs = std::tuple{
       AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {1}},
-      AssemblyProjection{-1. / dt, vStarRT.data, feSpaceUStarRT}
-      // AssemblyProjection{1./dt, velRT, feSpaceVelRT, feSpaceUStarRT, {1}}
+      // AssemblyProjection{-1. / dt, vStarRT.data, feSpaceUStarRT},
+      AssemblyGradRhs2{-1.0, lambdaOld, feSpaceLambda, feSpaceUStarRT, {1}},
+      AssemblyAnalyticRhs{g1, feSpaceUStarRT},
   };
   t.stop();
 
@@ -359,13 +388,15 @@ int main(int argc, char * argv[])
   // \nabla \cdot \vec{uRT} = 0
   Builder<StorageType::RowMajor> builderRT{
       feSpaceVelRT.dof.size + feSpaceLambda.dof.size};
-  builderRT.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceVelRT}}, bcsVelRT);
+  builderRT.buildLhs(std::tuple{AssemblyVectorMass{1. / dt, feSpaceVelRT}}, bcsVelRT);
   builderRT.buildCoupling(
-      AssemblyVectorGrad(1.0, feSpaceVelRT, feSpaceLambda), bcsVelRT, bcsLambda);
+      AssemblyVectorGrad(1.0, feSpaceVelRT, feSpaceLambdaCoupling),
+      bcsVelRT,
+      bcsLambda);
   builderRT.buildCoupling(
-      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceVelRT), bcsLambda, bcsVelRT);
-  auto const velRTRhs =
-      std::tuple{AssemblyProjection{1.0, velStarRT, feSpaceVelStarRT, feSpaceVelRT}};
+      AssemblyVectorDiv(1.0, feSpaceLambdaCoupling, feSpaceVelRT), bcsLambda, bcsVelRT);
+  auto const velRTRhs = std::tuple{
+      AssemblyProjection{1. / dt, velStarRT, feSpaceVelStarRT, feSpaceVelRT}};
   builderRT.closeMatrix();
   auto const velRTRhsFixed = builderRT.b;
   builderRT.clearRhs();
@@ -375,7 +406,7 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("ic");
-  auto const ic = [](Vec3 const &) { return Vec2(0., 1.); };
+  auto const ic = [](Vec3 const &) { return Vec2(0., 0.); };
   // auto const ic = [](Vec3 const & p) { return Vec2{0., 1.5 * (1. - p(0)*p(0))}; };
   // auto const ic = zero;
 
@@ -421,11 +452,13 @@ int main(int argc, char * argv[])
   IOManager ioUsplitRT{feSpaceUStarRT, "output_ipcs_rt/usplit_rt"};
   IOManagerP0 ioVelRT{feSpaceVelRT, "output_ipcs_rt/velrt"};
   IOManagerFacet ioFacet{feSpaceVelRT, "output_ipcs_rt/facet"};
+  IOManager ioLambda{feSpaceLambda, "output_ipcs_rt/lambda"};
   if (config["split_rt"].as<bool>())
   {
     ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol});
     ioVelRT.print(std::tuple{velRT});
     ioFacet.print(std::tuple{velRT});
+    ioLambda.print({lambda});
   }
   t.stop();
 
@@ -520,6 +553,7 @@ int main(int argc, char * argv[])
     if (config["split_rt"].as<bool>())
     {
       t.start("build ustarRT");
+      lambdaOld += dLambda;
       eqnUstarRT.build();
       eqnVstarRT.build();
       t.stop();
@@ -545,6 +579,7 @@ int main(int argc, char * argv[])
       // std::cout << "ART:\n" << builderRT.A << std::endl;
       auto const solRT = solverRT.solve(builderRT.b);
       velRT.data = solRT.block(0, 0, feSpaceVelRT.dof.size, 1);
+      dLambda = solRT.block(feSpaceVelRT.dof.size, 0, feSpaceLambda.dof.size, 1);
       std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
                 << std::endl;
       t.stop();
@@ -560,6 +595,10 @@ int main(int argc, char * argv[])
     if (config["split"].as<bool>())
     {
       pSplit.data += eqnP.sol.data;
+    }
+    if (config["split"].as<bool>())
+    {
+      lambda.data += dLambda;
     }
     if ((itime + 1) % printStep == 0)
     {
@@ -582,6 +621,7 @@ int main(int argc, char * argv[])
         ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol}, time);
         ioVelRT.print(std::tuple{velRT}, time);
         ioFacet.print(std::tuple{velRT}, time);
+        ioLambda.print({lambda}, time);
       }
     }
     t.stop();

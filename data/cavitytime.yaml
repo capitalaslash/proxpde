@@ -1,8 +1,0 @@
-{
-    nx: 4,
-    ny: 4,
-    mu: 0.1,
-    timestep: 0.1,
-    numsteps: 10,
-}
-

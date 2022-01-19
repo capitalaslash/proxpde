@@ -23,9 +23,10 @@ int main(int argc, char * argv[])
   // double const qiiLeft = 1.;
   double const tLeft = 1.;
   // double const qiiRight = 0.; // equivalent to no bc
-  double const tRight = 0.0;
+  double const tRight = 0.;
   double const dt = 0.1;
-  uint const ntime = 50U;
+  uint const ntime = 10U;
+  double const toll = 1.e-13;
 
   scalarFun_T const exactSol = [](Vec3 const & p) { return 1. - p[0]; };
 
@@ -50,69 +51,86 @@ int main(int argc, char * argv[])
   auto bcRight = BCEss{feSpace, side::RIGHT};
   bcRight << [tRight](Vec3 const &) { return tRight; };
   auto const bcs = std::tuple{bcLeft, bcRight};
+  // set increment BCs to zero for all Dirichlet boundaries
+  auto const zero = [](Vec3 const &) { return 0.; };
+  auto bcsInc = bcs;
+  static_for(bcsInc, [&zero]([[maybe_unused]] auto const i, auto & bc) { bc << zero; });
   t.stop();
 
   t.start("fe build");
+  Var temp{"temp"};
+  Var dTemp{"dTemp"};
+  Var tempInc{"tempInc"};
+  // tempOldInc can be removed using temp in its place
   Vec tempOld = Vec::Zero(feSpace.dof.size);
+  // tempOldInc can be removed using tempInc in its place
   Vec tempOldInc = Vec::Zero(feSpace.dof.size);
-  Vec res = Vec::Zero(feSpace.dof.size);
   AssemblyMass mass{1. / dt, feSpace};
   AssemblyStiffness diffusion{k, feSpace};
   AssemblyAnalyticRhs heatGeneration{qiii, feSpace};
   AssemblyProjection massOld{1. / dt, tempOld, feSpace};
   AssemblyProjection massOldInc{1. / dt, tempOldInc, feSpace};
-  AssemblyProjection residual{-1., res, feSpace};
-  AssemblyStiffnessRhs diffRhs{-1., tempOldInc, feSpace, feSpace};
-  // // using an interpolated rhs makes its quality independent of the chosen qr
-  // Vec rhsProj;
-  // interpolateAnalyticFunction(rotatedRhs, feSpace, rhsProj);
-  // AssemblyProjection f(1.0, rhsProj, feSpace);
+  t.stop();
+
+  t.start("ic");
+  auto const ic = [](Vec3 const &) { return 1.; };
+  interpolateAnalyticFunction(ic, feSpace, temp.data);
+  // the ic must be compatible with the original bcs for the incremental solution!
+  dTemp.data = Vec::Zero(feSpace.dof.size);
+  tempInc.data = temp.data;
+  applyBCs(tempInc.data, bcs);
+  tempOldInc = tempInc.data;
+  // this is not strictly required for the full solution, but it greatly improves the
+  // similarity between the solutions
+  temp.data = tempInc.data;
+  t.stop();
 
   Builder builder{feSpace.dof.size};
   Builder builderInc{feSpace.dof.size};
-  t.stop();
-
-  Var temp{"temp"};
-  Var dTemp{"dTemp"};
-  Var tempInc{"tempInc"};
-  // ic
-  temp.data = Vec::Zero(feSpace.dof.size);
-  dTemp.data = Vec::Zero(feSpace.dof.size);
-  tempInc.data = Vec::Zero(feSpace.dof.size);
-  tempOldInc = Vec::Zero(feSpace.dof.size);
-  // the ic must be compatible with the bcs for the incremental solution!
-  tempOldInc[0] = 1.0;
+  Builder builderTmp{feSpace.dof.size};
 
   LUSolver solver;
-  IOManager io{feSpace, "output_heat1d/temp"};
+
+  t.start("print");
   double time = 0.;
-  io.print({temp, tempInc}, time);
+  IOManager io{feSpace, "output_heat1d/temp"};
+  io.print({temp, tempInc, dTemp}, time);
+  t.stop();
+
+  // the lhs terms are the same for full and incremental versions
+  auto const lhs = std::tuple{mass, diffusion};
   for (uint itime = 0; itime < ntime; ++itime)
   {
     time += dt;
-    std::cout << "time = " << time << std::endl;
+    std::cout << Utils::separator << "time = " << time << std::endl;
 
+    t.start("build");
     tempOld = temp.data;
-    builder.buildLhs(std::tuple{mass, diffusion}, bcs);
+    builder.clear();
+    builder.buildLhs(lhs, bcs);
     builder.closeMatrix();
-    builder.buildRhs(std::tuple{massOld, heatGeneration}, bcs);
+    builder.buildRhs(std::tuple{heatGeneration, massOld}, bcs);
+    t.stop();
 
+    t.start("build inc");
     tempOldInc += dTemp.data;
-    builderInc.buildLhs(std::tuple{mass, diffusion}, bcs);
+    builderInc.clear();
+    builderInc.buildLhs(lhs, bcsInc);
     builderInc.closeMatrix();
-    Mat<StorageType::ClmMajor> K{feSpace.dof.size, feSpace.dof.size};
-    // K = builderInc.A;
-    // Vec const Krhs = builderInc.b;
-    // res = K * tempOld;
-    builderInc.buildRhs(
-        std::tuple{
-            heatGeneration,
-            // massOld,
-            // residual,
-            diffRhs,
-        },
-        bcs);
-    // builderInc.b -= Krhs;
+
+    // need a matrix where no Dirichlet bcs are set
+    // TODO: add buildLHS() split in assembly + apply_bc globally?
+    builderTmp.clear();
+    builderTmp.buildLhs(lhs, std::tuple{});
+    builderTmp.closeMatrix();
+    // std::cout << "K:\n" << builderTmp.A << std::endl;
+    Vec res = builderTmp.A * tempOldInc;
+    // residual on Dirichlet bc must be set to zero
+    applyBCs(res, bcsInc);
+
+    builderInc.buildRhs(std::tuple{heatGeneration, massOldInc}, bcsInc);
+    builderInc.b -= res;
+    t.stop();
 
     t.start("solve");
     solver.analyzePattern(builder.A);
@@ -124,12 +142,17 @@ int main(int argc, char * argv[])
     solver.analyzePattern(builderInc.A);
     solver.factorize(builderInc.A);
     dTemp.data = solver.solve(builderInc.b);
-    std::cout << "dTemp: " << dTemp.data.transpose() << std::endl;
+    // std::cout << "dTemp: " << dTemp.data.transpose() << std::endl;
     t.stop();
 
+    std::cout << "stationary check - increment norm: " << dTemp.data.norm()
+              << std::endl;
     t.start("output");
     tempInc.data += dTemp.data;
-    io.print({temp, tempInc}, time);
+    auto const diffNorm = (temp.data - tempInc.data).norm();
+    std::cout << "diffNorm: " << diffNorm << std::endl;
+    assert(diffNorm < toll);
+    io.print({temp, tempInc, dTemp}, time);
     t.stop();
   }
 
@@ -145,6 +168,6 @@ int main(int argc, char * argv[])
   double norm = error.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm
             << std::endl;
-  return checkError({norm}, {2.87785419773588e-07});
+  return checkError({norm}, {2.073273836549e-03});
   return 0;
 }

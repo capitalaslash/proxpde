@@ -378,3 +378,18 @@ public:
   Predicate_T const & predicate;
   typename BCEss<FESpace_T>::DofMap_T ids;
 };
+
+// apply a list of bcs to an already-assembled vector
+template <typename BCList>
+void applyBCs(Vec & v, BCList bcs)
+{
+  static_for(
+      bcs,
+      [&v]([[maybe_unused]] auto const i, auto const & bc)
+      {
+        for (auto const & [dof, counter]: bc._constrainedDofMap)
+        {
+          v[dof] = bc.data[counter];
+        }
+      });
+}

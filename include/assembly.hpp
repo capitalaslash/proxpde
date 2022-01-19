@@ -884,17 +884,17 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
     uint d = 0;
     for (auto const c: this->comp)
     {
-      FVec<CurFERhs_T::numDOFs> localRhs;
+      FVec<CurFERhs_T::numDOFs> rhsLocal;
       for (uint n = 0; n < CurFERhs_T::RefFE_T::numDOFs; ++n)
       {
         id_T const dofId = feSpaceRhs.dof.getId(feSpaceRhs.curFE.elem->id, n, c);
-        localRhs[n] = rhs[dofId];
+        rhsLocal[n] = rhs[dofId];
       }
       auto Fec = Fe.template block<CurFE_T::numDOFs, 1>(d * CurFE_T::numDOFs, 0);
       for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
       {
-        Fec += coef * this->feSpace.curFE.JxW[q] * this->feSpace.curFE.phi[q] *
-               (feSpaceRhs.curFE.phi[q].dot(localRhs));
+        auto const rhsQ = feSpaceRhs.curFE.phi[q].dot(rhsLocal);
+        Fec += coef * this->feSpace.curFE.JxW[q] * this->feSpace.curFE.phi[q] * rhsQ;
       }
       d++;
     }

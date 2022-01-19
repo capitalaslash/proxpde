@@ -1405,8 +1405,8 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace>
   }
 
   double const coef;
-  FESpaceData_T & feSpaceData;
   Vec const & data;
+  FESpaceData_T & feSpaceData;
 };
 
 template <typename FESpace, typename FESpaceVel, typename FESpaceData = FESpace>

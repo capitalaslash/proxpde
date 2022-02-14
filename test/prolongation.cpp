@@ -6,6 +6,7 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "mesh_refine.hpp"
+#include "multigrid.hpp"
 #include "reffe.hpp"
 #include "var.hpp"
 
@@ -16,6 +17,7 @@ int test(Function const & f, double const expectedNorm)
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T =
       FESpace<Mesh_T, RefFE, typename LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using RefFE_T = typename FESpace_T::RefFE_T;
 
   std::unique_ptr<Mesh_T> meshCoarse{new Mesh_T};
   // referenceMesh(*meshCoarse);
@@ -36,46 +38,14 @@ int test(Function const & f, double const expectedNorm)
   FESpace_T feSpaceCoarse{*meshCoarse};
   FESpace_T feSpaceFine{*meshFine};
 
-  std::vector<Triplet> triplets;
-  std::set<std::pair<DOFid_T, DOFid_T>> done;
-  using RefFE_T = typename FESpace_T::RefFE_T;
-  for (auto const & eFine: meshFine->elementList)
-  {
-    auto const & eCoarse = *eFine.parent.ptr;
-    auto const childId = eFine.parent.corner;
-
-    for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
-    {
-      auto const dofCoarse = feSpaceCoarse.dof.getId(eCoarse.id, iCoarse);
-      double sign = 1.0;
-      if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
-      {
-        sign =
-            (eCoarse.facets[iCoarse]->facingElem[0].ptr->id != eCoarse.id) ? -1.0 : 1.0;
-      }
-      for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
-      {
-        auto const dofFine = feSpaceFine.dof.getId(eFine.id, iFine);
-        if (!done.contains({dofFine, dofCoarse}))
-        {
-          double const value = RefFE_T::embeddingMatrix[childId](iFine, iCoarse);
-          triplets.emplace_back(dofFine, dofCoarse, sign * value);
-          done.insert({dofFine, dofCoarse});
-        }
-      }
-    }
-  }
-
-  Mat<StorageType::RowMajor> prol(feSpaceFine.dof.size, feSpaceCoarse.dof.size);
-  prol.setFromTriplets(triplets.begin(), triplets.end());
-  // std::cout << prol << std::endl;
+  Prolongator prol{feSpaceCoarse, feSpaceFine};
 
   FEVar uCoarse{"u", feSpaceCoarse};
   interpolateAnalyticFunction(f, feSpaceCoarse, uCoarse.data);
   // std::cout << "uCoarse: " << uCoarse.data.transpose() << std::endl;
 
   FEVar uFine{"u", feSpaceFine};
-  uFine.data = prol * uCoarse.data;
+  uFine.data = prol.mat * uCoarse.data;
   // std::cout << "uFine: " << uFine.data.transpose() << std::endl;
 
   if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)

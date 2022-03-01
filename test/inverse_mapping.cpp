@@ -25,8 +25,8 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   if constexpr (std::is_same_v<Elem, Line>)
   {
     mesh.pointList = {
-        Point(Vec3(1., 1., 0.), 0),
-        Point(Vec3(4., 1., 0.), 1),
+        Point{Vec3{1., 1., 0.}, 0},
+        Point{Vec3{4., 1., 0.}, 1},
     };
     mesh.elementList = {
         Line{{&mesh.pointList[0], &mesh.pointList[1]}, 0},
@@ -35,9 +35,9 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   else if constexpr (std::is_same_v<Elem, Triangle>)
   {
     mesh.pointList = {
-        Point(Vec3(1., 1., 0.), 0),
-        Point(Vec3(5., 2., 0.), 1),
-        Point(Vec3(3., 4., 0.), 2),
+        Point{Vec3{1., 1., 0.}, 0},
+        Point{Vec3{5., 2., 0.}, 1},
+        Point{Vec3{3., 4., 0.}, 2},
     };
     mesh.elementList = {
         Triangle{{&mesh.pointList[0], &mesh.pointList[1], &mesh.pointList[2]}, 0},
@@ -46,10 +46,10 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   else if constexpr (std::is_same_v<Elem, Quad>)
   {
     mesh.pointList = {
-        Point(Vec3(1., 1., 0.), 0),
-        Point(Vec3(5., 2., 0.), 1),
-        Point(Vec3(3., 4., 0.), 2),
-        Point(Vec3(1., 3., 0.), 3),
+        Point{Vec3{1., 1., 0.}, 0},
+        Point{Vec3{5., 2., 0.}, 1},
+        Point{Vec3{3., 4., 0.}, 2},
+        Point{Vec3{1., 3., 0.}, 3},
     };
     mesh.elementList = {
         Quad{
@@ -63,10 +63,10 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   else if constexpr (std::is_same_v<Elem, Tetrahedron>)
   {
     mesh.pointList = {
-        Point(Vec3(1., 1., 0.), 0),
-        Point(Vec3(5., 2., 0.), 1),
-        Point(Vec3(3., 4., -1.), 2),
-        Point(Vec3(0., 0., -2.), 3),
+        Point{Vec3{1., 1., 0.}, 0},
+        Point{Vec3{5., 2., 0.}, 1},
+        Point{Vec3{3., 4., -1.}, 2},
+        Point{Vec3{0., 0., -2.}, 3},
     };
     mesh.elementList = {
         Tetrahedron{
@@ -80,14 +80,14 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   else if constexpr (std::is_same_v<Elem, Hexahedron>)
   {
     mesh.pointList = {
-        Point(Vec3(1., 1., 0.), 0),
-        Point(Vec3(5., 2., 0.), 1),
-        Point(Vec3(3., 4., 0.), 2),
-        Point(Vec3(0., 4., 0.), 3),
-        Point(Vec3(2., 0., 3.), 4),
-        Point(Vec3(4., 0., 3.), 5),
-        Point(Vec3(3., 5., 4.), 6),
-        Point(Vec3(0., 5., 4.), 7),
+        Point{Vec3{1., 1., 0.}, 0},
+        Point{Vec3{5., 2., 0.}, 1},
+        Point{Vec3{3., 4., 0.}, 2},
+        Point{Vec3{0., 4., 0.}, 3},
+        Point{Vec3{2., 0., 3.}, 4},
+        Point{Vec3{4., 0., 3.}, 5},
+        Point{Vec3{3., 5., 4.}, 6},
+        Point{Vec3{0., 5., 4.}, 7},
     };
     mesh.elementList = {
         Hexahedron{

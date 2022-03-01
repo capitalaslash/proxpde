@@ -15,7 +15,7 @@ template <typename FESpace>
 double computeMaxCFL(FESpace const & feSpace, Vec const & vel, double const dt)
 {
   double cfl = 0.;
-  for (auto const & elem: feSpace.mesh.elementList)
+  for (auto const & elem: feSpace.mesh->elementList)
   {
     // feSpace.curFE.reinit(elem);
     FVec<FESpace::dim> localVel = FVec<FESpace::dim>::Zero();
@@ -127,21 +127,22 @@ struct FVSolver
       feSpace(fe),
       bcs(bcList),
       uOld(fe.dof.size),
-      uJump{fe.mesh.facetList.size()},
-      fluxes(Vec::Zero(fe.mesh.facetList.size())),
-      normalSgn(fe.mesh.elementList.size(), Elem_T::numFacets)
+      uJump{fe.mesh->facetList.size()},
+      fluxes(Vec::Zero(fe.mesh->facetList.size())),
+      // uFacet(Vec::Zero(fe.mesh->facetList.size())),
+      normalSgn(fe.mesh->elementList.size(), Elem_T::numFacets)
   {
     static_assert(
         order_v<ElemRefFE_T> == 0, "finite volume solver works only on order 0.");
-    assert((feSpace.mesh.flags & MeshFlags::INTERNAL_FACETS).any());
-    assert((feSpace.mesh.flags & MeshFlags::NORMALS).any());
+    assert((feSpace.mesh->flags & MeshFlags::INTERNAL_FACETS).any());
+    assert((feSpace.mesh->flags & MeshFlags::NORMALS).any());
 
-    for (auto const & elem: feSpace.mesh.elementList)
+    for (auto const & elem: feSpace.mesh->elementList)
     {
-      auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];
+      auto const & facetIds = feSpace.mesh->elemToFacet[elem.id];
       for (uint f = 0; f < Elem_T::numFacets; ++f)
       {
-        auto const & facet = feSpace.mesh.facetList[facetIds[f]];
+        auto const & facet = feSpace.mesh->facetList[facetIds[f]];
         // normals are always oriented from facingElem[0] to facingElem[1]
         normalSgn(elem.id, f) = (facet.facingElem[0].ptr->id == elem.id) ? -1. : 1.;
       }
@@ -154,7 +155,7 @@ struct FVSolver
     // TODO: uJump is defined only on internal facets.
     // shrink its size and offset calls with numBdFacets
     // since bd facets are always at the beginning
-    for (auto const & facet: feSpace.mesh.facetList)
+    for (auto const & facet: feSpace.mesh->facetList)
     {
       auto const * insideElem = facet.facingElem[0].ptr;
       auto const * outsideElem = facet.facingElem[1].ptr;
@@ -169,7 +170,7 @@ struct FVSolver
   template <typename Vel>
   void computeFluxes(Vel & vel)
   {
-    for (auto const & facet: feSpace.mesh.facetList)
+    for (auto const & facet: feSpace.mesh->facetList)
     {
       auto const [insideElemPtr, side] = facet.facingElem[0];
       vel.setLocalData(insideElemPtr->id);
@@ -208,7 +209,7 @@ struct FVSolver
           {
             double const uDownwind = uOld[feSpace.dof.getId(downwindElem->id)];
             // check uJump on all other facets of the upwind element
-            auto const elemFacetIds = feSpace.mesh.elemToFacet[upwindElem->id];
+            auto const elemFacetIds = feSpace.mesh->elemToFacet[upwindElem->id];
             std::array<double, Elem_T::numFacets> rFacets;
             for (uint f = 0; f < Elem_T::numFacets; ++f)
             {
@@ -277,20 +278,20 @@ struct FVSolver
 
   void advance(Vec & u, double const dt)
   {
-    assert(static_cast<size_t>(u.size()) == feSpace.mesh.elementList.size());
-    for (auto const & elem: feSpace.mesh.elementList)
+    assert(static_cast<size_t>(u.size()) == feSpace.mesh->elementList.size());
+    for (auto const & elem: feSpace.mesh->elementList)
     {
       auto const id = feSpace.dof.getId(elem.id);
       // std::cout << "elem " << id << std::endl;
       double const hinv = 1. / elem.volume();
-      auto const & facetIds = feSpace.mesh.elemToFacet[elem.id];
+      auto const & facetIds = feSpace.mesh->elemToFacet[elem.id];
       // fluxes sign must be adjusted wrt the normal pointing outside the element
       for (uint f = 0; f < Elem_T::numFacets; ++f)
       {
-        auto const facetId = feSpace.mesh.facetList[facetIds[f]].id;
+        auto const facetId = feSpace.mesh->facetList[facetIds[f]].id;
         u[id] += dt * normalSgn(elem.id, f) * fluxes[facetId] * hinv;
         // std::cout << normalSgn(elem.id, f) << " " <<
-        // fluxes[feSpace.mesh.facetList[facetIds[f]].id] << std::endl;
+        // fluxes[feSpace.mesh->facetList[facetIds[f]].id] << std::endl;
       }
     }
   }

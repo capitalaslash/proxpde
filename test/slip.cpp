@@ -24,7 +24,7 @@ struct BCEssNormal: public BCEss<FESpace>
   BCEssNormal<FESpace_T> operator<<(std::function<double(FVec<dim - 1> const &)> f)
   {
     auto const refPt = Vec3{0., 0., 0.};
-    for (auto const & facet: this->feSpace.mesh.facetList)
+    for (auto const & facet: this->feSpace.mesh->facetList)
     {
       if (facet.marker == this->marker)
       {

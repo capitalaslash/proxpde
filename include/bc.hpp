@@ -43,7 +43,7 @@ public:
       comp(c)
   {
     id_T counter = 0;
-    for (auto const & facet: feSpace.mesh.facetList)
+    for (auto const & facet: feSpace.mesh->facetList)
     {
       // TODO: store the list of facets with own marker
       if (facet.marker == marker)
@@ -92,7 +92,7 @@ public:
     {
       for (auto const facetId: facetIdList)
       {
-        auto const & facet = feSpace.mesh.facetList[facetId];
+        auto const & facet = feSpace.mesh->facetList[facetId];
         auto const & [elem, side] = facet.facingElem[0];
         feSpace.curFE.reinit(*elem);
 
@@ -119,7 +119,7 @@ public:
     else // no marker, work on the dof set
     {
       auto const size = numDOFs<RefFE_T>();
-      for (auto const & facet: feSpace.mesh.facetList)
+      for (auto const & facet: feSpace.mesh->facetList)
       {
         auto const & elem = *(facet.facingElem[0].ptr);
         for (uint d = 0; d < size * FESpace_T::dim; ++d)
@@ -175,7 +175,7 @@ public:
     static_assert(dim > 1, "cannot make tangent a scalar field.");
     for (auto const facetId: facetIdList)
     {
-      auto const & facet = feSpace.mesh.facetList[facetId];
+      auto const & facet = feSpace.mesh->facetList[facetId];
       auto const normal = narrow<dim>(facet.normal());
       auto const & [elem, side] = facet.facingElem[0];
       feSpace.curFE.reinit(*elem);
@@ -359,7 +359,7 @@ public:
   DOFCoordSet(FESpace_T & fe, Predicate_T const & p): feSpace(fe), predicate(p)
   {
     id_T counter = 0;
-    for (auto const & e: feSpace.mesh.elementList)
+    for (auto const & e: feSpace.mesh->elementList)
     {
       feSpace.curFE.reinit(e);
       for (uint d = 0; d < numDOFs<typename FESpace_T::RefFE_T>(); ++d)

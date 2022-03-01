@@ -117,7 +117,7 @@ struct FEVar
   auto integrate()
   {
     FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
-    for (auto const & elem: feSpace.mesh.elementList)
+    for (auto const & elem: feSpace.mesh->elementList)
     {
       this->reinit(elem);
       for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)

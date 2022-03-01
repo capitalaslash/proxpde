@@ -105,7 +105,7 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("gradient");
-  Grad_T<FESpace_T> feSpaceGrad{feSpace.mesh};
+  Grad_T<FESpace_T> feSpaceGrad{*feSpace.mesh};
   Var grad{"grad"};
   computeGradient(grad.data, feSpaceGrad, sol.data, feSpace);
   t.stop();

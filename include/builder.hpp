@@ -27,7 +27,7 @@ struct Builder
     using LVec_T = typename Diagonal<FESpace_T>::LVec_T;
 
     auto const & refAssembly = std::get<0>(assemblies);
-    auto const & mesh = refAssembly.feSpace.mesh;
+    auto const & mesh = *refAssembly.feSpace.mesh;
 
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
@@ -165,10 +165,10 @@ struct Builder
     // approxEntryNum = n. localMat entries * n. elements
     uint const approxEntryNum = CurFE1_T::numDOFs * FESpace1::dim * CurFE2_T::numDOFs *
                                 FESpace2::dim *
-                                assembly.feSpace1.mesh.elementList.size();
+                                assembly.feSpace1.mesh->elementList.size();
     _triplets.reserve(approxEntryNum);
 
-    for (auto const & elem: assembly.feSpace1.mesh.elementList)
+    for (auto const & elem: assembly.feSpace1.mesh->elementList)
     {
       LMat_T Ke = LMat_T::Zero();
       LVec_T Fe = LVec_T::Zero();
@@ -278,7 +278,7 @@ struct Builder
     using LVec_T = typename Diagonal<FESpace_T>::LVec_T;
 
     auto const & refAssembly = std::get<0>(assemblies);
-    auto const & mesh = refAssembly.feSpace.mesh;
+    auto const & mesh = *refAssembly.feSpace.mesh;
 
     for (auto const & elem: mesh.elementList)
     {

@@ -292,7 +292,7 @@ struct NSSolverSplit2D
       NSParameters const & par):
       feSpaceU{feU},
       feSpaceP{feP},
-      feSpaceVel{feU.mesh},
+      feSpaceVel{*feU.mesh},
       bcsU{bcsUU},
       bcsV{bcsVV},
       bcsP{bcsPP},
@@ -489,7 +489,7 @@ void computeElemWSS(
   FEVar velFE{feSpaceVel};
   velFE.data = vel;
 
-  for (auto & facet: feSpaceWSS.mesh.facetList)
+  for (auto & facet: feSpaceWSS.mesh->facetList)
   {
     if (markers.contains(facet.marker))
     {
@@ -534,14 +534,14 @@ void computeFEWSS(
   wss = Vec::Zero(feSpaceWSS.dof.size);
   FacetCurFEVel_T facetCurFEVel;
 
-  Grad_T<FESpaceVel> feSpaceGrad{feSpaceVel.mesh};
+  Grad_T<FESpaceVel> feSpaceGrad{*feSpaceVel.mesh};
   Vec grad;
   computeGradient(grad, feSpaceGrad, vel, feSpaceVel);
-  Grad_T<FacetFESpaceVel_T> facetFESpaceGrad{feSpaceVel.mesh};
+  Grad_T<FacetFESpaceVel_T> facetFESpaceGrad{*feSpaceVel.mesh};
   FEVar gradFacet{facetFESpaceGrad};
   gradFacet.data = grad;
 
-  for (auto & facet: feSpaceWSS.mesh.facetList)
+  for (auto & facet: feSpaceWSS.mesh->facetList)
   {
     if (markers.contains(facet.marker))
     {

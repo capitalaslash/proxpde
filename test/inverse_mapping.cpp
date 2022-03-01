@@ -112,7 +112,7 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   t.start("current fe");
   FESpace_T feSpace{mesh};
   auto & cfe = feSpace.curFE;
-  auto const & elem = feSpace.mesh.elementList[0];
+  auto const & elem = feSpace.mesh->elementList[0];
   cfe.reinit(elem);
   t.stop();
 

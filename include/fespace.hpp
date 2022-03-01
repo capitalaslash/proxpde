@@ -30,7 +30,7 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static short_T constexpr dim = Dimension;
 
-  explicit FESpace(Mesh const & m, uint offset = 0): mesh(m), dof(m, offset)
+  explicit FESpace(Mesh const & m, uint offset = 0): mesh(&m), dof(m, offset)
   {
     static_assert(
         std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
@@ -42,8 +42,8 @@ struct FESpace
     {
       // RT0 requires internal facets and facet ptrs
       assert(
-          (mesh.flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS)).count() ==
-          2);
+          (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
+              .count() == 2);
     }
   }
 
@@ -117,7 +117,7 @@ struct FESpace
 
   Vec3 findCoords(DOFid_T const id)
   {
-    for (auto const & elem: mesh.elementList)
+    for (auto const & elem: mesh->elementList)
     {
       for (uint d = 0; d < DOF_T::clms; ++d)
       {
@@ -133,7 +133,7 @@ struct FESpace
     return Vec3(0., 0., 0.);
   }
 
-  Mesh const & mesh;
+  Mesh const * mesh;
   CurFE_T mutable curFE;
   DOF_T /*const*/ dof;
 };
@@ -153,10 +153,10 @@ void interpolateAnalyticFunction(
 
   if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
   {
-    assert((feSpace.mesh.flags & MeshFlags::NORMALS).any());
+    assert((feSpace.mesh->flags & MeshFlags::NORMALS).any());
   }
 
-  for (auto const & elem: feSpace.mesh.elementList)
+  for (auto const & elem: feSpace.mesh->elementList)
   {
     feSpace.curFE.reinit(elem);
     for (uint i = 0; i < FESpace::RefFE_T::numDOFs; ++i)
@@ -180,8 +180,8 @@ void interpolateAnalyticFunction(
         // u_k = \int_{f_k} u.dot(n_k)
         // TODO: this should be an integral, we are taking the mean value at the
         // center of facet (ok for linear and piecewise constant functions only)
-        id_T const facetId = feSpace.mesh.elemToFacet[elem.id][i];
-        auto const & facet = feSpace.mesh.facetList[facetId];
+        id_T const facetId = feSpace.mesh->elemToFacet[elem.id][i];
+        auto const & facet = feSpace.mesh->facetList[facetId];
         auto const dofId = feSpace.dof.getId(elem.id, i);
         v[offset + dofId] = value.dot(facet.normal()) * facet.volume();
       }
@@ -239,7 +239,7 @@ void integrateAnalyticFunction(
     v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
 
-  for (auto const & e: feSpace.mesh.elementList)
+  for (auto const & e: feSpace.mesh->elementList)
   {
     curFE.reinit(e);
 
@@ -318,7 +318,7 @@ void reconstructGradient(
   assert(FESpaceGrad::dim == comp.size());
   grad = Vec::Zero(feSpaceGrad.dof.size * FESpaceGrad::dim);
   Eigen::VectorXi numberOfPasses = Eigen::VectorXi::Zero(size);
-  for (auto const & elem: feSpaceData.mesh.elementList)
+  for (auto const & elem: feSpaceData.mesh->elementList)
   {
     feSpaceData.curFE.reinit(elem);
     feSpaceGrad.curFE.reinit(elem);
@@ -399,7 +399,7 @@ void getComponents(
       typename FESpaceOrig::RefFE_T,
       typename FESpaceOrig::QR_T,
       1>;
-  FESpaceDest feSpaceDest{feSpaceOrig.mesh};
+  FESpaceDest feSpaceDest{*feSpaceOrig.mesh};
   for (uint d = 0; d < feSpaceOrig; ++d)
   {
     getComponent(dest[d], feSpaceDest, orig, feSpaceOrig, d);
@@ -446,12 +446,12 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
       FESpace<Mesh_T, RefFE_T, SideGaussQR<Elem_T, FacetQR_T::numPts>>;
 
   FacetCurFE_T facetCurFE;
-  FacetFESpace_T facetFESpace{feSpace.mesh};
+  FacetFESpace_T facetFESpace{*feSpace.mesh};
   FEVar uFacet{facetFESpace};
   uFacet.data = u;
 
   double integral = 0.;
-  for (auto & facet: feSpace.mesh.facetList)
+  for (auto & facet: feSpace.mesh->facetList)
   {
     if (facet.marker == m)
     {

@@ -300,7 +300,7 @@ struct IOManager
 
   IOManager(FESpace_T const & fe, fs::path const fp, uint const it = 0):
       feSpace{fe},
-      feSpaceScalar{fe.mesh},
+      feSpaceScalar{*fe.mesh},
       filePath(std::move(fp)),
       // h5Time{fs::path{filepath} += ".time.h5"},
       iter(it)
@@ -340,8 +340,8 @@ protected:
     if constexpr (Traits_T::needsMapping == true)
     {
       Table<DOFid_T, RefFE_T::numGeoDOFs> mappedConn(
-          feSpace.mesh.elementList.size(), RefFE_T::numGeoDOFs);
-      for (uint i = 0; i < feSpace.mesh.elementList.size(); ++i)
+          feSpace.mesh->elementList.size(), RefFE_T::numGeoDOFs);
+      for (uint i = 0; i < feSpace.mesh->elementList.size(); ++i)
       {
         for (uint j = 0; j < RefFE_T::numGeoDOFs; ++j)
         {
@@ -356,7 +356,7 @@ protected:
     }
 
     Table<double, 3> coords(feSpace.dof.mapSize, 3);
-    for (auto const & e: feSpace.mesh.elementList)
+    for (auto const & e: feSpace.mesh->elementList)
     {
       for (uint p = 0; p < RefFE_T::numGeoDOFs; ++p)
       {
@@ -369,7 +369,7 @@ protected:
   void printBoundary()
   {
     using Facet_T = typename Mesh_T::Facet_T;
-    Mesh_T const & mesh = feSpace.mesh;
+    Mesh_T const & mesh = *feSpace.mesh;
 
     // we always use linear elements for boundary facets
     XDMFDoc<typename LagrangeFE<Facet_T, 1>::RefFE_T> doc{
@@ -430,7 +430,7 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
   doc.setTime(t);
-  doc.setTopology(feSpace.mesh.elementList.size());
+  doc.setTopology(feSpace.mesh->elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{
@@ -489,7 +489,7 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
   timeSeries.push_back({iter, t});
   XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
   doc.setTime(t);
-  doc.setTopology(feSpace.mesh.elementList.size());
+  doc.setTopology(feSpace.mesh->elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{
@@ -583,7 +583,7 @@ struct IOManagerP0
 
   IOManagerP0(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
       feSpaceOrig{fe},
-      feSpaceP0{fe.mesh},
+      feSpaceP0{*fe.mesh},
       io{feSpaceP0, fp, it},
       l2Projector{feSpaceP0, feSpaceOrig}
   {}
@@ -652,7 +652,7 @@ struct IOManagerFacet
 
   IOManagerFacet(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
       feSpaceOrig{fe},
-      meshFacet{new MeshFacet_T{fe.mesh.buildFacetMesh()}},
+      meshFacet{new MeshFacet_T{fe.mesh->buildFacetMesh()}},
       feSpaceFacet{*meshFacet},
       io{feSpaceFacet, fp, it}
   {}
@@ -680,7 +680,7 @@ struct IOManagerFacet
           }
           vFacet.name = v.name + "Facet";
           vFacet.data = Vec::Zero(static_cast<uint>(meshFacet->elementList.size()));
-          for (auto const & facet: v.feSpace.mesh.facetList)
+          for (auto const & facet: v.feSpace.mesh->facetList)
           {
             auto const [insideElemPtr, side] = facet.facingElem[0];
             auto const dofId = v.feSpace.dof.getId(insideElemPtr->id, side);

@@ -1551,7 +1551,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    auto const & mesh = this->feSpace.mesh;
+    auto const & mesh = *this->feSpace.mesh;
     auto const & e = *this->feSpace.curFE.elem;
     uint facetCounter = 0;
     for (auto const facetId: mesh.elemToFacet[e.id])
@@ -1609,7 +1609,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    auto const & mesh = this->feSpace.mesh;
+    auto const & mesh = *this->feSpace.mesh;
     auto const & e = *this->feSpace.curFE.elem;
     uint facetCounter = 0;
     for (auto const facetId: mesh.elemToFacet[e.id])
@@ -1668,7 +1668,7 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    auto const & mesh = this->feSpace.mesh;
+    auto const & mesh = *this->feSpace.mesh;
     uint facetCounter = 0;
     for (auto const facetId: mesh.elemToFacet[this->feSpace.curFE.elem->id])
     {

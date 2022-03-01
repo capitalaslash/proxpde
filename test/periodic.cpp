@@ -35,7 +35,7 @@ struct BCPeriodic
 
     for (auto const & idDest: bcDest._constrainedDofMap)
     {
-      Vec3 const pDest = feSpace.mesh.pointList[invPtMap[idDest.first]].coord;
+      Vec3 const pDest = feSpace.mesh->pointList[invPtMap[idDest.first]].coord;
       // std::cout << "pDest: " << pDest.transpose() << std::endl;
 
       Vec3 const pConv = destToOrigFun(pDest);
@@ -43,7 +43,7 @@ struct BCPeriodic
 
       for (auto const & idOrig: bcOrig._constrainedDofMap)
       {
-        Vec3 const pOrig = feSpace.mesh.pointList[invPtMap[idOrig.first]].coord;
+        Vec3 const pOrig = feSpace.mesh->pointList[invPtMap[idOrig.first]].coord;
         if ((pOrig - pConv).norm() < 1.e-15)
         {
           destToOrig[idDest.first] = idOrig.first;

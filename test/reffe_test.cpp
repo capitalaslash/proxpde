@@ -27,7 +27,7 @@ int test()
   FMat<size, size> matPhi = FMat<size, size>::Zero();
   FMat<size, 3> matDPhi = FMat<size, 3>::Zero();
   auto & cfe = feSpace.curFE;
-  cfe.reinit(feSpace.mesh.elementList[0]);
+  cfe.reinit(feSpace.mesh->elementList[0]);
   for (uint i = 0; i < size; ++i)
   {
     for (uint j = 0; j < size; ++j)

@@ -163,11 +163,11 @@ void interpolateOnFacets(
   out = Vec::Zero(feSpaceOut.dof.size);
   CurFEFacet_T curFEFacet;
 
-  FESpaceFacet_T feSpaceFacet{feSpaceIn.mesh};
+  FESpaceFacet_T feSpaceFacet{*feSpaceIn.mesh};
   FEVar inFacet{feSpaceFacet};
   inFacet.data = in;
 
-  for (auto const & facet: feSpaceOut.mesh.elementList)
+  for (auto const & facet: feSpaceOut.mesh->elementList)
   {
     if (markers == std::unordered_set<marker_T>({marker_T(-1)}) ||
         (markers.contains(facet.marker)))

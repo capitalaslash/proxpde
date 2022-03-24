@@ -134,7 +134,7 @@ target_link_libraries(main PUBLIC MiniFEM::minifem)
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
 target_link_libraries(test_eigen PUBLIC MiniFEM::minifem)
 
-add_executable(test_trap test_trap.cpp)
+add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
 target_link_libraries(test_trap PUBLIC MiniFEM::minifem)
 
 install(TARGETS minifem
@@ -188,6 +188,7 @@ export(PACKAGE MiniFEM)
 
 if (MINIFEM_ENABLE_TESTS)
   # include(CTest)
+  add_custom_target(build_tests)
   enable_testing()
   add_subdirectory(test)
 endif()

@@ -42,11 +42,15 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("fespace");
-  FESpace_T feSpace{*mesh};
+  // FESpace_T feSpace{*mesh};
+  FESpace_T feSpace;
+  feSpace.init(*mesh);
   t.stop();
 
   t.start("bcs");
-  auto bcLeft = BCEss{feSpace, side::LEFT};
+  // auto bcLeft = BCEss{feSpace, side::LEFT};
+  auto bcLeft = BCEss<FESpace_T>{};
+  bcLeft.init(feSpace, side::LEFT);
   bcLeft << [](Vec3 const &) { return 0.; };
   auto bcBottom = BCEss{feSpace, side::BOTTOM};
   bcBottom << [](Vec3 const &) { return 0.; };

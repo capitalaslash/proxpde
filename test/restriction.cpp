@@ -18,6 +18,7 @@ int test(Function const & f, double const expectedNorm)
   using FESpace_T =
       FESpace<Mesh_T, RefFE, typename LagrangeFE<Elem_T, 1>::RecommendedQR>;
   using RefFE_T = typename FESpace_T::RefFE_T;
+  using BCList_T = std::array<BCEss<FESpace_T>, 0>; // no bc considered
 
   std::unique_ptr<Mesh_T> meshCoarse{new Mesh_T};
   // referenceMesh(*meshCoarse);
@@ -38,7 +39,7 @@ int test(Function const & f, double const expectedNorm)
   FESpace_T feSpaceCoarse{*meshCoarse};
   FESpace_T feSpaceFine{*meshFine};
 
-  Restrictor rest{feSpaceFine, feSpaceCoarse};
+  Restrictor rest{feSpaceFine, feSpaceCoarse, BCList_T{}};
 
   FEVar uFine{"u", feSpaceFine};
   interpolateAnalyticFunction(f, feSpaceFine, uFine.data);

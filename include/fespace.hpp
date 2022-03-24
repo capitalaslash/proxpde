@@ -30,7 +30,17 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static short_T constexpr dim = Dimension;
 
-  explicit FESpace(Mesh const & m, uint offset = 0): mesh(&m), dof(m, offset)
+  FESpace()
+  {
+    static_assert(
+        std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
+        "mesh element and reference element are not compatible.");
+    static_assert(
+        std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
+        "reference element and quad rule are not compatible.");
+  }
+
+  explicit FESpace(Mesh const & m, uint offset = 0): mesh{&m}, dof{m, offset}
   {
     static_assert(
         std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
@@ -45,6 +55,19 @@ struct FESpace
           (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
               .count() == 2);
     }
+  }
+
+  void init(Mesh const & m, uint offset = 0)
+  {
+    mesh = &m;
+    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      // RT0 requires internal facets and facet ptrs
+      assert(
+          (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
+              .count() == 2);
+    }
+    dof = DOF_T{m, offset};
   }
 
   static uint constexpr physicalDim()

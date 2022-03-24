@@ -40,6 +40,8 @@ struct DOF
   using edgeIdList_T = std::set<id_T>;
   using faceIdList_T = std::set<id_T>;
 
+  DOF() = default;
+
   explicit DOF(Mesh const & mesh, uint offset):
       rows{mesh.elementList.size()},
       elemMap(rows, clms * dim),

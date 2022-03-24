@@ -24,25 +24,25 @@ struct BCEssNormal: public BCEss<FESpace>
   BCEssNormal<FESpace_T> operator<<(std::function<double(FVec<dim - 1> const &)> f)
   {
     auto const refPt = Vec3{0., 0., 0.};
-    for (auto const & facet: this->feSpace.mesh->facetList)
+    for (auto const & facet: this->feSpace->mesh->facetList)
     {
       if (facet.marker == this->marker)
       {
         auto const normal = narrow<dim>(facet.normal());
         auto const & [elem, side] = facet.facingElem[0];
-        this->feSpace.curFE.reinit(*elem);
+        this->feSpace->curFE.reinit(*elem);
         if constexpr (
             order_v < RefFE_T >> 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
         {
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])
           {
-            auto const pt = this->feSpace.curFE.dofPts[dofFacet];
+            auto const pt = this->feSpace->curFE.dofPts[dofFacet];
             // TODO: f(s) where s is the curvilinear variable(s) on the facet
             auto const value =
                 -f(FVec<dim - 1>::Constant((pt - refPt).norm())) * normal;
             for (auto const c: this->comp)
             {
-              DOFid_T const dofId = this->feSpace.dof.getId(elem->id, dofFacet, c);
+              DOFid_T const dofId = this->feSpace->dof.getId(elem->id, dofFacet, c);
               this->data[this->_constrainedDofMap.at(dofId)] = value[c];
               if (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
               {

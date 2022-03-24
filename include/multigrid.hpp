@@ -10,22 +10,39 @@ class Prolongator
 public:
   using FESpace_T = FESpace;
 
+  Prolongator() = default;
+
   Prolongator(FESpace_T const & feCoarse, FESpace_T const & feFine):
-      feSpaceCoarse{feCoarse},
-      feSpaceFine{feFine},
+      feSpaceCoarse{&feCoarse},
+      feSpaceFine{&feFine},
       mat{feFine.dof.size, feCoarse.dof.size}
+  {
+    fillMatrix();
+  }
+
+  void init(FESpace_T const & feCoarse, FESpace_T const & feFine)
+  {
+    feSpaceCoarse = &feCoarse;
+    feSpaceFine = &feFine;
+    mat.resize(feFine.dof.size, feCoarse.dof.size);
+
+    fillMatrix();
+  }
+
+private:
+  void fillMatrix()
   {
     std::vector<Triplet> triplets;
     std::set<std::pair<DOFid_T, DOFid_T>> done;
     using RefFE_T = typename FESpace_T::RefFE_T;
-    for (auto const & eFine: feSpaceFine.mesh.elementList)
+    for (auto const & eFine: feSpaceFine->mesh->elementList)
     {
       auto const & eCoarse = *eFine.parent.ptr;
       auto const childId = eFine.parent.corner;
 
       for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
       {
-        auto const dofCoarse = feSpaceCoarse.dof.getId(eCoarse.id, iCoarse);
+        auto const dofCoarse = feSpaceCoarse->dof.getId(eCoarse.id, iCoarse);
         double sign = 1.0;
         if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
         {
@@ -34,7 +51,7 @@ public:
         }
         for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
         {
-          auto const dofFine = feSpaceFine.dof.getId(eFine.id, iFine);
+          auto const dofFine = feSpaceFine->dof.getId(eFine.id, iFine);
           if (!done.contains({dofFine, dofCoarse}))
           {
             double const value = RefFE_T::embeddingMatrix[childId](iFine, iCoarse);
@@ -49,30 +66,48 @@ public:
     // std::cout << mat << std::endl;
   }
 
-private:
-  FESpace_T const & feSpaceCoarse;
-  FESpace_T const & feSpaceFine;
+  FESpace_T const * feSpaceCoarse;
+  FESpace_T const * feSpaceFine;
 
 public:
   // TODO: works only for scalar fields!
   Mat<StorageType::RowMajor> mat;
 };
 
-template <typename FESpace>
+template <typename FESpace, typename BCList>
 class Restrictor
 {
 public:
   using FESpace_T = FESpace;
+  using BCList_T = BCList;
 
-  Restrictor(FESpace_T const & feFine, FESpace_T const & feCoarse):
-      feSpaceFine{feFine},
-      feSpaceCoarse{feCoarse},
+  Restrictor() = default;
+
+  Restrictor(
+      FESpace_T const & feFine, FESpace_T const & feCoarse, BCList_T const & bcs):
+      feSpaceFine{&feFine},
+      feSpaceCoarse{&feCoarse},
       mat{feCoarse.dof.size, feFine.dof.size}
+  {
+    fillMatrix(bcs);
+  }
+
+  void init(FESpace_T const & feFine, FESpace_T const & feCoarse, BCList_T const & bcs)
+  {
+    feSpaceFine = &feFine;
+    feSpaceCoarse = &feCoarse;
+    mat.resize(feCoarse.dof.size, feFine.dof.size);
+
+    fillMatrix(bcs);
+  }
+
+private:
+  void fillMatrix(BCList_T const & bcs)
   {
     std::vector<Triplet> triplets;
     std::set<std::pair<DOFid_T, DOFid_T>> done;
     using RefFE_T = typename FESpace_T::RefFE_T;
-    for (auto const & eCoarse: feSpaceCoarse.mesh.elementList)
+    for (auto const & eCoarse: feSpaceCoarse->mesh->elementList)
     {
       for (short_T iChild = 0; iChild < RefFE_T::numChildren; ++iChild)
       {
@@ -80,7 +115,7 @@ public:
         assert(eFine.parent.corner == iChild);
         for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
         {
-          auto const dofCoarse = feSpaceCoarse.dof.getId(eCoarse.id, iCoarse);
+          auto const dofCoarse = feSpaceCoarse->dof.getId(eCoarse.id, iCoarse);
           // don't need this on restriction?!
           double sign = 1.0;
           // if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
@@ -90,7 +125,7 @@ public:
           // }
           for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
           {
-            auto const dofFine = feSpaceFine.dof.getId(eFine.id, iFine);
+            auto const dofFine = feSpaceFine->dof.getId(eFine.id, iFine);
             if (!done.contains({dofCoarse, dofFine}))
             {
               double const value = RefFE_T::embeddingMatrix[iChild](iFine, iCoarse);
@@ -143,9 +178,8 @@ public:
     }
   }
 
-private:
-  FESpace_T const & feSpaceFine;
-  FESpace_T const & feSpaceCoarse;
+  FESpace_T const * feSpaceFine;
+  FESpace_T const * feSpaceCoarse;
 
 public:
   Mat<StorageType::RowMajor> mat;

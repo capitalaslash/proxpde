@@ -41,7 +41,7 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
+    this->feSpace->curFE.reinit(elem);
     vel.reinit(elem);
   }
 
@@ -51,7 +51,7 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     uint constexpr size = CurFE_T::numDOFs;
-    CurFE_T const & curFE = this->feSpace.curFE;
+    CurFE_T const & curFE = this->feSpace->curFE;
 
     for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
@@ -104,7 +104,7 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
+    this->feSpace->curFE.reinit(elem);
     uOld.reinit(elem);
     vel.reinit(elem);
   }
@@ -115,7 +115,7 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     uint constexpr size = CurFE_T::numDOFs;
-    CurFE_T const & curFE = this->feSpace.curFE;
+    CurFE_T const & curFE = this->feSpace->curFE;
 
     for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
@@ -166,7 +166,7 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
+    this->feSpace->curFE.reinit(elem);
     vel.reinit(elem);
   }
 
@@ -176,7 +176,7 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     uint constexpr size = CurFE_T::numDOFs;
-    CurFE_T const & curFE = this->feSpace.curFE;
+    CurFE_T const & curFE = this->feSpace->curFE;
 
     for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
@@ -245,7 +245,7 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
 
   void reinit(GeoElem const & elem) const override
   {
-    this->feSpace.curFE.reinit(elem);
+    this->feSpace->curFE.reinit(elem);
     uOld.reinit(elem);
     vel.reinit(elem);
   }
@@ -256,7 +256,7 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     uint constexpr size = CurFE_T::numDOFs;
-    CurFE_T const & curFE = this->feSpace.curFE;
+    CurFE_T const & curFE = this->feSpace->curFE;
 
     for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {

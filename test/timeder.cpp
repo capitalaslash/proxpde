@@ -79,6 +79,11 @@ int test(YAML::Node const & config)
   Vec uOld;
   Vec uOldOld;
   auto const dt = config["dt"].as<double>();
+
+  // BDF1: (u - uOld) / dt + A * u = 0 =>
+  // BDF1: u / dt + A * u = uOld / dt
+  // BDF2: (3 u - 4 uOld + uOldOld) / 2 dt + A * u = 0 =>
+  // BDF2: 3 u / 2 dt + A * u = (2 uOld - 1/2 uOldOld ) / dt
   AssemblyScalarMass bdf1Lhs{1.0 / dt, feSpace};
   AssemblyScalarMass bdf2Lhs{0.5 / dt, feSpace};
   AssemblyScalarMass mass{A, feSpace};

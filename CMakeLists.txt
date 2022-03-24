@@ -57,22 +57,23 @@ configure_file(
 )
 include_directories("${PROJECT_BINARY_DIR}")
 
-add_library(minifem SHARED
-  src/def.cpp
-  src/fespace.cpp
-  src/geo.cpp
-  src/mesh.cpp
-  src/ns.cpp
-  src/qr.cpp
-  src/reffe.cpp
+set(SOURCES
+    src/def.cpp
+    src/fespace.cpp
+    src/geo.cpp
+    src/mesh.cpp
+    src/ns.cpp
+    src/qr.cpp
+    src/reffe.cpp
 )
+
+add_library(minifem SHARED ${SOURCES})
 add_library(MiniFEM::minifem ALIAS minifem)
 
 target_include_directories(minifem PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
   $<INSTALL_INTERFACE:include>  # or include/minifem
-  ${HDF5_INCLUDE_DIRS}
 )
 
 target_compile_features(minifem PUBLIC cxx_std_20)
@@ -87,7 +88,7 @@ target_link_libraries(minifem PUBLIC
   UMFPACK::UMFPACK
   pugixml
   yaml-cpp
-  ${HDF5_LIBRARIES}
+  hdf5::hdf5
   OpenMP::OpenMP_CXX
   stdc++fs
 )

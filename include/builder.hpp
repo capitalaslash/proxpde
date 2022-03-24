@@ -362,6 +362,7 @@ struct Builder
   {
     A.setFromTriplets(_triplets.begin(), _triplets.end());
     A.prune(1., 1.e-16);
+    _triplets.clear();
   }
 
   void clearRhs() { b = Vec::Zero(b.size()); }

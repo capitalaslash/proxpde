@@ -67,6 +67,32 @@ set(SOURCES
     src/reffe.cpp
 )
 
+set(HEADERS
+    include/assembler.hpp
+    include/assembly.hpp
+    include/bc.hpp
+    include/blockmatrix.hpp
+    include/builder.hpp
+    include/curfe.hpp
+    include/def.hpp
+    include/dof.hpp
+    include/eqn.hpp
+    include/fe.hpp
+    include/fespace.hpp
+    include/feutils.hpp
+    include/fv.hpp
+    include/geo.hpp
+    include/iomanager.hpp
+    include/mesh.hpp
+    include/mesh_refine.hpp
+    include/ns.hpp
+    include/qr.hpp
+    include/reffe.hpp
+    include/timer.hpp
+    include/var.hpp
+    include/xdmf_traits.hpp
+)
+
 add_library(minifem SHARED ${SOURCES})
 add_library(MiniFEM::minifem ALIAS minifem)
 
@@ -119,7 +145,7 @@ install(TARGETS minifem
   INCLUDES DESTINATION include
   )
 
-install(DIRECTORY include/ DESTINATION include/minifem)
+install(FILES ${HEADERS} DESTINATION include/minifem)
 install(FILES ${PROJECT_BINARY_DIR}/minifem.h DESTINATION include/minifem)
 
 install(EXPORT MiniFEMTargets

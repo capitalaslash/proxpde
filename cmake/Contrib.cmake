@@ -1,7 +1,7 @@
 # eigen
 find_package(Eigen3 3.3 NO_MODULE REQUIRED)
 
-# umfpack (used through eigen)
+# umfpack (used in eigen)
 find_package(UMFPack REQUIRED)
 
 # pugixml

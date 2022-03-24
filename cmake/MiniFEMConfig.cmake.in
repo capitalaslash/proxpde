@@ -3,7 +3,7 @@ include(CMakeFindDependencyMacro)
 
 list(APPEND CMAKE_MODULE_PATH ${MiniFEM_CMAKE_DIR})
 
-find_dependency(Eigen3 3.3.3 REQUIRED NO_MODULE)
+find_dependency(Eigen3 3.3 REQUIRED NO_MODULE)
 find_dependency(UMFPack REQUIRED MODULE)
 find_dependency(pugixml REQUIRED NO_MODULE)
 find_dependency(HDF5 REQUIRED MODULE COMPONENTS C)

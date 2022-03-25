@@ -326,7 +326,7 @@ constexpr T pow(T const & base, short_T const exponent)
 // ----------------------------------------------------------------------------
 struct ParameterDict: public YAML::Node
 {
-  ParameterDict(): YAML::Node{} {}
+  ParameterDict() = default;
 
   ParameterDict(YAML::Node const & n): YAML::Node{n} {}
 
@@ -343,6 +343,41 @@ struct ParameterDict: public YAML::Node
     }
     return true;
   }
+
+  void override(std::string_view const fileName)
+  {
+    YAML::Node const override = YAML::LoadFile(fileName.data());
+
+    for (auto const & kv: override)
+    {
+      auto const & k = kv.first.as<std::string>();
+      auto const & v = kv.second;
+      if (std::find(
+              std::begin(ParameterDict::ALLOWED_SUBSECTIONS),
+              std::end(ParameterDict::ALLOWED_SUBSECTIONS),
+              k) != std::end(ParameterDict::ALLOWED_SUBSECTIONS))
+      {
+        for (auto const & kv_nested: v)
+        {
+          auto const & k_nested = kv_nested.first.as<std::string>();
+          auto const & v_nested = kv_nested.second;
+          std::cout << "overriding " << k_nested << " in subsection " << k
+                    << " with value " << v_nested << std::endl;
+          this->operator[](k)[k_nested] = v_nested;
+        }
+      }
+      else
+      {
+        std::cout << "overriding " << k << " with value " << v << std::endl;
+        this->operator[](k) = v;
+      }
+    }
+  }
+
+  static constexpr std::array<std::string_view, 2> ALLOWED_SUBSECTIONS = {
+      "mesh",
+      "nested",
+  };
 };
 
 namespace YAML

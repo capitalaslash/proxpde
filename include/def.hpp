@@ -352,15 +352,13 @@ struct ParameterDict: public YAML::Node
     {
       auto const & k = kv.first.as<std::string>();
       auto const & v = kv.second;
-      if (std::find(
-              std::begin(ParameterDict::ALLOWED_SUBSECTIONS),
-              std::end(ParameterDict::ALLOWED_SUBSECTIONS),
-              k) != std::end(ParameterDict::ALLOWED_SUBSECTIONS))
+      if (v.Type() == YAML::NodeType::Map)
       {
         for (auto const & kv_nested: v)
         {
           auto const & k_nested = kv_nested.first.as<std::string>();
           auto const & v_nested = kv_nested.second;
+          // TODO: allow sub-...sub-sections?
           std::cout << "overriding " << k_nested << " in subsection " << k
                     << " with value " << v_nested << std::endl;
           this->operator[](k)[k_nested] = v_nested;
@@ -373,11 +371,6 @@ struct ParameterDict: public YAML::Node
       }
     }
   }
-
-  static constexpr std::array<std::string_view, 2> ALLOWED_SUBSECTIONS = {
-      "mesh",
-      "nested",
-  };
 };
 
 namespace YAML

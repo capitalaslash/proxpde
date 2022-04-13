@@ -296,7 +296,7 @@ struct IOManager
   using Elem_T = typename Mesh_T::Elem_T;
   using Traits_T = XDMFTraits<RefFE_T>;
 
-  IOManager(FESpace_T const & fe, fs::path const fp, uint const it = 0):
+  IOManager(FESpace_T const & fe, fs::path const fp = "output", uint const it = 0):
       feSpace{fe},
       feSpaceScalar{*fe.mesh},
       filePath(std::move(fp)),

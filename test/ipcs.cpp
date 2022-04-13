@@ -10,44 +10,42 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
-using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
-using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
-using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
-using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
-using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-
 int main(int argc, char * argv[])
 {
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+
   MilliTimer t;
 
   ParameterDict config;
 
+  // default configuration
+  config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+  config["mesh"]["length"] = Vec3{1.0, 10.0, 0.0};
+  config["mesh"]["n"] = std::array{4U, 8U, 0U};
+
+  config["dt"] = 0.1;
+  config["ntime"] = 50U;
+  config["nu"] = 0.1;
+  config["printStep"] = 1U;
+
+  // override from command line
   if (argc > 1)
   {
-    config = YAML::LoadFile(argv[1]);
-  }
-  else
-  {
-    config["nx"] = 4U;
-    config["ny"] = 8U;
-    config["dt"] = 0.1;
-    config["ntime"] = 50U;
-    config["nu"] = 0.1;
-    config["printStep"] = 1U;
+    config.override(argv[1]);
   }
 
-  config.validate({"nx", "ny", "dt", "ntime", "nu", "printStep"});
+  config.validate({"mesh", "dt", "ntime", "nu", "printStep"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(
-      *mesh,
-      Vec3{0., 0., 0.},
-      Vec3{1., 10., 0.},
-      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
   t.stop();
 
   t.start("fespace");

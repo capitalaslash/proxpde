@@ -61,6 +61,7 @@ set(SOURCES
     src/def.cpp
     src/fespace.cpp
     src/geo.cpp
+    src/iomanager.cpp
     src/mesh.cpp
     src/ns.cpp
     src/qr.cpp

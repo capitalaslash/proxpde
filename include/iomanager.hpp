@@ -191,14 +191,12 @@ struct HDF5Var<uint>
 {
   static hid_t value;
 };
-hid_t HDF5Var<uint>::value = H5T_STD_I32LE;
 
 template <>
 struct HDF5Var<double>
 {
   static hid_t value;
 };
-hid_t HDF5Var<double>::value = H5T_IEEE_F64LE;
 
 enum class HDF5FileMode : int8_t
 {

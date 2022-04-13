@@ -66,6 +66,7 @@ set(SOURCES
     src/ns.cpp
     src/qr.cpp
     src/reffe.cpp
+    src/var.cpp
 )
 
 set(HEADERS

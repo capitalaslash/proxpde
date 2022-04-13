@@ -883,17 +883,21 @@ void readGMSH(
 }
 
 template <typename Mesh>
-void readMesh(
-    Mesh & mesh, YAML::Node const & config, MeshFlags::T flags = MeshFlags::NONE)
+void readMesh(Mesh & mesh, ParameterDict const & config)
 {
+  auto flags = MeshFlags::NONE;
+  if (config["flags"])
+  {
+    flags = config["flags"].as<MeshFlags::T>();
+  }
+  config.validate({"mesh_type"});
   auto const mesh_type = config["mesh_type"].as<std::string>();
   if (mesh_type == "structured")
   {
-    std::array<uint, 3> numElems = {
-        config["nx"].as<uint>(), config["ny"].as<uint>(), config["nz"].as<uint>()};
-    // TODO: auto const origin = config["origin"].as<Vec3>();
-    Vec3 const origin{0., 0., 0.};
-    Vec3 const length{1., 1., 1.};
+    config.validate({"n", "origin", "length"});
+    auto const numElems = config["n"].as<std::array<uint, 3>>();
+    auto const origin = config["origin"].as<Vec3>();
+    Vec3 const length = config["length"].as<Vec3>();
     buildHyperCube(mesh, origin, length, numElems, flags);
   }
   else if (mesh_type == "msh")

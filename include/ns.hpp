@@ -48,13 +48,21 @@ struct NSParameters
   // long const dummy = 0;
 };
 
-template <typename FESpaceVel, typename FESpaceP, typename BCSVel, typename BCSP>
+template <typename Mesh>
 struct NSSolverMonolithic
 {
-  using FESpaceVel_T = FESpaceVel;
-  using FESpaceP_T = FESpaceP;
-  using Elem_T = typename FESpaceVel_T::Mesh_T::Elem_T;
+  using Mesh_T = Mesh;
+  using Elem_T = typename Mesh_T::Elem_T;
   static int constexpr dim = Elem_T::dim;
+  using FESpaceVel_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 2>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
+      dim>;
+  using FESpaceP_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 1>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
 
   // using Backend = amgcl::backend::eigen<double>;
   // using USolver = amgcl::make_solver<
@@ -102,26 +110,19 @@ struct NSSolverMonolithic
   // using SolverParams = boost::property_tree::ptree;
   using SchurSolver = IterSolver;
 
-  explicit NSSolverMonolithic(
-      FESpaceVel_T const & feVel,
-      FESpaceP_T const & feP,
-      BCSVel const & bcsVV,
-      BCSP const & bcsPP,
-      NSParameters const & par):
-      feSpaceVel{feVel},
-      feSpaceP{feP},
-      bcsVel{bcsVV},
-      bcsP{bcsPP},
-      parameters{par},
+  explicit NSSolverMonolithic(Mesh_T const & mesh, ParameterDict const & c):
+      feSpaceVel{mesh},
+      feSpaceP{mesh, feSpaceVel.dof.size * dim},
+      config{c},
       builder{feSpaceVel.dof.size * dim + feSpaceP.dof.size},
       sol{"vel", feSpaceVel.dof.size * dim + feSpaceP.dof.size},
       p{"p", feSpaceP.dof.size},
       velOld{feSpaceVel.dof.size * dim},
-      assemblyRhs{1. / par.dt, velOld, feSpaceVel},
+      assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel},
       assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
       // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0),
-      ioVel{feSpaceVel, par.outputDir / "vel"},
-      ioP{feSpaceP, par.outputDir / "p"}
+      ioVel{feSpaceVel},
+      ioP{feSpaceP, fs::path{c["output_dir"].as<std::string>()} / "p"}
   {
     // // set up size and position of pressure dofs
     // std::fill(pMask.begin() + feSpaceVel.dof.size * dim, pMask.end(), 1);
@@ -129,15 +130,21 @@ struct NSSolverMonolithic
     // solverParams.put("precond.pmask", static_cast<void *>(pMask.data()));
     // // solverParams.put("precond.approx_schur", false);
     // solverParams.put("precond.psolver.precond.direct_coarse", false);
+
+    config.validate({"nu", "dt", "output_dir"});
+    auto const outDir = fs::path{config["output_dir"].as<std::string>()};
+    ioVel.filePath = outDir / "vel";
+    ioP.filePath = outDir / "p";
   }
 
-  void init()
+  template <typename BCsVel, typename BCsP>
+  void init(BCsVel const & bcsVel, BCsP const & bcsP)
   {
     // TODO: assert that this comes after setting up bcs
     builder.buildLhs(
         std::tuple{
-            AssemblyScalarMass{1. / parameters.dt, feSpaceVel},
-            AssemblyTensorStiffness{parameters.nu, feSpaceVel}},
+            AssemblyScalarMass{1. / config["dt"].as<double>(), feSpaceVel},
+            AssemblyTensorStiffness{config["nu"].as<double>(), feSpaceVel}},
         bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
@@ -147,7 +154,8 @@ struct NSSolverMonolithic
     rhsFixed = builder.b;
   }
 
-  void assemblyStep()
+  template <typename BCsVel>
+  void assemblyStep(BCsVel const & bcsVel)
   {
     velOld = sol.data;
     builder.clear();
@@ -230,11 +238,9 @@ struct NSSolverMonolithic
     ioP.print({p}, time);
   }
 
-  FESpaceVel_T const & feSpaceVel;
-  FESpaceP_T const & feSpaceP;
-  BCSVel const & bcsVel;
-  BCSP const & bcsP;
-  NSParameters parameters;
+  FESpaceVel_T const feSpaceVel;
+  FESpaceP_T const feSpaceP;
+  ParameterDict const config;
   Builder<StorageType::RowMajor> builder;
   Var sol;
   Var p;
@@ -250,23 +256,25 @@ struct NSSolverMonolithic
   IOManager<FESpaceP_T> ioP;
 };
 
-template <
-    typename FESpaceU,
-    typename FESpaceP,
-    typename BCSU,
-    typename BCSV,
-    typename BCSP>
+template <typename Mesh>
 struct NSSolverSplit2D
 {
-  using FESpaceU_T = FESpaceU;
-  using FESpaceP_T = FESpaceP;
-  static int constexpr dim = FESpaceU_T::Mesh_T::Elem_T::dim;
-  using Elem_T = typename FESpaceU_T::Mesh_T::Elem_T;
+  using Mesh_T = Mesh;
+  using Elem_T = typename Mesh_T::Elem_T;
+  static int constexpr dim = Elem_T::dim;
+  using FESpaceU_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 2>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   using FESpaceVel_T = FESpace<
-      typename FESpaceU_T::Mesh_T,
-      typename FESpaceU_T::RefFE_T,
-      typename FESpaceU_T::QR_T,
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 2>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
       dim>;
+  using FESpaceP_T = FESpace<
+      Mesh_T,
+      typename LagrangeFE<Elem_T, 1>::RefFE_T,
+      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   using BuilderVel_T = Builder<StorageType::RowMajor>;
   using BuilderP_T = Builder<StorageType::ClmMajor>;
   // using Backend = amgcl::backend::eigen<double>;
@@ -283,20 +291,11 @@ struct NSSolverSplit2D
   // >;
   using Solver = IterSolver;
 
-  explicit NSSolverSplit2D(
-      FESpaceU_T const & feU,
-      FESpaceP_T const & feP,
-      BCSU const & bcsUU,
-      BCSV const & bcsVV,
-      BCSP const & bcsPP,
-      NSParameters const & par):
-      feSpaceU{feU},
-      feSpaceP{feP},
-      feSpaceVel{*feU.mesh},
-      bcsU{bcsUU},
-      bcsV{bcsVV},
-      bcsP{bcsPP},
-      parameters{par},
+  explicit NSSolverSplit2D(Mesh_T const & mesh, ParameterDict const & c):
+      feSpaceU{mesh},
+      feSpaceP{mesh},
+      feSpaceVel{mesh},
+      config{c},
       builderUStar{feSpaceU.dof.size},
       builderVStar{feSpaceU.dof.size},
       builderP{feSpaceP.dof.size},
@@ -311,12 +310,12 @@ struct NSSolverSplit2D
       pOld{feSpaceP.dof.size},
       dp{feSpaceP.dof.size},
       vel{feSpaceU.dof.size * dim},
-      assemblyMassUStar{1. / par.dt, feSpaceU},
-      assemblyMassVStar{1. / par.dt, feSpaceU},
-      assemblyStiffnessUStar{par.nu, feSpaceU},
-      assemblyStiffnessVStar{par.nu, feSpaceU},
-      assemblyURhs{1. / par.dt, u.data, feSpaceU},
-      assemblyVRhs{1. / par.dt, v.data, feSpaceU},
+      assemblyMassUStar{1. / c["dt"].as<double>(), feSpaceU},
+      assemblyMassVStar{1. / c["dt"].as<double>(), feSpaceU},
+      assemblyStiffnessUStar{c["nu"].as<double>(), feSpaceU},
+      assemblyStiffnessVStar{c["nu"].as<double>(), feSpaceU},
+      assemblyURhs{1. / c["dt"].as<double>(), u.data, feSpaceU},
+      assemblyVRhs{1. / c["dt"].as<double>(), v.data, feSpaceU},
       assemblyAdvectionU{1.0, vel, feSpaceVel, feSpaceU},
       assemblyAdvectionV{1.0, vel, feSpaceVel, feSpaceU},
       assemblyPOldU{1.0, pOld, feSpaceP, feSpaceU, {0}},
@@ -324,16 +323,23 @@ struct NSSolverSplit2D
       assemblyDivVelStar{-1.0, velStar, feSpaceVel, feSpaceP},
       assemblyUStarRhs{1.0, uStar.data, feSpaceU},
       assemblyVStarRhs{1.0, vStar.data, feSpaceU},
-      assemblyGradPRhsU{-par.dt, dp, feSpaceP, feSpaceU, {0}},
-      assemblyGradPRhsV{-par.dt, dp, feSpaceP, feSpaceU, {1}},
-      ioVel{feSpaceU, par.outputDir / "vel"},
-      ioP{feSpaceP, par.outputDir / "p"}
-  {}
+      assemblyGradPRhsU{-c["dt"].as<double>(), dp, feSpaceP, feSpaceU, {0}},
+      assemblyGradPRhsV{-c["dt"].as<double>(), dp, feSpaceP, feSpaceU, {1}},
+      ioVel{feSpaceU},
+      ioP{feSpaceP}
+  {
+    config.validate({"nu", "dt", "output_dir"});
+    auto const outDir = fs::path{config["output_dir"].as<std::string>()};
+    ioVel.filePath = outDir / "vel";
+    ioP.filePath = outDir / "p";
+  }
 
-  void init()
+  template <typename BCsU, typename BCsV, typename BCsP>
+  void init(BCsU const & bcsU, BCsV const & bcsV, BCsP const & bcsP)
   {
     // TODO: assert that this comes after setting up bcs
-    builderP.buildLhs(std::tuple{AssemblyStiffness{parameters.dt, feSpaceP}}, bcsP);
+    builderP.buildLhs(
+        std::tuple{AssemblyStiffness{config["dt"].as<double>(), feSpaceP}}, bcsP);
     builderP.closeMatrix();
     solverP.analyzePattern(builderP.A);
     solverP.factorize(builderP.A);
@@ -345,7 +351,8 @@ struct NSSolverSplit2D
     solverU.factorize(builderU.A);
   }
 
-  void assemblyStepVelStar()
+  template <typename BCsU, typename BCsV>
+  void assemblyStepVelStar(BCsU const & bcsU, BCsV const & bcsV)
   {
     setComponent(vel, feSpaceVel, u.data, feSpaceU, 0);
     setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
@@ -378,7 +385,8 @@ struct NSSolverSplit2D
     vStar.data = solverVStar.solve(builderVStar.b);
   }
 
-  void assemblyStepP()
+  template <typename BCsP>
+  void assemblyStepP(BCsP const & bcsP)
   {
     setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
     setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
@@ -427,13 +435,10 @@ struct NSSolverSplit2D
     ioP.print({p}, time);
   }
 
-  FESpaceU_T const & feSpaceU;
-  FESpaceP_T const & feSpaceP;
-  FESpaceVel_T feSpaceVel;
-  BCSU const & bcsU;
-  BCSV const & bcsV;
-  BCSP const & bcsP;
-  NSParameters parameters;
+  FESpaceU_T const feSpaceU;
+  FESpaceP_T const feSpaceP;
+  FESpaceVel_T const feSpaceVel;
+  ParameterDict const config;
   Builder<StorageType::RowMajor> builderUStar;
   Builder<StorageType::RowMajor> builderVStar;
   Builder<StorageType::ClmMajor> builderP;

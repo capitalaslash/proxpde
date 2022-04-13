@@ -5,64 +5,51 @@
 
 int main(int argc, char * argv[])
 {
-  uint constexpr dim = 2;
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpaceVel_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 2>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
-      dim>;
-  using FESpaceU_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 2>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
-      1>;
-  using FESpaceP_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 1>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
-  MilliTimer t;
 
+  MilliTimer t;
   ParameterDict config;
+
+  // default configuration
+  config["mesh"]["origin"] = Vec3{0., 0., 0.};
+  config["mesh"]["length"] = Vec3{1., 10., 0.};
+  config["mesh"]["n"] = std::array{4U, 8U, 0U};
+  config["ntime"] = 50U;
+  config["ns"]["dt"] = 0.1;
+  config["ns"]["nu"] = 0.1;
+  config["ns"]["output_dir"] = "output_ns/monolithic";
+
+  auto const parSplit = NSParameters{
+      config["ns"]["dt"].as<double>(),
+      config["ns"]["nu"].as<double>(),
+      fs::path{"output_ns"} / "split",
+  };
 
   if (argc > 1)
   {
-    config = YAML::LoadFile(argv[1]);
-  }
-  else
-  {
-    config["origin"] = Vec3{0., 0., 0.};
-    config["length"] = Vec3{1., 10., 0.};
-    config["nx"] = 4;
-    config["ny"] = 8;
-    config["dt"] = 0.1;
-    config["ntime"] = 50U;
-    config["nu"] = 0.1;
+    // override from command line
+    config.override(argv[1]);
   }
 
-  config.validate({"origin", "length", "nx", "ny", "dt", "ntime", "nu"});
-
-  auto const dt = config["dt"].as<double>();
-  auto const nu = config["nu"].as<double>();
-  NSParameters parMonolithic{dt, nu, "output_ns/monolithic"};
-  NSParameters parSplit{dt, nu, "output_ns/split"};
+  config.validate({"mesh", "ns"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new (Mesh_T)};
-  buildHyperCube(
-      *mesh,
-      config["origin"].as<Vec3>(),
-      config["length"].as<Vec3>(),
-      {config["nx"].as<uint>(), config["ny"].as<uint>(), 0});
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
   t.stop();
 
-  FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
-  FESpaceU_T feSpaceU{*mesh};
-  FESpaceP_T feSpacePSplit{*mesh};
+  t.start("eqn monolithic");
+  NSSolverMonolithic ns{*mesh, ParameterDict{config["ns"]}};
+  t.stop();
 
-  t.start("monolithic bc");
+  config["ns"]["output_dir"] = "output_ns/split";
+
+  t.start("eqn split");
+  NSSolverSplit2D split{*mesh, ParameterDict{config["ns"]}};
+  t.stop();
+
+  t.start("bc monolithic");
   auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0) * p(0))}; };
   // auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.0}; };
   auto const zero2d = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
@@ -70,10 +57,11 @@ int main(int argc, char * argv[])
   auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   auto const zero = [](Vec3 const &) { return 0.0; };
   auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::TOP, Comp::u},
-      BCEss{feSpaceVel, side::LEFT, Comp::u}};
+      BCEss{ns.feSpaceVel, side::BOTTOM},
+      BCEss{ns.feSpaceVel, side::RIGHT},
+      BCEss{ns.feSpaceVel, side::LEFT, Comp::u},
+      BCEss{ns.feSpaceVel, side::TOP, Comp::u},
+  };
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;
@@ -82,33 +70,34 @@ int main(int argc, char * argv[])
   // auto const bcsP = std::tuple{BCEss{feSpaceP, side::TOP, zero}};
   t.stop();
 
-  t.start("split bc");
+  t.start("bc split");
   auto bcsU = std::tuple{
-      BCEss{feSpaceU, side::BOTTOM},
-      BCEss{feSpaceU, side::RIGHT},
-      BCEss{feSpaceU, side::TOP, {0}},
-      BCEss{feSpaceU, side::LEFT, {0}}};
+      BCEss{split.feSpaceU, side::BOTTOM},
+      BCEss{split.feSpaceU, side::RIGHT},
+      BCEss{split.feSpaceU, side::LEFT},
+      BCEss{split.feSpaceU, side::TOP},
+  };
   std::get<0>(bcsU) << inletX;
   std::get<1>(bcsU) << zero;
   std::get<2>(bcsU) << zero;
   std::get<3>(bcsU) << zero;
-  auto bcsV = std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
+  auto bcsV = std::tuple{
+      BCEss{split.feSpaceU, side::BOTTOM},
+      BCEss{split.feSpaceU, side::RIGHT},
+  };
   std::get<0>(bcsV) << inletY;
   std::get<1>(bcsV) << zero;
-  auto bcTopP = BCEss{feSpacePSplit, side::TOP};
+  auto bcTopP = BCEss{split.feSpaceP, side::TOP};
   bcTopP << zero;
   auto const bcsPSplit = std::tuple{bcTopP};
-
   t.stop();
 
-  t.start("monolithic ctor");
-  NSSolverMonolithic ns{feSpaceVel, feSpaceP, bcsVel, bcsP, parMonolithic};
-  NSSolverSplit2D split{feSpaceU, feSpacePSplit, bcsU, bcsV, bcsPSplit, parSplit};
+  t.start("monolithic init");
+  ns.init(bcsVel, bcsP);
   t.stop();
 
-  t.start("init");
-  ns.init();
-  split.init();
+  t.start("split init");
+  split.init(bcsU, bcsV, bcsPSplit);
   t.stop();
 
   t.start("ic");
@@ -130,12 +119,12 @@ int main(int argc, char * argv[])
     MilliTimer stepTimer;
     stepTimer.start();
 
-    time += dt;
-    std::cout << Utils::separator << "solving timestep " << itime << ", time = " << time
-              << std::endl;
+    time += ns.config["dt"].as<double>();
+    std::cout << Utils::separator << "solving timestep " << itime + 1
+              << ", time = " << time << std::endl;
 
     t.start("monolithic assembly");
-    ns.assemblyStep();
+    ns.assemblyStep(bcsVel);
     t.stop();
 
     t.start("monolithic solve");
@@ -143,7 +132,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepVelStar();
+    split.assemblyStepVelStar(bcsU, bcsV);
     t.stop();
 
     t.start("split solve");
@@ -151,7 +140,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepP();
+    split.assemblyStepP(bcsP);
     t.stop();
 
     t.start("split solve");

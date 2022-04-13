@@ -375,13 +375,20 @@ void buildHyperCube(
 template <typename Elem>
 void buildHyperCube(Mesh<Elem> & mesh, ParameterDict const & config)
 {
-  config.validate({"origin", "length", "n", "flags"});
+  auto flags = MeshFlags::NONE;
+  if (config["flags"])
+  {
+    flags = config["flags"].as<MeshFlags::T>();
+  }
+
+  config.validate({"origin", "length", "n"});
+
   buildHyperCube(
       mesh,
       config["origin"].as<Vec3>(),
       config["length"].as<Vec3>(),
       config["n"].as<std::array<uint, 3>>(),
-      config["flags"].as<MeshFlags::T>());
+      flags);
 }
 
 void refTriangleMesh(Mesh<Triangle> & mesh);

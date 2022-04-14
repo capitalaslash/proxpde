@@ -16,11 +16,15 @@ int main(int argc, char * argv[])
   static constexpr uint dim = 2;
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
-  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T, dim>::RecommendedQR;
-  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
-  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 2>::RefFE_T,
+      LagrangeFE<Elem_T, 2>::RecommendedQR,
+      dim>;
+  using FESpaceP_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 2>::RecommendedQR>;
 
   MilliTimer t;
 
@@ -28,21 +32,20 @@ int main(int argc, char * argv[])
 
   ParameterDict config;
 
+  // default config
+  config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+  config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+  config["mesh"]["n"] = std::array{4U, 4U, 0U};
+  config["mesh"]["flags"] = MeshFlags::BOUNDARY_FACETS;
+  config["dt"] = 0.1;
+  config["ntime"] = 10U;
+  config["nu"] = 0.1;
+  config["printStep"] = 1U;
+  config["toll"] = 1.e-11;
+
   if (argc > 1)
   {
-    config = YAML::LoadFile(argv[1]);
-  }
-  else
-  {
-    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
-    config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
-    config["mesh"]["n"] = std::array{4U, 4U, 0U};
-    config["mesh"]["flags"] = MeshFlags::BOUNDARY_FACETS;
-    config["dt"] = 0.1;
-    config["ntime"] = 10U;
-    config["nu"] = 0.1;
-    config["printStep"] = 1U;
-    config["toll"] = 1.e-11;
+    config.override(argv[1]);
   }
   config.validate({"mesh", "dt", "ntime", "nu", "printStep", "toll"});
   t.stop();
@@ -60,18 +63,27 @@ int main(int argc, char * argv[])
   t.start("bcs");
   auto zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
   auto bcsVel = std::tuple{
+      BCEss{feSpaceVel, side::BOTTOM},
       BCEss{feSpaceVel, side::RIGHT},
       BCEss{feSpaceVel, side::LEFT},
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::TOP}};
+      BCEss{feSpaceVel, side::TOP},
+  };
   std::get<0>(bcsVel) << zero;
   std::get<1>(bcsVel) << zero;
   std::get<2>(bcsVel) << zero;
   std::get<3>(bcsVel) << [](Vec3 const &) { return Vec2{1.0, 0.0}; };
-  // select the point on the bottom boundary in the middle
-  DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
-                       return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;
-                     }};
+
+  // select the point(s) on the bottom boundary in the middle
+  auto const o = config["mesh"]["origin"].as<Vec3>();
+  auto const l = config["mesh"]["length"].as<Vec3>();
+  auto const hx = l[0] / config["mesh"]["n"].as<std::array<uint, 3>>()[0];
+  auto const xm = o[0] + 0.5 * l[0];
+  auto const ymin = o[1];
+  DOFCoordSet pinSet{
+      feSpaceP,
+      [xm, ymin, hx](Vec3 const & p)
+      { return std::fabs(p[0] - xm) < hx && std::fabs(p[1] - ymin) < 1e-12; },
+  };
   auto bcPin = BCEss{feSpaceP, pinSet.ids};
   bcPin << [](Vec3 const &) { return 0.; };
   auto const bcsP = std::tuple{bcPin};
@@ -81,109 +93,115 @@ int main(int argc, char * argv[])
   auto const dofU = feSpaceVel.dof.size;
   auto const dofP = feSpaceP.dof.size;
   uint const numDOFs = dofU * dim + dofP;
-
   auto const nu = config["nu"].as<double>();
   auto const dt = config["dt"].as<double>();
-  Vec velOld{dofU * dim};
 
-  AssemblyTensorStiffness stiffness(nu, feSpaceVel);
-  // AssemblyStiffness stiffness(nu, feSpaceVel);
+  Var vel{"vel", dofU * dim};
+  Vec velOld{dofU * dim};
+  Var p{"p"};
+  p.data = Vec::Zero(dofP);
+  AssemblyScalarMass timeDer(1. / dt, feSpaceVel);
+  AssemblyAdvection advection(1.0, velOld, feSpaceVel, feSpaceVel);
+  AssemblyTensorStiffness diffusion(nu, feSpaceVel);
+  // AssemblyStiffness diffusion(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
-  AssemblyScalarMass timeder(1. / dt, feSpaceVel);
-  AssemblyProjection timeder_rhs(1. / dt, velOld, feSpaceVel);
-  AssemblyAdvection advection(1.0, velOld, feSpaceVel, feSpaceVel);
+  AssemblyProjection timeDerRhs(1. / dt, velOld, feSpaceVel);
+  auto const lhs = std::tuple{timeDer, advection, diffusion};
+  auto const rhs = std::tuple{timeDerRhs};
+
   // we need this in order to properly apply the pinning bc on the pressure
   AssemblyDummy dummy{feSpaceP};
   t.stop();
 
   t.start("ic");
-  Var sol{"vel", numDOFs};
-  Vec fixedSol;
-  auto ic = [](Vec3 const &) { return Vec2(1., 0.); };
-  interpolateAnalyticFunction(ic, feSpaceVel, sol.data);
-  fixedSol = sol.data;
+  auto ic = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
+  interpolateAnalyticFunction(ic, feSpaceVel, vel.data);
+  velOld = vel.data;
   t.stop();
+
+  Builder builder{numDOFs};
+  Builder builderFixed{numDOFs};
+
+  t.start("assembly fixed");
+  builderFixed.buildLhs(std::tuple{timeDer, diffusion}, bcsVel);
+  builderFixed.buildCoupling(grad, bcsVel, bcsP);
+  builderFixed.buildCoupling(div, bcsP, bcsVel);
+  builderFixed.buildLhs(std::tuple{dummy}, bcsP);
+  builderFixed.closeMatrix();
+  auto const matFixed = builderFixed.A;
+  auto const rhsFixed = builderFixed.b;
+  t.stop();
+
+  LUSolver solver;
+  LUSolver solverFixed;
 
   t.start("print");
   IOManager ioVel{feSpaceVel, "output_cavitytime/sol_v"};
-  ioVel.print({sol});
+  ioVel.print({vel});
   IOManager ioP{feSpaceP, "output_cavitytime/sol_p"};
-  Var p{"p", sol.data, dofU * dim, dofP};
   ioP.print({p});
   t.stop();
 
-  Builder<StorageType::RowMajor> builder{numDOFs};
-
-  t.start("assembly fixed");
-  Builder<StorageType::RowMajor> fixedBuilder{numDOFs};
-  fixedBuilder.buildLhs(std::tuple{timeder, stiffness}, bcsVel);
-  fixedBuilder.buildCoupling(grad, bcsVel, bcsP);
-  fixedBuilder.buildCoupling(div, bcsP, bcsVel);
-  fixedBuilder.buildLhs(std::tuple{dummy}, bcsP);
-  fixedBuilder.closeMatrix();
-  auto const fixedMat = fixedBuilder.A;
-  auto const fixedRhs = fixedBuilder.b;
-  t.stop();
-
-  IterSolver solver;
-  IterSolver fixedSolver;
   auto const ntime = config["ntime"].as<uint>();
   uint const printStep = config["printStep"].as<uint>();
   double const toll = config["toll"].as<double>();
+  Vec sol = Vec::Zero(numDOFs);
+  Vec solFixed = Vec::Zero(numDOFs);
   double time = 0.0;
   MilliTimer timerStep;
-  auto const lhs = std::tuple{advection, timeder, stiffness};
-  auto const rhs = std::tuple{timeder_rhs};
   for (uint itime = 0; itime < ntime; itime++)
   {
     timerStep.start();
     time += dt;
-    std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
+    std::cout << Utils::separator << "solving timestep " << itime + 1
+              << ", time = " << time << std::endl;
 
     t.start("update");
-    velOld = sol.data.block(0, 0, dofU * dim, 1);
+    velOld = vel.data;
     t.stop();
 
-    t.start("assembly");
+    t.start("build");
     builder.clear();
-    builder.buildRhs(rhs, bcsVel);
     builder.buildLhs(lhs, bcsVel);
     builder.buildCoupling(grad, bcsVel, bcsP);
     builder.buildCoupling(div, bcsP, bcsVel);
     builder.buildLhs(std::tuple{dummy}, bcsP);
     builder.closeMatrix();
+    builder.buildRhs(rhs, bcsVel);
     t.stop();
 
-    t.start("assembly fixed");
-    fixedBuilder.clear();
-    fixedBuilder.buildRhs(std::tuple{timeder_rhs}, bcsVel);
-    fixedBuilder.buildLhs(std::tuple{advection}, bcsVel);
-    fixedBuilder.closeMatrix();
-    fixedBuilder.A += fixedMat;
-    fixedBuilder.b += fixedRhs;
+    t.start("build fixed");
+    builderFixed.clear();
+    builderFixed.buildRhs(std::tuple{timeDerRhs}, bcsVel);
+    builderFixed.buildLhs(std::tuple{advection}, bcsVel);
+    builderFixed.closeMatrix();
+    builderFixed.A += matFixed;
+    builderFixed.b += rhsFixed;
     t.stop();
 
-    // auto const diffMat = builder.A - fixedBuilder.A;
+    // auto const diffMat = builder.A - builderFixed.A;
     // std::cout << "diffMat norm: " << diffMat.norm() << std::endl;
 
     t.start("solve");
     solver.compute(builder.A);
-    sol.data = solver.solve(builder.b);
+    sol = solver.solve(builder.b);
+    vel.data = sol.block(0, 0, dofU * dim, 1);
+    p.data = sol.block(dofU * dim, 0, dofP, 1);
     t.stop();
 
     t.start("res");
-    Vec const res = builder.A * sol.data - builder.b;
+    Vec const res = builder.A * sol - builder.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
     t.stop();
 
     t.start("solve fixed");
-    fixedSolver.compute(fixedBuilder.A);
-    fixedSol = fixedSolver.solve(fixedBuilder.b);
+    solverFixed.compute(builderFixed.A);
+    solFixed = solverFixed.solve(builderFixed.b);
     t.stop();
 
     t.start("check");
-    auto const solDiffNorm = (sol.data - fixedSol).norm();
+    auto const solDiffNorm = (sol - solFixed).norm();
     t.stop();
 
     std::cout << "solution difference norm: " << solDiffNorm << std::endl;
@@ -196,8 +214,7 @@ int main(int argc, char * argv[])
     t.start("print");
     if (itime % printStep == 0)
     {
-      ioVel.print({sol}, time);
-      p.data = sol.data.block(dofU * dim, 0, dofP, 1);
+      ioVel.print({vel}, time);
       ioP.print({p}, time);
     }
     t.stop();
@@ -206,11 +223,11 @@ int main(int argc, char * argv[])
   }
 
   t.start("norm");
-  auto const solNorm = sol.data.norm();
+  auto const solNorm = sol.norm();
   std::cout << "solution norm: " << std::setprecision(16) << solNorm << std::endl;
   t.stop();
 
   t.print();
 
-  return checkError({solNorm}, {4.40937006291}, 1.e-10);
+  return checkError({solNorm}, {4.409436658784684}, 1.e-12);
 }

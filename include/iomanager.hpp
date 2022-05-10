@@ -26,7 +26,6 @@ std::string join(std::vector<T> const & v, std::string_view const divider = " ")
   return buf.substr(0, buf.size() - 1);
 }
 
-template <typename RefFE>
 class XDMFDoc
 {
 public:
@@ -90,6 +89,7 @@ public:
     timeNode.append_attribute("Value") = time;
   }
 
+  template <typename RefFE>
   void
   setTopology(uint const numElems, std::string_view const connName = "connectivity")
   {
@@ -327,7 +327,7 @@ struct IOManager
 protected:
   void printTimeSeries()
   {
-    XDMFDoc<RefFE_T> doc{filePath, "time", "", "", XDMFGridType::COLLECTION};
+    XDMFDoc doc{filePath.value(), "time", "", "", XDMFGridType::COLLECTION};
     doc.setTimeSeries(timeSeries);
   }
 
@@ -369,10 +369,10 @@ protected:
     using Facet_T = typename Mesh_T::Facet_T;
     Mesh_T const & mesh = *feSpace.mesh;
 
+    XDMFDoc doc{filePath.value(), "boundary", "mesh", "mesh"};
     // we always use linear elements for boundary facets
-    XDMFDoc<typename LagrangeFE<Facet_T, 1>::RefFE_T> doc{
-        filePath, "boundary", "mesh", "mesh"};
-    doc.setTopology(mesh.facetList.size(), "connectivity_bd");
+    doc.setTopology<typename LagrangeFE<Facet_T, 1>::RefFE_T>(
+        mesh.facetList.size(), "connectivity_bd");
     doc.setGeometry(mesh.pointList.size(), "coords_bd");
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
     doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
@@ -426,9 +426,9 @@ template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
-  XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
+  XDMFDoc doc{filePath.value(), std::to_string(iter)};
   doc.setTime(t);
-  doc.setTopology(feSpace.mesh->elementList.size());
+  doc.setTopology<typename FESpace::RefFE_T>(feSpace.mesh->elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{
@@ -485,9 +485,9 @@ template <typename VarTup>
 void IOManager<FESpace>::print(VarTup const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
-  XDMFDoc<typename FESpace::RefFE_T> doc{filePath, std::to_string(iter)};
+  XDMFDoc doc{filePath.value(), std::to_string(iter)};
   doc.setTime(t);
-  doc.setTopology(feSpace.mesh->elementList.size());
+  doc.setTopology<typename FESpace::RefFE_T>(feSpace.mesh->elementList.size());
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{

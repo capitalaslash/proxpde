@@ -35,7 +35,7 @@ public:
       std::string_view meshS = "mesh",
       std::string_view dataS = "",
       XDMFGridType gridType = XDMFGridType::SINGLE):
-      filePath(std::move(fp)),
+      filePath{fp},
       suffix(s),
       meshSuffix(meshS),
       dataSuffix(dataS)
@@ -207,7 +207,7 @@ enum class HDF5FileMode : int8_t
 class HDF5
 {
 public:
-  HDF5(fs::path const fp, HDF5FileMode const mode): filePath(std::move(fp)), status(0)
+  HDF5(fs::path const fp, HDF5FileMode const mode): filePath{fp}, status(0)
   {
     if (mode == HDF5FileMode::OVERWRITE)
     {
@@ -296,17 +296,29 @@ struct IOManager
   using Elem_T = typename Mesh_T::Elem_T;
   using Traits_T = XDMFTraits<RefFE_T>;
 
-  IOManager(FESpace_T const & fe, fs::path const fp = "output", uint const it = 0):
+  IOManager(
+      FESpace_T const & fe,
+      std::optional<fs::path> const fp = std::nullopt,
+      uint const it = 0):
       feSpace{fe},
       feSpaceScalar{*fe.mesh},
-      filePath(std::move(fp)),
       // h5Time{fs::path{filepath} += ".time.h5"},
       iter(it)
   {
-    // create subfolder if not saving in the current directory
-    if (filePath.parent_path() != fs::path(""))
+    // init only when path is specified
+    if (fp.has_value())
     {
-      fs::create_directories(filePath.parent_path());
+      init(fp.value());
+    }
+  }
+
+  void init(fs::path const fp)
+  {
+    filePath = fp;
+    // create subfolder if not saving in the current directory
+    if (filePath->parent_path() != fs::path(""))
+    {
+      fs::create_directories(filePath->parent_path());
     }
 
     printMeshData();
@@ -333,7 +345,7 @@ protected:
 
   void printMeshData()
   {
-    HDF5 h5Mesh{fs::path{filePath} += ".mesh.h5", HDF5FileMode::OVERWRITE};
+    HDF5 h5Mesh{fs::path{filePath.value()} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
     {
@@ -377,7 +389,7 @@ protected:
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
     doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
 
-    HDF5 h5Mesh{fs::path{filePath} += ".mesh.h5", HDF5FileMode::APPEND};
+    HDF5 h5Mesh{fs::path{filePath.value()} += ".mesh.h5", HDF5FileMode::APPEND};
 
     Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
     for (auto const & f: mesh.facetList)
@@ -414,7 +426,7 @@ protected:
 public:
   FESpace_T const & feSpace;
   FESpaceScalar_T feSpaceScalar;
-  fs::path filePath;
+  std::optional<fs::path> filePath = fs::current_path();
   // HDF5 h5Time;
   uint iter;
   std::vector<std::pair<uint, double>> timeSeries;
@@ -432,7 +444,7 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{
-      filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+      filePath->string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
   for (auto const & v: vars)
   {
     // mixed variable vectors can be longer than current fespace
@@ -491,7 +503,7 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
   doc.setGeometry(feSpace.dof.mapSize);
 
   HDF5 h5Iter{
-      filePath.string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+      filePath->string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
   static_for(
       vars,
       [&](auto const /*i*/, auto const & v)

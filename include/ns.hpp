@@ -39,15 +39,6 @@ struct Comp
   static const std::vector<short_T> uvw;
 };
 
-struct NSParameters
-{
-  double const dt;
-  double const nu;
-  fs::path const outputDir = "output";
-  // avoid padding warning
-  // long const dummy = 0;
-};
-
 template <typename Mesh>
 struct NSSolverMonolithic
 {
@@ -122,7 +113,7 @@ struct NSSolverMonolithic
       assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
       // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0),
       ioVel{feSpaceVel},
-      ioP{feSpaceP, fs::path{c["output_dir"].as<std::string>()} / "p"}
+      ioP{feSpaceP}
   {
     // // set up size and position of pressure dofs
     // std::fill(pMask.begin() + feSpaceVel.dof.size * dim, pMask.end(), 1);
@@ -133,8 +124,8 @@ struct NSSolverMonolithic
 
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = fs::path{config["output_dir"].as<std::string>()};
-    ioVel.filePath = outDir / "vel";
-    ioP.filePath = outDir / "p";
+    ioVel.init(outDir / "vel");
+    ioP.init(outDir / "p");
   }
 
   template <typename BCsVel, typename BCsP>
@@ -330,8 +321,8 @@ struct NSSolverSplit2D
   {
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = fs::path{config["output_dir"].as<std::string>()};
-    ioVel.filePath = outDir / "vel";
-    ioP.filePath = outDir / "p";
+    ioVel.init(outDir / "vel");
+    ioP.init(outDir / "p");
   }
 
   template <typename BCsU, typename BCsV, typename BCsP>

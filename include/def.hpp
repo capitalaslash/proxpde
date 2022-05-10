@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <numeric>
+#include <optional>
 
 // eigen
 #include <Eigen/Dense>

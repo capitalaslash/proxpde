@@ -885,24 +885,20 @@ void readGMSH(
 template <typename Mesh>
 void readMesh(Mesh & mesh, ParameterDict const & config)
 {
-  auto flags = MeshFlags::NONE;
-  if (config["flags"])
-  {
-    flags = config["flags"].as<MeshFlags::T>();
-  }
-  config.validate({"mesh_type"});
-  auto const mesh_type = config["mesh_type"].as<std::string>();
+  config.validate({"type"});
+  auto const mesh_type = config["type"].as<std::string>();
   if (mesh_type == "structured")
   {
-    config.validate({"n", "origin", "length"});
-    auto const numElems = config["n"].as<std::array<uint, 3>>();
-    auto const origin = config["origin"].as<Vec3>();
-    Vec3 const length = config["length"].as<Vec3>();
-    buildHyperCube(mesh, origin, length, numElems, flags);
+    buildHyperCube(mesh, config);
   }
   else if (mesh_type == "msh")
   {
-    readGMSH(mesh, config["mesh_file"].as<std::string>(), flags);
+    auto flags = MeshFlags::NONE;
+    if (config["flags"])
+    {
+      flags = config["flags"].as<MeshFlags::T>();
+    }
+    readGMSH(mesh, config["filename"].as<std::string>(), flags);
   }
 }
 

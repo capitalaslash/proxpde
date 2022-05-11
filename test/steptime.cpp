@@ -24,16 +24,10 @@ int main()
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
   MilliTimer t;
-  auto const numElemsX = config["nx"].as<uint>();
-  auto const numElemsY = config["ny"].as<uint>();
-
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1.0, 0.1, 0.};
-
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start();
-  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

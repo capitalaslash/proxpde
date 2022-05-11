@@ -1,12 +1,11 @@
-{
-  # mesh_type: "structured",
-  # nx: 20,
-  # ny: 20,
-  # nz: 2,
-  # expected_error: 0.369787423000,
+mesh:
+  # type: "structured"
+  # origin: [0.0, 0.0, 0.0]
+  # length: [1.0, 1.0, 1.0]
+  # n: [20, 20, 2]
+# expected_error: 0.369787423000
 
-  mesh_type: "msh",
-  mesh_file: "cube_uns.msh",
-  expected_error: 0.88528925443,
-}
+  type: "msh"
+  filename: "cube_uns.msh"
+expected_error: 0.88528925443
 

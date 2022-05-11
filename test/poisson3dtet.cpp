@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
 
   t.start();
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  readMesh(*mesh, config);
+  readMesh(*mesh, ParameterDict{config["mesh"]});
   std::cout << "mesh build: " << t << " ms" << std::endl;
 
   t.start();

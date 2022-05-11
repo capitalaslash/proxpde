@@ -35,7 +35,7 @@ int test(YAML::Node const & config)
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  readMesh(*mesh, config);
+  readMesh(*mesh, ParameterDict{config["mesh"]});
   t.stop();
 
   t.start("fe space");
@@ -110,21 +110,21 @@ int main(int argc, char * argv[])
   {
     {
       YAML::Node config;
-      config["mesh_type"] = "structured";
-      auto const n = 4;
-      config["nx"] = n;
-      config["ny"] = n;
-      config["nz"] = n;
+      config["mesh"]["type"] = "structured";
+      auto const n = 4U;
+      config["mesh"]["n"] = std::array{n, n, n};
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 1.0};
       config["expected_error"] = 0.08097818482375403;
       tests[0] = test(config);
     }
     {
       YAML::Node config;
-      config["mesh_type"] = "structured";
-      auto const n = 8;
-      config["nx"] = n;
-      config["ny"] = n;
-      config["nz"] = n;
+      config["mesh"]["type"] = "structured";
+      auto const n = 8U;
+      config["mesh"]["n"] = std::array{n, n, n};
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 1.0};
       config["expected_error"] = 0.02265721054353444;
       tests[0] = test(config);
     }

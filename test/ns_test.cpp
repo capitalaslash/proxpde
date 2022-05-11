@@ -20,19 +20,13 @@ int main(int argc, char * argv[])
   config["ns"]["nu"] = 0.1;
   config["ns"]["output_dir"] = "output_ns/monolithic";
 
-  auto const parSplit = NSParameters{
-      config["ns"]["dt"].as<double>(),
-      config["ns"]["nu"].as<double>(),
-      fs::path{"output_ns"} / "split",
-  };
-
   if (argc > 1)
   {
     // override from command line
     config.override(argv[1]);
   }
 
-  config.validate({"mesh", "ns"});
+  config.validate({"mesh", "ns", "ntime"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new (Mesh_T)};

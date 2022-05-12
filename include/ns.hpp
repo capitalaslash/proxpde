@@ -139,7 +139,7 @@ struct NSSolverMonolithic
         bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
-    builder.buildLhs(std::tuple{AssemblyScalarMass{0., feSpaceP}}, bcsP);
+    builder.buildLhs(std::tuple{AssemblyDummy{feSpaceP}}, bcsP);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
@@ -325,6 +325,22 @@ struct NSSolverSplit
   }
 
   template <typename BCsVel>
+  void assemblyStep(BCsVel const & bcsVel)
+  {
+    assemblyStepVelStar(bcsVel);
+  }
+
+  template <typename BCsP>
+  void solve(BCsP const & bcsP)
+  {
+    solveVelStar();
+    assemblyStepP(bcsP);
+    solveP();
+    assemblyStepVel();
+    solveVel();
+  }
+
+  template <typename BCsVel>
   void assemblyStepVelStar(BCsVel const & bcsVel)
   {
     pOld += dp;
@@ -337,14 +353,28 @@ struct NSSolverSplit
 
   void solveVelStar()
   {
-    // Solver solveUStar(builderUStar.A);
-    // auto const [numIterUStar, resUStar] = solveUStar(builderUStar.b, uStar.data);
-    // std::cout << "ustar - iter: " << numIterUStar << ", res: " << resUStar <<
-    // std::endl; Solver solveVStar(builderVStar.A); auto const [numIterVStar, resVStar]
-    // = solveVStar(builderVStar.b, vStar.data); std::cout << "vstar - iter: " <<
-    // numIterVStar << ", res: " << resVStar << std::endl;
-    solverVelStar.compute(builderVelStar.A);
-    velStar.data = solverVelStar.solve(builderVelStar.b);
+    // TODO: make the below 2 options selectable
+
+    // solve all components of the velocity monolithically
+    // solverVelStar.compute(builderVelStar.A);
+    // velStar.data = solverVelStar.solve(builderVelStar.b);
+
+    // solve each component separately
+    auto const dofU = feSpaceVel.dof.size;
+    for (short_T d = 0; d < dim; ++d)
+    {
+      solverVelStar.compute(builderVelStar.A.block(d * dofU, d * dofU, dofU, dofU));
+      auto b = builderVelStar.b.block(d * dofU, 0, dofU, 1);
+      for (short_T od = 0; od < dim; ++od)
+      {
+        if (od != d)
+        {
+          b -= builderVelStar.A.block(d * dofU, od * dofU, dofU, dofU) *
+               vel.data.block(od * dofU, 0, dofU, 1);
+        }
+      }
+      velStar.data.block(d * dofU, 0, dofU, 1) = solverVelStar.solve(b);
+    }
   }
 
   template <typename BCsP>
@@ -368,7 +398,12 @@ struct NSSolverSplit
     builderVel.buildRhs(std::tuple{assemblyVelStarRhs, assemblyGradPRhs}, bcsVel);
   }
 
-  void solveVel() { vel.data = solverVel.solve(builderVel.b); }
+  void solveVel()
+  {
+    // this can also be split in components, but since it is pre-calculated once it is
+    // not so important
+    vel.data = solverVel.solve(builderVel.b);
+  }
 
   void ic(std::function<FVec<dim>(Vec3 const &)> const & f)
   {

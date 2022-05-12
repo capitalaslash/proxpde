@@ -59,8 +59,21 @@ int main(int argc, char * argv[])
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;
   std::get<3>(bcsVel) << zero2d;
-  auto const bcsP = std::tuple{};
-  // auto const bcsP = std::tuple{BCEss{feSpaceP, side::TOP, zero}};
+  // auto const bcsP = std::tuple{};
+  // select the point(s) on the top boundary in the middle
+  auto const o = config["mesh"]["origin"].as<Vec3>();
+  auto const l = config["mesh"]["length"].as<Vec3>();
+  auto const hx = l[0] / config["mesh"]["n"].as<std::array<uint, 3>>()[0];
+  auto const xm = o[0] + 0.5 * l[0];
+  auto const ymax = o[1] + l[1];
+  DOFCoordSet pinSet{
+      ns.feSpaceP,
+      [hx, xm, ymax](Vec3 const & p)
+      { return std::fabs(p[0] - xm) < hx && std::fabs(p[1] - ymax) < 1.e-12; },
+  };
+  auto bcPin = BCEss{ns.feSpaceP, pinSet.ids};
+  bcPin << [](Vec3 const &) { return 0.; };
+  auto const bcsP = std::tuple{bcPin};
 
   auto bcTopP = BCEss{split.feSpaceP, side::TOP};
   bcTopP << zero;

@@ -34,12 +34,10 @@ int main(int argc, char * argv[])
   MilliTimer t;
 
   uint const numElems = (argc < 2) ? 20U : std::stoi(argv[1]);
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 0., 0.};
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start("mesh build");
-  buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
+  t.start("mesh");
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
+  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 0., 0.}, {{numElems, 0, 0}});
   t.stop();
 
   t.start("fespace");
@@ -54,7 +52,7 @@ int main(int argc, char * argv[])
   auto const bcs = std::tuple{bcLeft, bcRight};
   t.stop();
 
-  t.start("fe build");
+  t.start("assembly def");
   Var temp{"temp"};
   // tempOld can be removed using temp in its place
   Vec tempOld = Vec::Zero(feSpace.dof.size);
@@ -81,15 +79,13 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(ic, feSpace, tempInc.data);
   dTemp.data = Vec::Zero(feSpace.dof.size);
   tempOldInc = tempInc.data;
-  // this is not strictly required for the full solution, but it greatly improves the
-  // similarity between the solutions
-  temp.data = tempInc.data;
   t.stop();
 
   Builder builder{feSpace.dof.size};
   Builder builderInc{feSpace.dof.size};
 
   LUSolver solver;
+  LUSolver solverInc;
 
   t.start("print");
   double time = 0.;
@@ -100,10 +96,15 @@ int main(int argc, char * argv[])
   for (uint itime = 0; itime < ntime; ++itime)
   {
     time += dt;
-    std::cout << Utils::separator << "time = " << time << std::endl;
+    std::cout << Utils::separator << "solving timestep " << itime + 1
+              << ", time = " << time << std::endl;
+
+    t.start("update");
+    tempOld = temp.data;
+    std::cout << "tempOld norm: " << tempOld.norm() << std::endl;
+    t.stop();
 
     t.start("build");
-    tempOld = temp.data;
     builder.clear();
     builder.buildLhs(lhs, bcs);
     builder.closeMatrix();
@@ -116,8 +117,12 @@ int main(int argc, char * argv[])
     temp.data = solver.solve(builder.b);
     t.stop();
 
-    t.start("build inc");
+    t.start("update inc");
     tempOldInc += dTemp.data;
+    std::cout << "tempOldInc norm: " << tempOldInc.norm() << std::endl;
+    t.stop();
+
+    t.start("build inc");
     builderInc.clear();
     builderInc.buildLhs(lhs, bcs);
     builderInc.closeMatrix();
@@ -126,8 +131,8 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("solve inc");
-    solver.analyzePattern(builderInc.A);
-    solver.factorize(builderInc.A);
+    solverInc.analyzePattern(builderInc.A);
+    solverInc.factorize(builderInc.A);
     dTemp.data = solver.solve(builderInc.b);
     tempInc.data += dTemp.data;
     t.stop();

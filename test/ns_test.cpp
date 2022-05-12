@@ -6,6 +6,7 @@
 int main(int argc, char * argv[])
 {
   using Elem_T = Quad;
+  uint const dim = Elem_T::dim;
   using Mesh_T = Mesh<Elem_T>;
 
   MilliTimer t;
@@ -40,15 +41,13 @@ int main(int argc, char * argv[])
   config["ns"]["output_dir"] = "output_ns/split";
 
   t.start("eqn split");
-  NSSolverSplit2D split{*mesh, ParameterDict{config["ns"]}};
+  NSSolverSplit split{*mesh, ParameterDict{config["ns"]}};
   t.stop();
 
-  t.start("bc monolithic");
+  t.start("bc");
   auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0) * p(0))}; };
   // auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.0}; };
   auto const zero2d = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
-  auto const inletX = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
-  auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   auto const zero = [](Vec3 const &) { return 0.0; };
   auto bcsVel = std::tuple{
       BCEss{ns.feSpaceVel, side::BOTTOM},
@@ -62,25 +61,7 @@ int main(int argc, char * argv[])
   std::get<3>(bcsVel) << zero2d;
   auto const bcsP = std::tuple{};
   // auto const bcsP = std::tuple{BCEss{feSpaceP, side::TOP, zero}};
-  t.stop();
 
-  t.start("bc split");
-  auto bcsU = std::tuple{
-      BCEss{split.feSpaceU, side::BOTTOM},
-      BCEss{split.feSpaceU, side::RIGHT},
-      BCEss{split.feSpaceU, side::LEFT},
-      BCEss{split.feSpaceU, side::TOP},
-  };
-  std::get<0>(bcsU) << inletX;
-  std::get<1>(bcsU) << zero;
-  std::get<2>(bcsU) << zero;
-  std::get<3>(bcsU) << zero;
-  auto bcsV = std::tuple{
-      BCEss{split.feSpaceU, side::BOTTOM},
-      BCEss{split.feSpaceU, side::RIGHT},
-  };
-  std::get<0>(bcsV) << inletY;
-  std::get<1>(bcsV) << zero;
   auto bcTopP = BCEss{split.feSpaceP, side::TOP};
   bcTopP << zero;
   auto const bcsPSplit = std::tuple{bcTopP};
@@ -91,7 +72,8 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("split init");
-  split.init(bcsU, bcsV, bcsPSplit);
+  // no bcs for the velocity, they are derived from velStar
+  split.init(std::tuple{}, bcsPSplit);
   t.stop();
 
   t.start("ic");
@@ -126,7 +108,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepVelStar(bcsU, bcsV);
+    split.assemblyStepVelStar(bcsVel);
     t.stop();
 
     t.start("split solve");
@@ -142,7 +124,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepVel();
+    split.assemblyStepVel(std::tuple{});
     t.stop();
 
     t.start("split solve");
@@ -159,27 +141,27 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  // std::array<Vec, 2> vel = {Vec{split.feSpaceU.dof.size},
-  // Vec{split.feSpaceU.dof.size}}; getComponents(vel, ns.sol.data, ns.feSpaceVel);
-  Vec u{split.feSpaceU.dof.size};
-  Vec v{split.feSpaceU.dof.size};
-  getComponent(u, split.feSpaceU, ns.sol.data, ns.feSpaceVel, 0);
-  getComponent(v, split.feSpaceU, ns.sol.data, ns.feSpaceVel, 1);
-
-  Var errorU{"errorU"};
-  errorU.data = u - split.u.data;
-  Var errorV{"errorV"};
-  errorV.data = v - split.v.data;
+  Var errorVel{"errorU"};
+  errorVel.data =
+      ns.sol.data.block(0, 0, ns.feSpaceVel.dof.size * dim, 1) - split.vel.data;
   Var errorP{"errorP"};
   errorP.data = ns.p.data - split.p.data;
 
-  IOManager ioErrorU{split.feSpaceU, "output_ns/eu"};
-  ioErrorU.print({errorU, errorV});
+  IOManager ioErrorVel{split.feSpaceVel, "output_ns/eu"};
+  ioErrorVel.print({errorVel});
   IOManager ioErrorP{split.feSpaceP, "output_ns/ep"};
   ioErrorP.print({errorP});
 
-  double const errorNormU = errorU.data.norm();
-  double const errorNormV = errorV.data.norm();
+  using FESpaceComp_T = Scalar_T<NSSolverMonolithic<Mesh_T>::FESpaceVel_T>;
+  FESpaceComp_T const feSpaceComp{*mesh};
+
+  Vec errorU{feSpaceComp.dof.size};
+  getComponent(errorU, feSpaceComp, errorVel.data, ns.feSpaceVel, 0);
+  Vec errorV{feSpaceComp.dof.size};
+  getComponent(errorV, feSpaceComp, errorVel.data, ns.feSpaceVel, 1);
+
+  double const errorNormU = errorU.norm();
+  double const errorNormV = errorV.norm();
   double const errorNormP = errorP.data.norm();
   std::cout << "errorU: " << std::setprecision(16) << errorNormU << std::endl;
   std::cout << "errorV: " << std::setprecision(16) << errorNormV << std::endl;

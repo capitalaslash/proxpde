@@ -248,15 +248,11 @@ struct NSSolverMonolithic
 };
 
 template <typename Mesh>
-struct NSSolverSplit2D
+struct NSSolverSplit
 {
   using Mesh_T = Mesh;
   using Elem_T = typename Mesh_T::Elem_T;
   static int constexpr dim = Elem_T::dim;
-  using FESpaceU_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 2>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   using FESpaceVel_T = FESpace<
       Mesh_T,
       typename LagrangeFE<Elem_T, 2>::RefFE_T,
@@ -282,42 +278,28 @@ struct NSSolverSplit2D
   // >;
   using Solver = IterSolver;
 
-  explicit NSSolverSplit2D(Mesh_T const & mesh, ParameterDict const & c):
-      feSpaceU{mesh},
-      feSpaceP{mesh},
+  explicit NSSolverSplit(Mesh_T const & mesh, ParameterDict const & c):
       feSpaceVel{mesh},
+      feSpaceP{mesh},
       config{c},
-      builderUStar{feSpaceU.dof.size},
-      builderVStar{feSpaceU.dof.size},
+      builderVelStar{feSpaceVel.dof.size * dim},
       builderP{feSpaceP.dof.size},
-      builderU{feSpaceU.dof.size},
-      builderV{feSpaceU.dof.size},
-      uStar{"uStar", feSpaceU.dof.size},
-      vStar{"vStar", feSpaceU.dof.size},
+      builderVel{feSpaceVel.dof.size * dim},
+      velStar{"velStar", feSpaceVel.dof.size * dim},
       p{"p", feSpaceP.dof.size},
-      u{"u", feSpaceU.dof.size},
-      v{"v", feSpaceU.dof.size},
-      velStar{feSpaceU.dof.size * dim},
+      vel{"vel", feSpaceVel.dof.size * dim},
       pOld{feSpaceP.dof.size},
       dp{feSpaceP.dof.size},
-      vel{feSpaceU.dof.size * dim},
-      assemblyMassUStar{1. / c["dt"].as<double>(), feSpaceU},
-      assemblyMassVStar{1. / c["dt"].as<double>(), feSpaceU},
-      assemblyStiffnessUStar{c["nu"].as<double>(), feSpaceU},
-      assemblyStiffnessVStar{c["nu"].as<double>(), feSpaceU},
-      assemblyURhs{1. / c["dt"].as<double>(), u.data, feSpaceU},
-      assemblyVRhs{1. / c["dt"].as<double>(), v.data, feSpaceU},
-      assemblyAdvectionU{1.0, vel, feSpaceVel, feSpaceU},
-      assemblyAdvectionV{1.0, vel, feSpaceVel, feSpaceU},
-      assemblyPOldU{1.0, pOld, feSpaceP, feSpaceU, {0}},
-      assemblyPOldV{1.0, pOld, feSpaceP, feSpaceU, {1}},
-      assemblyDivVelStar{-1.0, velStar, feSpaceVel, feSpaceP},
-      assemblyUStarRhs{1.0, uStar.data, feSpaceU},
-      assemblyVStarRhs{1.0, vStar.data, feSpaceU},
-      assemblyGradPRhsU{-c["dt"].as<double>(), dp, feSpaceP, feSpaceU, {0}},
-      assemblyGradPRhsV{-c["dt"].as<double>(), dp, feSpaceP, feSpaceU, {1}},
-      ioVel{feSpaceU},
-      ioP{feSpaceP}
+      assemblyMassVelStar{1. / c["dt"].as<double>(), feSpaceVel},
+      assemblyStiffness{c["nu"].as<double>(), feSpaceVel},
+      assemblyVelRhs{1. / c["dt"].as<double>(), vel.data, feSpaceVel},
+      assemblyAdvection{1.0, vel.data, feSpaceVel, feSpaceVel},
+      assemblyPOld{1.0, pOld, feSpaceP, feSpaceVel},
+      assemblyDivVelStar{-1.0, velStar.data, feSpaceVel, feSpaceP},
+      assemblyVelStarRhs{1.0, velStar.data, feSpaceVel},
+      assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel},
+      ioVel{feSpaceVel, fs::path{config["output_dir"].as<std::string>()} / "vel"},
+      ioP{feSpaceP, fs::path{config["output_dir"].as<std::string>()} / "p"}
   {
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = fs::path{config["output_dir"].as<std::string>()};
@@ -325,8 +307,8 @@ struct NSSolverSplit2D
     ioP.init(outDir / "p");
   }
 
-  template <typename BCsU, typename BCsV, typename BCsP>
-  void init(BCsU const & bcsU, BCsV const & bcsV, BCsP const & bcsP)
+  template <typename BCsVel, typename BCsP>
+  void init(BCsVel const & bcsVel, BCsP const & bcsP)
   {
     // TODO: assert that this comes after setting up bcs
     builderP.buildLhs(
@@ -336,30 +318,21 @@ struct NSSolverSplit2D
     solverP.factorize(builderP.A);
     rhsFixedP = builderP.b;
 
-    builderU.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceU}}, std::tuple{});
-    builderU.closeMatrix();
-    solverU.analyzePattern(builderU.A);
-    solverU.factorize(builderU.A);
+    builderVel.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceVel}}, bcsVel);
+    builderVel.closeMatrix();
+    solverVel.analyzePattern(builderVel.A);
+    solverVel.factorize(builderVel.A);
   }
 
-  template <typename BCsU, typename BCsV>
-  void assemblyStepVelStar(BCsU const & bcsU, BCsV const & bcsV)
+  template <typename BCsVel>
+  void assemblyStepVelStar(BCsVel const & bcsVel)
   {
-    setComponent(vel, feSpaceVel, u.data, feSpaceU, 0);
-    setComponent(vel, feSpaceVel, v.data, feSpaceU, 1);
     pOld += dp;
-    builderUStar.clear();
-    builderUStar.buildLhs(
-        std::tuple{assemblyMassUStar, assemblyAdvectionU, assemblyStiffnessUStar},
-        bcsU);
-    builderUStar.buildRhs(std::tuple{assemblyURhs, assemblyPOldU}, bcsU);
-    builderUStar.closeMatrix();
-    builderVStar.clear();
-    builderVStar.buildLhs(
-        std::tuple{assemblyMassVStar, assemblyAdvectionV, assemblyStiffnessVStar},
-        bcsV);
-    builderVStar.buildRhs(std::tuple{assemblyVRhs, assemblyPOldV}, bcsV);
-    builderVStar.closeMatrix();
+    builderVelStar.clear();
+    builderVelStar.buildLhs(
+        std::tuple{assemblyMassVelStar, assemblyAdvection, assemblyStiffness}, bcsVel);
+    builderVelStar.buildRhs(std::tuple{assemblyVelRhs, assemblyPOld}, bcsVel);
+    builderVelStar.closeMatrix();
   }
 
   void solveVelStar()
@@ -370,17 +343,13 @@ struct NSSolverSplit2D
     // std::endl; Solver solveVStar(builderVStar.A); auto const [numIterVStar, resVStar]
     // = solveVStar(builderVStar.b, vStar.data); std::cout << "vstar - iter: " <<
     // numIterVStar << ", res: " << resVStar << std::endl;
-    solverUStar.compute(builderUStar.A);
-    uStar.data = solverUStar.solve(builderUStar.b);
-    solverVStar.compute(builderVStar.A);
-    vStar.data = solverVStar.solve(builderVStar.b);
+    solverVelStar.compute(builderVelStar.A);
+    velStar.data = solverVelStar.solve(builderVelStar.b);
   }
 
   template <typename BCsP>
   void assemblyStepP(BCsP const & bcsP)
   {
-    setComponent(velStar, feSpaceVel, uStar.data, feSpaceU, 0);
-    setComponent(velStar, feSpaceVel, vStar.data, feSpaceU, 1);
     builderP.clearRhs();
     builderP.buildRhs(std::tuple{assemblyDivVelStar}, bcsP);
     builderP.b += rhsFixedP;
@@ -392,28 +361,19 @@ struct NSSolverSplit2D
     p.data += dp;
   }
 
-  void assemblyStepVel()
+  template <typename BCsVel>
+  void assemblyStepVel(BCsVel const & bcsVel)
   {
-    builderU.clearRhs();
-    builderU.buildRhs(std::tuple{assemblyUStarRhs, assemblyGradPRhsU}, std::tuple{});
-    builderV.clearRhs();
-    builderV.buildRhs(std::tuple{assemblyVStarRhs, assemblyGradPRhsV}, std::tuple{});
+    builderVel.clearRhs();
+    builderVel.buildRhs(std::tuple{assemblyVelStarRhs, assemblyGradPRhs}, bcsVel);
   }
 
-  void solveVel()
-  {
-    u.data = solverU.solve(builderU.b);
-    v.data = solverU.solve(builderV.b);
-  }
+  void solveVel() { vel.data = solverVel.solve(builderVel.b); }
 
   void ic(std::function<FVec<dim>(Vec3 const &)> const & f)
   {
-    interpolateAnalyticFunction(
-        [&f](Vec3 const & p) { return f(p)[0]; }, feSpaceU, u.data);
-    uStar.data = u.data;
-    interpolateAnalyticFunction(
-        [&f](Vec3 const & p) { return f(p)[1]; }, feSpaceU, v.data);
-    vStar.data = v.data;
+    interpolateAnalyticFunction(f, feSpaceVel, vel.data);
+    velStar.data = vel.data;
     dp = Vec::Zero(feSpaceP.dof.size);
     pOld = Vec::Zero(feSpaceP.dof.size);
     p.data = pOld;
@@ -421,53 +381,38 @@ struct NSSolverSplit2D
 
   void print(double const time = 0.0)
   {
-    ioVel.print({uStar, vStar, u, v}, time);
+    ioVel.print({velStar, vel}, time);
     Var pPrint{"p"};
     ioP.print({p}, time);
   }
 
-  FESpaceU_T const feSpaceU;
-  FESpaceP_T const feSpaceP;
   FESpaceVel_T const feSpaceVel;
+  FESpaceP_T const feSpaceP;
   ParameterDict const config;
-  Builder<StorageType::RowMajor> builderUStar;
-  Builder<StorageType::RowMajor> builderVStar;
+  Builder<StorageType::RowMajor> builderVelStar;
   Builder<StorageType::ClmMajor> builderP;
-  Builder<StorageType::ClmMajor> builderU;
-  Builder<StorageType::ClmMajor> builderV;
-  Solver solverUStar;
-  Solver solverVStar;
+  Builder<StorageType::ClmMajor> builderVel;
+  Solver solverVelStar;
   LUSolver solverP;
-  LUSolver solverU;
-  Var uStar;
-  Var vStar;
+  LUSolver solverVel;
+  Var velStar;
   Var p;
-  Var u;
-  Var v;
-  Vec velStar;
+  Var vel;
   Vec pOld;
   Vec dp;
-  Vec vel;
-  AssemblyScalarMass<FESpaceU_T> assemblyMassUStar;
-  AssemblyScalarMass<FESpaceU_T> assemblyMassVStar;
-  AssemblyStiffness<FESpaceU_T> assemblyStiffnessUStar;
-  AssemblyStiffness<FESpaceU_T> assemblyStiffnessVStar;
-  AssemblyS2SProjection<FESpaceU_T> assemblyURhs;
-  AssemblyS2SProjection<FESpaceU_T> assemblyVRhs;
-  AssemblyAdvection<FESpaceU_T, FESpaceVel_T> assemblyAdvectionU;
-  AssemblyAdvection<FESpaceU_T, FESpaceVel_T> assemblyAdvectionV;
-  AssemblyGradRhs2<FESpaceU_T, FESpaceP_T> assemblyPOldU;
-  AssemblyGradRhs2<FESpaceU_T, FESpaceP_T> assemblyPOldV;
+  AssemblyScalarMass<FESpaceVel_T> assemblyMassVelStar;
+  AssemblyStiffness<FESpaceVel_T> assemblyStiffness;
+  AssemblyS2SProjection<FESpaceVel_T> assemblyVelRhs;
+  AssemblyAdvection<FESpaceVel_T, FESpaceVel_T> assemblyAdvection;
+  AssemblyGradRhs2<FESpaceVel_T, FESpaceP_T> assemblyPOld;
   AssemblyDivRhs<FESpaceP_T, FESpaceVel_T> assemblyDivVelStar;
-  AssemblyS2SProjection<FESpaceU_T> assemblyUStarRhs;
-  AssemblyS2SProjection<FESpaceU_T> assemblyVStarRhs;
-  AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsU;
-  AssemblyGradRhs<FESpaceU_T, FESpaceP_T> assemblyGradPRhsV;
+  AssemblyS2SProjection<FESpaceVel_T> assemblyVelStarRhs;
+  AssemblyGradRhs<FESpaceVel_T, FESpaceP_T> assemblyGradPRhs;
   std::array<typename Builder<StorageType::RowMajor>::Mat_T, dim> matFixedVelStar;
   std::array<Vec, dim> rhsFixedVelStar;
   Vec rhsFixedP;
   std::array<Vec, dim> rhsFixedVel;
-  IOManager<FESpaceU_T> ioVel;
+  IOManager<FESpaceVel_T> ioVel;
   IOManager<FESpaceP_T> ioP;
 };
 

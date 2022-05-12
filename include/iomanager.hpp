@@ -189,13 +189,13 @@ struct HDF5Var
 template <>
 struct HDF5Var<uint>
 {
-  static hid_t value;
+  static hid_t const value;
 };
 
 template <>
 struct HDF5Var<double>
 {
-  static hid_t value;
+  static hid_t const value;
 };
 
 enum class HDF5FileMode : int8_t

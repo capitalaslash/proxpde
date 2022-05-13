@@ -80,7 +80,7 @@ void projectAnalyticFunction(
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
   Solver solver(builder.A);
-  v.block(offset, 0, size, 1) = solver.solve(builder.b);
+  v.segment(offset, size) = solver.solve(builder.b);
 }
 
 template <typename FESpace>

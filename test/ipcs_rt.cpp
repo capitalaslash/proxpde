@@ -578,10 +578,10 @@ int main(int argc, char * argv[])
       t.start("solve RT");
       // std::cout << "ART:\n" << builderRT.A << std::endl;
       auto const solRT = solverRT.solve(builderRT.b);
-      velRT.data = solRT.block(0, 0, feSpaceVelRT.dof.size, 1);
-      dLambda = solRT.block(feSpaceVelRT.dof.size, 0, feSpaceLambda.dof.size, 1);
       std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
                 << std::endl;
+      velRT.data = solRT.head(feSpaceVelRT.dof.size);
+      dLambda = solRT.tail(feSpaceLambda.dof.size);
       t.stop();
 
       t.start("clear RT");
@@ -606,7 +606,7 @@ int main(int argc, char * argv[])
       if (config["monolithic"].as<bool>())
       {
         ioVelM.print({velM}, time);
-        pM.data = velM.data.block(dofU * FESpaceVel_T::dim, 0, dofP, 1);
+        pM.data = velM.data.tail(dofP);
         ioPM.print({pM}, time);
       }
 

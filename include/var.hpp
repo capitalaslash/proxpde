@@ -15,7 +15,7 @@ struct Var
 
   Var(std::string_view const n, Vec const & vec, uint offset, uint size):
       name{n},
-      data(vec.block(offset, 0, size, 1))
+      data(vec.segment(offset, size))
   {}
 
   std::string name;
@@ -32,7 +32,7 @@ struct BlockVar: public Var
       blocks{bs}
   {}
 
-  auto block(uint i) { return this->data.block(offsets[i], 0, blocks[i], 1); }
+  auto block(uint i) { return this->data.segment(offsets[i], blocks[i]); }
 
   std::vector<uint> const offsets;
   std::vector<uint> const blocks;

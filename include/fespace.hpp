@@ -399,7 +399,7 @@ void getComponent(
   assert(size == feSpaceOrig.dof.size);
   if (FESpaceOrig::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    dest = orig.block(component * size, 0, size, 1);
+    dest = orig.segment(component * size, size);
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {
@@ -444,7 +444,7 @@ void setComponent(
   assert(component < dim);
   if (FESpaceDest::DOF_T::ordering == DofOrdering::BLOCK)
   {
-    dest.block(component * size, 0, size, 1) = orig;
+    dest.segment(component * size, size) = orig;
   }
   else // FESpaceVel_T::DOF_T::ordering == DofOrdering::INTERLEAVED
   {

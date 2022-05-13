@@ -76,9 +76,9 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   // std::cout << "sol:\n" << sol << std::endl;
 
   Var uRT0{"uRT0"};
-  uRT0.data = sol.block(0, 0, feSpaceRT0.dof.size, 1);
+  uRT0.data = sol.head(feSpaceRT0.dof.size);
   Var lambda{"lambda"};
-  lambda.data = sol.block(feSpaceRT0.dof.size, 0, feSpaceLambda.dof.size, 1);
+  lambda.data = sol.tail(feSpaceLambda.dof.size);
 
   double sum = 0.;
   for (marker_T const marker: {1, 2, 3, 5})

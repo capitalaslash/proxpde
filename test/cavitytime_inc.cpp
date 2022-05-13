@@ -167,7 +167,7 @@ int main(int argc, char * argv[])
   Vec sol = Vec::Zero(numDOFs);
   Vec dSol = Vec::Zero(numDOFs);
   Vec solOldInc = Vec::Zero(numDOFs);
-  solOldInc.block(0, 0, dofU * dim, 1) = velOldInc;
+  solOldInc.head(dofU * dim) = velOldInc;
   double time = 0.0;
   MilliTimer timerStep;
   for (uint itime = 0; itime < ntime; itime++)
@@ -204,8 +204,8 @@ int main(int argc, char * argv[])
     t.start("solve full");
     solver.compute(builder.A);
     sol = solver.solve(builder.b);
-    vel.data = sol.block(0, 0, dofU * dim, 1);
-    p.data = sol.block(dofU * dim, 0, dofP, 1);
+    vel.data = sol.head(dofU * dim);
+    p.data = sol.tail(dofP);
     t.stop();
 
     t.start("update inc");
@@ -229,8 +229,8 @@ int main(int argc, char * argv[])
     solverInc.compute(builderInc.A);
     dSol = solverInc.solve(builderInc.b);
     std::cout << "dSol norm: " << dSol.norm() << std::endl;
-    dVel.data = dSol.block(0, 0, dofU * dim, 1);
-    dP.data = dSol.block(dofU * dim, 0, dofP, 1);
+    dVel.data = dSol.head(dofU * dim);
+    dP.data = dSol.tail(dofP);
     velInc.data += dVel.data;
     pInc.data += dP.data;
     t.stop();

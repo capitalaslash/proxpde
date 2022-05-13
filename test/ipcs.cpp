@@ -217,7 +217,7 @@ int main(int argc, char * argv[])
   Var vM{"vM"};
   getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
   getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
-  Var pM{"pM", velM.data.block(2 * dofU, 0, dofP, 1)};
+  Var pM{"pM", velM.data.tail(dofP)};
   Var pSplit{"p"};
   pSplit.data = Vec::Zero(feSpacePSplit.dof.size);
   IOManager ioV{feSpaceU, "output_ipcs/sol_v"};
@@ -320,7 +320,7 @@ int main(int argc, char * argv[])
       getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
-      pM.data = velM.data.block(2 * dofU, 0, dofP, 1);
+      pM.data = velM.data.tail(dofP);
       ioP.print({pM, pSplit}, time);
     }
     t.stop();

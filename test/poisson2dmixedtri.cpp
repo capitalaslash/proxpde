@@ -101,15 +101,15 @@ int test(YAML::Node const & config)
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol = solver.solve(builder.b);
-  w.data = sol.block(0, 0, sizeW, 1);
-  u.data = sol.block(sizeW, 0, sizeU, 1);
+  w.data = sol.head(sizeW);
+  u.data = sol.tail(sizeU);
 
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   Var exactU{"exactU"};
-  exactU.data = exact.block(sizeW, 0, sizeU, 1);
+  exactU.data = exact.tail(sizeU);
   Var errorU{"errorU"};
   errorU.data = u.data - exactU.data;
 

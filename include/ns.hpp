@@ -167,8 +167,8 @@ struct NSSolverMonolithic
     // Eigen::MatrixXd Bt = builder.A.block(    0, uSize, uSize, pSize);
     // Eigen::MatrixXd B  = builder.A.block(uSize,     0, pSize, uSize);
     // Eigen::MatrixXd M  = builder.A.block(uSize, uSize, pSize, pSize);
-    // Eigen::VectorXd f  = builder.b.block(    0,     0, uSize,     1);
-    // Eigen::VectorXd g  = builder.b.block(uSize,     0, pSize,     1);
+    // Eigen::VectorXd f  = builder.b.segment(    0, uSize);
+    // Eigen::VectorXd g  = builder.b.segment(uSize, pSize);
     //
     // // step 1
     // Eigen::SparseLU<Eigen::SparseMatrix<double>> solverA(A);
@@ -189,8 +189,8 @@ struct NSSolverMonolithic
     // // Eigen::VectorXd u = Ainv * (f - Bt * p);
     // Eigen::VectorXd u = solverA.solve(f - Bt * p);
     //
-    // sol.data.block(    0,     0, uSize,     1) = u;
-    // sol.data.block(uSize,     0, pSize,     1) = p;
+    // sol.data.segent(0, uSize) = u;
+    // sol.data.segment(uSize, pSize) = p;
     //
     // // print
     // // std::cout << "det Sfull:  " << Sfull.determinant() << std::endl;
@@ -225,7 +225,7 @@ struct NSSolverMonolithic
   void print(double const time = 0.0)
   {
     ioVel.print({sol}, time);
-    p.data = sol.data.block(feSpaceVel.dof.size * dim, 0, feSpaceP.dof.size, 1);
+    p.data = sol.data.tail(feSpaceP.dof.size);
     ioP.print({p}, time);
   }
 
@@ -364,16 +364,16 @@ struct NSSolverSplit
     for (short_T d = 0; d < dim; ++d)
     {
       solverVelStar.compute(builderVelStar.A.block(d * dofU, d * dofU, dofU, dofU));
-      auto b = builderVelStar.b.block(d * dofU, 0, dofU, 1);
+      auto b = builderVelStar.b.segment(d * dofU, dofU);
       for (short_T od = 0; od < dim; ++od)
       {
         if (od != d)
         {
           b -= builderVelStar.A.block(d * dofU, od * dofU, dofU, dofU) *
-               vel.data.block(od * dofU, 0, dofU, 1);
+               vel.data.segment(od * dofU, dofU);
         }
       }
-      velStar.data.block(d * dofU, 0, dofU, 1) = solverVelStar.solve(b);
+      velStar.data.segment(d * dofU, dofU) = solverVelStar.solve(b);
     }
   }
 

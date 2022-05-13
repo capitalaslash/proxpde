@@ -87,8 +87,8 @@ int main(int argc, char * argv[])
   t.stop();
 
   // std::cout << "A:\n" << builder.A.block(2*dofU, 2*dofU, dofU, dofU).norm() <<
-  // std::endl; std::cout << "b:\n" << builder.b.block(2*dofU, 0, dofU, 1).norm() <<
-  // std::endl; std::cout << "sol:\n" << sol.data.block(2*dofU, 0, dofU, 1).transpose()
+  // std::endl; std::cout << "b:\n" << builder.b.segment(2*dofU, dofU).norm() <<
+  // std::endl; std::cout << "sol:\n" << sol.data.segment(2*dofU, dofU).transpose()
   // << std::endl;
 
   t.start("error");

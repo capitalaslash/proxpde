@@ -130,7 +130,7 @@ int main(int argc, char * argv[])
       ioVel.iter = itime + 1;
       ioVel.time = time;
       ioVel.print({sol});
-      p.data = sol.data.block(2 * dofU, 0, dofP, 1);
+      p.data = sol.data.tail(dofP);
       ioP.iter = itime + 1;
       ioP.time = time;
       ioP.print({p});

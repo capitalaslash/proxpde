@@ -102,7 +102,7 @@ int main()
     builder.clear();
 
     ioVel.print({sol}, time);
-    p.data = sol.data.block(2 * dofU, 0, dofP, 1);
+    p.data = sol.data.tail(dofP);
     ioP.print({p}, time);
 
     if ((sol.data - dt * velOld).norm() < 1.e-12)

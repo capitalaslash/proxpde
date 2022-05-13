@@ -16,7 +16,7 @@ using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
 using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
 using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
 using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
-using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 2>;
+using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
 using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
 int main(int argc, char * argv[])
@@ -108,13 +108,13 @@ int main(int argc, char * argv[])
   auto const dt = config["dt"].as<double>();
   auto const nu = config["nu"].as<double>();
 
-  Vec velOldMonolithic{2 * dofU};
+  Vec velOldM{dofU * FESpaceVel_T::dim};
   AssemblyScalarMass timeder(1. / dt, feSpaceVel);
-  AssemblyAdvection advection(1.0, velOldMonolithic, feSpaceVel, feSpaceVel);
+  AssemblyAdvection advection(1.0, velOldM, feSpaceVel, feSpaceVel);
   AssemblyTensorStiffness stiffness(nu, feSpaceVel);
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
-  AssemblyProjection timederRhs(1. / dt, velOldMonolithic, feSpaceVel);
+  AssemblyProjection timederRhs(1. / dt, velOldM, feSpaceVel);
   // AssemblyBCNormal naturalBC{pIn, side::BOTTOM, feSpaceVel};
   // to apply bc on pressure
   // AssemblyDummy dummy{feSpaceP};
@@ -125,8 +125,8 @@ int main(int argc, char * argv[])
   builderM.buildCoupling(grad, bcsVel, bcsP);
   builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();
-  Mat<StorageType::RowMajor> matFixed = builderM.A;
-  Vec rhsFixed = builderM.b;
+  Mat<StorageType::RowMajor> const matFixed = builderM.A;
+  Vec const rhsFixed = builderM.b;
   builderM.clear();
 
   Var uStar{"uStar", feSpaceU.dof.size};
@@ -135,8 +135,8 @@ int main(int argc, char * argv[])
   Var u{"u", feSpaceU.dof.size};
   Var v{"v", feSpaceU.dof.size};
 
-  Vec velStar{2 * dofU};
-  Vec vel{2 * dofU};
+  Vec velStar{dofU * FESpaceVel_T::dim};
+  Vec vel{dofU * FESpaceVel_T::dim};
 
   // uStar / dt + (vel \cdot \nabla) uStar - \nabla \cdot (nu \nabla uStar) = u / dt
   // (uStar, \phi) / dt + ((vel \cdot \nabla) uStar, \phi) + nu (\nabla uStar, \nabla
@@ -198,13 +198,12 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("ic");
-  Var velM{"velM"};
-  velM.data = Vec::Zero(2 * dofU + dofP);
+  Vec solM{dofU * FESpaceVel_T::dim + dofP};
   auto ic = [](Vec3 const &) { return Vec2(0., 1.); };
   // auto ic = zero;
   auto ic0 = [&ic](Vec3 const & p) { return ic(p)[0]; };
   auto ic1 = [&ic](Vec3 const & p) { return ic(p)[1]; };
-  interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
+  interpolateAnalyticFunction(ic, feSpaceVel, solM);
   interpolateAnalyticFunction(ic0, feSpaceU, u.data);
   interpolateAnalyticFunction(ic1, feSpaceU, v.data);
 
@@ -215,9 +214,9 @@ int main(int argc, char * argv[])
   t.start("print");
   Var uM{"uM"};
   Var vM{"vM"};
-  getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
-  getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
-  Var pM{"pM", velM.data.block(2 * dofU, 0, dofP, 1)};
+  getComponent(uM.data, feSpaceU, solM, feSpaceVel, 0);
+  getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
+  Var pM{"pM", dofP};
   IOManager ioV{feSpaceU, "output_nipcs/sol_v"};
   ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
@@ -240,7 +239,7 @@ int main(int argc, char * argv[])
     // filelog << "\n" << Utils::separator;
 
     t.start("monolithic build");
-    velOldMonolithic = velM.data;
+    velOldM = solM.head(dofU * FESpaceVel_T::dim);
 
     builderM.buildRhs(std::tuple{timederRhs}, bcsVel);
     builderM.buildLhs(std::tuple{advection}, bcsVel);
@@ -251,8 +250,8 @@ int main(int argc, char * argv[])
 
     t.start("monolithic solve");
     solverM.compute(builderM.A);
-    velM.data = solverM.solve(builderM.b);
-    auto res = builderM.A * velM.data - builderM.b;
+    solM = solverM.solve(builderM.b);
+    auto res = builderM.A * solM - builderM.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
     t.stop();
 
@@ -311,11 +310,11 @@ int main(int argc, char * argv[])
     if ((itime + 1) % printStep == 0)
     {
       std::cout << "printing" << std::endl;
-      getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
-      getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
+      getComponent(uM.data, feSpaceU, solM, feSpaceVel, 0);
+      getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
-      pM.data = velM.data.block(2 * dofU, 0, dofP, 1);
+      pM.data = solM.tail(dofP);
       ioP.print({pM, eqnP.sol}, time);
     }
     t.stop();

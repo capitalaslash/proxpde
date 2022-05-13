@@ -186,8 +186,8 @@ int main(int argc, char * argv[])
     t.start("solve");
     solver.compute(builder.A);
     sol = solver.solve(builder.b);
-    vel.data = sol.block(0, 0, dofU * dim, 1);
-    p.data = sol.block(dofU * dim, 0, dofP, 1);
+    vel.data = sol.head(dofU * dim);
+    p.data = sol.tail(dofP);
     t.stop();
 
     t.start("res");

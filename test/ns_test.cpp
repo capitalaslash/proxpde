@@ -155,8 +155,7 @@ int main(int argc, char * argv[])
   t.print();
 
   Var errorVel{"errorU"};
-  errorVel.data =
-      ns.sol.data.block(0, 0, ns.feSpaceVel.dof.size * dim, 1) - split.vel.data;
+  errorVel.data = ns.sol.data.head(ns.feSpaceVel.dof.size * dim) - split.vel.data;
   Var errorP{"errorP"};
   errorP.data = ns.p.data - split.p.data;
 

@@ -89,7 +89,7 @@ int test(
   auto bcLeft = BCEss{feSpaceRT0, side::LEFT};
   bcLeft << [](Vec3 const &) { return Vec3{1.0, 0.0, 0.0}; };
   auto const bcs = std::tuple{bcLeft};
-  Builder builder{sizeP0 + sizeRT0};
+  Builder builder{sizeRT0 + sizeP0};
   builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcs);
   builder.buildCoupling(
       AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcs, std::tuple{});
@@ -98,16 +98,16 @@ int test(
   builder.buildRhs(
       std::tuple{AssemblyProjection(1.0, uP1.data, feSpaceP1, feSpaceRT0)}, bcs);
   builder.closeMatrix();
-  std::cout << "A:\n" << builder.A << std::endl;
-  std::cout << "b:\n" << builder.b << std::endl;
+  // std::cout << "A:\n" << builder.A << std::endl;
+  // std::cout << "b:\n" << builder.b << std::endl;
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   Vec const sol = solver.solve(builder.b);
   std::cout << "uRT0div (+lambda):\n" << sol << std::endl;
-  uRT0div.data = sol.block(0, 0, sizeRT0, 1);
+  uRT0div.data = sol.head(sizeRT0);
   Var lambda("lambda", sizeP0);
-  lambda.data = sol.block(sizeRT0, 0, sizeP0, 1);
+  lambda.data = sol.tail(sizeP0);
 
   Var exactRT0{"exactRT0"};
   interpolateAnalyticFunction(inputFun3d, feSpaceRT0, exactRT0.data);

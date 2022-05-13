@@ -279,7 +279,7 @@ int main(int argc, char * argv[])
 
     t.start("build");
     builder.clear();
-    velOld = sol.data.block(0, 0, 2 * dofU, 1);
+    velOld = sol.data.head(2 * dofU);
     builder.buildLhs(std::tuple{stiffness, advection}, bcsVelNew);
     builder.buildCoupling(grad, bcsVelNew, bcsP);
     builder.buildCoupling(div, bcsP, bcsVelNew);
@@ -293,7 +293,7 @@ int main(int argc, char * argv[])
     sol.data = solver.solve(builder.b);
     auto const res = builder.A * sol.data - builder.b;
     std::cout << "residual norm: " << res.norm() << std::endl;
-    p.data = sol.data.block(2 * dofU, 0, dofP, 1);
+    p.data = sol.data.tail(dofP);
     t.stop();
 
     t.start("integral");

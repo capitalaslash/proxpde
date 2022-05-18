@@ -16,7 +16,7 @@ struct Builder
 
   explicit Builder(uint const size): A(size, size), b{Vec::Zero(size)}
   {
-    std::cout << "new builder with " << size << " dofs" << std::endl;
+    // std::cout << "new builder with " << size << " dofs" << std::endl;
   }
 
   void init(uint const size)
@@ -355,6 +355,7 @@ struct Builder
           b[idI] += Fe[i + d * FESpace_T::CurFE_T::numDOFs];
         }
       }
+      // std::cout << "rhs " << elem.id << ":\n" << b << std::endl;
     }
   }
 

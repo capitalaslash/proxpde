@@ -32,8 +32,8 @@ public:
       _constrainedDofMap(std::move(dofMap)),
       data{Vec::Zero(_constrainedDofMap.size())}
   {
-    std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
-              << std::endl;
+    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
+    //           << std::endl;
   }
 
   BCEss(
@@ -45,8 +45,8 @@ public:
       comp(c)
   {
     setupDofMap();
-    std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
-              << " dofs" << std::endl;
+    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
+    //           << " dofs" << std::endl;
   }
 
   void init(FESpace_T const & fe, marker_T const m)
@@ -55,8 +55,8 @@ public:
     marker = m;
 
     setupDofMap();
-    std::cout << "bc set on marker " << m << " with " << _constrainedDofMap.size()
-              << " dofs" << std::endl;
+    // std::cout << "bc set on marker " << m << " with " << _constrainedDofMap.size()
+    //           << " dofs" << std::endl;
   }
 
   BCEss<FESpace> & operator<<(Fun<FESpace::physicalDim(), 3> const & fun)
@@ -389,7 +389,7 @@ public:
         }
       }
     }
-    std::cout << "new DOFCoordSet with " << ids.size() << " dofs" << std::endl;
+    // std::cout << "new DOFCoordSet with " << ids.size() << " dofs" << std::endl;
   }
 
   FESpace_T & feSpace;

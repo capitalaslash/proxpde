@@ -535,11 +535,11 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
           doc.setVar({name, Traits_T::attributeType, feSpace.dof.size});
 
           // this works only with Lagrange elements
-          Vec compData{feSpace.dof.size};
           // TODO: pass data as const &
           if constexpr (dim > 1)
           {
             // TODO: print vector variable as vector xdmf data
+            Vec compData{feSpace.dof.size};
             if constexpr (std::is_same_v<Var_T, Var>)
             {
               getComponent(compData, feSpaceScalar, v.data, feSpace, d);
@@ -548,13 +548,14 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
             {
               getComponent(compData, feSpaceScalar, v.data, v.feSpace, d);
             }
+            h5Iter.print(compData, name);
+            // h5Time.print(compdata, name + "." + std::to_string(iter));
           }
           else
           {
-            compData = v.data;
+            h5Iter.print(v.data, name);
+            // h5Time.print(v.data, name + "." + std::to_string(iter));
           }
-          h5Iter.print(compData, name);
-          // h5Time.print(compdata, name + "." + std::to_string(iter));
         }
       });
   iter++;

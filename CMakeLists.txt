@@ -113,12 +113,13 @@ target_compile_options(minifem
 
 target_link_libraries(minifem PUBLIC
   Eigen3::Eigen
-  UMFPACK::UMFPACK
-  pugixml
-  yaml-cpp
+  fmt::fmt
   hdf5::hdf5
   OpenMP::OpenMP_CXX
+  pugixml::pugixml
   stdc++fs
+  UMFPACK::UMFPACK
+  yaml-cpp
 )
 
 target_link_options(minifem

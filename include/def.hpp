@@ -31,6 +31,9 @@
 #include <unsupported/Eigen/IterativeSolvers>
 #include <unsupported/Eigen/SparseExtra>
 
+// fmt
+#include <fmt/core.h>
+
 // yaml
 #include <yaml-cpp/yaml.h>
 

@@ -60,7 +60,8 @@ template <typename Elem>
 int test(
     Mesh<Elem> const & meshCoarse,
     uint const refinements,
-    Fun<Elem::dim, 3> const & exact,
+    Fun<Elem::dim, 3> const & exactU,
+    scalarFun_T const & exactLambda,
     long double const expectedError,
     long double const tolerance)
 {
@@ -82,7 +83,7 @@ int test(
       typename LagrangeFE<Facet_T, 0>::RecommendedQR,
       2>;
 
-  std::cout << Utils::separator << "test " << test_id << std::endl;
+  fmt::print("{}test {}\n", Utils::separator, test_id);
   test_id++;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T{meshCoarse}};
@@ -99,7 +100,7 @@ int test(
   FESpaceRhs_T feSpaceRhs{*mesh};
   Var uExact{"uExact"};
   // interpolateAnalyticFunction(inputFun, feSpace1, u1.data);
-  projectAnalyticFunction(exact, feSpaceRhs, uExact.data);
+  projectAnalyticFunction(exactU, feSpaceRhs, uExact.data);
   // std::cout << "uExact:\n" << uExact.data << std::endl;
 
   FESpaceFacet_T feSpaceFacet{*facetMesh};
@@ -113,34 +114,41 @@ int test(
   // std::cout << "uRT0:\n" << uRT0.data << std::endl;
 
   Var uRT0proj{"uRT0proj"};
-  auto const exact3d = [&exact](Vec3 const & p) { return promote<3>(exact(p)); };
-  projectAnalyticFunction(exact3d, feSpaceRT0, uRT0proj.data);
+  auto const exactU3d = [&exactU](Vec3 const & p) { return promote<3>(exactU(p)); };
+  projectAnalyticFunction(exactU3d, feSpaceRT0, uRT0proj.data);
   // std::cout << "uRT0proj:\n" << uRT0proj.data << std::endl;
 
   Var uRT0div{"uRT0div"};
   uint const sizeRT0 = feSpaceRT0.dof.size;
   FESpaceP0_T feSpaceLambda{*mesh, sizeRT0};
+  FESpaceP0_T feSpaceLambda0{*mesh};
   uint const sizeP0 = feSpaceLambda.dof.size;
-  auto bcs = std::tuple{
+  auto bcsU = std::array{
       BCEss{feSpaceRT0, side::BOTTOM},
       BCEss{feSpaceRT0, side::RIGHT},
       BCEss{feSpaceRT0, side::LEFT},
-      BCEss{feSpaceRT0, side::TOP},
+      // BCEss{feSpaceRT0, side::TOP},
   };
-  std::get<0>(bcs) << exact3d;
-  std::get<1>(bcs) << exact3d;
-  std::get<2>(bcs) << exact3d;
-  std::get<3>(bcs) << exact3d;
+  std::get<0>(bcsU) << exactU3d;
+  std::get<1>(bcsU) << exactU3d;
+  std::get<2>(bcsU) << exactU3d;
+  // std::get<3>(bcs) << exactU3d;
+
+  auto bcsLambda = std::array{
+      BCEss{feSpaceLambda, side::TOP},
+  };
+  std::get<0>(bcsLambda) << exactLambda;
 
   Builder builder{sizeRT0 + sizeP0};
-  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcs);
+  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcsU);
   builder.buildCoupling(
-      AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcs, std::tuple{});
+      AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcsU, bcsLambda);
   builder.buildCoupling(
-      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceRT0), std::tuple{}, bcs);
-  // builder.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceLambda}}, std::tuple{});
+      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceRT0), bcsLambda, bcsU);
+  // the dummy assembly is necessary to apply Dirichlet bc for lambda
+  builder.buildLhs(std::tuple{AssemblyDummy{feSpaceLambda}}, bcsLambda);
   builder.buildRhs(
-      std::tuple{AssemblyProjection(1.0, uExact.data, feSpaceRhs, feSpaceRT0)}, bcs);
+      std::tuple{AssemblyProjection(1.0, uExact.data, feSpaceRhs, feSpaceRT0)}, bcsU);
   builder.closeMatrix();
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b.transpose() << std::endl;
@@ -154,7 +162,7 @@ int test(
   lambda.data = sol.tail(sizeP0);
 
   Var exactRT0{"exactRT0"};
-  interpolateAnalyticFunction(exact3d, feSpaceRT0, exactRT0.data);
+  interpolateAnalyticFunction(exactU3d, feSpaceRT0, exactRT0.data);
   // std::cout << "exactRT0:\n" << exactRT0.data << std::endl;
 
   IOManager ioRhs{feSpaceRhs, "output_projrt0err/uExact"};
@@ -164,8 +172,11 @@ int test(
   IOManager ioLambda{feSpaceLambda, "output_projrt0err/lambda"};
   ioLambda.print({lambda});
 
-  auto const error = computeErrorL2(exact3d, uRT0div.data, feSpaceRT0);
-  std::cout << "l2 error: " << error << std::endl;
+  auto const errorU = computeErrorL2(exactU3d, uRT0div.data, feSpaceRT0);
+  fmt::print("l2 errorU: {:.12e}\n", errorU);
+
+  auto const errorLambda = computeErrorL2(exactLambda, lambda.data, feSpaceLambda0);
+  fmt::print("l2 errorLambda: {:.12e}\n", errorLambda);
 
   // auto const error = (uRT0div.data - exactRT0.data).norm();
 
@@ -173,241 +184,109 @@ int test(
   return 0;
 }
 
-int main()
+int main(int argc, char * argv[])
 {
   std::bitset<16> tests;
 
   auto const eps = std::numeric_limits<double>::epsilon();
 
-  // Triangle
+  ParameterDict config;
+  config["refinements"] = 3U;
 
-  // std::array<Vec3, 3> const refTrianglePts = {
-  //     Vec3{0.0, 0.0, 0.0}, Vec3{1.0, 0.0, 0.0}, Vec3{0.0, 1.0, 0.0}};
+  config["triangle"]["structured"] = true;
+  config["triangle"]["gmsh"] = true;
+  config["quad"]["structured"] = true;
+  config["quad"]["gmsh"] = true;
 
-  // tests[0] = test<Triangle>(
-  //     refTrianglePts,
-  //     [&constFun](Vec3 const & p) { return narrow<2>(constFun(p)); },
-  //     eps,
-  //     eps);
-
-  // tests[1] = test<Triangle>(
-  //     refTrianglePts,
-  //     [&linearFun](Vec3 const & p) { return narrow<2>(linearFun(p)); },
-  //     2 * eps,
-  //     eps);
-
-  // std::array<Vec3, 3> const trianglePts = {
-  //     Vec3{1.0, 0.0, 0.0}, Vec3{3.0, 1.0, 0.0}, Vec3{0.0, 5.0, 0.0}};
-
-  // tests[2] = test<Triangle>(
-  //     trianglePts,
-  //     [&constFun](Vec3 const & p) { return narrow<2>(constFun(p)); },
-  //     4 * eps,
-  //     eps);
-
-  // tests[3] = test<Triangle>(
-  //     trianglePts,
-  //     [&linearFun](Vec3 const & p) { return narrow<2>(linearFun(p)); },
-  //     8 * eps,
-  //     eps);
-
-  // Quad
-
-  std::unique_ptr<Mesh<Quad>> mesh{new Mesh<Quad>};
-
-  ParameterDict meshConfig;
-  meshConfig["origin"] = Vec3{-1.0, -1.0, 0.0};
-  meshConfig["length"] = Vec3{2.0, 2.0, 0.0};
-  meshConfig["n"] = std::array<uint, 3>{4U, 4U, 0U};
-  meshConfig["flags"] =
+  config["mesh"]["origin"] = Vec3{-1.0, -1.0, 0.0};
+  config["mesh"]["length"] = Vec3{2.0, 2.0, 0.0};
+  config["mesh"]["n"] = std::array<uint, 3>{4U, 4U, 0U};
+  config["mesh"]["flags"] =
       MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS;
 
-  buildHyperCube(*mesh, meshConfig);
+  auto const funDivZero2d = std::tuple{
+      [](Vec3 const & p)
+      {
+        return Vec2{
+            -(1. - p[0] * p[0]) * (1. - p[0] * p[0]) * (1. - p[1] * p[1]) * p[1],
+            +(1. - p[0] * p[0]) * p[0] * (1. - p[1] * p[1]) * (1. - p[1] * p[1])};
+      },
+      [](Vec3 const &) { return 0.0; }};
 
-  for (uint r = 0; r < 6U; ++r)
+  if (argc > 1)
   {
-    tests[4 + r] = test<Quad>(
-        *mesh,
-        r,
-        [](Vec3 const & p)
-        {
-          return Vec2{
-              -(1. - p[0] * p[0]) * (1. - p[0] * p[0]) * (1. - p[1] * p[1]) * p[1],
-              +(1. - p[0] * p[0]) * p[0] * (1. - p[1] * p[1]) * (1. - p[1] * p[1])};
-        },
-        2 * eps,
-        eps);
+    config.override(argv[1]);
   }
 
-  // tests[5] = test<Quad>(
-  //     refQuadPts,
-  //     [&linearFun](Vec3 const & p) { return narrow<2>(linearFun(p)); },
-  //     3 * eps,
-  //     eps);
+  // fmt::print("configuration: {}", config);
 
-  // std::array<Vec3, 4> const quadPts = {
-  //   Vec3{0.0, 0.0, 0.0},
-  //   Vec3{3.0, 1.0, 0.0},
-  //   Vec3{2.0, 5.0, 0.0},
-  //   Vec3{0.0, 5.0, 0.0},
-  // };
+  uint const refinements = config["refinements"].as<uint>();
 
-  // stretched and roneElemMesh->facetList[3]otated
-  // std::array<Vec3, 4> const quadPts = {
-  //   Vec3{0.0, 0.0, 0.0},
-  //   Vec3{4.0, 2.0, 0.0},
-  //   Vec3{3.0, 4.0, 0.0},
-  //   Vec3{-1.0, 2.0, 0.0},
-  // };
+  if (config["triangle"]["structured"].as<bool>())
+  {
+    std::unique_ptr<Mesh<Triangle>> mesh{new Mesh<Triangle>};
 
-  // non-affine
-  // std::array<Vec3, 4> const quadPts = {
-  //     Vec3{-1.0, -1.0, 0.0},
-  //     Vec3{1.0, -1.0, 0.0},
-  //     Vec3{1.0, 0.5, 0.0},
-  //     Vec3{-1.0, 1.0, 0.0},
-  // };
+    buildHyperCube(*mesh, config["mesh"]);
 
-  // tests[6] = test<Quad>(
-  //     quadPts,
-  //     [&constFun](Vec3 const & p) { return narrow<2>(constFun(p)); },
-  //     7.021666937153402e-16,
-  //     eps);
+    for (uint r = 0; r < refinements; ++r)
+    {
+      tests[0 + r] = test(
+          *mesh, r, std::get<0>(funDivZero2d), std::get<1>(funDivZero2d), 2 * eps, eps);
+    }
+  }
 
-  // tests[7] = test<Quad>(
-  //     quadPts,
-  //     [&linearFun](Vec3 const & p) { return narrow<2>(linearFun(p)); },
-  //     9.085915191948722e-02,
-  //     eps);
+  if (config["triangle"]["gmsh"].as<bool>())
+  {
+    std::unique_ptr<Mesh<Triangle>> mesh{new Mesh<Triangle>};
+    readGMSH(
+        *mesh,
+        "square_uns.msh",
+        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
 
-  //  // Tetrahedron
+    // rescale to [-1,1]x[-1,1]
+    for (auto & pt: mesh->pointList)
+    {
+      pt.coord = pt.coord * 2.0 - Vec3::Constant(1.0);
+    }
 
-  //  std::array<Vec3, 4> const refTetPts = {
-  //    Vec3{0.0, 0.0, 0.0},
-  //    Vec3{1.0, 0.0, 0.0},
-  //    Vec3{0.0, 1.0, 0.0},
-  //    Vec3{0.0, 0.0, 1.0}
-  //  };
+    for (uint r = 0; r < refinements; ++r)
+    {
+      tests[0 + r] = test(
+          *mesh, r, std::get<0>(funDivZero2d), std::get<1>(funDivZero2d), 2 * eps, eps);
+    }
+  }
 
-  //  tests[8] = test<Tetrahedron>(refTetPts,
-  //                               constFun,
-  //                               5 * eps,
-  //                               eps);
+  if (config["quad"]["structured"].as<bool>())
+  {
+    std::unique_ptr<Mesh<Quad>> mesh{new Mesh<Quad>};
 
-  //  tests[9] = test<Tetrahedron>(refTetPts,
-  //                               linearFun,
-  //                               13 * eps,
-  //                               eps);
+    buildHyperCube(*mesh, config["mesh"]);
 
-  //  std::array<Vec3, 4> const tetPts = {
-  //    Vec3{0.0, 0.0, 0.0},
-  //    Vec3{2.0, 0.0, 1.0},
-  //    Vec3{1.0, 3.0, 2.0},
-  //    Vec3{1.0, 1.0, 5.0}
-  //  };
+    for (uint r = 0; r < refinements; ++r)
+    {
+      tests[0 + r] = test(
+          *mesh, r, std::get<0>(funDivZero2d), std::get<1>(funDivZero2d), 2 * eps, eps);
+    }
+  }
 
-  //  tests[10] = test<Tetrahedron>(tetPts,
-  //                                constFun,
-  //                                0.,
-  //                                eps);
+  if (config["quad"]["gmsh"].as<bool>())
+  {
+    std::unique_ptr<Mesh<Quad>> mesh{new Mesh<Quad>};
+    readGMSH(
+        *mesh,
+        "square_skew.msh",
+        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
 
-  //  tests[11] = test<Tetrahedron>(tetPts,
-  //                                linearFun,
-  //                                20 * eps,
-  //                                eps);
+    for (uint r = 0; r < refinements; ++r)
+    {
+      tests[0 + r] = test(
+          *mesh, r, std::get<0>(funDivZero2d), std::get<1>(funDivZero2d), 2 * eps, eps);
+    }
+  }
 
-  //  // Hexahedron
+  // Tetrahedron
 
-  //  std::array<Vec3, 8> const refHexaPts = {
-  //    Vec3{-1.0, -1.0, -1.0},
-  //    Vec3{ 1.0, -1.0, -1.0},
-  //    Vec3{ 1.0,  1.0, -1.0},
-  //    Vec3{-1.0,  1.0, -1.0},
-  //    Vec3{-1.0, -1.0,  1.0},
-  //    Vec3{ 1.0, -1.0,  1.0},
-  //    Vec3{ 1.0,  1.0,  1.0},
-  //    Vec3{-1.0,  1.0,  1.0},
-  //  };
-
-  //  tests[12] = test<Hexahedron>(refHexaPts,
-  //                               constFun,
-  //                               2 * eps,
-  //                               eps);
-
-  //  tests[13] = test<Hexahedron>(refHexaPts,
-  //                               linearFun,
-  //                               2 * eps,
-  //                               eps);
-
-  //  // auto const theta = M_PI / 3.;
-  //  // auto const axis = Vec3{1.0, 2.0, 3.0}.normalized();
-  //  // auto const scale = Vec3{1.5, 2.0, 0.4};
-  //  // auto const translate = Vec3{2.0, 3.0, 1.0};
-
-  //  // // order of operation changes the result!
-  //  // auto const threeLinearTransform = [&axis, &theta, &scale, &translate] (Vec3
-  //  const & p)
-  //  // {
-  //  //   auto const rotMatrix = (FMat<3,3>() <<
-  //  //       std::cos(theta) + axis[0] * axis[0] * (1. - std::cos(theta)),
-  //  //       axis[0] * axis[1] * (1. - std::cos(theta)) - axis[2] *
-  //  std::sin(theta),
-  //  //       axis[0] * axis[2] * (1. - std::cos(theta)) + axis[1] *
-  //  std::sin(theta),
-  //  //       axis[1] * axis[0] * (1. - std::cos(theta)) + axis[2] *
-  //  std::sin(theta),
-  //  //       std::cos(theta) + axis[1] * axis[1] * (1. - std::cos(theta)),
-  //  //       axis[1] * axis[2] * (1. - std::cos(theta)) - axis[0] *
-  //  std::sin(theta),
-  //  //       axis[2] * axis[0] * (1. - std::cos(theta)) - axis[1] *
-  //  std::sin(theta),
-  //  //       axis[2] * axis[1] * (1. - std::cos(theta)) + axis[0] *
-  //  std::sin(theta),
-  //  //       std::cos(theta) + axis[2] * axis[2] * (1. -
-  //  std::cos(theta))).finished();
-
-  //  //   auto const scaleMatrix = (FMat<3,3>{} <<
-  //  //                             scale[0], 0.0, 0.0,
-  //  //                             0.0, scale[1], 0.0,
-  //  //                             0.0, 0.0, scale[2]).finished();
-
-  //  //   Vec3 const pOut = scaleMatrix * rotMatrix * (p + translate);
-  //  //   return pOut;
-  //  // };
-
-  //  // // affine
-  //  // std::array<Vec3, 8> const hexaPts = {
-  //  //   threeLinearTransform(Vec3{-1.0, -1.0, -1.0}),
-  //  //   threeLinearTransform(Vec3{ 1.0, -1.0, -1.0}),
-  //  //   threeLinearTransform(Vec3{ 1.0,  1.0, -1.0}),
-  //  //   threeLinearTransform(Vec3{-1.0,  1.0, -1.0}),
-  //  //   threeLinearTransform(Vec3{-1.0, -1.0,  1.0}),
-  //  //   threeLinearTransform(Vec3{ 1.0, -1.0,  1.0}),
-  //  //   threeLinearTransform(Vec3{ 1.0,  1.0,  1.0}),
-  //  //   threeLinearTransform(Vec3{-1.0,  1.0,  1.0}),
-  //  // };
-
-  //  // non-affine
-  //  std::array<Vec3, 8> const hexaPts = {
-  //    Vec3{-1.0, -1.0, -1.0},
-  //    Vec3{ 1.0, -1.0, -1.0},
-  //    Vec3{ 1.0,  1.0, -1.0},
-  //    Vec3{-1.0,  1.0, -1.0},
-  //    Vec3{-1.0, -1.0,  1.0},
-  //    Vec3{ 1.0, -1.0,  1.0},
-  //    Vec3{ 1.0,  1.0,  0.5},
-  //    Vec3{-1.0,  1.0,  0.5},
-  //  };
-
-  //  tests[14] = test<Hexahedron>(hexaPts,
-  //                               constFun,
-  //                               6.802721088435382e-03,
-  //                               eps);
-
-  //  tests[15] = test<Hexahedron>(hexaPts,
-  //                               linearFun,
-  //                               2.159947638851983e-01,
-  //                               eps);
+  // Hexahedron
 
   std::cout << "test results: " << tests << std::endl;
   return tests.any();

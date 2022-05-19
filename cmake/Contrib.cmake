@@ -1,5 +1,5 @@
 # eigen
-find_package(Eigen3 3.3 NO_MODULE REQUIRED)
+find_package(Eigen3 3.4 REQUIRED)
 
 # {fmt}
 find_package(fmt REQUIRED)

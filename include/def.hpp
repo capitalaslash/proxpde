@@ -358,20 +358,34 @@ struct ParameterDict: public YAML::Node
       auto const & v = kv.second;
       if (v.Type() == YAML::NodeType::Map)
       {
+        // TODO: allow sub-...sub-sections with recursion?
         for (auto const & kv_nested: v)
         {
           auto const & k_nested = kv_nested.first.as<std::string>();
           auto const & v_nested = kv_nested.second;
-          // TODO: allow sub-...sub-sections?
-          std::cout << "overriding " << k_nested << " in subsection " << k
-                    << " with value " << v_nested << std::endl;
-          this->operator[](k)[k_nested] = v_nested;
+          if (this->operator[](k)[k_nested])
+          {
+            std::cout << k << " -> " << k_nested << ": overriding with " << v_nested
+                      << std::endl;
+            this->operator[](k)[k_nested] = v_nested;
+          }
+          else
+          {
+            std::cout << k << " -> " << k_nested << ": option not defined" << std::endl;
+          }
         }
       }
       else
       {
-        std::cout << "overriding " << k << " with value " << v << std::endl;
-        this->operator[](k) = v;
+        if (this->operator[](k))
+        {
+          std::cout << k << ": overriding with " << v << std::endl;
+          this->operator[](k) = v;
+        }
+        else
+        {
+          std::cout << k << ": option not defined" << std::endl;
+        }
       }
     }
   }

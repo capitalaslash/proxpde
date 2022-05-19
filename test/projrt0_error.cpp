@@ -23,19 +23,35 @@ double computeErrorL2(
       FMat<FESpace::CurFE_T::numDOFs, 1> uLocal;
       for (uint n = 0; n < FESpace::CurFE_T::numDOFs; ++n)
       {
-        id_T const dofId = feSpace.dof.getId(feSpace.curFE.elem->id, n, d);
+        id_T const dofId = feSpace.dof.getId(elem.id, n, d);
         uLocal[n] = u[dofId];
       }
 
       for (uint q = 0; q < FESpace::QR_T::numPts; ++q)
       {
-        Vec3 const uQ = uLocal.transpose() * feSpace.curFE.phiVect[q];
-        Vec3 const fQ = f(feSpace.curFE.qpoint[q]);
+        FVec<FESpace::physicalDim()> uQ;
+        if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
+        {
+          uQ = uLocal.transpose() * feSpace.curFE.phi[q];
+        }
+        else // FamilyType::RAVIART_THOMAS
+        {
+          uQ = uLocal.transpose() * feSpace.curFE.phiVect[q];
+        }
+        FVec<FESpace::physicalDim()> const fQ = f(feSpace.curFE.qpoint[q]);
         error += feSpace.curFE.JxW[q] * (fQ - uQ).transpose() * (fQ - uQ);
       }
     }
   }
   return std::sqrt(error);
+}
+
+template <typename FESpace>
+double computeErrorL2(scalarFun_T const & exact, Vec const & u, FESpace const & feSpace)
+{
+  static_assert(FESpace::dim == 1);
+  return computeErrorL2(
+      [&exact](Vec3 const & p) { return Vec1{exact(p)}; }, u, feSpace);
 }
 
 static int test_id = 0;

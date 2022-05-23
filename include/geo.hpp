@@ -73,7 +73,7 @@ struct GeoElem
   virtual std::tuple<Vec3, Vec3> bbox() const final
   {
     Vec3 min = Vec3::Constant(std::numeric_limits<double>::max());
-    Vec3 max = Vec3::Constant(std::numeric_limits<double>::min());
+    Vec3 max = -Vec3::Constant(std::numeric_limits<double>::max());
     for (auto const & p: pts)
     {
       for (uint c = 0; c < 3; ++c)

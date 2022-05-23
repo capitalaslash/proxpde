@@ -185,10 +185,10 @@ int test(Function const & rhs, double const expectedNorm)
 
   t.start("mesh refine");
   // std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  // uniformRefine2d(*meshCoarse, *mesh);
+  // uniformRefine(*meshCoarse, *mesh);
   for (short_T ref = 0; ref < numRefs; ++ref)
   {
-    uniformRefine2d(*meshes[ref], *meshes[ref + 1]);
+    uniformRefine(*meshes[ref], *meshes[ref + 1]);
   }
   auto const & meshTop = meshes.back();
   t.stop();

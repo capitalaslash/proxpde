@@ -115,13 +115,36 @@ public:
     }
   }
 
-  Mesh<Facet_T> buildFacetMesh() const
+  uint countRidges()
   {
-    Mesh<Facet_T> facetMesh;
-    facetMesh.pointList = pointList;
-    facetMesh.elementList = facetList;
-    facetMesh.buildConnectivity();
-    return facetMesh;
+    // ridges are relevant only in 3d
+    if (Elem_T::dim < 3)
+    {
+      return 0;
+    }
+
+    // identify a ridge by its points (unordered)
+    using Ridge_T = std::set<id_T>;
+    using RidgeList_T = std::set<Ridge_T>;
+
+    RidgeList_T ridges;
+    auto ridgeCount = 0U;
+    for (auto const & elem: elementList)
+    {
+      for (auto const ridgeIds: Elem_T::elemToRidge)
+      {
+        Ridge_T ridge;
+        ridge.insert(elem.pts[ridgeIds[0]]->id);
+        ridge.insert(elem.pts[ridgeIds[1]]->id);
+
+        [[maybe_unused]] auto const [ptr, inserted] = ridges.insert(ridge);
+        if (inserted)
+        {
+          ridgeCount++;
+        }
+      }
+    }
+    return ridgeCount;
   }
 
   PointList_T pointList;

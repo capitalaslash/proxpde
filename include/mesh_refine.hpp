@@ -13,7 +13,8 @@ struct RefineHelper<Triangle>
   uint static constexpr numPts = 6U;
 
   // refining triangles adds as many points as many facets (including internals)
-  uint static constexpr totalPts(uint const p, uint const f, uint const /*e*/)
+  uint static constexpr totalPts(
+      uint const p, uint const /*r*/, uint const f, uint const /*e*/)
   {
     return p + f;
   }
@@ -26,19 +27,46 @@ struct RefineHelper<Quad>
 
   // refining quads adds as many points as many facets (including internals) and
   // elements (middle pt)
-  uint static constexpr totalPts(uint const p, uint const f, uint const e)
+  uint static constexpr totalPts(
+      uint const p, uint const /*r*/, uint const f, uint const e)
   {
     return p + f + e;
   }
 };
 
-template <typename Mesh>
-void uniformRefine2d(Mesh & meshCoarse, Mesh & meshFine)
+template <>
+struct RefineHelper<Tetrahedron>
 {
-  static_assert(Mesh::Elem_T::dim == 2, "the mesh dimension is not 2.");
+  uint static constexpr numPts = 10U;
 
+  // refining tets adds as many points as many ridges (including internals)
+  uint static constexpr totalPts(
+      uint const p, uint const r, uint const /*f*/, uint const /*e*/)
+  {
+    return p + r;
+  }
+};
+
+template <>
+struct RefineHelper<Hexahedron>
+{
+  uint static constexpr numPts = 27U;
+
+  // refining hexs adds as many points as many facets, ridges (including internals) and
+  // elements (middle pt)
+  uint static constexpr totalPts(uint const p, uint const r, uint const f, uint const e)
+  {
+    return p + r + f + e;
+  }
+};
+
+template <typename Mesh>
+void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
+{
   using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
+
+  auto const numRidges = meshCoarse.countRidges();
 
   auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS).any()
                              ? meshCoarse.facetList.size()
@@ -47,7 +75,7 @@ void uniformRefine2d(Mesh & meshCoarse, Mesh & meshFine)
                                    2;
 
   auto const predPts = RefineHelper<Elem_T>::totalPts(
-      meshCoarse.pointList.size(), numFacets, meshCoarse.elementList.size());
+      meshCoarse.pointList.size(), numRidges, numFacets, meshCoarse.elementList.size());
   meshFine.pointList.reserve(predPts);
 
   meshFine.elementList.reserve(Elem_T::numChildren * meshCoarse.elementList.size());

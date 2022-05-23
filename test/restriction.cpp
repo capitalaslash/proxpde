@@ -34,7 +34,7 @@ int test(Function const & f, double const expectedNorm)
   //     MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
 
   std::unique_ptr<Mesh_T> meshFine{new Mesh_T};
-  uniformRefine2d(*meshCoarse, *meshFine);
+  uniformRefine(*meshCoarse, *meshFine);
 
   FESpace_T feSpaceCoarse{*meshCoarse};
   FESpace_T feSpaceFine{*meshFine};

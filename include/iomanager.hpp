@@ -663,10 +663,12 @@ struct IOManagerFacet
 
   IOManagerFacet(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
       feSpaceOrig{fe},
-      meshFacet{new MeshFacet_T{fe.mesh->buildFacetMesh()}},
+      meshFacet{new MeshFacet_T},
       feSpaceFacet{*meshFacet},
       io{feSpaceFacet, fp, it}
-  {}
+  {
+    buildFacetMesh(*meshFacet, *fe.mesh);
+  }
 
   template <typename... Vars>
   void print(std::tuple<Vars...> const && data, double const t = 0.0)

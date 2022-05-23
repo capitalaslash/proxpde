@@ -42,7 +42,7 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  // uniformRefine2d(*meshCoarse, *mesh);
+  // uniformRefine(*meshCoarse, *mesh);
   *mesh = *meshCoarse;
 
   using QR_T = typename RaviartThomasFE<Elem_T, 0>::RecommendedQR;

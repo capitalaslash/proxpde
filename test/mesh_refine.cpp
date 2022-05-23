@@ -23,8 +23,8 @@ void test()
   buildHyperCube(
       *meshCoarse,
       {0.0, 0.0, 0.0},
-      {1.0, 1.0, 0.0},
-      {2, 3, 0},
+      {1.0, 1.0, 1.0},
+      {2U, 3U, 4U},
       MeshFlags::INTERNAL_FACETS);
   // readGMSH(*mesh, "square_uns.msh");
   // readGMSH(*mesh, "square_q.msh");
@@ -33,7 +33,7 @@ void test()
 
   std::unique_ptr<Mesh_T> meshFine{new Mesh_T};
 
-  uniformRefine2d(*meshCoarse, *meshFine);
+  uniformRefine(*meshCoarse, *meshFine);
 
   std::cout << Utils::separator << "mesh fine:\n" << *meshFine << std::endl;
 
@@ -83,6 +83,10 @@ int main()
   test<Triangle>();
 
   test<Quad>();
+
+  test<Tetrahedron>();
+
+  test<Hexahedron>();
 
   return 0;
 }

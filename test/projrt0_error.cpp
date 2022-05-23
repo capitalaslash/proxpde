@@ -90,7 +90,7 @@ int test(
   for (uint r = 0U; r < refinements; ++r)
   {
     std::unique_ptr<Mesh_T> newMesh{new Mesh_T{}};
-    uniformRefine2d(*mesh, *newMesh);
+    uniformRefine(*mesh, *newMesh);
     mesh.reset(newMesh.release());
   }
 

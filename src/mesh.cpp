@@ -428,7 +428,7 @@ void buildCube(
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  mesh.elementList.reserve(5 * numElems[0] * numElems[1] * numElems[2]);
+  mesh.elementList.reserve(5U * numElems[0] * numElems[1] * numElems[2]);
   id_T counter = 0;
   auto const dx = 1;
   auto const dy = numPts[0];

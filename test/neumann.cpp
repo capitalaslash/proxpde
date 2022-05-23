@@ -30,13 +30,13 @@ int test(YAML::Node const & config)
   scalarFun_T const exactSol = [](Vec3 const & p)
   {
     return std::sin(M_PI * p(0));
-    // return 4. * p(0) - pow(p(0), 3);
+    // return 4. * p(0) - cepow(p(0), 3);
   };
   Fun<Elem_T::dim, 3> const exactGrad = [](Vec3 const & p)
   {
     FVec<Elem_T::dim> value = FVec<Elem_T::dim>::Zero();
     value[0] = M_PI * std::cos(M_PI * p(0));
-    // value[0] = 4. - 3. * pow(p(0), 2);
+    // value[0] = 4. - 3. * cepow(p(0), 2);
     return value;
   };
 

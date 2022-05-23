@@ -54,11 +54,11 @@ int main(int argc, char * argv[])
       {numElems, 0, 0},
       MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
   // auto const r = 1. / 1.1;
-  // auto const starting = (1. - r) / (1. - pow(r, numElems));
+  // auto const starting = (1. - r) / (1. - cepow(r, numElems));
   // auto counter = 0;
   // for (auto & p: mesh->pointList)
   // {
-  //   p.coord[0] = starting * (1. - pow(r, counter)) / (1. - r);
+  //   p.coord[0] = starting * (1. - cepow(r, counter)) / (1. - r);
   //   counter++;
   // }
   t.stop();

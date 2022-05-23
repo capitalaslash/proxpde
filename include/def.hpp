@@ -322,9 +322,9 @@ static constexpr int ERROR_GMSH = 1;
 
 // ----------------------------------------------------------------------------
 template <class T>
-constexpr T pow(T const & base, short_T const exponent)
+constexpr T cepow(T const & base, short_T const exponent)
 {
-  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
+  return exponent == 0 ? 1 : base * cepow(base, exponent - 1);
 }
 
 // ----------------------------------------------------------------------------

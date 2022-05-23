@@ -229,7 +229,7 @@ struct SimpsonQR
 {
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
-  static short_T const numPts = pow(3, GeoElem::dim);
+  static short_T const numPts = cepow(3, GeoElem::dim);
 
   static FVec<numPts> const weight;
   static std::array<Vec_T, numPts> const node;
@@ -238,7 +238,6 @@ struct SimpsonQR
 // 1D ----------------------------------------------------------------------------------
 template <>
 FVec<3> const SimpsonQR<Line>::weight;
-// clang-format off
 template <>
 std::array<SimpsonQR<Line>::Vec_T, 3> const SimpsonQR<Line>::node;
 
@@ -261,7 +260,7 @@ struct MiniQR
 {
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
-  static uint constexpr numPts = pow(N, GeoElem::dim);
+  static uint constexpr numPts = cepow(N, GeoElem::dim);
 
   static FVec<numPts> const weight;
   static std::array<Vec_T, numPts> const node;

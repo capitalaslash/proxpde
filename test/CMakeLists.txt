@@ -52,7 +52,10 @@ minifem_add_test(poisson3dtet_p2 LABELS 3d pde tet)
 minifem_add_test(projection_p1top2 LABELS 2d fe)
 minifem_add_test(projection_p2top1 LABELS 2d fe)
 minifem_add_test(projection_rt0 LABELS 2d 3d fe rt)
-minifem_add_test(projrt0_error LABELS 2d 3d fe rt)
+minifem_add_test(projrt0_error
+    LABELS 2d 3d fe rt
+    DATA cube_uns.msh cube_skew.msh square_skew.msh square_uns.msh
+)
 minifem_add_test(prolongation LABELS 2d linalg)
 minifem_add_test(qr LABELS fe)
 minifem_add_test(reffe_test LABELS fe)

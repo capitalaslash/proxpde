@@ -168,15 +168,18 @@ class Line: public GeoElem
 {
 public:
   using Facet_T = PointElem;
+  using Ridge_T = NullElem;
   using Face_T = NullElem;
   using Edge_T = Line;
   static short_T constexpr dim = 1;
   static short_T constexpr numPts = 2U;
-  static short_T constexpr numEdges = 1U;
-  static short_T constexpr numFaces = 0U;
   static short_T constexpr numFacets = 2U;
+  static short_T constexpr numFaces = 0U;
+  static short_T constexpr numRidges = 0U;
+  static short_T constexpr numEdges = 1U;
   static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
       {{{0}}, {{1}}}};
+  static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {};
   static array2d<short_T, 0, 0> constexpr elemToFace = {{}};
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {{{{0, 1}}}};
   static short_T constexpr numChildren = 2U;

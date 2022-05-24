@@ -580,6 +580,18 @@ struct ElemToGmsh
 {};
 
 template <>
+struct ElemToGmsh<PointElem, 1>
+{
+  static GMSHElemType constexpr value = GMSHNull;
+};
+
+template <>
+struct ElemToGmsh<PointElem, 2>
+{
+  static GMSHElemType constexpr value = GMSHNull;
+};
+
+template <>
 struct ElemToGmsh<Line, 1>
 {
   static GMSHElemType constexpr value = GMSHLine;
@@ -704,6 +716,7 @@ void readGMSH(
   std::set<marker_T> facetMarkers;
   std::map<marker_T, std::string> physicalNames;
 
+  auto ignoredElements = 0U;
   in >> buf;
   while (!in.eof())
   {
@@ -827,6 +840,23 @@ void readGMSH(
           facets.insert(ElemStub<Facet_T>{conn, eBd, static_cast<marker_T>(tags[0])});
           eBd++;
         }
+        else if (
+            ElemToGmsh<typename Facet_T::Facet_T, 1>::value == elType ||
+            ElemToGmsh<typename Facet_T::Facet_T, 2>::value == elType)
+        {
+          // ignore ridges
+          for (uint c = 0; c < Facet_T::Facet_T::numPts; c++)
+          {
+            in >> buf;
+          }
+          ignoredElements++;
+        }
+        else if (elType == 15)
+        {
+          // ignore points
+          in >> buf;
+          ignoredElements++;
+        }
         else
         {
           std::cerr << "error reading elements" << std::endl;
@@ -854,6 +884,7 @@ void readGMSH(
     // get next section
     in >> buf;
   }
+  std::cout << "ignored elements: " << ignoredElements << std::endl;
   std::cout << "available volume markers: ";
   for (auto const marker: volumeMarkers)
   {

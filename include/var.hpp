@@ -46,9 +46,9 @@ struct FEVar
   using Vec_T = FVec<FESpace_T::physicalDim()>;
 
   FEVar(std::string_view n, FESpace_T const & fe):
-      name(n),
-      feSpace(fe),
-      data(fe.dof.size * FESpace_T::dim)
+      name{n},
+      feSpace{&fe},
+      data{fe.dof.size * FESpace_T::dim}
   {}
 
   explicit FEVar(FESpace_T const & fe): feSpace(fe), data(fe.dof.size * FESpace_T::dim)
@@ -81,7 +81,7 @@ struct FEVar
 
   void reinit(GeoElem const & elem)
   {
-    feSpace.curFE.reinit(elem);
+    feSpace->curFE.reinit(elem);
     setLocalData(elem.id);
   }
 
@@ -91,7 +91,7 @@ struct FEVar
     {
       for (uint n = 0; n < FESpace_T::RefFE_T::numDOFs; ++n)
       {
-        auto const id = feSpace.dof.getId(elemId, n, d);
+        auto const id = feSpace->dof.getId(elemId, n, d);
         _localData(n, d) = data[id];
       }
     }
@@ -112,12 +112,12 @@ struct FEVar
   auto integrate()
   {
     FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
-    for (auto const & elem: feSpace.mesh->elementList)
+    for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
       for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
       {
-        integral += feSpace.curFE.JxW[q] * this->evaluate(q);
+        integral += feSpace->curFE.JxW[q] * this->evaluate(q);
       }
     }
     return integral;
@@ -129,12 +129,12 @@ struct FEVar
     assert(q < FESpace_T::QR_T::numPts);
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
-      FVec<FESpace_T::dim> dataQ = feSpace.curFE.phi[q].transpose() * _localData;
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
       return dataQ;
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
-      Vec3 const dataQ = feSpace.curFE.phiVect[q].transpose() * _localData;
+      Vec3 const dataQ = feSpace->curFE.phiVect[q].transpose() * _localData;
       return dataQ;
     }
   }
@@ -146,7 +146,7 @@ struct FEVar
         "gradient is available only for Lagrange elements.");
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
-    return feSpace.curFE.dphi[q].transpose() * _localData;
+    return feSpace->curFE.dphi[q].transpose() * _localData;
   }
 
   // expensive version for points that are not the ones defined by the qr rule
@@ -164,7 +164,7 @@ struct FEVar
   // and that we need to trace back to the ref element
   auto evaluateOnReal(Vec3 const & p) const
   {
-    auto const pRef = feSpace.curFE.approxInverseMap(p);
+    auto const pRef = feSpace->curFE.approxInverseMap(p);
     return evaluateOnRef(pRef);
   }
 
@@ -181,7 +181,7 @@ struct FEVar
   }
 
   std::string const name = "";
-  FESpace_T const & feSpace;
+  FESpace_T const * feSpace;
   Vec data;
 
 private:
@@ -197,7 +197,7 @@ private:
 //   {
 //     uint sum = 0;
 //     static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
-//       sum += feSpace.dof.size;
+//       sum += feSpace->dof.size;
 //     });
 //     data.resize(sum);
 //   }
@@ -207,7 +207,7 @@ private:
 //   {
 //     uint sum = 0;
 //     static_for(feList, [&sum] (const auto /*i*/, const auto & feSpace){
-//       sum += feSpace.dof.size;
+//       sum += feSpace->dof.size;
 //     });
 //     data.resize(sum);
 //   }

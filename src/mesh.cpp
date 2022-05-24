@@ -38,48 +38,6 @@ void buildLine(
   mesh.facetList[1].marker = side::RIGHT;
 }
 
-template <typename Mesh>
-void markFacetsCube(Mesh & mesh, Vec3 const & origin, Vec3 const & length)
-{
-  for (auto & f: mesh.facetList)
-  {
-    if (f.onBoundary())
-    {
-      auto const [min, max] = f.bbox();
-      // BOTTOM -> ymin
-      if (std::fabs(max[1] - origin[1]) < 1e-6 * length[1])
-      {
-        f.marker = side::BOTTOM;
-      }
-      // RIGHT -> xmax
-      else if (std::fabs(min[0] - origin[0] - length[0]) < 1e-6 * length[0])
-      {
-        f.marker = side::RIGHT;
-      }
-      // TOP -> ymax
-      else if (std::fabs(min[1] - origin[1] - length[1]) < 1e-6 * length[1])
-      {
-        f.marker = side::TOP;
-      }
-      // LEFT -> xmin
-      else if (std::fabs(max[0] - origin[0]) < 1e-6 * length[0])
-      {
-        f.marker = side::LEFT;
-      }
-      // BACK -> zmin
-      else if (std::fabs(max[2] - origin[2]) < 1e-6 * length[2])
-      {
-        f.marker = side::BACK;
-      }
-      // FRONT -> zmax
-      else if (std::fabs(min[2] - origin[2] - length[2]) < 1e-6 * length[2])
-      {
-        f.marker = side::FRONT;
-      }
-    }
-  }
-}
-
 void buildSquare(
     Mesh<Triangle> & mesh,
     Vec3 const & origin,

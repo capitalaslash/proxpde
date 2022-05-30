@@ -10,19 +10,11 @@
 #include "timer.hpp"
 
 #include <unsupported/Eigen/src/IterativeSolvers/Scaling.h>
-#include <yaml-cpp/yaml.h>
-
-using Elem_T = Hexahedron;
-uint constexpr order = 2U;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, order>::RefFE_T,
-    LagrangeFE<Elem_T, order>::RecommendedQR>;
 
 template <StorageType Storage, typename Solver>
-void solve(Mat<Storage> const & A, Vec const & b, YAML::Node const & config, Vec & x)
+void solve(Mat<Storage> const & A, Vec const & b, ParameterDict const & config, Vec & x)
 {
+  config.validate({"tolerance", "maxNumIters"});
   Solver solver;
   solver.setTolerance(config["tolerance"].as<double>());
   solver.setMaxIterations(config["maxNumIters"].as<int>());
@@ -34,6 +26,26 @@ void solve(Mat<Storage> const & A, Vec const & b, YAML::Node const & config, Vec
 
 int main(int argc, char * argv[])
 {
+  using Elem_T = Hexahedron;
+  using Mesh_T = Mesh<Elem_T>;
+  uint constexpr order = 2U;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, order>::RefFE_T,
+      LagrangeFE<Elem_T, order>::RecommendedQR>;
+
+  ParameterDict config;
+  config["mesh"]["origin"] = Vec3{0., 0., 0.};
+  config["mesh"]["length"] = Vec3{1., 1., 1.};
+  config["mesh"]["n"] = std::array{10U, 10U, 10U};
+  config["solver"]["tolerance"] = 1.e-8;
+  config["solver"]["maxNumIters"] = 2000;
+
+  if (argc > 1)
+  {
+    config.override(argv[1]);
+  }
+
   const scalarFun_T rhs = [](Vec3 const & p)
   {
     return 2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
@@ -43,15 +55,11 @@ int main(int argc, char * argv[])
   { return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1)); };
 
   MilliTimer t;
-  uint const numElems = (argc < 2) ? 10 : std::stoi(argv[1]);
-
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 1.};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
   t.start("mesh build");
-  buildHyperCube(*mesh, origin, length, {{numElems, numElems, numElems}});
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
   t.stop();
 
   t.start("fespace");
@@ -78,9 +86,6 @@ int main(int argc, char * argv[])
   // filelog << "A:\n" << builder.A << std::endl;
   // filelog << "b:\n" << builder.b << std::endl;
 
-  YAML::Node config;
-  config["tolerance"] = 1.e-8;
-  config["maxNumIters"] = 2000;
   using DiagPrec = Eigen::DiagonalPreconditioner<double>;
   // using ILUTPrec = Eigen::IncompleteLUT<double>;
 
@@ -88,7 +93,7 @@ int main(int argc, char * argv[])
   std::cout << "BiCGSTAB DiagPrec" << std::endl;
   Var solCG{"uBiCGSTAB"};
   solve<StorageType::RowMajor, Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec>>(
-      builderR.A, builderR.b, config, solCG.data);
+      builderR.A, builderR.b, ParameterDict{config["solver"]}, solCG.data);
   t.stop();
 
   t.start("MINRES DiagPrec");
@@ -97,14 +102,14 @@ int main(int argc, char * argv[])
   solve<
       StorageType::RowMajor,
       Eigen::MINRES<Mat<StorageType::RowMajor>, Eigen::Lower, DiagPrec>>(
-      builderR.A, builderR.b, config, solMINRES.data);
+      builderR.A, builderR.b, ParameterDict{config["solver"]}, solMINRES.data);
   t.stop();
 
   t.start("GMRES DiagPrec");
   std::cout << "GMRES DiagPrec" << std::endl;
   Var solGMRES{"uGMRES"};
   solve<StorageType::RowMajor, Eigen::GMRES<Mat<StorageType::RowMajor>, DiagPrec>>(
-      builderR.A, builderR.b, config, solGMRES.data);
+      builderR.A, builderR.b, ParameterDict{config["solver"]}, solGMRES.data);
   t.stop();
 
   // crashes in opt build
@@ -112,8 +117,8 @@ int main(int argc, char * argv[])
   // std::cout << "DGMRES DiagPrec" << std::endl;
   // {
   //   Eigen::DGMRES<Mat, DiagPrec> solver;
-  //   solver.setTolerance(config["tolerance"].as<double>());
-  //   solver.setMaxIterations(config["maxNumIters"].as<int>());
+  //   solver.setTolerance(config["solver"]["tolerance"].as<double>());
+  //   solver.setMaxIterations(config["solver"]["maxNumIters"].as<int>());
   //   solver.set_restart(30); // Set restarting value
   //   solver.setEigenv(1); // Set the number of eigenvalues to deflate
   //   solver.compute(builder.A);
@@ -137,8 +142,8 @@ int main(int argc, char * argv[])
 
     // Now, solve the equilibrated linear system with any available solver
     Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec> solver;
-    solver.setTolerance(config["tolerance"].as<double>());
-    solver.setMaxIterations(config["maxNumIters"].as<int>());
+    solver.setTolerance(config["solver"]["tolerance"].as<double>());
+    solver.setMaxIterations(config["solver"]["maxNumIters"].as<int>());
     solver.compute(builderR.A);
     x = solver.solve(builderR.b);
     std::cout << "iters: " << solver.iterations() << std::endl;
@@ -153,20 +158,20 @@ int main(int argc, char * argv[])
   // std::cout << "BiCGSTAB ILUTPrec" << std::endl;
   // Var solCGILUT{"uBiCGSTABILUT"};
   // solve<StorageType::RowMajor, Eigen::BiCGSTAB<Mat<StorageType::RowMajor>,
-  // ILUTPrec>>(builderR.A, builderR.b, config, solCGILUT.data); t.stop();
+  // ILUTPrec>>(builderR.A, builderR.b, config["solver"], solCGILUT.data); t.stop();
   //
   // t.start("MINRES ILUTPrec");
   // std::cout << "MINRES ILUTPrec" << std::endl;
   // Var solMINRESILUT{"uMINRESILUT"};
   // solve<StorageType::RowMajor, Eigen::MINRES<Mat<StorageType::RowMajor>,
-  // Eigen::Lower, ILUTPrec>>(builderR.A, builderR.b, config, solMINRESILUT.data);
-  // t.stop();
+  // Eigen::Lower, ILUTPrec>>(builderR.A, builderR.b, config["solver"],
+  // solMINRESILUT.data); t.stop();
   //
   // t.start("GMRES ILUTPrec");
   // std::cout << "GMRES ILUTPrec" << std::endl;
   // Var solGMRESILUT{"uGMRESILUT"};
   // solve<StorageType::RowMajor, Eigen::GMRES<Mat<StorageType::RowMajor>,
-  // ILUTPrec>>(builderR.A, builderR.b, config, solGMRESILUT.data); t.stop();
+  // ILUTPrec>>(builderR.A, builderR.b, config["solver"], solGMRESILUT.data); t.stop();
 
   // t.start("solver LU");
   // Var solLU{"uLU"};

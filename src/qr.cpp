@@ -409,6 +409,15 @@ std::array<TrapQR<Quad>::Vec_T, 4> const TrapQR<Quad>::node = {
 
 // 3D ----------------------------------------------------------------------------------
 template <>
+FVec<4> const TrapQR<Tetrahedron>::weight = FVec<4>::Constant(1.L);
+template <>
+std::array<TrapQR<Tetrahedron>::Vec_T, 4> const TrapQR<Tetrahedron>::node = {
+    {TrapQR<Tetrahedron>::Vec_T(0., 0., 0.),
+     TrapQR<Tetrahedron>::Vec_T(1., 0., 0.),
+     TrapQR<Tetrahedron>::Vec_T(0., 1., 0.),
+     TrapQR<Tetrahedron>::Vec_T(0., 0., 1.)}};
+
+template <>
 FVec<8> const TrapQR<Hexahedron>::weight = FVec<8>::Constant(1.L);
 // clang-format off
 template <>

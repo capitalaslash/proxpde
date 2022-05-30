@@ -377,12 +377,12 @@ int main(int argc, char * argv[])
   Builder builderRes{feSpaceCG.dof.size};
   LUSolver solverRes;
   AssemblyMass timeDer{1. / dt, feSpaceCG};
-  AssemblyAdvection advection{1.0, vel.data, vel.feSpace, feSpaceCG};
+  AssemblyAdvection advection{1.0, vel.data, *vel.feSpace, feSpaceCG};
   double const eps = 0.001;
   AssemblyStiffness diffusion{eps, feSpaceCG};
   AssemblyLhsSUPGRes lhsSUPGRes{1. / dt, vel, eps, feSpaceCG};
   FEVar uCGOldRes{feSpaceCG};
-  AssemblyProjection timeDerRhs{1. / dt, uCGOldRes.data, uCGOldRes.feSpace, feSpaceCG};
+  AssemblyProjection timeDerRhs{1. / dt, uCGOldRes.data, *uCGOldRes.feSpace, feSpaceCG};
   AssemblyRhsSUPGRes rhsSUPGRes{1. / dt, uCGOldRes, vel, eps, feSpaceCG};
 
   // FEVar c{"conc", feSpace};

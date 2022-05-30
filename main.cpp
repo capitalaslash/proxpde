@@ -114,7 +114,7 @@ int main()
   error.data = sol.data - exact.data;
   std::cout << "error: " << error.data.norm() << std::endl;
 
-  IOManager io{feSpace, "sol"};
+  IOManager io{feSpace, "output/sol"};
   io.print({sol, exact, error});
 
   return 0;

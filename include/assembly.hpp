@@ -556,6 +556,14 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   using LMat_T = typename Super_T::LMat_T;
 
   AssemblyAdvection(
+      FESpaceVel_T const & feVel,
+      FESpace_T const & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>{fe, cmp},
+      feSpaceVel{feVel}
+  {}
+
+  AssemblyAdvection(
       double const c,
       Vec const & u,
       FESpaceVel_T const & feVel,
@@ -602,6 +610,8 @@ struct AssemblyAdvection: public Diagonal<FESpace>
         std::abort();
       }
 
+      // TODO: the block is independent from d, so it could be computed once and then
+      // copied over to the others
       for (uint d = 0; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
@@ -619,7 +629,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   //   return Ke;
   // }
 
-  double const coef;
+  double coef;
   Vec const * vel;
   FESpaceVel_T const * feSpaceVel;
 };

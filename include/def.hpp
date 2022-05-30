@@ -182,8 +182,8 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
 // using LUSolver = Eigen::SparseLU<Mat<StorageType::ClmMajor>,
 // Eigen::COLAMDOrdering<int>>;
 using LUSolver = Eigen::UmfPackLU<Mat<StorageType::ClmMajor>>;
-// using IterSolver = Eigen::GMRES<Mat<StorageType::RowMajor,
-// Eigen::IncompleteLUT<double>>;
+// using IterSolver =
+//     Eigen::GMRES < Mat<StorageType::RowMajor, Eigen::IncompleteLUT<double>>;
 using IterSolver =
     Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
 

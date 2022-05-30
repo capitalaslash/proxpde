@@ -317,7 +317,7 @@ struct IOManager
   void init(FESpace_T const & fe, fs::path const fp, uint const it = 0)
   {
     feSpace = &fe;
-    feSpaceScalar = FESpace{*fe.mesh};
+    feSpaceScalar = FESpaceScalar_T{*fe.mesh};
     filePath = fp;
     iter = it;
 
@@ -558,7 +558,7 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
             }
             else
             {
-              getComponent(compData, feSpaceScalar, v.data, v.feSpace, d);
+              getComponent(compData, feSpaceScalar, v.data, *v.feSpace, d);
             }
             h5Iter.print(compData, name);
             // h5Time.print(compdata, name + "." + std::to_string(iter));

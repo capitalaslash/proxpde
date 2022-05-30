@@ -110,10 +110,8 @@ struct NSSolverMonolithic
       p{"p", feSpaceP.dof.size},
       velOld{feSpaceVel.dof.size * dim},
       assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel},
-      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
-      // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0),
-      ioVel{feSpaceVel},
-      ioP{feSpaceP}
+      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel}
+  // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0)
   {
     // // set up size and position of pressure dofs
     // std::fill(pMask.begin() + feSpaceVel.dof.size * dim, pMask.end(), 1);
@@ -124,8 +122,8 @@ struct NSSolverMonolithic
 
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = fs::path{config["output_dir"].as<std::string>()};
-    ioVel.init(outDir / "vel");
-    ioP.init(outDir / "p");
+    ioVel.init(feSpaceVel, outDir / "vel");
+    ioP.init(feSpaceP, outDir / "p");
   }
 
   template <typename BCsVel, typename BCsP>
@@ -297,14 +295,12 @@ struct NSSolverSplit
       assemblyPOld{1.0, pOld, feSpaceP, feSpaceVel},
       assemblyDivVelStar{-1.0, velStar.data, feSpaceVel, feSpaceP},
       assemblyVelStarRhs{1.0, velStar.data, feSpaceVel},
-      assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel},
-      ioVel{feSpaceVel, fs::path{config["output_dir"].as<std::string>()} / "vel"},
-      ioP{feSpaceP, fs::path{config["output_dir"].as<std::string>()} / "p"}
+      assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel}
   {
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = fs::path{config["output_dir"].as<std::string>()};
-    ioVel.init(outDir / "vel");
-    ioP.init(outDir / "p");
+    ioVel.init(feSpaceVel, outDir / "vel");
+    ioP.init(feSpaceP, outDir / "p");
   }
 
   template <typename BCsVel, typename BCsP>
@@ -481,7 +477,7 @@ void computeElemWSS(
         FMat<3, dim> const grad = velFE.evaluateGrad(q);
         tau.template block<dim, 3>(0, 0) = nu * grad.transpose();
         // minus sign due to the outwards normal
-        wss[id] -= velFE.feSpace.curFE.JxW[q] * (tau * normal).dot(tangent);
+        wss[id] -= velFE.feSpace->curFE.JxW[q] * (tau * normal).dot(tangent);
       }
       wss[id] /= elem->volume();
     }

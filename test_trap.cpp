@@ -84,7 +84,7 @@ int main()
   Var error{"error"};
   error.data = sol.data - exact.data;
 
-  IOManager io{feSpace, "sol_trap"};
+  IOManager io{feSpace, "output_trap/sol"};
   io.print({sol, exact, error});
 
   std::cout << "error: " << error.data.norm() << std::endl;

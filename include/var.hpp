@@ -51,12 +51,12 @@ struct FEVar
       data{fe.dof.size * FESpace_T::dim}
   {}
 
-  explicit FEVar(FESpace_T const & fe): feSpace(fe), data(fe.dof.size * FESpace_T::dim)
+  explicit FEVar(FESpace_T const & fe): feSpace(&fe), data(fe.dof.size * FESpace_T::dim)
   {}
 
   FEVar<FESpace_T> & operator<<(Fun<FESpace_T::physicalDim(), 3> const & f)
   {
-    interpolateAnalyticFunction(f, this->feSpace, this->data);
+    interpolateAnalyticFunction(f, *this->feSpace, this->data);
     return *this;
   }
 
@@ -71,7 +71,7 @@ struct FEVar
     return operator<<([&v](Vec3 const &) { return v; });
   }
 
-  FEVar<FESpace_T> & operator<<(double const & v)
+  FEVar<FESpace_T> & operator<<(double const v)
   {
     static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
     return operator<<([&v](Vec3 const &) { return Vec1::Constant(v); });

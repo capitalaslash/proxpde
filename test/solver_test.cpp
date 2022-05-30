@@ -7,22 +7,10 @@
 #include "fespace.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
+#include "solver.hpp"
 #include "timer.hpp"
 
 #include <unsupported/Eigen/src/IterativeSolvers/Scaling.h>
-
-template <StorageType Storage, typename Solver>
-void solve(Mat<Storage> const & A, Vec const & b, ParameterDict const & config, Vec & x)
-{
-  config.validate({"tolerance", "maxNumIters"});
-  Solver solver;
-  solver.setTolerance(config["tolerance"].as<double>());
-  solver.setMaxIterations(config["maxNumIters"].as<int>());
-  solver.compute(A);
-  x = solver.solve(b);
-  std::cout << "iters: " << solver.iterations() << std::endl;
-  std::cout << "error: " << solver.error() << std::endl;
-}
 
 int main(int argc, char * argv[])
 {
@@ -38,8 +26,10 @@ int main(int argc, char * argv[])
   config["mesh"]["origin"] = Vec3{0., 0., 0.};
   config["mesh"]["length"] = Vec3{1., 1., 1.};
   config["mesh"]["n"] = std::array{10U, 10U, 10U};
+  config["solver"]["package"] = "eigen";
+  config["solver"]["type"] = "iterative";
   config["solver"]["tolerance"] = 1.e-8;
-  config["solver"]["maxNumIters"] = 2000;
+  config["solver"]["max_iters"] = 2000;
 
   if (argc > 1)
   {
@@ -75,41 +65,56 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("fe build");
-  AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyAnalyticRhs f{rhs, feSpace};
   Builder<StorageType::RowMajor> builderR{feSpace.dof.size};
-  builderR.buildLhs(std::tuple{stiffness}, bcs);
-  builderR.buildRhs(std::tuple{f}, bcs);
+  builderR.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
+  builderR.buildRhs(std::tuple{AssemblyAnalyticRhs{rhs, feSpace}}, bcs);
   builderR.closeMatrix();
+  fmt::print("the matrix is compressed? {}\n", builderR.A.isCompressed());
   t.stop();
 
   // filelog << "A:\n" << builder.A << std::endl;
   // filelog << "b:\n" << builder.b << std::endl;
 
+  t.start("iterative solver");
+  // generic iterative solver
+  auto solver = getSolver(ParameterDict{config["solver"]});
+  solver->compute(builderR.A);
+  Vec u;
+  auto const [iters, err] = solver->solve(builderR.b, u);
+  fmt::print("iterative solver: iterations = {}, error = {}\n", iters, err);
+  t.stop();
+
   using DiagPrec = Eigen::DiagonalPreconditioner<double>;
   // using ILUTPrec = Eigen::IncompleteLUT<double>;
 
   t.start("BiCGSTAB DiagPrec");
-  std::cout << "BiCGSTAB DiagPrec" << std::endl;
   Var solCG{"uBiCGSTAB"};
-  solve<StorageType::RowMajor, Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec>>(
-      builderR.A, builderR.b, ParameterDict{config["solver"]}, solCG.data);
+  config["solver"]["type"] = "bicgstab";
+  config["solver"]["preconditioner"] = "diag";
+  auto solverCG = getSolver(ParameterDict{config["solver"]});
+  solverCG->compute(builderR.A);
+  auto const [itersCG, errCG] = solverCG->solve(builderR.b, solCG.data);
+  fmt::print("BiCGSTAB DiagPrec\niters: {}\nerror: {}\n", itersCG, errCG);
   t.stop();
 
   t.start("MINRES DiagPrec");
-  std::cout << "MINRES DiagPrec" << std::endl;
   Var solMINRES{"uMINRES"};
-  solve<
-      StorageType::RowMajor,
-      Eigen::MINRES<Mat<StorageType::RowMajor>, Eigen::Lower, DiagPrec>>(
-      builderR.A, builderR.b, ParameterDict{config["solver"]}, solMINRES.data);
+  config["solver"]["type"] = "minres";
+  config["solver"]["preconditioner"] = "diag";
+  auto solverMINRES = getSolver(ParameterDict{config["solver"]});
+  solverMINRES->compute(builderR.A);
+  auto const [itersMINRES, errMINRES] = solverMINRES->solve(builderR.b, solMINRES.data);
+  fmt::print("MINRES DiagPrec\niters: {}\nerror: {}\n", itersMINRES, errMINRES);
   t.stop();
 
   t.start("GMRES DiagPrec");
-  std::cout << "GMRES DiagPrec" << std::endl;
   Var solGMRES{"uGMRES"};
-  solve<StorageType::RowMajor, Eigen::GMRES<Mat<StorageType::RowMajor>, DiagPrec>>(
-      builderR.A, builderR.b, ParameterDict{config["solver"]}, solGMRES.data);
+  config["solver"]["type"] = "gmres";
+  config["solver"]["preconditioner"] = "diag";
+  auto solverGMRES = getSolver(ParameterDict{config["solver"]});
+  solverGMRES->compute(builderR.A);
+  auto const [itersGMRES, errGMRES] = solverGMRES->solve(builderR.b, solGMRES.data);
+  fmt::print("GMRES DiagPrec\niters: {}\nerror: {}\n", itersGMRES, errGMRES);
   t.stop();
 
   // crashes in opt build
@@ -118,7 +123,7 @@ int main(int argc, char * argv[])
   // {
   //   Eigen::DGMRES<Mat, DiagPrec> solver;
   //   solver.setTolerance(config["solver"]["tolerance"].as<double>());
-  //   solver.setMaxIterations(config["solver"]["maxNumIters"].as<int>());
+  //   solver.setMaxIterations(config["solver"]["max_iters"].as<int>());
   //   solver.set_restart(30); // Set restarting value
   //   solver.setEigenv(1); // Set the number of eigenvalues to deflate
   //   solver.compute(builder.A);
@@ -143,7 +148,7 @@ int main(int argc, char * argv[])
     // Now, solve the equilibrated linear system with any available solver
     Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec> solver;
     solver.setTolerance(config["solver"]["tolerance"].as<double>());
-    solver.setMaxIterations(config["solver"]["maxNumIters"].as<int>());
+    solver.setMaxIterations(config["solver"]["max_iters"].as<int>());
     solver.compute(builderR.A);
     x = solver.solve(builderR.b);
     std::cout << "iters: " << solver.iterations() << std::endl;

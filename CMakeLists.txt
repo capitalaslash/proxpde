@@ -90,6 +90,7 @@ set(HEADERS
     include/ns.hpp
     include/qr.hpp
     include/reffe.hpp
+    include/solver.hpp
     include/timer.hpp
     include/var.hpp
     include/xdmf_traits.hpp

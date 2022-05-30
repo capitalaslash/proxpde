@@ -23,138 +23,6 @@ struct GaussQR
   static std::array<Vec_T, N> const node;
 };
 
-// 0D ----------------------------------------------------------------------------------
-template <>
-GaussQR<NullElem, 0>::Weights_T const GaussQR<NullElem, 0>::weight;
-template <>
-std::array<GaussQR<NullElem, 0>::Vec_T, 0> const GaussQR<NullElem, 0>::node;
-template <>
-short_T const GaussQR<NullElem, 0>::bestPt;
-
-// 1D ----------------------------------------------------------------------------------
-template <>
-GaussQR<Line, 1>::Weights_T const GaussQR<Line, 1>::weight;
-template <>
-std::array<GaussQR<Line, 1>::Vec_T, 1> const GaussQR<Line, 1>::node;
-template <>
-short_T const GaussQR<Line, 1>::bestPt;
-
-template <>
-GaussQR<Line, 2>::Weights_T const GaussQR<Line, 2>::weight;
-template <>
-std::array<GaussQR<Line, 2>::Vec_T, 2> const GaussQR<Line, 2>::node;
-template <>
-short_T const GaussQR<Line, 2>::bestPt;
-
-template <>
-GaussQR<Line, 3>::Weights_T const GaussQR<Line, 3>::weight;
-template <>
-std::array<GaussQR<Line, 3>::Vec_T, 3> const GaussQR<Line, 3>::node;
-template <>
-short_T const GaussQR<Line, 3>::bestPt;
-
-template <>
-GaussQR<Line, 4>::Weights_T const GaussQR<Line, 4>::weight;
-template <>
-std::array<GaussQR<Line, 4>::Vec_T, 4> const GaussQR<Line, 4>::node;
-template <>
-short_T const GaussQR<Line, 4>::bestPt;
-
-// 2D Triangle -------------------------------------------------------------------------
-template <>
-GaussQR<Triangle, 1>::Weights_T const GaussQR<Triangle, 1>::weight;
-template <>
-std::array<GaussQR<Triangle, 1>::Vec_T, 1> const GaussQR<Triangle, 1>::node;
-template <>
-short_T const GaussQR<Triangle, 1>::bestPt;
-
-template <>
-GaussQR<Triangle, 3>::Weights_T const GaussQR<Triangle, 3>::weight;
-template <>
-std::array<GaussQR<Triangle, 3>::Vec_T, 3> const GaussQR<Triangle, 3>::node;
-template <>
-short_T const GaussQR<Triangle, 3>::bestPt;
-
-template <>
-GaussQR<Triangle, 6>::Weights_T const GaussQR<Triangle, 6>::weight;
-template <>
-std::array<GaussQR<Triangle, 6>::Vec_T, 6> const GaussQR<Triangle, 6>::node;
-template <>
-short_T const GaussQR<Triangle, 6>::bestPt;
-
-template <>
-GaussQR<Triangle, 7>::Weights_T const GaussQR<Triangle, 7>::weight;
-template <>
-std::array<GaussQR<Triangle, 7>::Vec_T, 7> const GaussQR<Triangle, 7>::node;
-template <>
-short_T const GaussQR<Triangle, 7>::bestPt;
-
-// 2D Quad -----------------------------------------------------------------------------
-template <>
-GaussQR<Quad, 1>::Weights_T const GaussQR<Quad, 1>::weight;
-template <>
-std::array<GaussQR<Quad, 1>::Vec_T, 1> const GaussQR<Quad, 1>::node;
-template <>
-short_T const GaussQR<Quad, 1>::bestPt;
-
-template <>
-GaussQR<Quad, 4>::Weights_T const GaussQR<Quad, 4>::weight;
-template <>
-std::array<GaussQR<Quad, 4>::Vec_T, 4> const GaussQR<Quad, 4>::node;
-template <>
-short_T const GaussQR<Quad, 4>::bestPt;
-
-template <>
-GaussQR<Quad, 9>::Weights_T const GaussQR<Quad, 9>::weight;
-template <>
-std::array<GaussQR<Quad, 9>::Vec_T, 9> const GaussQR<Quad, 9>::node;
-template <>
-short_T const GaussQR<Quad, 9>::bestPt;
-
-// 3D Tetra ----------------------------------------------------------------------------
-template <>
-GaussQR<Tetrahedron, 1>::Weights_T const GaussQR<Tetrahedron, 1>::weight;
-template <>
-std::array<GaussQR<Tetrahedron, 1>::Vec_T, 1> const GaussQR<Tetrahedron, 1>::node;
-template <>
-short_T const GaussQR<Tetrahedron, 1>::bestPt;
-
-template <>
-GaussQR<Tetrahedron, 4>::Weights_T const GaussQR<Tetrahedron, 4>::weight;
-template <>
-std::array<GaussQR<Tetrahedron, 4>::Vec_T, 4> const GaussQR<Tetrahedron, 4>::node;
-template <>
-short_T const GaussQR<Tetrahedron, 4>::bestPt;
-
-template <>
-GaussQR<Tetrahedron, 11>::Weights_T const GaussQR<Tetrahedron, 11>::weight;
-template <>
-std::array<GaussQR<Tetrahedron, 11>::Vec_T, 11> const GaussQR<Tetrahedron, 11>::node;
-template <>
-short_T const GaussQR<Tetrahedron, 11>::bestPt;
-
-// 3D Hexahedron -----------------------------------------------------------------------
-template <>
-GaussQR<Hexahedron, 1>::Weights_T const GaussQR<Hexahedron, 1>::weight;
-template <>
-std::array<GaussQR<Hexahedron, 1>::Vec_T, 1> const GaussQR<Hexahedron, 1>::node;
-template <>
-short_T const GaussQR<Hexahedron, 1>::bestPt;
-
-template <>
-GaussQR<Hexahedron, 8>::Weights_T const GaussQR<Hexahedron, 8>::weight;
-template <>
-std::array<GaussQR<Hexahedron, 8>::Vec_T, 8> const GaussQR<Hexahedron, 8>::node;
-template <>
-short_T const GaussQR<Hexahedron, 8>::bestPt;
-
-template <>
-GaussQR<Hexahedron, 27>::Weights_T const GaussQR<Hexahedron, 27>::weight;
-template <>
-std::array<GaussQR<Hexahedron, 27>::Vec_T, 27> const GaussQR<Hexahedron, 27>::node;
-template <>
-short_T const GaussQR<Hexahedron, 27>::bestPt;
-
 // =====================================================================================
 
 template <typename GeoElem, short_T N>
@@ -169,23 +37,6 @@ struct SideGaussQR
   static std::array<Vec_T, numPts> const node;
 };
 
-// 2D Triangle -------------------------------------------------------------------------
-template <>
-SideGaussQR<Triangle, 2>::Weights_T const SideGaussQR<Triangle, 2>::weight;
-template <>
-std::array<SideGaussQR<Triangle, 2>::Vec_T, 2 * 3> const SideGaussQR<Triangle, 2>::node;
-
-// 2D Quad -------------------------------------------------------------------------
-template <>
-SideGaussQR<Quad, 2>::Weights_T const SideGaussQR<Quad, 2>::weight;
-template <>
-std::array<SideGaussQR<Quad, 2>::Vec_T, 2 * 4> const SideGaussQR<Quad, 2>::node;
-
-template <>
-SideGaussQR<Quad, 3>::Weights_T const SideGaussQR<Quad, 3>::weight;
-template <>
-std::array<SideGaussQR<Quad, 3>::Vec_T, 3 * 4> const SideGaussQR<Quad, 3>::node;
-
 // =====================================================================================
 
 template <typename GeoElem>
@@ -199,29 +50,6 @@ struct TrapQR
   static std::array<Vec_T, numPts> const node;
 };
 
-// 1D ----------------------------------------------------------------------------------
-template <>
-FVec<2> const TrapQR<Line>::weight;
-template <>
-std::array<TrapQR<Line>::Vec_T, 2> const TrapQR<Line>::node;
-
-// 2D ----------------------------------------------------------------------------------
-template <>
-FVec<3> const TrapQR<Triangle>::weight;
-template <>
-std::array<TrapQR<Triangle>::Vec_T, 3> const TrapQR<Triangle>::node;
-
-template <>
-FVec<4> const TrapQR<Quad>::weight;
-template <>
-std::array<TrapQR<Quad>::Vec_T, 4> const TrapQR<Quad>::node;
-
-// 3D ----------------------------------------------------------------------------------
-template <>
-FVec<8> const TrapQR<Hexahedron>::weight;
-template <>
-std::array<TrapQR<Hexahedron>::Vec_T, 8> const TrapQR<Hexahedron>::node;
-
 // =====================================================================================
 
 template <typename GeoElem>
@@ -234,24 +62,6 @@ struct SimpsonQR
   static FVec<numPts> const weight;
   static std::array<Vec_T, numPts> const node;
 };
-
-// 1D ----------------------------------------------------------------------------------
-template <>
-FVec<3> const SimpsonQR<Line>::weight;
-template <>
-std::array<SimpsonQR<Line>::Vec_T, 3> const SimpsonQR<Line>::node;
-
-// 2D ----------------------------------------------------------------------------------
-template <>
-FVec<9> const SimpsonQR<Quad>::weight;
-template <>
-std::array<SimpsonQR<Quad>::Vec_T, 9> const SimpsonQR<Quad>::node;
-
-// 3D ----------------------------------------------------------------------------------
-template <>
-FVec<27> const SimpsonQR<Hexahedron>::weight;
-template <>
-std::array<SimpsonQR<Hexahedron>::Vec_T, 27> const SimpsonQR<Hexahedron>::node;
 
 // =====================================================================================
 

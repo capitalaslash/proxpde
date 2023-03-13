@@ -319,6 +319,7 @@ constexpr void static_for(Tup1 & tup1, Tup2 & tup2, Func && f)
 
 // ----------------------------------------------------------------------------
 static constexpr int ERROR_GMSH = 1;
+static constexpr int MINIFEM_NOT_IMPLEMENTED = 2;
 
 // ----------------------------------------------------------------------------
 template <class T>

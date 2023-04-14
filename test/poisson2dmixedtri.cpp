@@ -9,18 +9,27 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
+// solve
+// (w, t) + (u, \nabla /cdot t) = 0
+// (\nabla /cdot w, v) = (f, v)
+// w, t \in RT_0
+// u, v \in P_0
+
+using Elem_T = Triangle;
+using Mesh_T = Mesh<Elem_T>;
+using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
+using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
+using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
+using FESpaceP0Vec_T =
+    FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
+
 int test(YAML::Node const & config)
 {
-  using Elem_T = Triangle;
-  using Mesh_T = Mesh<Elem_T>;
-  using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
-  using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
-  using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
-  using FESpaceP0Vec_T =
-      FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
-
-  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   auto const n = config["n"].as<uint>();
+  fmt::print("mesh size: {}\n", n);
+
+  // create mesh
+  std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
   buildHyperCube(
@@ -28,7 +37,7 @@ int test(YAML::Node const & config)
       origin,
       length,
       {n, n, 0},
-      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
+      MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
   // refTriangleMesh(*mesh);
   // mesh->pointList[2].coord = Vec3(1., 1., 0.);
   // addElemFacetList(*mesh);

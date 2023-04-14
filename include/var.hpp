@@ -177,6 +177,23 @@ struct FEVar
     return error;
   }
 
+  auto DIVL2ErrorSquared(scalarFun_T const & exact)
+  {
+    double error = 0.0;
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localValue = this->evaluateDIV(q);
+        auto const exactQ = exact(feSpace->curFE.qpoint[q]);
+        error +=
+            feSpace->curFE.JxW[q] * ((localValue - exactQ) * (localValue - exactQ));
+      }
+    }
+    return error;
+  }
+
   auto evaluate(uint const q) const
   {
     // check that the qr is compatible
@@ -216,6 +233,23 @@ struct FEVar
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       double const dataQ = feSpace->curFE.divphi[q].transpose() * _localData;
+      return dataQ;
+    }
+  }
+
+  auto evaluateDIV(uint const q) const
+  {
+    // check that the qr is compatible
+    assert(q < FESpace_T::QR_T::numPts);
+    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
+    {
+      auto const gradQ = evaluateGrad(q);
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
+      return gradQ[0] + gradQ[1] + gradQ[2];
+    }
+    else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      double const dataQ = feSpace->curFE.divphi0[q].transpose() * _localData;
       return dataQ;
     }
   }

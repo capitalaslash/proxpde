@@ -139,12 +139,8 @@ int main(int argc, char * argv[])
   // double norm = error.data.norm();
   // std::cout << "the norm of the error is " << norm << std::endl;
 
-  if (std::fabs(pIntegral - 0.9800943987494872) > 1.e-12 ||
-      std::fabs(wss.data.maxCoeff() - 0.3068317649009756) > 1.e-12)
-  {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    return 1;
-  }
-
-  return 0;
+  return checkError(
+      {pIntegral, wss.data.maxCoeff()},
+      {9.800943987495e-01, 3.068317649010e-01},
+      1.e-12);
 }

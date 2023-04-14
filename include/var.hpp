@@ -160,6 +160,23 @@ struct FEVar
     return l2ErrorSquared([exact](Vec3 const & p) { return Vec1{exact(p)}; });
   }
 
+  auto divL2ErrorSquared(scalarFun_T const & exact)
+  {
+    double error = 0.0;
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localValue = this->evaluateDiv(q);
+        auto const exactQ = exact(feSpace->curFE.qpoint[q]);
+        error +=
+            feSpace->curFE.JxW[q] * ((localValue - exactQ) * (localValue - exactQ));
+      }
+    }
+    return error;
+  }
+
   auto evaluate(uint const q) const
   {
     // check that the qr is compatible
@@ -184,6 +201,23 @@ struct FEVar
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
     return feSpace->curFE.dphi[q].transpose() * _localData;
+  }
+
+  auto evaluateDiv(uint const q) const
+  {
+    // check that the qr is compatible
+    assert(q < FESpace_T::QR_T::numPts);
+    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
+    {
+      auto const gradQ = evaluateGrad(q);
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
+      return gradQ[0] + gradQ[1] + gradQ[2];
+    }
+    else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      double const dataQ = feSpace->curFE.divphi[q].transpose() * _localData;
+      return dataQ;
+    }
   }
 
   // expensive version for points that are not the ones defined by the qr rule

@@ -200,6 +200,11 @@ int main(int argc, char * argv[])
     solFixed = solverFixed.solve(builderFixed.b);
     t.stop();
 
+    t.start("res fixed");
+    Vec const resFixed = builderFixed.A * sol - builderFixed.b;
+    std::cout << "residual norm (fixed): " << resFixed.norm() << std::endl;
+    t.stop();
+
     t.start("check");
     auto const solDiffNorm = (sol - solFixed).norm();
     t.stop();

@@ -59,7 +59,9 @@ int test(YAML::Node const & config)
   };
 
   FESpaceRT0_T feSpaceW{*mesh};
-  FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
+  uint const sizeW = feSpaceW.dof.size;
+  FESpaceP0_T feSpaceU{*mesh, sizeW};
+  uint const sizeU = feSpaceU.dof.size;
 
   auto const bcsU = std::tuple{};
 
@@ -75,13 +77,13 @@ int test(YAML::Node const & config)
   // bcWBottom << [] (Vec3 const & ) { return 0.; };
 
   auto const bcsW = std::tuple{bcWRight, bcWTop};
+  // auto const bcsW = std::tuple{};
 
-  uint const sizeU = feSpaceU.dof.size;
-  Var u("u", sizeU);
-  uint const sizeW = feSpaceW.dof.size;
-  Var w("w", sizeW);
-  Builder builder{sizeU + sizeW};
-  builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
+  FEVar w{"w", feSpaceW};
+  FEVar u{"u", feSpaceU};
+  Builder builder{sizeW + sizeU};
+  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceW}}, bcsW);
+
   builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU), bcsW, bcsU);
   builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW), bcsU, bcsW);
   // fixed u value
@@ -89,12 +91,13 @@ int test(YAML::Node const & config)
   //                        [] (Vec3 const & ) { return 1.; },
   //                      side::RIGHT,
   //                      feSpaceW), bcsW);
-  FESpaceP0Vec_T feSpaceP0Vec{*mesh};
-  auto const bcsDummy = std::tuple{};
+  // FESpaceP0Vec_T feSpaceP0Vec{*mesh};
+  // auto const bcsDummy = std::tuple{};
   // Vec rhsW;
-  // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) -
-  // p(0)); }, feSpaceP0Vec, rhsW); builder.buildRhs(AssemblyS2VProjection(1.0, rhsW,
-  // feSpaceP0Vec, feSpaceRT0), bcsW);
+  // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 -
+  // p(1) - p(0)); }, feSpaceP0Vec, rhsW);
+  // builder.buildRhs(AssemblyS2VProjection(1.0, rhsW, feSpaceP0Vec,
+  // feSpaceRT0), bcsW);
 
   // in order to apply essential bcs on U
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
@@ -108,46 +111,24 @@ int test(YAML::Node const & config)
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
 
-  Vec sol;
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
-  sol = solver.solve(builder.b);
+  Vec const sol = solver.solve(builder.b);
   w.data = sol.head(sizeW);
   u.data = sol.tail(sizeU);
 
   // std::cout << "sol:\n" << sol << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
-  Var exactU{"exactU"};
-  exactU.data = exact.tail(sizeU);
-  Var errorU{"errorU"};
-  errorU.data = u.data - exactU.data;
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact, sizeW);
+  FEVar uExact{"uExact", feSpaceU};
+  uExact.data = exact.tail(sizeU);
+  FEVar uError{"uError", feSpaceU};
+  uError.data = u.data - uExact.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
-  ioP0.print({u, exactU, errorU});
-
-  Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
-  builderRT0.buildLhs(std::tuple{AssemblyScalarMass(1.0, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.buildRhs(
-      std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceW, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.closeMatrix();
-  Var wP0("w");
-  LUSolver solverRT0;
-  solverRT0.analyzePattern(builderRT0.A);
-  solverRT0.factorize(builderRT0.A);
-  wP0.data = solverRT0.solve(builderRT0.b);
-
-  Var exactW{"exactW"};
-  interpolateAnalyticFunction(exactGrad, feSpaceP0Vec, exactW.data);
-  Var errorW{"errorW"};
-  errorW.data = wP0.data - exactW.data;
-
-  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedquad/w"};
-  ioRT0.print({wP0, exactW, errorW});
-
-  double const norm = errorU.data.norm();
+  ioP0.print(std::tuple{u, uExact, uError});
   std::cout << "the norm of the error is " << std::setprecision(16) << norm
             << std::endl;
   return checkError({norm}, {config["expected_error"].as<double>()});

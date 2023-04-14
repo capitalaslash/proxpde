@@ -136,7 +136,7 @@ int main(int argc, char * argv[])
   t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
   // FESpaceComponent_T feSpaceComponent{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 2 * feSpaceVel.dof.size};
+  FESpaceP_T feSpaceP{*mesh, FESpaceVel_T::dim * feSpaceVel.dof.size};
   t.stop();
 
   t.start("bc");

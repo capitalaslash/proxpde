@@ -77,7 +77,10 @@ int main(int /*argc*/, char * /*argv*/[])
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
   interpolateAnalyticFunction(
-      [](Vec3 const & p) { return 1. - p(1); }, feSpaceP, exact.data);
+      [](Vec3 const & p) { return 1. - p(1); },
+      feSpaceP,
+      exact.data,
+      feSpaceVel.dof.size * FESpaceVel_T::dim);
 
   std::cout << sol.data.norm() << std::endl;
 

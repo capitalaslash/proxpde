@@ -135,14 +135,16 @@ struct Builder
       {
         for (uint d1 = 0; d1 < FESpace_T::dim; ++d1)
         {
-          DOFid_T const idI = refAssembly.feSpace->dof.getId(elem.id, i, d1);
+          DOFid_T const idI = refAssembly.feSpace->offset +
+                              refAssembly.feSpace->dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1 * FESpace_T::CurFE_T::numDOFs];
 
           for (uint j = 0; j < CurFE_T::RefFE_T::numDOFs; ++j)
           {
             for (uint d2 = 0; d2 < FESpace_T::dim; ++d2)
             {
-              DOFid_T const idJ = refAssembly.feSpace->dof.getId(elem.id, j, d2);
+              DOFid_T const idJ = refAssembly.feSpace->offset +
+                                  refAssembly.feSpace->dof.getId(elem.id, j, d2);
               auto val =
                   Ke(i + d1 * FESpace_T::CurFE_T::numDOFs,
                      j + d2 * FESpace_T::CurFE_T::numDOFs);
@@ -258,14 +260,16 @@ struct Builder
       {
         for (uint d1 = 0; d1 < FESpace1::dim; ++d1)
         {
-          DOFid_T const idI = assembly.feSpace1->dof.getId(elem.id, i, d1);
+          DOFid_T const idI =
+              assembly.feSpace1->offset + assembly.feSpace1->dof.getId(elem.id, i, d1);
           b[idI] += Fe[i + d1 * FESpace1::CurFE_T::numDOFs];
 
           for (uint j = 0; j < CurFE2_T::RefFE_T::numDOFs; ++j)
           {
             for (uint d2 = 0; d2 < FESpace2::dim; ++d2)
             {
-              DOFid_T const idJ = assembly.feSpace2->dof.getId(elem.id, j, d2);
+              DOFid_T const idJ = assembly.feSpace2->offset +
+                                  assembly.feSpace2->dof.getId(elem.id, j, d2);
               auto val =
                   Ke(i + d1 * FESpace1::CurFE_T::numDOFs,
                      j + d2 * FESpace2::CurFE_T::numDOFs);
@@ -351,7 +355,8 @@ struct Builder
       {
         for (uint d = 0; d < FESpace_T::dim; ++d)
         {
-          DOFid_T const idI = refAssembly.feSpace->dof.getId(elem.id, i, d);
+          DOFid_T const idI = refAssembly.feSpace->offset +
+                              refAssembly.feSpace->dof.getId(elem.id, i, d);
           b[idI] += Fe[i + d * FESpace_T::CurFE_T::numDOFs];
         }
       }

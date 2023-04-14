@@ -95,7 +95,10 @@ int main(int argc, char * argv[])
   Vec exact{FESpaceVel_T::dim * dofU + dofP};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact);
   interpolateAnalyticFunction(
-      [nu](Vec3 const & p) { return nu * (1. - p(1)); }, feSpaceP, exact);
+      [nu](Vec3 const & p) { return nu * (1. - p(1)); },
+      feSpaceP,
+      exact,
+      FESpaceVel_T::dim * dofU);
 
   Var u{"u"};
   Var v{"v"};
@@ -103,10 +106,10 @@ int main(int argc, char * argv[])
   getComponent(v.data, feSpaceComponent, sol, feSpaceVel, 1);
   Var p{"p", sol, 2 * dofU, dofP};
 
-  Var u_exact{"ue"};
-  Var v_exact{"ve"};
-  getComponent(u_exact.data, feSpaceComponent, exact, feSpaceVel, 0);
-  getComponent(v_exact.data, feSpaceComponent, exact, feSpaceVel, 1);
+  Var uExact{"ue"};
+  Var vExact{"ve"};
+  getComponent(uExact.data, feSpaceComponent, exact, feSpaceVel, 0);
+  getComponent(vExact.data, feSpaceComponent, exact, feSpaceVel, 1);
   Var p_exact{"p", exact, FESpaceVel_T::dim * dofU, dofP};
 
   // wall shear stress
@@ -133,7 +136,7 @@ int main(int argc, char * argv[])
 
   t.start("print");
   IOManager ioComponent{feSpaceComponent, "output_stokes2dquad/vel"};
-  ioComponent.print({u, v, u_exact, v_exact});
+  ioComponent.print({u, v, uExact, vExact});
   IOManager ioP{feSpaceP, "output_stokes2dquad/p"};
   ioP.print({p, p_exact});
   IOManager ioWSS{feSpaceP0, "output_stokes2dquad/wss"};
@@ -142,8 +145,8 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  auto uError = (u.data - u_exact.data).norm();
-  auto vError = (v.data - v_exact.data).norm();
+  auto uError = (u.data - uExact.data).norm();
+  auto vError = (v.data - vExact.data).norm();
   auto pError = (p.data - p_exact.data).norm();
 
   std::cout << "u error norm: " << uError << std::endl;

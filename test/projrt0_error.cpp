@@ -119,7 +119,6 @@ int test(
   FEVar uRT0div{"uRT0div", feSpaceRT0};
   uint const sizeRT0 = feSpaceRT0.dof.size;
   FESpaceP0_T feSpaceLambda{*mesh, sizeRT0};
-  FESpaceP0_T feSpaceLambda0{*mesh};
   uint const sizeP0 = feSpaceLambda.dof.size;
   auto bcsVel = std::tuple{
       BCEss{feSpaceRT0, side::BOTTOM},
@@ -153,9 +152,9 @@ int test(
   Builder builder{sizeRT0 + sizeP0};
   builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcsVel);
   builder.buildCoupling(
-      AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcsVel, bcsLambda);
+      AssemblyVectorGrad{1.0, feSpaceRT0, feSpaceLambda}, bcsVel, bcsLambda);
   builder.buildCoupling(
-      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceRT0), bcsLambda, bcsVel);
+      AssemblyVectorDiv{1.0, feSpaceLambda, feSpaceRT0}, bcsLambda, bcsVel);
   // the dummy assembly is necessary to apply Dirichlet bc for lambda
   builder.buildLhs(std::tuple{AssemblyDummy{feSpaceLambda}}, bcsLambda);
   builder.buildRhs(
@@ -182,7 +181,7 @@ int test(
   interpolateAnalyticFunction(uExact3d, feSpaceRT0, exactRT0.data);
   // std::cout << "exactRT0:\n" << exactRT0.data << std::endl;
   Var lambdaExact{"lambdaExact"};
-  interpolateAnalyticFunction(fun.lambdaExact, feSpaceLambda0, lambdaExact.data);
+  interpolateAnalyticFunction(fun.lambdaExact, feSpaceLambda, lambdaExact.data);
   Var lambdaError{"lambdaError"};
   lambdaError.data = lambdaExact.data - lambda.data;
 
@@ -198,7 +197,7 @@ int test(
   auto const errorU = computeErrorL2(uExact3d, uRT0div.data, feSpaceRT0);
   fmt::print("l2_errorU: {:.12e}\n", errorU);
 
-  auto const errorLambda = computeErrorL2(fun.lambdaExact, lambda.data, feSpaceLambda0);
+  auto const errorLambda = computeErrorL2(fun.lambdaExact, lambda.data, feSpaceLambda);
   fmt::print("l2_errorLambda: {:.12e}\n", errorLambda);
 
   // auto const error = (uRT0div.data - exactRT0.data).norm();

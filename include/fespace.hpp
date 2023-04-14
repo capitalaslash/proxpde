@@ -30,36 +30,32 @@ struct FESpace
   using CurFE_T = CurFE<RefFE, QR>;
   static short_T constexpr dim = Dimension;
 
-  FESpace()
+  FESpace(Mesh const & m, uint const os): mesh{&m}, dof{m}, offset{os}
   {
-    static_assert(
-        std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
-        "mesh element and reference element are not compatible.");
-    static_assert(
-        std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
-        "reference element and quad rule are not compatible.");
+    _compatibilityCheck();
   }
 
-  explicit FESpace(Mesh const & m, uint offset = 0): mesh{&m}, dof{m, offset}
-  {
-    static_assert(
-        std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
-        "mesh element and reference element are not compatible.");
-    static_assert(
-        std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
-        "reference element and quad rule are not compatible.");
-    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
-    {
-      // RT0 requires internal facets and facet ptrs
-      assert(
-          (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
-              .count() == 2);
-    }
-  }
+  explicit FESpace(Mesh const & m): FESpace{m, 0} {}
 
-  void init(Mesh const & m, uint offset = 0)
+  FESpace() { _compatibilityCheck(); }
+
+  void init(Mesh const & m, uint const os)
   {
     mesh = &m;
+    dof = DOF_T{m};
+    offset = os;
+  }
+
+  void init(Mesh const & m) { init(m, 0); }
+
+  void _compatibilityCheck()
+  {
+    static_assert(
+        std::is_same_v<typename Mesh_T::Elem_T, typename RefFE_T::GeoElem_T>,
+        "mesh element and reference element are not compatible.");
+    static_assert(
+        std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
+        "reference element and quad rule are not compatible.");
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       // RT0 requires internal facets and facet ptrs
@@ -67,7 +63,6 @@ struct FESpace
           (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
               .count() == 2);
     }
-    dof = DOF_T{m, offset};
   }
 
   static uint constexpr physicalDim()
@@ -159,6 +154,7 @@ struct FESpace
   Mesh const * mesh;
   CurFE_T mutable curFE;
   DOF_T /*const*/ dof;
+  uint offset{0};
 };
 
 template <typename FESpace>

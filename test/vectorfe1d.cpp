@@ -11,7 +11,7 @@
 
 int main(int argc, char * argv[])
 {
-  uint constexpr dim = 2U;
+  uint constexpr numVars = 2U;
 
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
@@ -19,22 +19,18 @@ int main(int argc, char * argv[])
       Mesh_T,
       LagrangeFE<Elem_T, 1>::RefFE_T,
       LagrangeFE<Elem_T, 1>::RecommendedQR,
-      dim>;
-
-  std::vector<uint> const COMP_X{0};
-  std::vector<uint> const COMP_Y{1};
-  std::vector<uint> const COMP_Z{2};
+      numVars>;
 
   auto const rhs = [](Vec3 const & p)
   {
-    FVec<dim> rhs;
-    for (uint d = 0; d < dim; ++d)
+    FVec<numVars> rhs;
+    for (uint d = 0; d < numVars; ++d)
       rhs[d] = M_PI * std::sin(M_PI * p(0));
     return rhs;
   };
 
   scalarFun_T const exactSol = [](Vec3 const & p)
-  { return std::sin(M_PI * p(0)) / M_PI + p(0); };
+  { return numVars + std::sin(M_PI * p(0)) / M_PI + p(0); };
 
   MilliTimer t;
   uint const numElems = (argc < 2) ? 3 : std::stoi(argv[1]);
@@ -63,18 +59,18 @@ int main(int argc, char * argv[])
   //  }
 
   t.start();
-  FESpace_T feSpace(*mesh);
+  FESpace_T feSpace{*mesh};
   std::cout << "fespace: " << t << " ms" << std::endl;
 
   t.start();
   auto bcValue = [](Vec3 const &)
   {
-    FVec<dim> v;
-    for (uint d = 0; d < dim; ++d)
+    FVec<numVars> vars;
+    for (uint v = 0; v < numVars; ++v)
     {
-      v[d] = d;
+      vars[v] = v;
     }
-    return v;
+    return vars;
   };
   auto bc = BCEss{feSpace, side::LEFT};
   bc << bcValue;
@@ -82,15 +78,20 @@ int main(int argc, char * argv[])
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();
-  auto const size = dim * feSpace.dof.size;
-  AssemblyStiffness stiffness(1.0, feSpace);
+  auto const size = numVars * feSpace.dof.size;
+  auto const stiffness = AssemblyStiffness{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
-  // AssemblyAnalyticRhs f(rotatedRhs, feSpace);
-  AssemblyAnalyticRhs f(rhs, feSpace);
+  // AssemblyAnalyticRhs f{rotatedRhs, feSpace};
+  auto const f = AssemblyAnalyticRhs{rhs, feSpace};
+  auto const bcNat = AssemblyBCNatural{bcValue, side::RIGHT, feSpace};
   Builder builder{size};
   builder.buildLhs(std::tuple{stiffness}, bcs);
   builder.buildRhs(
-      std::tuple{f, AssemblyBCNatural{bcValue, side::RIGHT, feSpace}}, bcs);
+      std::tuple{
+          f,
+          bcNat,
+      },
+      bcs);
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;
 

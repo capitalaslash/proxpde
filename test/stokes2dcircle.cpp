@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
 
   t.start("feSpace");
   FESpaceU_T feSpaceU{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 2 * feSpaceU.dof.size};
+  FESpaceP_T feSpaceP{*mesh, FESpaceU_T::dim * feSpaceU.dof.size};
   t.stop();
 
   t.start("bcs");

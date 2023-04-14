@@ -19,7 +19,7 @@ int main(int argc, char * argv[])
   using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
   using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, 3>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
   using FESpaceComponent_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
 
   MilliTimer t;
@@ -36,7 +36,7 @@ int main(int argc, char * argv[])
 
   t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
-  FESpaceP_T feSpaceP{*mesh, 3 * feSpaceVel.dof.size};
+  FESpaceP_T feSpaceP{*mesh, FESpaceVel_T::dim * feSpaceVel.dof.size};
   FESpaceComponent_T feSpaceComponent{*mesh};
   t.stop();
   // std::cout << feSpaceVel.dof << std::endl;
@@ -95,7 +95,10 @@ int main(int argc, char * argv[])
   Var exact{"exact", numDOFs};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact.data);
   interpolateAnalyticFunction(
-      [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); }, feSpaceP, exact.data);
+      [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); },
+      feSpaceP,
+      exact.data,
+      FESpaceVel_T::dim * feSpaceVel.dof.size);
 
   std::cout << "solution norm: " << sol.data.norm() << std::endl;
 

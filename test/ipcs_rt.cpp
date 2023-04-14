@@ -411,9 +411,8 @@ int main(int argc, char * argv[])
   // auto const ic = zero;
 
   // monolithic
-  Var velM{"velM"};
-  velM.data = Vec::Zero(dofU * FESpaceVel_T::dim + dofP);
-  interpolateAnalyticFunction(ic, feSpaceVel, velM.data);
+  Vec solM = Vec::Zero(dofU * FESpaceVel_T::dim + dofP);
+  interpolateAnalyticFunction(ic, feSpaceVel, solM);
 
   // split
   auto const ic0 = [&ic](Vec3 const & p) { return ic(p)[0]; };
@@ -431,11 +430,14 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("print");
+  Var velM{"velM", dofU * FESpaceVel_T::dim};
+  Var pM{"pM", dofP};
   IOManager ioVelM{feSpaceVel, "output_ipcs_rt/velm"};
   IOManager ioPM{feSpaceP, "output_ipcs_rt/pm"};
-  Var pM{"pM", velM.data.block(dofU * FESpaceVel_T::dim, 0, dofP, 1)};
   if (config["monolithic"].as<bool>())
   {
+    velM.data = solM.head(dofU * FESpaceVel_T::dim);
+    pM.data = solM.tail(dofP);
     ioVelM.print({velM});
     ioPM.print({pM});
   }
@@ -478,7 +480,7 @@ int main(int argc, char * argv[])
     if (config["monolithic"].as<bool>())
     {
       t.start("build monolithic");
-      velOldMonolithic = velM.data;
+      velOldMonolithic = solM.head(dofU * FESpaceVel_T::dim);
 
       builderM.buildLhs(std::tuple{timeder, advection, stiffness}, bcsVel);
       builderM.buildCoupling(grad, bcsVel, bcsP);
@@ -489,8 +491,8 @@ int main(int argc, char * argv[])
 
       t.start("solve monolithic");
       solverM.compute(builderM.A);
-      velM.data = solverM.solve(builderM.b);
-      auto const res = builderM.A * velM.data - builderM.b;
+      solM = solverM.solve(builderM.b);
+      auto const res = builderM.A * solM - builderM.b;
       std::cout << "residual norm: " << res.norm() << std::endl;
       t.stop();
 
@@ -605,8 +607,9 @@ int main(int argc, char * argv[])
       std::cout << "printing" << std::endl;
       if (config["monolithic"].as<bool>())
       {
+        velM.data = solM.head(dofU * FESpaceVel_T::dim);
+        pM.data = solM.tail(dofP);
         ioVelM.print({velM}, time);
-        pM.data = velM.data.tail(dofP);
         ioPM.print({pM}, time);
       }
 

@@ -48,7 +48,9 @@ int test(YAML::Node const & config)
   Fun<2, 3> exactGrad = [g](Vec3 const & p) { return Vec2(2. + g - 2. * p(0), 0.); };
 
   FESpaceRT0_T feSpaceW{*mesh};
-  FESpaceP0_T feSpaceU{*mesh, feSpaceW.dof.size};
+  uint const sizeW = feSpaceW.dof.size;
+  FESpaceP0_T feSpaceU{*mesh, sizeW};
+  uint const sizeU = feSpaceU.dof.size;
 
   auto const bcsU = std::tuple{};
 
@@ -64,11 +66,9 @@ int test(YAML::Node const & config)
 
   auto const bcsW = std::tuple{bcWRight, bcWBottom, bcWTop};
 
-  uint const sizeU = feSpaceU.dof.size;
-  Var u("u", sizeU);
-  uint const sizeW = feSpaceW.dof.size;
   Var w("w", sizeW);
-  Builder builder{sizeU + sizeW};
+  Var u("u", sizeU);
+  Builder builder{sizeW + sizeU};
   builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
   builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU), bcsW, bcsU);
   builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW), bcsU, bcsW);
@@ -107,7 +107,7 @@ int test(YAML::Node const & config)
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact, sizeW);
   Var exactU{"exactU"};
   exactU.data = exact.tail(sizeU);
   Var errorU{"errorU"};

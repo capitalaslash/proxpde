@@ -123,6 +123,43 @@ struct FEVar
     return integral;
   }
 
+  auto l2NormSquared()
+  {
+    FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localValue = this->evaluate(q);
+        integral += feSpace->curFE.JxW[q] * cepow(localValue, 2);
+      }
+    }
+    return integral;
+  }
+
+  auto l2ErrorSquared(Fun<FESpace_T::physicalDim(), 3> const & exact)
+  {
+    double error = 0.0;
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localValue = this->evaluate(q);
+        auto const exactQ = exact(feSpace->curFE.qpoint[q]);
+        error +=
+            feSpace->curFE.JxW[q] * ((localValue - exactQ).dot(localValue - exactQ));
+      }
+    }
+    return error;
+  }
+
+  auto l2ErrorSquared(scalarFun_T const & exact)
+  {
+    return l2ErrorSquared([exact](Vec3 const & p) { return Vec1{exact(p)}; });
+  }
+
   auto evaluate(uint const q) const
   {
     // check that the qr is compatible

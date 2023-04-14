@@ -206,3 +206,100 @@ void interpolateOnFacets(
     }
   }
 }
+
+template <typename FESpace>
+double l2Norm(Var const & u, FESpace const & feSpace)
+{
+  using CurFE_T = typename FESpace::CurFE_T;
+  double norm = 0.0;
+  for (auto const & elem: feSpace.mesh->elementList)
+  {
+    feSpace.curFE.reinit(elem);
+
+    FVec<FESpace::RefFE_T::numDOFs> localU;
+    for (uint n = 0; n < FESpace::RefFE_T::numDOFs; ++n)
+    {
+      id_T const dofId = feSpace.dof.getId(feSpace.curFE.elem->id, n);
+      localU[n] = u.data[dofId];
+    }
+
+    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    {
+      if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
+      {
+        for (uint d = 0; d < FESpace::dim; ++d)
+        {
+          norm += feSpace.curFE.JxW[q] *
+                  cepow(feSpace.curFE.phi[q] * localU.transpose(), 2);
+        }
+      }
+      else if constexpr (
+          family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        abort();
+        // Vec3 localRhs3 = promote<3>(localU);
+        // norm += feSpace->curFE.JxW[q] * feSpace->curFE.phiVect[q] * localRhs3;
+      }
+      else
+      {
+        std::abort();
+      }
+    }
+  }
+  return norm;
+}
+
+template <typename FESpace>
+double l2Error(
+    Var const & u,
+    FESpace const & feSpace,
+    Fun<FESpace::physicalDim(), 3> const & exact)
+{
+  using CurFE_T = typename FESpace::CurFE_T;
+  double error = 0.0;
+  for (auto const & elem: feSpace.mesh->elementList)
+  {
+    feSpace.curFE.reinit(elem);
+
+    FMat<FESpace::RefFE_T::numDOFs, FESpace::dim> localU;
+    for (uint n = 0; n < FESpace::RefFE_T::numDOFs; ++n)
+    {
+      for (uint d = 0; d < FESpace::dim; ++d)
+      {
+        id_T const dofId = feSpace.dof.getId(feSpace.curFE.elem->id, n, d);
+        localU(n, d) = u.data[dofId];
+      }
+    }
+
+    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    {
+      FVec<FESpace::physicalDim()> const exactQ = exact(feSpace.curFE.qpoint[q]);
+      if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
+      {
+        for (uint d = 0; d < FESpace::dim; ++d)
+        {
+          error += feSpace.curFE.JxW[q] *
+                   cepow((feSpace.curFE.phi[q] * localU.col(d) - exactQ)[0], 2);
+        }
+      }
+      else if constexpr (
+          family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
+      {
+        std::abort();
+        // Vec3 localRhs3 = promote<3>(localU);
+        // norm += feSpace->curFE.JxW[q] * feSpace->curFE.phiVect[q] * localRhs3;
+      }
+      else
+      {
+        std::abort();
+      }
+    }
+  }
+  return error;
+}
+
+template <typename FESpace>
+double l2Error(Var const & u, FESpace const & feSpace, scalarFun_T const & exact)
+{
+  return l2Error(u, feSpace, [exact](Vec3 const & p) { return Vec1{exact(p)}; });
+}

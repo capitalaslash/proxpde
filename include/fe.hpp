@@ -12,7 +12,7 @@ struct LagrangeFE
 template <>
 struct LagrangeFE<PointElem, 0>
 {
-  using RefFE_T = RefPointP1;
+  using RefFE_T = RefPoint;
   using RecommendedQR = GaussQR<PointElem, 1>;
 };
 

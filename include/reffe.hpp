@@ -14,18 +14,18 @@ uint constexpr numDOFs()
 }
 
 // Point ===============================================================================
-struct RefPointP1
+struct RefPoint
 {
   using GeoElem_T = PointElem;
   using FacetFE_T = NullElem;
   static GeoElem_T const geoElem;
-  static int constexpr dim = 1;
+  static int constexpr dim = 0;
   static uint constexpr numDOFs = 1U;
   static uint constexpr numGeoDOFs = 1U;
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 1, 1> constexpr dofOnFacet = {{{{0}}}};
-  using Vec_T = FVec<dim>;
+  using Vec_T = FVec<1>;
 
   static std::array<Vec_T, numDOFs> const points;
   static std::array<scalarOnedFun_T, numDOFs> const phiFun;
@@ -52,7 +52,7 @@ struct RefPointP1
 struct RefLineP0
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPointP1;
+  using FacetFE_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 1U;
@@ -93,7 +93,7 @@ struct RefLineP0
 struct RefLineP1
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPointP1;
+  using FacetFE_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 2U;
@@ -135,7 +135,7 @@ struct RefLineP1
 struct RefLineP2
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPointP1;
+  using FacetFE_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 3U;
@@ -1036,7 +1036,7 @@ struct Order<RefLineP0>
   static constexpr uint value = 0;
 };
 template <>
-struct Order<RefPointP1>
+struct Order<RefPoint>
 {
   static constexpr uint value = 1;
 };
@@ -1113,9 +1113,9 @@ struct Family
 {};
 
 template <>
-struct Family<RefPointP1>
+struct Family<RefPoint>
 {
-  static constexpr FamilyType value = FamilyType::LAGRANGE;
+  static constexpr FamilyType value = FamilyType::NONE;
 };
 template <>
 struct Family<RefLineP0>
@@ -1239,7 +1239,7 @@ struct FEDim
 {};
 
 template <>
-struct FEDim<RefPointP1>
+struct FEDim<RefPoint>
 {
   static constexpr FEDimType value = FEDimType::SCALAR;
 };

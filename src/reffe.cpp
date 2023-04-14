@@ -1,18 +1,18 @@
 #include "reffe.hpp"
 
 // ----------------------------------------------------------------------------
-std::array<RefPointP1::Vec_T, RefPointP1::numDOFs> const RefPointP1::points = {
+std::array<RefPoint::Vec_T, RefPoint::numDOFs> const RefPoint::points = {
     {Vec_T::Constant(1.L)}};
 
-std::array<ScalarFun<1>, RefPointP1::numDOFs> const RefPointP1::phiFun = {{
+std::array<ScalarFun<1>, RefPoint::numDOFs> const RefPoint::phiFun = {{
     [](Vec_T const &) { return 1.L; },
 }};
 
-std::array<onedFun_T, RefPointP1::numDOFs> const RefPointP1::dphiFun = {
+std::array<onedFun_T, RefPoint::numDOFs> const RefPoint::dphiFun = {
     {[](Vec_T const &) { return Vec_T::Constant(0.L); }}};
 
-std::array<onedFun_T, RefPointP1::numGeoDOFs> const RefPointP1::mapping =
-    RefPointP1::dphiFun;
+std::array<onedFun_T, RefPoint::numGeoDOFs> const RefPoint::mapping =
+    RefPoint::dphiFun;
 
 // ----------------------------------------------------------------------------
 Vec1 const RefLineP0::refMidpoint = Vec1{0.};

@@ -96,7 +96,11 @@ set(HEADERS
     include/xdmf_traits.hpp
 )
 
-add_library(minifem SHARED ${SOURCES})
+add_library(minifem SHARED)
+target_sources(minifem
+  PUBLIC $<BUILD_INTERFACE:${HEADERS}>
+  PRIVATE ${SOURCES}
+)
 add_library(MiniFEM::minifem ALIAS minifem)
 
 target_include_directories(minifem PUBLIC

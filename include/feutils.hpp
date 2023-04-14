@@ -153,7 +153,7 @@ void interpolateOnFacets(
   uint constexpr dim = FESpaceIn::dim;
   using FEFacet_T = typename FESpaceIn::RefFE_T::FacetFE_T;
   using QRFacet_T = SideQR_T<typename FESpaceIn::QR_T>;
-  using CurFEFacet_T = CurFE<FEFacet_T, QRFacet_T>;
+  using CurFEFacet_T = typename CurFETraits<FEFacet_T, QRFacet_T>::type;
   using FESpaceFacet_T = FESpace<
       typename FESpaceIn::Mesh_T,
       typename FESpaceIn::RefFE_T,

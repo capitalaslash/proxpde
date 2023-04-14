@@ -27,7 +27,7 @@ struct FESpace
   static constexpr DofType type = t;
   static constexpr DofOrdering ordering = o;
   using DOF_T = DOF<Mesh, RefFE, Dimension, type, ordering>;
-  using CurFE_T = CurFE<RefFE, QR>;
+  using CurFE_T = typename CurFETraits<RefFE, QR>::type;
   static short_T constexpr dim = Dimension;
 
   FESpace(Mesh const & m, uint const os): mesh{&m}, dof{m}, offset{os}
@@ -456,7 +456,7 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
   using RefFE_T = typename FESpace_T::RefFE_T;
   using FacetFE_T = typename RefFE_T::FacetFE_T;
   using FacetQR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using FacetCurFE_T = CurFE<FacetFE_T, FacetQR_T>;
+  using FacetCurFE_T = typename CurFETraits<FacetFE_T, FacetQR_T>::type;
   using FacetFESpace_T =
       FESpace<Mesh_T, RefFE_T, SideGaussQR<Elem_T, FacetQR_T::numPts>>;
 

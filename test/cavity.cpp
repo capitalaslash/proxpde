@@ -45,9 +45,11 @@ int main(int argc, char * argv[])
   std::get<2>(bcsVel) << zero;
   std::get<3>(bcsVel) << [](Vec3 const &) { return Vec2{1.0, 0.0}; };
   // select the point on the bottom boundary in the middle
-  DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
-                       return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;
-                     }};
+  DOFCoordSet pinSet{
+      feSpaceP,
+      [](Vec3 const & p)
+      { return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12; }
+  };
   auto bcsP = std::tuple{BCEss{feSpaceP, pinSet.ids}};
   std::get<0>(bcsP) << [](Vec3 const &) { return 0.; };
 

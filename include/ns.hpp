@@ -496,7 +496,7 @@ void computeFEWSS(
   uint constexpr dim = FESpaceVel::dim;
   using FacetFEVel_T = typename FESpaceVel::RefFE_T::FacetFE_T;
   using FacetQR_T = SideQR_T<typename FESpaceVel::QR_T>;
-  using FacetCurFEVel_T = CurFE<FacetFEVel_T, FacetQR_T>;
+  using FacetCurFEVel_T = typename CurFETraits<FacetFEVel_T, FacetQR_T>::type;
   using FacetFESpaceVel_T = FESpace<
       typename FESpaceVel::Mesh_T,
       typename FESpaceVel::RefFE_T,

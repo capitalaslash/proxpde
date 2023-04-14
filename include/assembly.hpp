@@ -604,7 +604,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
         {
           id_T const dofId = feSpaceVel->dof.getId(this->feSpace->curFE.elem->id, n);
           localVel +=
-              (*vel)[dofId] * this->feSpace->curFE.phiVect[q].row(n).transpose();
+              (*vel)[dofId] * this->feSpaceVel->curFE.phiVect[q].row(n).transpose();
         }
       }
       else
@@ -799,9 +799,7 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
 
   void build(LMat_T & Ke) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    // using CurFE2_T = typename FESpace2_T::CurFE_T;
-    for (uint q = 0; q < CurFE1_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < FESpace1_T::QR_T::numPts; ++q)
     {
       Ke += coef * this->feSpace1->curFE.JxW[q] * this->feSpace1->curFE.divphi[q] *
             this->feSpace2->curFE.phi[q].transpose();
@@ -838,9 +836,7 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
 
   void build(LMat_T & Ke) const override
   {
-    using CurFE1_T = typename FESpace1_T::CurFE_T;
-    // using CurFE2_T = typename FESpace2_T::CurFE_T;
-    for (uint q = 0; q < CurFE1_T::QR_T::numPts; ++q)
+    for (uint q = 0; q < FESpace1_T::QR_T::numPts; ++q)
     {
       Ke += coef * this->feSpace1->curFE.JxW[q] * this->feSpace1->curFE.phi[q] *
             this->feSpace2->curFE.divphi[q].transpose();
@@ -1541,7 +1537,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
 
   using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
+  using FacetCurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
 
   AssemblyBCNatural(
       Fun<FESpace_T::dim, 3> const r,
@@ -1610,7 +1606,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
 
   using FacetFE_T = typename FESpace::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
+  using FacetCurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
 
   AssemblyBCNormal(
       scalarFun_T const r,
@@ -1669,7 +1665,7 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
 
   using FacetFE_T = typename FESpace::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace::QR_T>;
-  using FacetCurFE_T = CurFE<FacetFE_T, QR_T>;
+  using FacetCurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
 
   AssemblyBCMixed(
       scalarFun_T const c,

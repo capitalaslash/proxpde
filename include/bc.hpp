@@ -2,11 +2,9 @@
 
 #include "def.hpp"
 
+#include "curfe.hpp"
 #include "qr.hpp"
 #include "reffe.hpp"
-
-template <typename RefFE, typename QR>
-struct CurFE;
 
 using DofSet_T = std::unordered_set<DOFid_T>;
 
@@ -252,7 +250,7 @@ struct BCNat
   using FESpace_T = FESpace;
   using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using CurFE_T = CurFE<FacetFE_T, QR_T>;
+  using CurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
 
   BCNat(
       marker_T const m,
@@ -289,7 +287,7 @@ struct BCMixed
   using FESpace_T = FESpace;
   using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using CurFE_T = CurFE<FacetFE_T, QR_T>;
+  using CurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
   explicit BCMixed(

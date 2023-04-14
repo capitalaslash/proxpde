@@ -183,7 +183,7 @@ struct Table<T, 1>: public Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>
 // Eigen::COLAMDOrdering<int>>;
 using LUSolver = Eigen::UmfPackLU<Mat<StorageType::ClmMajor>>;
 // using IterSolver =
-//     Eigen::GMRES < Mat<StorageType::RowMajor, Eigen::IncompleteLUT<double>>;
+//     Eigen::GMRES<Mat<StorageType::RowMajor>, Eigen::IncompleteLUT<double>>;
 using IterSolver =
     Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
 
@@ -209,6 +209,9 @@ using FVec = Eigen::Matrix<double, Size, 1>;
 
 template <int RowSize, int ClmSize>
 using FMat = Eigen::Matrix<double, RowSize, ClmSize>;
+
+template <typename Mat>
+using Transpose_T = FMat<Mat::ColsAtCompileTime, Mat::RowsAtCompileTime>;
 
 template <int ImageSize, int DomainSize>
 using Fun = std::function<FVec<ImageSize>(FVec<DomainSize> const &)>;
@@ -318,7 +321,6 @@ constexpr void static_for(Tup1 & tup1, Tup2 & tup2, Func && f)
 }
 
 // ----------------------------------------------------------------------------
-static constexpr int ERROR_GMSH = 1;
 static constexpr int MINIFEM_GMSH_ERROR = 1;
 static constexpr int MINIFEM_NOT_IMPLEMENTED = 2;
 

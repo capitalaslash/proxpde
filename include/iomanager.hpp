@@ -464,10 +464,14 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
 
     for (uint d = 0; d < FESpace_T::dim; ++d)
     {
-      auto name = v.name;
-      if constexpr (FESpace_T::dim > 1)
+      std::string name;
+      if constexpr (FESpace_T::dim == 1)
       {
-        name += "_" + std::to_string(d);
+        name = v.name;
+      }
+      else if constexpr (FESpace_T::dim > 1)
+      {
+        name = v.name + "_" + std::to_string(d);
       }
 
       doc.setVar({name, Traits_T::attributeType, feSpace->dof.size});
@@ -538,10 +542,14 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
 
         for (uint d = 0; d < dim; ++d)
         {
-          auto name = v.name;
-          if constexpr (dim > 1)
+          std::string name;
+          if constexpr (dim == 1)
           {
-            name += "_" + std::to_string(d);
+            name = v.name;
+          }
+          else if constexpr (dim > 1)
+          {
+            name = v.name + "_" + std::to_string(d);
           }
 
           doc.setVar({name, Traits_T::attributeType, feSpace->dof.size});

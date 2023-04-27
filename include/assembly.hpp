@@ -549,6 +549,10 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
   Fun<FESpace::physicalDim(), 3> const rhs;
 };
 
+// TODO: implement 2nd order formulation with
+// \vec{v} \cdot \nabla \vec{v} = \vec{v}^{n+1} \cdot \nabla \vec{v}^{n} +
+// \vec{v}^{n} \cdot \nabla \vec{v}^{n+1} - \vec{v}^{n} \cdot \nabla \vec{v}^{n}
+// that inserts values also at rhs
 template <typename FESpace, typename FESpaceVel>
 struct AssemblyAdvection: public Diagonal<FESpace>
 {

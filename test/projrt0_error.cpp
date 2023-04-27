@@ -71,8 +71,8 @@ int test(
     Mesh<Elem> const & meshCoarse,
     uint const refinements,
     InputFun<Elem::dim> const & fun,
-    long double const expectedError,
-    long double const tolerance)
+    long double const /*expectedError*/,
+    long double const /*tolerance*/)
 {
   using Elem_T = Elem;
   using Mesh_T = Mesh<Elem_T>;

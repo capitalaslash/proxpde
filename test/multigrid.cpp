@@ -134,7 +134,7 @@ auto convertToHomogeneous(
   static_for(
       bcsOrig,
       // bcsDest,
-      [&feDest, &zero](uint const i, auto const & bcOrig)
+      [&feDest, &zero](uint const /*i*/, auto const & bcOrig)
       {
         auto bcDest = BCEss{feDest, bcOrig.marker};
         bcDest << zero;
@@ -143,7 +143,7 @@ auto convertToHomogeneous(
 }
 
 template <typename RefFE, typename Function>
-int test(Function const & rhs, double const expectedNorm)
+int test(Function const & rhs, double const /*expectedNorm*/)
 {
   using Elem_T = typename RefFE::GeoElem_T;
   using Mesh_T = Mesh<Elem_T>;
@@ -190,7 +190,7 @@ int test(Function const & rhs, double const expectedNorm)
   {
     uniformRefine(*meshes[ref], *meshes[ref + 1]);
   }
-  auto const & meshTop = meshes.back();
+  // auto const & meshTop = meshes.back();
   t.stop();
 
   t.start("fespace");
@@ -427,7 +427,7 @@ int main()
            std::sin(1.5 * M_PI * p(1));
     ;
   };
-  auto const fVector = [](Vec3 const & p) { return Vec3{p[0], -p[1], 0.0}; };
+  // auto const fVector = [](Vec3 const & p) { return Vec3{p[0], -p[1], 0.0}; };
 
   // tests[0] = test<RefTriangleP1>(fScalar, 1.762571852935e+00);
   // tests[1] = test<RefTriangleRT0>(fVector, 1.433720877840e+00);

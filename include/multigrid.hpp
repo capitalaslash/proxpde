@@ -102,7 +102,7 @@ public:
   }
 
 private:
-  void fillMatrix(BCList_T const & bcs)
+  void fillMatrix(BCList_T const & /*bcs*/)
   {
     std::vector<Triplet> triplets;
     std::set<std::pair<DOFid_T, DOFid_T>> done;

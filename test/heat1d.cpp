@@ -142,7 +142,11 @@ int main(int argc, char * argv[])
     t.start("output");
     auto const diffNorm = (temp.data - tempInc.data).norm();
     std::cout << "diffNorm: " << diffNorm << std::endl;
-    assert(diffNorm < toll);
+    if (diffNorm > toll)
+    {
+      fmt::print(stderr, "the norm of the difference is too big, aborting.");
+      return 2;
+    }
     io.print({temp, tempInc, dTemp}, time);
     t.stop();
   }
@@ -160,5 +164,4 @@ int main(int argc, char * argv[])
   std::cout << "the norm of the error is " << std::setprecision(16) << norm
             << std::endl;
   return checkError({norm}, {2.196219431925e-06});
-  return 0;
 }

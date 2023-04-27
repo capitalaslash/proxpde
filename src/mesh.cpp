@@ -1,7 +1,7 @@
 #include "mesh.hpp"
 
 // explicit instantiations
-#ifdef MINIFEM_EXPLICIT_INSTANTIATION
+#ifdef PROXPDE_EXPLICIT_INSTANTIATION
 template class Mesh<Line>;
 template class Mesh<Triangle>;
 template class Mesh<Quad>;

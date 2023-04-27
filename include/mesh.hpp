@@ -682,7 +682,7 @@ void readGMSH(
   if (!in.is_open())
   {
     std::cerr << "mesh file " << filename << " not found" << std::endl;
-    std::exit(MINIFEM_GMSH_ERROR);
+    std::exit(PROXPDE_GMSH_ERROR);
   }
 
   // header
@@ -691,7 +691,7 @@ void readGMSH(
   if (buf != "$MeshFormat")
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(MINIFEM_GMSH_ERROR);
+    std::exit(PROXPDE_GMSH_ERROR);
   }
 
   int filetype, datasize; // filetype = 0 -> ascii
@@ -699,14 +699,14 @@ void readGMSH(
   if (buf != "2.2" || filetype != 0 || datasize != 8)
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(MINIFEM_GMSH_ERROR);
+    std::exit(PROXPDE_GMSH_ERROR);
   }
 
   in >> buf;
   if (buf != "$EndMeshFormat")
   {
     std::cerr << "file format not recognized" << std::endl;
-    std::exit(MINIFEM_GMSH_ERROR);
+    std::exit(PROXPDE_GMSH_ERROR);
   }
 
   std::vector<Point> points;
@@ -738,7 +738,7 @@ void readGMSH(
       if (buf != "$EndPhysicalNames")
       {
         std::cerr << "error reading physical names" << std::endl;
-        std::exit(MINIFEM_GMSH_ERROR);
+        std::exit(PROXPDE_GMSH_ERROR);
       }
     }
     else if (buf == "$Nodes")
@@ -761,7 +761,7 @@ void readGMSH(
       if (buf != "$EndNodes")
       {
         std::cerr << "error reading nodes" << std::endl;
-        std::exit(MINIFEM_GMSH_ERROR);
+        std::exit(PROXPDE_GMSH_ERROR);
       }
     }
     else if (buf == "$Elements")
@@ -860,14 +860,14 @@ void readGMSH(
         else
         {
           std::cerr << "error reading elements" << std::endl;
-          std::exit(MINIFEM_GMSH_ERROR);
+          std::exit(PROXPDE_GMSH_ERROR);
         }
       }
       in >> buf;
       if (buf != "$EndElements")
       {
         std::cerr << "error reading elements" << std::endl;
-        std::exit(MINIFEM_GMSH_ERROR);
+        std::exit(PROXPDE_GMSH_ERROR);
       }
     }
     else
@@ -879,7 +879,7 @@ void readGMSH(
       {
         in >> buf;
       }
-      // std::exit(MINIFEM_GMSH_ERROR);
+      // std::exit(PROXPDE_GMSH_ERROR);
     }
     // get next section
     in >> buf;

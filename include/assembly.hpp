@@ -541,7 +541,7 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
       {
         std::cerr << "only Lagrange and Raviart-Thomas are cyrrently implemented."
                   << std::endl;
-        std::exit(MINIFEM_NOT_IMPLEMENTED);
+        std::exit(PROXPDE_NOT_IMPLEMENTED);
       }
     }
   }
@@ -615,7 +615,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       {
         std::cerr << "only Lagrange and Raviart-Thomas are cyrrently implemented."
                   << std::endl;
-        std::exit(MINIFEM_NOT_IMPLEMENTED);
+        std::exit(PROXPDE_NOT_IMPLEMENTED);
       }
 
       // TODO: the block is independent from d, so it could be computed once and then

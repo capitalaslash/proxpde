@@ -1,0 +1,7 @@
+#pragma once
+
+#cmakedefine PROXPDE_DOF_INTERLEAVED
+
+#cmakedefine PROXPDE_ENABLE_SECONDDERIV
+
+#cmakedefine PROXPDE_EXPLICIT_INSTANTIATION

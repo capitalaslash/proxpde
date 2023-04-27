@@ -14,7 +14,7 @@ template <
     typename QR,
     uint Dimension = 1,
     DofType t = DofType::CONTINUOUS,
-#ifdef MINIFEM_DOF_INTERLEAVED
+#ifdef PROXPDE_DOF_INTERLEAVED
     DofOrdering o = DofOrdering::INTERLEAVED>
 #else
     DofOrdering o = DofOrdering::BLOCK>

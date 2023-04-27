@@ -1,7 +1,7 @@
-get_filename_component(MiniFEM_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(ProXPDE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 
-list(APPEND CMAKE_MODULE_PATH ${MiniFEM_CMAKE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${ProXPDE_CMAKE_DIR})
 
 find_dependency(Eigen3 3.3 REQUIRED NO_MODULE)
 find_dependency(UMFPack REQUIRED MODULE)
@@ -11,9 +11,9 @@ find_dependency(yaml-cpp 0.6 REQUIRED NO_MODULE)
 find_dependency(OpenMP REQUIRED MODULE COMPONENTS CXX)
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
-if(NOT TARGET MiniFEM::MiniFEM)
-    include("${MiniFEM_CMAKE_DIR}/MiniFEMTargets.cmake")
+if(NOT TARGET ProXPDE::ProXPDE)
+    include("${ProXPDE_CMAKE_DIR}/ProXPDETargets.cmake")
 endif()
 
-set(MiniFEM_LIBRARIES MiniFEM::MiniFEM)
+set(ProXPDE_LIBRARIES ProXPDE::ProXPDE)
 

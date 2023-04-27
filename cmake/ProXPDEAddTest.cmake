@@ -1,4 +1,4 @@
-macro(minifem_add_test name)
+macro(proxpde_add_test name)
   # check arguments
   set(options EXCLUDE_FROM_ALL WILL_FAIL)
   set(one_value_args HEADER_ROOT)
@@ -21,26 +21,26 @@ macro(minifem_add_test name)
   set_target_properties(${name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
   add_dependencies(build_tests ${name})
   # TODO: support COMPONENTS
-  target_link_libraries(${name} PUBLIC MiniFEM::minifem)
+  target_link_libraries(${name} PUBLIC ProXPDE::proxpde)
   # TODO: manage optional compile flags
   target_compile_options(${name}
-    PRIVATE ${MINIFEM_COMPILE_FLAGS}
+    PRIVATE ${PROXPDE_COMPILE_FLAGS}
   )
   target_link_options(${name}
-    PRIVATE ${MINIFEM_LINK_FLAGS}
+    PRIVATE ${PROXPDE_LINK_FLAGS}
   )
   if(${name}_LIBRARIES)
     target_link_libraries(${name} PUBLIC ${${name}_LIBRARIES})
   endif()
   add_test(
-    NAME MiniFEM.${name}
+    NAME ProXPDE.${name}
     COMMAND ${name}
   )
   if(${name}_LABELS)
-      set_property(TEST MiniFEM.${name} PROPERTY LABELS ${${name}_LABELS})
+      set_property(TEST ProXPDE.${name} PROPERTY LABELS ${${name}_LABELS})
   endif()
   if (${${name}_WILL_FAIL})
-    set_tests_properties(MiniFEM.${name} PROPERTIES WILL_FAIL TRUE)
+    set_tests_properties(ProXPDE.${name} PROPERTIES WILL_FAIL TRUE)
   endif()
 
   foreach(datafile ${${name}_DATA})

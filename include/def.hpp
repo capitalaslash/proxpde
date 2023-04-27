@@ -1,6 +1,6 @@
 #pragma once
 
-#include "minifem.h"
+#include "proxpde.h"
 
 // io
 #include <fstream>
@@ -46,7 +46,7 @@ struct Utils
   static std::ostream constexpr & debug = std::cout;
 #endif
 
-  inline static std::ofstream filelog = std::ofstream{"minifem.log"};
+  inline static std::ofstream filelog = std::ofstream{"proxpde.log"};
 
   // static constexpr const char * separator =
   //     "================================================"
@@ -321,8 +321,8 @@ constexpr void static_for(Tup1 & tup1, Tup2 & tup2, Func && f)
 }
 
 // ----------------------------------------------------------------------------
-static constexpr int MINIFEM_GMSH_ERROR = 1;
-static constexpr int MINIFEM_NOT_IMPLEMENTED = 2;
+static constexpr int PROXPDE_GMSH_ERROR = 1;
+static constexpr int PROXPDE_NOT_IMPLEMENTED = 2;
 
 // ----------------------------------------------------------------------------
 template <class T>

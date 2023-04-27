@@ -32,7 +32,7 @@ pushd $tmp_dir || quit "tmp dir $tmp_dir not found" 2
 
 message "cloning $repo into $PWD..."
 git clone $repo >> $logfile || quit "clone failed in $tmp_dir" 3
-pushd minifem/
+pushd proxpde/
 
 message "loading environment..."
 source $envfile || quit "env failed" 4
@@ -45,7 +45,7 @@ for build in Release Debug; do
   message "configuring $build build..."
   cmake .. \
     -DCMAKE_BUILD_TYPE=$build \
-    -DMINIFEM_DOF_INTERLEAVED=ON >> $logfile || quit "cmake failed" 5
+    -DPROXPDE_DOF_INTERLEAVED=ON >> $logfile || quit "cmake failed" 5
 
   message "compiling..."
   make -j$parallel >> $logfile || quit "make failed" 6
@@ -64,7 +64,7 @@ done
 
 popd
 message "cleaning up..."
-rm -r minifem || quit "clean up failed" 9
+rm -r proxpde || quit "clean up failed" 9
 popd
 
 quit "execution end: $(date)" 0

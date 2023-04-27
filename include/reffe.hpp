@@ -1432,7 +1432,7 @@ struct EnableSecondDeriv
   bool static constexpr value = false;
 };
 
-#ifdef MINIFEM_ENABLE_SECONDDERIV
+#ifdef PROXPDE_ENABLE_SECONDDERIV
 template <>
 struct EnableSecondDeriv<RefLineP1>
 {

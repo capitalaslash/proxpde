@@ -3,7 +3,7 @@
 #include "qr.hpp"
 
 // explicit instantiations
-#ifdef MINIFEM_EXPLICIT_INSTANTIATION
+#ifdef PROXPDE_EXPLICIT_INSTANTIATION
 template struct FESpace<Mesh<Line>, RefLineP0, GaussQR<Line, 1>>;
 template struct FESpace<Mesh<Line>, RefLineP1, GaussQR<Line, 2>>;
 template struct FESpace<Mesh<Line>, RefLineP2, GaussQR<Line, 3>>;

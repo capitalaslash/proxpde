@@ -245,6 +245,12 @@ struct NSSolverMonolithic
   IOManager<FESpaceP_T> ioP;
 };
 
+enum class VelStarSolverType
+{
+  MONOLITHIC,
+  SEGREGATED,
+};
+
 template <typename Mesh>
 struct NSSolverSplit
 {
@@ -284,6 +290,7 @@ struct NSSolverSplit
       builderP{feSpaceP.dof.size},
       builderVel{feSpaceVel.dof.size * dim},
       velStar{"velStar", feSpaceVel.dof.size * dim},
+      velStarOld{feSpaceVel.dof.size * dim},
       p{"p", feSpaceP.dof.size},
       vel{"vel", feSpaceVel.dof.size * dim},
       pOld{feSpaceP.dof.size},
@@ -326,10 +333,10 @@ struct NSSolverSplit
     assemblyStepVelStar(bcsVel);
   }
 
-  template <typename BCsP>
+  template <VelStarSolverType SolverType, typename BCsP>
   void solve(BCsP const & bcsP)
   {
-    solveVelStar();
+    solveVelStar<SolverType>();
     assemblyStepP(bcsP);
     solveP();
     assemblyStepVel();
@@ -339,6 +346,7 @@ struct NSSolverSplit
   template <typename BCsVel>
   void assemblyStepVelStar(BCsVel const & bcsVel)
   {
+    velStarOld = velStar.data;
     pOld += dp;
     builderVelStar.clear();
     builderVelStar.buildLhs(
@@ -347,29 +355,36 @@ struct NSSolverSplit
     builderVelStar.closeMatrix();
   }
 
+  template <VelStarSolverType SolverType>
   void solveVelStar()
   {
-    // TODO: make the below 2 options selectable
-
-    // solve all components of the velocity monolithically
-    // solverVelStar.compute(builderVelStar.A);
-    // velStar.data = solverVelStar.solve(builderVelStar.b);
-
-    // solve each component separately
-    auto const dofU = feSpaceVel.dof.size;
-    for (short_T d = 0; d < dim; ++d)
+    if constexpr (SolverType == VelStarSolverType::MONOLITHIC)
     {
-      solverVelStar.compute(builderVelStar.A.block(d * dofU, d * dofU, dofU, dofU));
-      auto b = builderVelStar.b.segment(d * dofU, dofU);
-      for (short_T od = 0; od < dim; ++od)
+      // solve all components of the velocity monolithically
+      solverVelStar.compute(builderVelStar.A);
+      velStar.data = solverVelStar.solve(builderVelStar.b);
+    }
+    else if constexpr (SolverType == VelStarSolverType::SEGREGATED)
+    {
+      // solve each component separately
+      auto const dofU = feSpaceVel.dof.size;
+      for (short_T d = 0; d < dim; ++d)
       {
-        if (od != d)
+        solverVelStar.compute(builderVelStar.A.block(d * dofU, d * dofU, dofU, dofU));
+        auto b = builderVelStar.b.segment(d * dofU, dofU);
+
+        // subtract all the other variables considering them fixed
+        for (short_T od = 0; od < dim; ++od)
         {
-          b -= builderVelStar.A.block(d * dofU, od * dofU, dofU, dofU) *
-               vel.data.segment(od * dofU, dofU);
+          if (od != d)
+          {
+            b -= builderVelStar.A.block(d * dofU, od * dofU, dofU, dofU) *
+                 velStarOld.segment(od * dofU, dofU);
+          }
         }
+
+        velStar.data.segment(d * dofU, dofU) = solverVelStar.solve(b);
       }
-      velStar.data.segment(d * dofU, dofU) = solverVelStar.solve(b);
     }
   }
 
@@ -405,6 +420,7 @@ struct NSSolverSplit
   {
     interpolateAnalyticFunction(f, feSpaceVel, vel.data);
     velStar.data = vel.data;
+    velStarOld = vel.data;
     dp = Vec::Zero(feSpaceP.dof.size);
     pOld = Vec::Zero(feSpaceP.dof.size);
     p.data = pOld;
@@ -427,6 +443,7 @@ struct NSSolverSplit
   LUSolver solverP;
   LUSolver solverVel;
   Var velStar;
+  Vec velStarOld;
   Var p;
   Var vel;
   Vec pOld;

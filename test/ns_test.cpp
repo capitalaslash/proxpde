@@ -52,14 +52,16 @@ int main(int argc, char * argv[])
   auto bcsVel = std::tuple{
       BCEss{ns.feSpaceVel, side::BOTTOM},
       BCEss{ns.feSpaceVel, side::RIGHT},
-      BCEss{ns.feSpaceVel, side::LEFT, Comp::u},
       BCEss{ns.feSpaceVel, side::TOP, Comp::u},
+      BCEss{ns.feSpaceVel, side::LEFT, Comp::u},
   };
   std::get<0>(bcsVel) << inlet;
   std::get<1>(bcsVel) << zero2d;
   std::get<2>(bcsVel) << zero2d;
   std::get<3>(bcsVel) << zero2d;
+
   // auto const bcsP = std::tuple{};
+
   // select the point(s) on the top boundary in the middle
   auto const o = config["mesh"]["origin"].as<Vec3>();
   auto const l = config["mesh"]["length"].as<Vec3>();
@@ -75,9 +77,9 @@ int main(int argc, char * argv[])
   bcPin << [](Vec3 const &) { return 0.; };
   auto const bcsP = std::tuple{bcPin};
 
-  auto bcTopP = BCEss{split.feSpaceP, side::TOP};
-  bcTopP << zero;
-  auto const bcsPSplit = std::tuple{bcTopP};
+  auto bcPTop = BCEss{split.feSpaceP, side::TOP};
+  bcPTop << zero;
+  auto const bcsPSplit = std::tuple{bcPTop};
   t.stop();
 
   t.start("monolithic init");
@@ -125,11 +127,11 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split solve");
-    split.solveVelStar();
+    split.solveVelStar<VelStarSolverType::MONOLITHIC>();
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepP(bcsP);
+    split.assemblyStepP(bcsPSplit);
     t.stop();
 
     t.start("split solve");
@@ -181,6 +183,6 @@ int main(int argc, char * argv[])
 
   return checkError(
       {errorNormU, errorNormV, errorNormP},
-      {5.18337674567542e-05, 7.57375946701665e-05, 5.272719445641985e-05},
+      {5.18103317234e-05, 7.56511221503e-05, 5.25647216673e-05},
       1.e-11);
 }

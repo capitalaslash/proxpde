@@ -48,7 +48,7 @@ for build in Release Debug; do
     -DPROXPDE_DOF_INTERLEAVED=ON >> $logfile || quit "cmake failed" 5
 
   message "compiling..."
-  make -j$parallel >> $logfile || quit "make failed" 6
+  make -j$parallel build_tests >> $logfile || quit "make failed" 6
 
   pushd test/
   message "testing..."

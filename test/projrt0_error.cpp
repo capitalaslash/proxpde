@@ -10,6 +10,8 @@
 
 #include <limits>
 
+using namespace proxpde;
+
 template <typename FESpace>
 double computeErrorL2(
     Fun<FESpace::physicalDim(), 3> const & f, Vec const & u, FESpace const & feSpace)

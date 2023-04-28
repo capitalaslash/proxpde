@@ -13,6 +13,8 @@
 
 #include <unsupported/Eigen/SparseExtra>
 
+using namespace proxpde;
+
 template <
     typename Prol,
     typename Rest,

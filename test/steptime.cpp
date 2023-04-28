@@ -13,7 +13,9 @@
 
 int main()
 {
-  YAML::Node config = YAML::LoadFile("steptime.yaml");
+  using namespace proxpde;
+
+  ParameterDict config = YAML::LoadFile("steptime.yaml");
 
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;

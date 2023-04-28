@@ -4,6 +4,9 @@
 
 #include "builder.hpp"
 
+namespace proxpde
+{
+
 template <auto Storage = StorageType::ClmMajor>
 struct EqnSolver
 {};
@@ -62,3 +65,5 @@ struct Eqn
   Builder<Storage> builder;
   RecommendedSolverType<Storage> solver;
 };
+
+} // namespace proxpde

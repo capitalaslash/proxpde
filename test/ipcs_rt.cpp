@@ -11,6 +11,8 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
+using namespace proxpde;
+
 template <Component Comp, typename FESpaceOut, typename FESpaceIn>
 void interpolateOnBoundary(
     Vec & out,

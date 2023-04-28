@@ -1,5 +1,8 @@
 #include "mesh.hpp"
 
+namespace proxpde
+{
+
 // explicit instantiations
 #ifdef PROXPDE_EXPLICIT_INSTANTIATION
 template class Mesh<Line>;
@@ -783,3 +786,5 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags)
   markFacetsCube(mesh, {0., 0., 0.}, {1., (2 + 2 * rows) * h * oneOnSr3, 0.});
   buildNormals(mesh);
 }
+
+} // namespace proxpde

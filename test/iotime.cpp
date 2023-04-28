@@ -8,6 +8,8 @@
 
 int main()
 {
+  using namespace proxpde;
+
   using Mesh_T = Mesh<Hexahedron>;
   using FESpace_T = FESpace<Mesh_T, RefHexahedronQ2, GaussQR<Hexahedron, 1>>;
 

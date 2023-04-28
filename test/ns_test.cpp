@@ -5,6 +5,8 @@
 
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   using Elem_T = Quad;
   uint const dim = Elem_T::dim;
   using Mesh_T = Mesh<Elem_T>;

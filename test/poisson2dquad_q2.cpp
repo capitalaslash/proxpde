@@ -8,15 +8,17 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, 2>::RefFE_T,
-    LagrangeFE<Elem_T, 2>::RecommendedQR>;
-
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 2>::RefFE_T,
+      LagrangeFE<Elem_T, 2>::RecommendedQR>;
+
   scalarFun_T rhs = [](Vec3 const & p)
   {
     return 2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *

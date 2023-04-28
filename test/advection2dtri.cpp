@@ -13,6 +13,8 @@
 
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central

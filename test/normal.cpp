@@ -2,6 +2,8 @@
 
 #include "mesh.hpp"
 
+using namespace proxpde;
+
 int vectorTest(Vec3 const & v, Vec3 const & e)
 {
   auto const norm = (v - e).norm();

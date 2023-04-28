@@ -10,6 +10,8 @@
 #include "reffe.hpp"
 #include "var.hpp"
 
+using namespace proxpde;
+
 template <typename RefFE, typename Function>
 int test(Function const & f, double const expectedNorm)
 {

@@ -9,14 +9,7 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, 0>::RefFE_T,
-    LagrangeFE<Elem_T, 0>::RecommendedQR>;
-
-using TimeFun_T = std::function<double(double const)>;
+using namespace proxpde;
 
 enum class TimeIntegrationMethod : char
 {
@@ -50,6 +43,15 @@ struct convert<TimeIntegrationMethod>
 
 int test(YAML::Node const & config)
 {
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0>::RefFE_T,
+      LagrangeFE<Elem_T, 0>::RecommendedQR>;
+
+  using TimeFun_T = std::function<double(double const)>;
+
   MilliTimer t;
 
   // du / dt + A u = f

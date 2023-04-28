@@ -10,6 +10,8 @@
 #include "mesh.hpp"
 #include "var.hpp"
 
+using namespace proxpde;
+
 using Elem_T = Quad;
 using Mesh_T = Mesh<Elem_T>;
 using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;

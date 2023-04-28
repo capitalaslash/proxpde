@@ -9,6 +9,8 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
+using namespace proxpde;
+
 int test(YAML::Node const & config)
 {
   using Elem_T = Hexahedron;

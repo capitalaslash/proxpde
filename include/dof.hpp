@@ -4,6 +4,9 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 enum class DofOrdering : uint8_t
 {
   BLOCK,
@@ -357,3 +360,5 @@ operator<<(std::ostream & out, DOF<Mesh, RefFE, dim, type, ordering> const & dof
   out << dof.geoMap;
   return out;
 }
+
+} // namespace proxpde

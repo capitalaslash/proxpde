@@ -5,6 +5,9 @@
 #include "geo.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 // =====================================================================================
 
 template <typename GeoElem, short_T N>
@@ -254,3 +257,5 @@ struct SideQR<TrapQR<Hexahedron>>
 {
   using type = TrapQR<Quad>;
 };
+
+} // namespace proxpde

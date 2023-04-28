@@ -4,6 +4,9 @@
 
 #include "fespace.hpp"
 
+namespace proxpde
+{
+
 template <typename FESpace>
 class Prolongator
 {
@@ -184,3 +187,5 @@ private:
 public:
   Mat<StorageType::RowMajor> mat;
 };
+
+} // namespace proxpde

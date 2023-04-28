@@ -37,6 +37,9 @@
 // yaml
 #include <yaml-cpp/yaml.h>
 
+namespace proxpde
+{
+
 // ----------------------------------------------------------------------------
 struct Utils
 {
@@ -395,35 +398,6 @@ struct ParameterDict: public YAML::Node
   }
 };
 
-namespace YAML
-{
-template <>
-struct convert<Vec3>
-{
-  static Node encode(const Vec3 & rhs)
-  {
-    Node node;
-    node.push_back(rhs[0]);
-    node.push_back(rhs[1]);
-    node.push_back(rhs[2]);
-    return node;
-  }
-
-  static bool decode(const Node & node, Vec3 & rhs)
-  {
-    if (!node.IsSequence() || node.size() != 3)
-    {
-      return false;
-    }
-
-    rhs[0] = node[0].as<double>();
-    rhs[1] = node[1].as<double>();
-    rhs[2] = node[2].as<double>();
-    return true;
-  }
-};
-} // namespace YAML
-
 // ----------------------------------------------------------------------------
 inline bool checkError(
     std::vector<long double> const & error,
@@ -452,3 +426,34 @@ inline bool checkError(
   }
   return !check;
 }
+
+} // namespace proxpde
+
+namespace YAML
+{
+template <>
+struct convert<proxpde::Vec3>
+{
+  static Node encode(const proxpde::Vec3 & rhs)
+  {
+    Node node;
+    node.push_back(rhs[0]);
+    node.push_back(rhs[1]);
+    node.push_back(rhs[2]);
+    return node;
+  }
+
+  static bool decode(const Node & node, proxpde::Vec3 & rhs)
+  {
+    if (!node.IsSequence() || node.size() != 3)
+    {
+      return false;
+    }
+
+    rhs[0] = node[0].as<double>();
+    rhs[1] = node[1].as<double>();
+    rhs[2] = node[2].as<double>();
+    return true;
+  }
+};
+} // namespace YAML

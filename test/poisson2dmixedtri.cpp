@@ -15,6 +15,8 @@
 // w, t \in RT_0
 // u, v \in P_0
 
+using namespace proxpde;
+
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
 using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;

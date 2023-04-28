@@ -4,6 +4,8 @@
 
 int main(int /*argc*/, char * /*argv*/[])
 {
+  using namespace proxpde;
+
   // default config
   ParameterDict config;
   config["a"] = 2;

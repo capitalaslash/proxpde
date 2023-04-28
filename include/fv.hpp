@@ -5,6 +5,9 @@
 #include "geo.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 template <typename T>
 int sgn(T val)
 {
@@ -304,3 +307,5 @@ struct FVSolver
   std::function<double(double const)> const & limiterFun = limiterMap.at(L);
   Table<int, Elem_T::numFacets> normalSgn;
 };
+
+} // namespace proxpde

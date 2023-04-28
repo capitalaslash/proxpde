@@ -7,6 +7,9 @@
 #include "fespace.hpp"
 #include "var.hpp"
 
+namespace proxpde
+{
+
 struct ScalarCoef
 {
   explicit ScalarCoef(double const c): coef{c} {}
@@ -1795,3 +1798,5 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
   marker_T const marker;
   FacetCurFE_T mutable facetCurFE;
 };
+
+} // namespace proxpde

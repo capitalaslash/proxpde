@@ -7,6 +7,8 @@
 #include "mesh_refine.hpp"
 #include "xdmf_traits.hpp"
 
+using namespace proxpde;
+
 template <typename Elem>
 void test()
 {

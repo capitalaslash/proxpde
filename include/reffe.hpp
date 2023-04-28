@@ -4,6 +4,9 @@
 
 #include "geo.hpp"
 
+namespace proxpde
+{
+
 template <typename RefElem>
 uint constexpr numDOFs()
 {
@@ -1477,3 +1480,5 @@ struct RefFEtoString<RefQuadRT0>
 {
   static constexpr char const name[] = "quadRT0";
 };
+
+} // namespace proxpde

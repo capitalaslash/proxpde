@@ -5,6 +5,9 @@
 #include "curfe.hpp"
 #include "dof.hpp"
 
+namespace proxpde
+{
+
 template <typename FESpace>
 struct FEVar;
 
@@ -502,3 +505,5 @@ using Scalar_T = FESpace<
     1,
     FESpaceVec::type,
     FESpaceVec::ordering>;
+
+} // namespace proxpde

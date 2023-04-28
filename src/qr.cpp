@@ -1,5 +1,8 @@
 #include "qr.hpp"
 
+namespace proxpde
+{
+
 // GaussQR =============================================================================
 
 // 0D ----------------------------------------------------------------------------------
@@ -503,3 +506,5 @@ std::array<SimpsonQR<Hexahedron>::Vec_T, 27> const SimpsonQR<Hexahedron>::node =
     SimpsonQR<Hexahedron>::Vec_T{ 1.,  1.,  1.},
 }};
 // clang-format on
+
+} // namespace proxpde

@@ -4,6 +4,9 @@
 
 #include "blockmatrix.hpp"
 
+namespace proxpde
+{
+
 template <typename FESpaceTuple>
 constexpr id_T computeDOFTotalNum(FESpaceTuple & list)
 {
@@ -112,3 +115,5 @@ Assembler<FESpaces...> make_assembler(std::tuple<FESpaces...> const & list)
 {
   return Assembler<FESpaces...>(list);
 }
+
+} // namespace proxpde

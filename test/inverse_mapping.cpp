@@ -8,6 +8,8 @@
 
 #include <random>
 
+using namespace proxpde;
+
 template <typename RandomEngine, typename Elem, uint Order>
 int test(RandomEngine & gen, int const numTests, double const expectedError)
 {

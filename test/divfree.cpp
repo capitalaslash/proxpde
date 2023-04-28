@@ -11,6 +11,8 @@
 #include "mesh_refine.hpp"
 #include "var.hpp"
 
+using namespace proxpde;
+
 template <typename Elem>
 int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const & rhs)
 {

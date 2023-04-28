@@ -87,6 +87,7 @@ set(HEADERS
     include/iomanager.hpp
     include/mesh.hpp
     include/mesh_refine.hpp
+    include/multigrid.hpp
     include/ns.hpp
     include/qr.hpp
     include/reffe.hpp

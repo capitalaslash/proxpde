@@ -12,7 +12,8 @@
 #include <hdf5.h>
 #include <pugixml.hpp>
 
-namespace fs = std::filesystem;
+namespace proxpde
+{
 
 template <typename T>
 std::string join(std::vector<T> const & v, std::string_view const divider = " ")
@@ -30,7 +31,7 @@ class XDMFDoc
 {
 public:
   explicit XDMFDoc(
-      fs::path const fp,
+      std::filesystem::path const fp,
       std::string_view s = "",
       std::string_view meshS = "mesh",
       std::string_view dataS = "",
@@ -174,7 +175,7 @@ private:
     return node;
   }
 
-  fs::path filePath;
+  std::filesystem::path filePath;
   std::string suffix;
   std::string meshSuffix;
   std::string dataSuffix;
@@ -207,7 +208,7 @@ enum class HDF5FileMode : int8_t
 class HDF5
 {
 public:
-  HDF5(fs::path const fp, HDF5FileMode const mode): filePath{fp}, status(0)
+  HDF5(std::filesystem::path const fp, HDF5FileMode const mode): filePath{fp}, status(0)
   {
     if (mode == HDF5FileMode::OVERWRITE)
     {
@@ -280,7 +281,7 @@ public:
   ~HDF5() { status = H5Fclose(fileId); }
 
 protected:
-  fs::path filePath;
+  std::filesystem::path filePath;
   hid_t fileId;
   herr_t status;
 };
@@ -300,7 +301,7 @@ struct IOManager
 
   explicit IOManager(
       FESpace_T const & fe,
-      std::optional<fs::path> const fp = std::nullopt,
+      std::optional<std::filesystem::path> const fp = std::nullopt,
       uint const it = 0):
       feSpace{&fe},
       feSpaceScalar{*fe.mesh},
@@ -314,7 +315,7 @@ struct IOManager
     }
   }
 
-  void init(FESpace_T const & fe, fs::path const fp, uint const it = 0)
+  void init(FESpace_T const & fe, std::filesystem::path const fp, uint const it = 0)
   {
     feSpace = &fe;
     feSpaceScalar = FESpaceScalar_T{*fe.mesh};
@@ -324,13 +325,13 @@ struct IOManager
     setPath(fp);
   }
 
-  void setPath(fs::path const fp)
+  void setPath(std::filesystem::path const fp)
   {
     filePath = fp;
     // create subfolder if not saving in the current directory
-    if (filePath->parent_path() != fs::path(""))
+    if (filePath->parent_path() != std::filesystem::path(""))
     {
-      fs::create_directories(filePath->parent_path());
+      std::filesystem::create_directories(filePath->parent_path());
     }
 
     printMeshData();
@@ -357,7 +358,8 @@ protected:
 
   void printMeshData()
   {
-    HDF5 h5Mesh{fs::path{filePath.value()} += ".mesh.h5", HDF5FileMode::OVERWRITE};
+    HDF5 h5Mesh{
+        std::filesystem::path{filePath.value()} += ".mesh.h5", HDF5FileMode::OVERWRITE};
 
     if constexpr (Traits_T::needsMapping == true)
     {
@@ -401,7 +403,8 @@ protected:
     doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
     doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
 
-    HDF5 h5Mesh{fs::path{filePath.value()} += ".mesh.h5", HDF5FileMode::APPEND};
+    HDF5 h5Mesh{
+        std::filesystem::path{filePath.value()} += ".mesh.h5", HDF5FileMode::APPEND};
 
     Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
     for (auto const & f: mesh.facetList)
@@ -438,7 +441,7 @@ protected:
 public:
   FESpace_T const * feSpace;
   FESpaceScalar_T feSpaceScalar;
-  std::optional<fs::path> filePath = fs::current_path();
+  std::optional<std::filesystem::path> filePath = std::filesystem::current_path();
   // HDF5 h5Time;
   uint iter;
   std::vector<std::pair<uint, double>> timeSeries;
@@ -612,7 +615,8 @@ struct IOManagerP0
   using FESpaceOrig_T = FESpaceOrig;
   using FESpaceP0_T = ToP0_T<FESpaceOrig>;
 
-  IOManagerP0(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
+  IOManagerP0(
+      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
       feSpaceOrig{fe},
       feSpaceP0{*fe.mesh},
       io{feSpaceP0, fp, it},
@@ -681,7 +685,8 @@ struct IOManagerFacet
       typename LagrangeFE<Facet_T, 0>::RefFE_T,
       typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
 
-  IOManagerFacet(FESpaceOrig_T const & fe, fs::path const fp, uint const it = 0):
+  IOManagerFacet(
+      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
       feSpaceOrig{fe},
       meshFacet{new MeshFacet_T}
   {
@@ -729,3 +734,5 @@ struct IOManagerFacet
   FESpaceFacet_T feSpaceFacet;
   IOManager<FESpaceFacet_T> io;
 };
+
+} // namespace proxpde

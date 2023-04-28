@@ -11,6 +11,8 @@
 
 #include <random>
 
+using namespace proxpde;
+
 static auto constexpr numTests = 1 << 16;
 
 template <typename RandomEngine, typename Elem>

@@ -10,10 +10,12 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-// sigma = +1 MS
-// sigma =  0 SUPG
-// sigma = -1 GLS
-int constexpr sigma = 0;
+namespace proxpde
+{
+
+// int constexpr sigma = +1;  // MS
+// int constexpr sigma =  0;  // SUPG
+// int constexpr sigma = -1;  // GLS
 
 int constexpr orderCG = 1;
 
@@ -287,8 +289,12 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
   double eps;
 };
 
+} // namespace proxpde
+
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   using Elem_T = Line;
   using Mesh_T = Mesh<Elem_T>;
   // implicit finite element central

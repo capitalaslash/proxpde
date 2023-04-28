@@ -9,6 +9,8 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
+using namespace proxpde;
+
 template <typename Elem, uint Order>
 int test()
 {

@@ -6,16 +6,18 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
-using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
-using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
-using FESpace1_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-using FESpace2_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
-
 int main()
 {
+  using namespace proxpde;
+
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpace1_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+  using FESpace2_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};

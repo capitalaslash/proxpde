@@ -1,5 +1,8 @@
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 // ----------------------------------------------------------------------------
 std::array<RefPoint::Vec_T, RefPoint::numDOFs> const RefPoint::points = {
     {Vec_T::Constant(1.L)}};
@@ -11,8 +14,7 @@ std::array<ScalarFun<1>, RefPoint::numDOFs> const RefPoint::phiFun = {{
 std::array<onedFun_T, RefPoint::numDOFs> const RefPoint::dphiFun = {
     {[](Vec_T const &) { return Vec_T::Constant(0.L); }}};
 
-std::array<onedFun_T, RefPoint::numGeoDOFs> const RefPoint::mapping =
-    RefPoint::dphiFun;
+std::array<onedFun_T, RefPoint::numGeoDOFs> const RefPoint::mapping = RefPoint::dphiFun;
 
 // ----------------------------------------------------------------------------
 Vec1 const RefLineP0::refMidpoint = Vec1{0.};
@@ -1021,3 +1023,5 @@ std::array<scalarThreedFun_T, RefHexahedronRT0::numDOFs> const
 // tri-linear mapping
 std::array<threedFun_T, RefHexahedronRT0::numGeoDOFs> const RefHexahedronRT0::mapping =
     RefHexahedronQ1::mapping;
+
+} // namespace proxpde

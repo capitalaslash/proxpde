@@ -8,6 +8,8 @@
 
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   //  HDF5 h5 {"hdf5write.h5"};
   //  size_t size = 10;
   //  Var v("var", size);

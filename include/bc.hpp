@@ -6,6 +6,9 @@
 #include "qr.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 using DofSet_T = std::unordered_set<DOFid_T>;
 
 // TODO: add static map to set components via flags
@@ -409,3 +412,5 @@ void applyBCs(Vec & v, BCList bcs)
         }
       });
 }
+
+} // namespace proxpde

@@ -14,6 +14,8 @@
 
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   using Elem_T = Hexahedron;
   using Mesh_T = Mesh<Elem_T>;
   uint constexpr order = 2U;

@@ -1,5 +1,8 @@
 #include "geo.hpp"
 
+namespace proxpde
+{
+
 // -------------------------------------------------------------------------------------
 GeoElem::~GeoElem() = default;
 
@@ -337,3 +340,5 @@ bool geoEqual(GeoElem const & e1, GeoElem const & e2)
 
   return std::is_permutation(ids1.begin(), ids1.end(), ids2.begin());
 }
+
+} // namespace proxpde

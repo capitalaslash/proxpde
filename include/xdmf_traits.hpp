@@ -4,6 +4,9 @@
 
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 enum class XDMFGridType : int8_t
 {
   SINGLE,
@@ -248,3 +251,5 @@ struct XDMFTraits<RefHexahedronQ2>
     26};
   // clang-format on
 };
+
+} // namespace proxpde

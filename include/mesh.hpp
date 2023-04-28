@@ -4,6 +4,9 @@
 
 #include "geo.hpp"
 
+namespace proxpde
+{
+
 struct MeshFlags
 {
   using T = std::bitset<4>;
@@ -45,47 +48,6 @@ static const MeshFlags::T to_MeshFlags(std::string_view str)
   abort();
   return MeshFlags::NONE;
 }
-
-namespace YAML
-{
-template <>
-struct convert<MeshFlags::T>
-{
-  static Node encode(MeshFlags::T const & rhs)
-  {
-    // string array implementation
-    Node node;
-    for (auto const flag: MeshFlags::ALL)
-    {
-      if ((rhs & flag).any())
-        node.push_back(to_string(flag));
-    }
-    return node;
-
-    // ulong implementation
-    // return Node{rhs.to_ulong()};
-  }
-
-  static bool decode(Node const & node, MeshFlags::T & rhs)
-  {
-    // string array implementation
-    if (!node.IsSequence())
-      return false;
-
-    for (auto const & flag: node)
-    {
-      rhs |= to_MeshFlags(flag.as<std::string>());
-    }
-    return true;
-
-    // ulong implementation
-    // if (!node.IsScalar())
-    //   return false;
-    // rhs = node.as<ulong>();
-    // return true;
-  }
-};
-} // namespace YAML
 
 template <typename Elem>
 class Mesh
@@ -1005,3 +967,46 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
   facetMesh.elementList = mesh.facetList;
   facetMesh.buildConnectivity();
 }
+
+} // namespace proxpde
+
+namespace YAML
+{
+template <>
+struct convert<proxpde::MeshFlags::T>
+{
+  static Node encode(proxpde::MeshFlags::T const & rhs)
+  {
+    // string array implementation
+    Node node;
+    for (auto const flag: proxpde::MeshFlags::ALL)
+    {
+      if ((rhs & flag).any())
+        node.push_back(proxpde::to_string(flag));
+    }
+    return node;
+
+    // ulong implementation
+    // return Node{rhs.to_ulong()};
+  }
+
+  static bool decode(Node const & node, proxpde::MeshFlags::T & rhs)
+  {
+    // string array implementation
+    if (!node.IsSequence())
+      return false;
+
+    for (auto const & flag: node)
+    {
+      rhs |= proxpde::to_MeshFlags(flag.as<std::string>());
+    }
+    return true;
+
+    // ulong implementation
+    // if (!node.IsScalar())
+    //   return false;
+    // rhs = node.as<ulong>();
+    // return true;
+  }
+};
+} // namespace YAML

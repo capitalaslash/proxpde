@@ -9,6 +9,8 @@
 #include "mesh.hpp"
 #include "reffe.hpp"
 
+using namespace proxpde;
+
 // solve
 // (w, t) + (u, \nabla /cdot t) = 0
 // (\nabla /cdot w, v) = (f, v)

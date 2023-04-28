@@ -8,6 +8,8 @@
 
 #include <limits>
 
+using namespace proxpde;
+
 static int test_id = 0;
 
 template <typename Elem>

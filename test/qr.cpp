@@ -2,6 +2,9 @@
 
 #include "qr.hpp"
 
+namespace proxpde
+{
+
 template <uint N>
 struct Monomial
 {
@@ -56,6 +59,10 @@ struct Polynomial
            Monomial<K>::value(p(2));
   }
 };
+
+} // namespace proxpde
+
+using namespace proxpde;
 
 template <typename QR, typename Poly>
 int test(

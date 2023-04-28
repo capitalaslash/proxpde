@@ -10,6 +10,8 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
+using namespace proxpde;
+
 template <typename Elem, uint order>
 int test(YAML::Node const & config)
 {

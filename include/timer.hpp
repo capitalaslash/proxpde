@@ -4,6 +4,9 @@
 
 #include <chrono>
 
+namespace proxpde
+{
+
 template <typename TimeUnit>
 struct TimerTraits
 {};
@@ -98,3 +101,5 @@ std::ostream & operator<<(std::ostream & out, Timer<TimeUnit> & timer)
 }
 
 using MilliTimer = Timer<std::chrono::milliseconds>;
+
+} // namespace proxpde

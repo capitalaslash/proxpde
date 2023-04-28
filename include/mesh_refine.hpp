@@ -3,6 +3,9 @@
 #include "geo.hpp"
 #include "mesh.hpp"
 
+namespace proxpde
+{
+
 template <typename Elem>
 struct RefineHelper
 {};
@@ -223,3 +226,5 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
   meshFine.flags = meshCoarse.flags;
 }
+
+} // namespace proxpde

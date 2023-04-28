@@ -10,6 +10,8 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
+using namespace proxpde;
+
 double areaTriangle(Vec3 p0, Vec3 p1, Vec3 p2)
 {
   return 0.5 * ((p1 - p0).cross(p2 - p0)).norm();

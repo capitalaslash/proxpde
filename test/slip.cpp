@@ -12,6 +12,9 @@
 #include "timer.hpp"
 #include "var.hpp"
 
+namespace proxpde
+{
+
 template <typename FESpace>
 struct BCEssNormal: public BCEss<FESpace>
 {
@@ -74,8 +77,12 @@ struct BCEssNormal: public BCEss<FESpace>
   }
 };
 
+} // namespace proxpde
+
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
   using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;

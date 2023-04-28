@@ -2,6 +2,9 @@
 
 #include "def.hpp"
 
+namespace proxpde
+{
+
 struct Point
 {
   double operator[](short_T const i) const { return this->coord[i]; }
@@ -847,3 +850,5 @@ bool inside(Elem const & e, Vec3 const & pt)
   }
   return false;
 }
+
+} // namespace proxpde

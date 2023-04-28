@@ -11,6 +11,8 @@
 
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
   uint constexpr numVars = 2U;
 
   using Elem_T = Line;

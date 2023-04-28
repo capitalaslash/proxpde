@@ -5,6 +5,9 @@
 #include "qr.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 template <typename RefFE, typename QR>
 struct CurFE
 {
@@ -366,3 +369,5 @@ struct CurFETraits<RefFE, QR, dim, FamilyType::RAVIART_THOMAS>
 {
   using type = VectorCurFE<RefFE, QR>;
 };
+
+} // namespace proxpde

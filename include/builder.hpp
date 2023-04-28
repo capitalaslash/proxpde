@@ -7,6 +7,9 @@
 #include "blockmatrix.hpp"
 #include "fespace.hpp"
 
+namespace proxpde
+{
+
 template <StorageType Storage = StorageType::ClmMajor>
 struct Builder
 {
@@ -390,3 +393,5 @@ struct Builder
   Vec b;
   std::vector<Triplet> _triplets;
 };
+
+} // namespace proxpde

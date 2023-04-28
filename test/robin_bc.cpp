@@ -9,15 +9,17 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, 1>::RefFE_T,
-    LagrangeFE<Elem_T, 1>::RecommendedQR>;
-
 int test(YAML::Node const & config)
 {
+  using namespace proxpde;
+
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+
   MilliTimer t;
 
   auto const hConv = config["hConv"].as<double>();
@@ -105,7 +107,8 @@ int test(YAML::Node const & config)
   error.data = sol.data - exact.data;
 
   t.start();
-  IOManager io{feSpace, fs::path{"output"} / config["filename"].as<std::string>()};
+  IOManager io{
+      feSpace, std::filesystem::path{"output"} / config["filename"].as<std::string>()};
   io.print({sol, exact, error});
   std::cout << "output: " << t << " ms" << std::endl;
 

@@ -6,6 +6,8 @@
 #include "mesh.hpp"
 #include "mesh_refine.hpp"
 
+using namespace proxpde;
+
 template <typename Elem>
 void test()
 {

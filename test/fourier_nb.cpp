@@ -9,19 +9,21 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using Elem_T = Line;
-using Mesh_T = Mesh<Elem_T>;
-using FESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, 1>::RefFE_T,
-    LagrangeFE<Elem_T, 1>::RecommendedQR>;
-using RecFESpace_T = FESpace<
-    Mesh_T,
-    LagrangeFE<Elem_T, 1>::RefFE_T,
-    LagrangeFE<Elem_T, 1>::ReconstructionQR>;
-
 int test(YAML::Node const & config)
 {
+  using namespace proxpde;
+
+  using Elem_T = Line;
+  using Mesh_T = Mesh<Elem_T>;
+  using FESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using RecFESpace_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 1>::RefFE_T,
+      LagrangeFE<Elem_T, 1>::ReconstructionQR>;
+
   MilliTimer t;
 
   auto const hConv = config["hConv"].as<double>();
@@ -84,7 +86,8 @@ int test(YAML::Node const & config)
   Builder builder{size};
   double time = 0.;
   IOManager io{
-      feSpace, fs::path{"output_fourier"} / config["filename"].as<std::string>()};
+      feSpace,
+      std::filesystem::path{"output_fourier"} / config["filename"].as<std::string>()};
   io.print({sol, flux, exact});
   for (uint itime = 0; itime < steps; ++itime)
   {

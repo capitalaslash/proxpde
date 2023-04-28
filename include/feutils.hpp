@@ -5,6 +5,9 @@
 #include "builder.hpp"
 #include "fe.hpp"
 
+namespace proxpde
+{
+
 template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
 struct L2Projector
 {
@@ -303,3 +306,5 @@ double l2Error(Var const & u, FESpace const & feSpace, scalarFun_T const & exact
 {
   return l2Error(u, feSpace, [exact](Vec3 const & p) { return Vec1{exact(p)}; });
 }
+
+} // namespace proxpde

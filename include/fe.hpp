@@ -5,6 +5,9 @@
 #include "qr.hpp"
 #include "reffe.hpp"
 
+namespace proxpde
+{
+
 template <typename Elem, uint order>
 struct LagrangeFE
 {};
@@ -160,3 +163,5 @@ struct RaviartThomasFE<Hexahedron, 0>
   using RefFE_T = RefHexahedronRT0;
   using RecommendedQR = GaussQR<Hexahedron, 8>;
 };
+
+} // namespace proxpde

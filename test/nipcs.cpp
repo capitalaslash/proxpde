@@ -10,17 +10,19 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using Elem_T = Quad;
-using Mesh_T = Mesh<Elem_T>;
-using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
-using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
-using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
-using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
-using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
-using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
-
 int main(int argc, char * argv[])
 {
+  using namespace proxpde;
+
+  using Elem_T = Quad;
+  using Mesh_T = Mesh<Elem_T>;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using QuadraticQR = LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceU_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
+  using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
+
   MilliTimer t;
 
   ParameterDict config;

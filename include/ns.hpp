@@ -28,6 +28,9 @@
 // #include <amgcl/preconditioner/dummy.hpp>
 // #include <amgcl/profiler.hpp>
 
+namespace proxpde
+{
+
 struct Comp
 {
   static const std::vector<short_T> u;
@@ -121,7 +124,7 @@ struct NSSolverMonolithic
     // solverParams.put("precond.psolver.precond.direct_coarse", false);
 
     config.validate({"nu", "dt", "output_dir"});
-    auto const outDir = fs::path{config["output_dir"].as<std::string>()};
+    auto const outDir = std::filesystem::path{config["output_dir"].as<std::string>()};
     ioVel.init(feSpaceVel, outDir / "vel");
     ioP.init(feSpaceP, outDir / "p");
   }
@@ -305,7 +308,7 @@ struct NSSolverSplit
       assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel}
   {
     config.validate({"nu", "dt", "output_dir"});
-    auto const outDir = fs::path{config["output_dir"].as<std::string>()};
+    auto const outDir = std::filesystem::path{config["output_dir"].as<std::string>()};
     ioVel.init(feSpaceVel, outDir / "vel");
     ioP.init(feSpaceP, outDir / "p");
   }
@@ -559,3 +562,5 @@ void computeFEWSS(
     }
   }
 }
+
+} // namespace proxpde

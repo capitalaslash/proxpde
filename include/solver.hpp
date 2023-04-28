@@ -2,6 +2,9 @@
 
 #include "def.hpp"
 
+namespace proxpde
+{
+
 enum class SolverPackage : int8_t
 {
   AMGCL, // not yet implemnted
@@ -271,3 +274,5 @@ std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
 
   return nullptr;
 }
+
+} // namespace proxpde

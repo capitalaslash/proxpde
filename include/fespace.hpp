@@ -45,7 +45,7 @@ struct FESpace
   void init(Mesh const & m, uint const os)
   {
     mesh = &m;
-    dof = DOF_T{m};
+    dof.init(m);
     offset = os;
   }
 
@@ -82,7 +82,7 @@ struct FESpace
     }
   }
 
-  FVec<physicalDim()> compute(GeoElem const & elem, Vec const & data, Vec3 pt)
+  FVec<physicalDim()> evaluate(GeoElem const & elem, Vec const & data, Vec3 pt)
   {
     this->curFE.reinit(elem);
 
@@ -105,7 +105,7 @@ struct FESpace
       }
       // TODO: jacPlus should be computed on the point
       // here we assume that jacPlus does not change on the element
-      // (this is true only for linear mappings)
+      // (this is true only for affine mappings)
       auto const ptRef = this->curFE.jacPlus[QR_T::bestPt] * (pt - elem.origin());
       // check that the approximated inverse mapping is close enough
       assert(
@@ -121,7 +121,7 @@ struct FESpace
         abort();
       }
       // instead of moving the point back to the ref element, we could
-      // instead move the shape functions to the real element
+      // move the shape functions to the real element
     }
 
     FVec<physicalDim()> value;
@@ -156,16 +156,13 @@ struct FESpace
 
   Mesh const * mesh;
   CurFE_T mutable curFE;
-  DOF_T /*const*/ dof;
-  uint offset{0};
+  DOF_T dof;
+  uint offset = 0U;
 };
 
 template <typename FESpace>
 void interpolateAnalyticFunction(
-    Fun<FESpace::physicalDim(), 3> const & fun,
-    FESpace & feSpace,
-    Vec & v,
-    uint const offset = 0)
+    Fun<FESpace::physicalDim(), 3> const & fun, FESpace & feSpace, Vec & v)
 {
   // set the vector data to the appropriate dimension if it comes with length 0
   if (v.size() == 0)
@@ -191,8 +188,8 @@ void interpolateAnalyticFunction(
         // for vector fespaces this is a vector
         for (uint d = 0; d < FESpace::dim; ++d)
         {
-          auto const dofId = feSpace.dof.getId(elem.id, i, d);
-          v[offset + dofId] = value[d];
+          auto const dofId = feSpace.dof.getId(elem.id, i, d) + feSpace.offset;
+          v[dofId] = value[d];
         }
       }
       else if constexpr (
@@ -204,8 +201,8 @@ void interpolateAnalyticFunction(
         // center of facet (ok for linear and piecewise constant functions only)
         id_T const facetId = feSpace.mesh->elemToFacet[elem.id][i];
         auto const & facet = feSpace.mesh->facetList[facetId];
-        auto const dofId = feSpace.dof.getId(elem.id, i);
-        v[offset + dofId] = value.dot(facet.normal()) * facet.volume();
+        auto const dofId = feSpace.dof.getId(elem.id, i) + feSpace.offset;
+        v[dofId] = value.dot(facet.normal()) * facet.volume();
       }
       else if constexpr (
           family_v<typename FESpace::RefFE_T> == FamilyType::CROUZEIX_RAVIART)
@@ -222,8 +219,8 @@ void interpolateAnalyticFunction(
         // with different interpolating space (see Guermond TAMU 2015 ch. 3)
         for (uint d = 0; d < FESpace::dim; ++d)
         {
-          auto const dofId = feSpace.dof.getId(elem.id, i, d);
-          v[offset + dofId] = value[d];
+          auto const dofId = feSpace.dof.getId(elem.id, i, d) + feSpace.offset;
+          v[dofId] = value[d];
         }
       }
       else
@@ -242,16 +239,14 @@ void interpolateAnalyticFunction(
 }
 
 template <typename FESpace>
-void interpolateAnalyticFunction(
-    scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
+void interpolateAnalyticFunction(scalarFun_T const & f, FESpace & feSpace, Vec & v)
 {
-  interpolateAnalyticFunction(
-      [f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v, offset);
+  interpolateAnalyticFunction([f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v);
 }
 
 template <typename FESpace>
 void integrateAnalyticFunction(
-    Fun<FESpace::dim, 3> const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
+    Fun<FESpace::dim, 3> const & f, FESpace & feSpace, Vec & v)
 {
   auto & curFE = feSpace.curFE;
 
@@ -299,7 +294,7 @@ void integrateAnalyticFunction(
         {
           // the value of the dof is the value of the function
           // u_k = u phi_k
-          v[offset + dofId] = value[d];
+          v[feSpace.offset + dofId] = value[d];
         }
         else if constexpr (
             family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
@@ -307,7 +302,7 @@ void integrateAnalyticFunction(
           std::abort();
           // the value of the dof is the flux through the face
           // u_k = u.dot(n_k)
-          v[offset + dofId] = value.dot(FESpace::RefFE_T::normal(e)[i]);
+          v[feSpace.offset + dofId] = value.dot(FESpace::RefFE_T::normal(e)[i]);
         }
         else
         {
@@ -319,11 +314,9 @@ void integrateAnalyticFunction(
 }
 
 template <typename FESpace>
-void integrateAnalyticFunction(
-    scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
+void integrateAnalyticFunction(scalarFun_T const & f, FESpace & feSpace, Vec & v)
 {
-  integrateAnalyticFunction(
-      [f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v, offset);
+  integrateAnalyticFunction([f](Vec3 const & p) { return Vec1(f(p)); }, feSpace, v);
 }
 
 template <typename FESpaceData, typename FESpaceGrad>

@@ -97,10 +97,7 @@ int main(int argc, char * argv[])
   Vec exact{FESpaceVel_T::dim * dofU + dofP};
   interpolateAnalyticFunction(inlet, feSpaceVel, exact);
   interpolateAnalyticFunction(
-      [nu](Vec3 const & p) { return nu * (1. - p(1)); },
-      feSpaceP,
-      exact,
-      FESpaceVel_T::dim * dofU);
+      [nu](Vec3 const & p) { return nu * (1. - p(1)); }, feSpaceP, exact);
 
   Var u{"u"};
   Var v{"v"};

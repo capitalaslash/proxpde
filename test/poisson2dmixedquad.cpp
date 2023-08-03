@@ -124,7 +124,8 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec rhs = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(rhsFun, feSpaceU, rhs);
-  builder.buildRhs(std::tuple{AssemblyProjection(1.0, rhs, feSpaceU)}, bcsU);
+  builder.buildRhs(
+      std::tuple{AssemblyProjection{1.0, rhs.tail(sizeU), feSpaceU}}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -140,7 +141,7 @@ int test(YAML::Node const & config)
   // std::cout << "sol:\n" << sol << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact, sizeW);
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   FEVar uExact{"uExact", feSpaceU};
   uExact.data = exact.tail(sizeU);
   FEVar uError{"uError", feSpaceU};
@@ -188,17 +189,17 @@ int main(int argc, char * argv[])
     config["test10"]["n"] = 10U;
     config["test10"]["chevron"] = true;
     config["test10"]["g"] = 0.0;
-    config["test10"]["expected_error"] = 8.538026774387e-02;
+    config["test10"]["expected_error"] = 8.552056692344e-02;
 
     config["test20"]["n"] = 20U;
     config["test20"]["chevron"] = true;
     config["test20"]["g"] = 0.0;
-    config["test20"]["expected_error"] = 4.294110146866e-02;
+    config["test20"]["expected_error"] = 4.300932864206e-02;
 
     config["test40"]["n"] = 40U;
     config["test40"]["chevron"] = true;
     config["test40"]["g"] = 0.0;
-    config["test40"]["expected_error"] = 2.149248846273e-02;
+    config["test40"]["expected_error"] = 2.152590864074e-02;
 
     // config["test80"]["n"] = 80;
     // config["test80"]["chevron"] = true;

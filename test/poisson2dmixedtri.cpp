@@ -101,7 +101,7 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
   Vec f = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(rhs, feSpaceU, f);
-  builder.buildRhs(std::tuple{AssemblyProjection(1.0, f, feSpaceU)}, bcsU);
+  builder.buildRhs(std::tuple{AssemblyProjection(1.0, f.tail(sizeU), feSpaceU)}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
@@ -118,7 +118,7 @@ int test(YAML::Node const & config)
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact, sizeW);
+  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
   Var exactU{"exactU"};
   exactU.data = exact.tail(sizeU);
   Var errorU{"errorU"};

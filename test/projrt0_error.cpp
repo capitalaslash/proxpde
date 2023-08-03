@@ -12,51 +12,6 @@
 
 using namespace proxpde;
 
-template <typename FESpace>
-double computeErrorL2(
-    Fun<FESpace::physicalDim(), 3> const & f, Vec const & u, FESpace const & feSpace)
-{
-  double error = 0.0;
-  for (auto const & elem: feSpace.mesh->elementList)
-  {
-    feSpace.curFE.reinit(elem);
-
-    for (uint d = 0; d < FESpace::dim; ++d)
-    {
-      FMat<FESpace::CurFE_T::numDOFs, 1> uLocal;
-      for (uint n = 0; n < FESpace::CurFE_T::numDOFs; ++n)
-      {
-        id_T const dofId = feSpace.dof.getId(elem.id, n, d);
-        uLocal[n] = u[dofId];
-      }
-
-      for (uint q = 0; q < FESpace::QR_T::numPts; ++q)
-      {
-        FVec<FESpace::physicalDim()> uQ;
-        if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
-        {
-          uQ = uLocal.transpose() * feSpace.curFE.phi[q];
-        }
-        else // FamilyType::RAVIART_THOMAS
-        {
-          uQ = uLocal.transpose() * feSpace.curFE.phiVect[q];
-        }
-        FVec<FESpace::physicalDim()> const fQ = f(feSpace.curFE.qpoint[q]);
-        error += feSpace.curFE.JxW[q] * (fQ - uQ).transpose() * (fQ - uQ);
-      }
-    }
-  }
-  return std::sqrt(error);
-}
-
-template <typename FESpace>
-double computeErrorL2(scalarFun_T const & exact, Vec const & u, FESpace const & feSpace)
-{
-  static_assert(FESpace::dim == 1);
-  return computeErrorL2(
-      [&exact](Vec3 const & p) { return Vec1{exact(p)}; }, u, feSpace);
-}
-
 template <int dim>
 struct InputFun
 {
@@ -101,14 +56,14 @@ int test(
       mesh->elementList.size());
 
   FESpaceRhs_T feSpaceRhs{*mesh};
-  Var uExact{"uExact"};
+  Var uRhs{"uRhs"};
   // interpolateAnalyticFunction(inputFun, feSpace1, u1.data);
-  projectAnalyticFunction(fun.uExact, feSpaceRhs, uExact.data);
-  // std::cout << "uExact:\n" << uExact.data << std::endl;
+  projectAnalyticFunction(fun.uExact, feSpaceRhs, uRhs.data);
+  // std::cout << "uRhs:\n" << uRhs.data << std::endl;
 
   FESpaceRT0_T feSpaceRT0{*mesh};
   Var uRT0{"uRT0"};
-  l2Projection(uRT0.data, feSpaceRT0, uExact.data, feSpaceRhs);
+  l2Projection(uRT0.data, feSpaceRT0, uRhs.data, feSpaceRhs);
   // std::cout << "uRT0:\n" << uRT0.data << std::endl;
 
   FEVar uRT0proj{"uRT0proj", feSpaceRT0};
@@ -118,7 +73,6 @@ int test(
   Vec rhs;
   projectAnalyticFunction(fun.rhs, feSpaceRhs, rhs);
 
-  FEVar uRT0div{"uRT0div", feSpaceRT0};
   uint const sizeRT0 = feSpaceRT0.dof.size;
   FESpaceP0_T feSpaceLambda{*mesh, sizeRT0};
   uint const sizeP0 = feSpaceLambda.dof.size;
@@ -169,8 +123,9 @@ int test(
   solver.compute(builder.A);
   Vec const sol = solver.solve(builder.b);
   // std::cout << "uRT0div (+lambda):\n" << sol.transpose() << std::endl;
+  FEVar uRT0div{"uRT0div", feSpaceRT0};
   uRT0div.data = sol.head(sizeRT0);
-  Var lambda("lambda", sizeP0);
+  FEVar lambda("lambda", feSpaceLambda);
   lambda.data = sol.tail(sizeP0);
   // // translate lambda so that the minimum is zero;
   // auto const lambdaMin = lambda.data.minCoeff();
@@ -179,28 +134,31 @@ int test(
   //   lambda.data -= Vec::Constant(lambda.data.size(), lambdaMin);
   // }
 
-  Var exactRT0{"exactRT0"};
-  interpolateAnalyticFunction(uExact3d, feSpaceRT0, exactRT0.data);
-  // std::cout << "exactRT0:\n" << exactRT0.data << std::endl;
+  auto exact = Vec{sizeRT0 + sizeP0};
+  interpolateAnalyticFunction(uExact3d, feSpaceRT0, exact);
+  interpolateAnalyticFunction(fun.lambdaExact, feSpaceLambda, exact);
+  Var uExactRT0{"uExactRT0"};
+  uExactRT0.data = exact.head(sizeRT0);
+  // std::cout << "uExactRT0:\n" << uExactRT0.data << std::endl;
   Var lambdaExact{"lambdaExact"};
-  interpolateAnalyticFunction(fun.lambdaExact, feSpaceLambda, lambdaExact.data);
+  lambdaExact.data = exact.tail(sizeP0);
+
   Var lambdaError{"lambdaError"};
   lambdaError.data = lambdaExact.data - lambda.data;
 
-  IOManager ioRhs{feSpaceRhs, "output_projrt0err/uExact"};
-  ioRhs.print({uExact});
+  IOManager ioRhs{feSpaceRhs, "output_projrt0err/uRhs"};
+  ioRhs.print({uRhs});
   IOManagerP0 ioRT0{feSpaceRT0, "output_projrt0err/u"};
-  ioRT0.print(std::tuple{uRT0, uRT0div, exactRT0});
+  ioRT0.print(std::tuple{uRT0, uRT0div, uExactRT0});
   IOManager ioLambda{feSpaceLambda, "output_projrt0err/lambda"};
-  ioLambda.print({lambda, lambdaExact, lambdaError});
+  ioLambda.print(std::tuple{lambda, lambdaExact, lambdaError});
   IOManagerFacet ioFacet{feSpaceRT0, "output_projrt0err/flux"};
   ioFacet.print(std::tuple{uRT0div, uRT0proj});
 
-  auto const errorU = computeErrorL2(uExact3d, uRT0div.data, feSpaceRT0);
-  fmt::print("l2_errorU: {:.12e}\n", errorU);
+  fmt::print("u l2-error: {:.12e}\n", std::sqrt(uRT0div.l2ErrorSquared(uExact3d)));
 
-  auto const errorLambda = computeErrorL2(fun.lambdaExact, lambda.data, feSpaceLambda);
-  fmt::print("l2_errorLambda: {:.12e}\n", errorLambda);
+  fmt::print(
+      "lambda l2-error: {:.12e}\n", std::sqrt(lambda.l2ErrorSquared(fun.lambdaExact)));
 
   // auto const error = (uRT0div.data - exactRT0.data).norm();
 

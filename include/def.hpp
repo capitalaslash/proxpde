@@ -33,6 +33,7 @@
 
 // fmt
 #include <fmt/core.h>
+#include <fmt/ostream.h>
 
 // yaml
 #include <yaml-cpp/yaml.h>
@@ -428,6 +429,15 @@ inline bool checkError(
 }
 
 } // namespace proxpde
+
+template <typename T>
+requires std::is_base_of_v<Eigen::DenseBase<T>, T>
+struct fmt::formatter<T>: ostream_formatter
+{};
+
+template <typename T, int S>
+struct fmt::formatter<Eigen::SparseMatrix<T, S>>: ostream_formatter
+{};
 
 namespace YAML
 {

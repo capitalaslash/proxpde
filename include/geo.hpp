@@ -680,12 +680,29 @@ public:
 
   double volume() const final
   {
-    // TODO: this is not correct for general hexahedrons, just for parallelepids
-    // a better way is to split the hexahedron in tetrahedra and sum their volumes
-    auto const v1 = pts[1]->coord - pts[0]->coord;
-    auto const v2 = pts[3]->coord - pts[0]->coord;
-    auto const v3 = pts[4]->coord - pts[0]->coord;
-    return std::fabs((v1.cross(v2)).dot(v3));
+    // // TODO: this is not correct for general hexahedrons, just for parallelepids
+    // // a better way is to split the hexahedron in tetrahedra and sum their volumes
+    // auto const v1 = pts[1]->coord - pts[0]->coord;
+    // auto const v2 = pts[3]->coord - pts[0]->coord;
+    // auto const v3 = pts[4]->coord - pts[0]->coord;
+    // return std::fabs((v1.cross(v2)).dot(v3));
+
+    // split in 5 tetra as done in mesh generation
+    auto const v13 = pts[3]->coord - pts[1]->coord;
+    auto const v14 = pts[4]->coord - pts[1]->coord;
+    auto const v16 = pts[6]->coord - pts[1]->coord;
+    auto const v01 = pts[1]->coord - pts[0]->coord;
+    auto const v03 = pts[3]->coord - pts[0]->coord;
+    auto const v04 = pts[4]->coord - pts[0]->coord;
+    auto const v12 = pts[2]->coord - pts[1]->coord;
+    auto const v15 = pts[5]->coord - pts[1]->coord;
+    auto const v34 = pts[4]->coord - pts[3]->coord;
+    auto const v36 = pts[6]->coord - pts[3]->coord;
+    auto const v37 = pts[7]->coord - pts[3]->coord;
+    return ((v13.cross(v14)).dot(v16) + (v01.cross(v03)).dot(v04) +
+            (v12.cross(v13)).dot(v16) + (v14.cross(v15)).dot(v16) +
+            (v34.cross(v36)).dot(v37)) /
+           6.;
   }
 
   void buildNormal() final { std::abort(); }

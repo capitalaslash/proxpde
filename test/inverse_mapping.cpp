@@ -1,6 +1,5 @@
 #include "def.hpp"
 
-#include "curfe.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
 #include "mesh.hpp"
@@ -153,23 +152,26 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
       // std::numeric_limits<double>::epsilon() || !approxInside);
       t.stop();
 
-      if (approxInside && iterError > 1.e-12)
-      {
-        // abort();
-        //   std::cout << "test " << n << " - " << pt.transpose() << " -> " <<
-        //   approxPtNew.transpose()
-        //             << " - distance norm: " << approxError
-        //             << " - inside: " << approxInside << std::endl;
-        //  return 1;
-      }
+      // if (approxInside && iterError > 1.e-12)
+      // {
+      //   // abort();
+      //   fmt::print(
+      //       stderr,
+      //       "test {} - {} -> {} - distance norm: {} - inside: {}\n",
+      //       n,
+      //       pt.transpose(),
+      //       approxPtNew.transpose(),
+      //       approxError,
+      //       approxInside);
+      //   return 1;
+      // }
       insideCount++;
       totalNumIter += numIter;
     }
   }
-  std::cout << "errorApproxMax: " << errorApproxMax << std::endl
-            << "errorIterMax:   " << errorIterMax << std::endl
-            << "meanNumIter:    " << static_cast<double>(totalNumIter) / insideCount
-            << std::endl;
+  fmt::print("errorApproxMax: {}\n", errorApproxMax);
+  fmt::print("errorIterMax:   {}\n", errorIterMax);
+  fmt::print("meanNumIter:    {}\n", static_cast<double>(totalNumIter) / insideCount);
 
   double bboxVolume = (max[0] - min[0]);
   if constexpr (RefFE_T::dim > 1)
@@ -187,9 +189,9 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   double const insideFrac = static_cast<double>(insideCount) / numTests;
   double const error = std::fabs(insideArea - insideFrac);
 
-  std::cout << std::setprecision(16) << "inside area: " << insideArea << std::endl
-            << "inside frac: " << insideFrac << std::endl
-            << "error:       " << error << std::endl;
+  fmt::print("inside area: {:.16f}\n", insideArea);
+  fmt::print("inside frac: {:.16f}\n", insideFrac);
+  fmt::print("error:       {:.16f}\n", error);
 
   return checkError({error}, {expectedError});
 }
@@ -198,6 +200,7 @@ int main(int argc, char * argv[])
 {
   int const exp = (argc > 1) ? std::atoi(argv[1]) : 13;
   int numTests = 1 << exp;
+  fmt::print("running {} tests\n", numTests);
 
   std::bitset<10> tests;
 
@@ -207,58 +210,58 @@ int main(int argc, char * argv[])
 
   MilliTimer t;
 
-  std::cout << Utils::separator << "Line - order 1\n" << Utils::separator;
+  fmt::print("{}Line - order 1\n{}", Utils::separator, Utils::separator);
   t.start("line - 1");
   tests[0] = test<std::mt19937, Line, 1>(gen, numTests, 1.e-16);
   t.stop();
 
-  std::cout << Utils::separator << "Line - order 2\n" << Utils::separator;
+  fmt::print("{}Line - order 2\n{}", Utils::separator, Utils::separator);
   t.start("line - 2");
   tests[1] = test<std::mt19937, Line, 2>(gen, numTests, 1.e-16);
   t.stop();
 
-  std::cout << Utils::separator << "Triangle - order 1\n" << Utils::separator;
+  fmt::print("{}Triangle - order 1\n{}", Utils::separator, Utils::separator);
   t.start("tri - 1");
-  tests[2] = test<std::mt19937, Triangle, 1>(gen, numTests, 0.001871744791666685);
+  tests[2] = test<std::mt19937, Triangle, 1>(gen, numTests, 1.871744791666685e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Triangle - order 2\n" << Utils::separator;
+  fmt::print("{}Triangle - order 2\n{}", Utils::separator, Utils::separator);
   t.start("tri - 2");
-  tests[3] = test<std::mt19937, Triangle, 2>(gen, numTests, 0.003458658854166685);
+  tests[3] = test<std::mt19937, Triangle, 2>(gen, numTests, 3.458658854166685e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Quad - order 1\n" << Utils::separator;
+  fmt::print("{}Quad - order 1\n{}", Utils::separator, Utils::separator);
   t.start("quad - 1");
-  tests[4] = test<std::mt19937, Quad, 1>(gen, numTests, 0.00472005208333337);
+  tests[4] = test<std::mt19937, Quad, 1>(gen, numTests, 4.72005208333337e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Quad - order 2\n" << Utils::separator;
+  fmt::print("{}Quad - order 2\n{}", Utils::separator, Utils::separator);
   t.start("quad - 2");
-  tests[5] = test<std::mt19937, Quad, 2>(gen, numTests, 0.00358072916666663);
+  tests[5] = test<std::mt19937, Quad, 2>(gen, numTests, 3.58072916666663e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Tetrahedron - order 1\n" << Utils::separator;
+  fmt::print("{}Tetrahedron - order 1\n{}", Utils::separator, Utils::separator);
   t.start("tet - 1");
-  tests[6] = test<std::mt19937, Tetrahedron, 1>(gen, numTests, 0.00389811197916666);
+  tests[6] = test<std::mt19937, Tetrahedron, 1>(gen, numTests, 3.89811197916666e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Tetrahedron - order 2\n" << Utils::separator;
+  fmt::print("{}Tetrahedron - order 2\n{}", Utils::separator, Utils::separator);
   t.start("tet - 2");
-  tests[7] = test<std::mt19937, Tetrahedron, 2>(gen, numTests, 0.00402018229166666);
+  tests[7] = test<std::mt19937, Tetrahedron, 2>(gen, numTests, 4.02018229166666e-3);
   t.stop();
 
-  std::cout << Utils::separator << "Hexahedron - order 1\n" << Utils::separator;
+  fmt::print("{}Hexahedron - order 1\n{}", Utils::separator, Utils::separator);
   t.start("hex - 1");
-  tests[8] = test<std::mt19937, Hexahedron, 1>(gen, numTests, 0.005234375000000013);
+  tests[8] = test<std::mt19937, Hexahedron, 1>(gen, numTests, 3.356770833333e-2);
   t.stop();
 
-  std::cout << Utils::separator << "Hexahedron - order 2\n" << Utils::separator;
+  fmt::print("{}Hexahedron - order 2\n{}", Utils::separator, Utils::separator);
   t.start("hex - 2");
-  tests[9] = test<std::mt19937, Hexahedron, 2>(gen, numTests, 0.006088867187500013);
+  tests[9] = test<std::mt19937, Hexahedron, 2>(gen, numTests, 3.442220052083e-2);
   t.stop();
 
   t.print();
 
-  std::cout << tests << std::endl;
+  fmt::print("tests: {}\n", tests.to_string());
   return tests.any();
 }

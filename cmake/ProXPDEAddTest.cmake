@@ -2,7 +2,17 @@ macro(proxpde_add_test name)
   # check arguments
   set(options EXCLUDE_FROM_ALL WILL_FAIL)
   set(one_value_args HEADER_ROOT)
-  set(multi_value_args COMPILE_FLAGS COMPONENT_DEPENDENCIES DATA DEPENDENCIES HEADERS LABELS LINK_FLAGS LIBRARIES SOURCES)
+  set(multi_value_args
+      COMPILE_FLAGS
+      COMPONENT_DEPENDENCIES
+      DATA
+      DEPENDENCIES
+      HEADERS
+      LABELS
+      LINK_FLAGS
+      LIBRARIES
+      SOURCES
+  )
   cmake_parse_arguments(${name} "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   # message(STATUS "name = ${name}")
@@ -13,9 +23,7 @@ macro(proxpde_add_test name)
   if(NOT ${name}_SOURCES)
     set(${name}_SOURCES ${name}.cpp)
   endif()
-  # if(NOT ${name}_COMPILE_FLAGS)
-  #   set(${name}_COMPILE_FLAGS "-Wall -Wpedantic")
-  # endif()
+  # if(NOT ${name}_COMPILE_FLAGS) set(${name}_COMPILE_FLAGS "-Wall -Wpedantic") endif()
 
   add_executable(${name} ${${name}_SOURCES})
   set_target_properties(${name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -37,18 +45,17 @@ macro(proxpde_add_test name)
     COMMAND ${name}
   )
   if(${name}_LABELS)
-      set_property(TEST ProXPDE.${name} PROPERTY LABELS ${${name}_LABELS})
+    set_property(TEST ProXPDE.${name} PROPERTY LABELS ${${name}_LABELS})
   endif()
-  if (${${name}_WILL_FAIL})
+  if(${${name}_WILL_FAIL})
     set_tests_properties(ProXPDE.${name} PROPERTIES WILL_FAIL TRUE)
   endif()
 
   foreach(datafile ${${name}_DATA})
     message(STATUS "copying ${datafile}")
     file(COPY ${PROJECT_SOURCE_DIR}/data/${datafile}
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    )
   endforeach()
 
 endmacro()
-
-

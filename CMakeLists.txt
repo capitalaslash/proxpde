@@ -104,10 +104,11 @@ target_sources(proxpde
 )
 add_library(ProXPDE::proxpde ALIAS proxpde)
 
-target_include_directories(proxpde PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
-  $<INSTALL_INTERFACE:include>  # or include/proxpde
+target_include_directories(proxpde
+  PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
+    $<INSTALL_INTERFACE:include> # or include/proxpde
 )
 
 target_compile_features(proxpde PUBLIC cxx_std_20)
@@ -117,16 +118,17 @@ target_compile_options(proxpde
   PRIVATE ${PROXPDE_COMPILE_FLAGS}
 )
 
-target_link_libraries(proxpde PUBLIC
-  Eigen3::Eigen
-  fmt::fmt
-  hdf5::hdf5
-  MPI::MPI_CXX  # required by hdf5, should be added implicitly
-  OpenMP::OpenMP_CXX
-  pugixml::pugixml
-  stdc++fs
-  UMFPACK::UMFPACK
-  yaml-cpp
+target_link_libraries(proxpde
+  PUBLIC
+    Eigen3::Eigen
+    fmt::fmt
+    hdf5::hdf5
+    # MPI::MPI_CXX # required by hdf5, should be added implicitly
+    OpenMP::OpenMP_CXX
+    pugixml::pugixml
+    stdc++fs
+    UMFPACK::UMFPACK
+    yaml-cpp
 )
 
 target_link_options(proxpde

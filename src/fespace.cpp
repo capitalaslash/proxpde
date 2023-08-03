@@ -2,6 +2,9 @@
 
 #include "qr.hpp"
 
+namespace proxpde
+{
+
 // explicit instantiations
 #ifdef PROXPDE_EXPLICIT_INSTANTIATION
 template struct FESpace<Mesh<Line>, RefLineP0, GaussQR<Line, 1>>;
@@ -22,3 +25,5 @@ template struct FESpace<Mesh<Hexahedron>, RefHexahedronP0, GaussQR<Hexahedron, 1
 template struct FESpace<Mesh<Hexahedron>, RefHexahedronQ1, GaussQR<Hexahedron, 8>>;
 template struct FESpace<Mesh<Hexahedron>, RefHexahedronQ2, GaussQR<Hexahedron, 27>>;
 #endif
+
+} // namespace proxpde

@@ -15,8 +15,8 @@ short_T const GaussQR<NullElem, 0>::bestPt = 0;
 
 // 1D ----------------------------------------------------------------------------------
 template <>
-GaussQR<Line, 1>::Weights_T const
-    GaussQR<Line, 1>::weight = GaussQR<Line, 1>::Weights_T::Constant(2.L);
+GaussQR<Line, 1>::Weights_T const GaussQR<Line, 1>::weight =
+    GaussQR<Line, 1>::Weights_T::Constant(2.L);
 template <>
 std::array<GaussQR<Line, 1>::Vec_T, 1> const GaussQR<Line, 1>::node = {
     {GaussQR<Line, 1>::Vec_T::Constant(0.0L)}};
@@ -68,8 +68,8 @@ short_T const GaussQR<Line, 4>::bestPt = 1;
 
 // 2D Triangle -------------------------------------------------------------------------
 template <>
-GaussQR<Triangle, 1>::Weights_T const
-    GaussQR<Triangle, 1>::weight = GaussQR<Triangle, 1>::Weights_T::Constant(0.5L);
+GaussQR<Triangle, 1>::Weights_T const GaussQR<Triangle, 1>::weight =
+    GaussQR<Triangle, 1>::Weights_T::Constant(0.5L);
 template <>
 std::array<GaussQR<Triangle, 1>::Vec_T, 1> const GaussQR<Triangle, 1>::node = {
     {GaussQR<Triangle, 1>::Vec_T(1.L / 3, 1.L / 3)}};
@@ -77,8 +77,8 @@ template <>
 short_T const GaussQR<Triangle, 1>::bestPt = 0;
 
 template <>
-GaussQR<Triangle, 3>::Weights_T const
-    GaussQR<Triangle, 3>::weight = GaussQR<Triangle, 3>::Weights_T::Constant(1.L / 6);
+GaussQR<Triangle, 3>::Weights_T const GaussQR<Triangle, 3>::weight =
+    GaussQR<Triangle, 3>::Weights_T::Constant(1.L / 6);
 template <>
 std::array<GaussQR<Triangle, 3>::Vec_T, 3> const GaussQR<Triangle, 3>::node = {
     {GaussQR<Triangle, 3>::Vec_T(1. / 6, 1. / 6),
@@ -149,8 +149,8 @@ short_T const GaussQR<Triangle, 7>::bestPt = 0;
 
 // 2D Quad -----------------------------------------------------------------------------
 template <>
-GaussQR<Quad, 1>::Weights_T const
-    GaussQR<Quad, 1>::weight = GaussQR<Quad, 1>::Weights_T::Constant(4.L);
+GaussQR<Quad, 1>::Weights_T const GaussQR<Quad, 1>::weight =
+    GaussQR<Quad, 1>::Weights_T::Constant(4.L);
 template <>
 std::array<GaussQR<Quad, 1>::Vec_T, 1> const GaussQR<Quad, 1>::node = {
     {GaussQR<Quad, 1>::Vec_T(0.L, 0.L)}};
@@ -158,8 +158,8 @@ template <>
 short_T const GaussQR<Quad, 1>::bestPt = 0;
 
 template <>
-GaussQR<Quad, 4>::Weights_T const
-    GaussQR<Quad, 4>::weight = GaussQR<Quad, 4>::Weights_T::Constant(1.L);
+GaussQR<Quad, 4>::Weights_T const GaussQR<Quad, 4>::weight =
+    GaussQR<Quad, 4>::Weights_T::Constant(1.L);
 // clang-format off
 template <>
 std::array<GaussQR<Quad, 4>::Vec_T, 4> const GaussQR<Quad, 4>::node = {{
@@ -245,8 +245,8 @@ short_T const GaussQR<Tetrahedron, 11>::bestPt = 0;
 
 // 3D Hexahedron -----------------------------------------------------------------------
 template <>
-GaussQR<Hexahedron, 1>::Weights_T const
-    GaussQR<Hexahedron, 1>::weight = GaussQR<Hexahedron, 1>::Weights_T::Constant(8.L);
+GaussQR<Hexahedron, 1>::Weights_T const GaussQR<Hexahedron, 1>::weight =
+    GaussQR<Hexahedron, 1>::Weights_T::Constant(8.L);
 template <>
 std::array<GaussQR<Hexahedron, 1>::Vec_T, 1> const GaussQR<Hexahedron, 1>::node = {{
     GaussQR<Hexahedron, 1>::Vec_T(0.L, 0.L, 0.L),
@@ -255,8 +255,8 @@ template <>
 short_T const GaussQR<Hexahedron, 1>::bestPt = 0;
 
 template <>
-GaussQR<Hexahedron, 8>::Weights_T const
-    GaussQR<Hexahedron, 8>::weight = GaussQR<Hexahedron, 8>::Weights_T::Constant(1.L);
+GaussQR<Hexahedron, 8>::Weights_T const GaussQR<Hexahedron, 8>::weight =
+    GaussQR<Hexahedron, 8>::Weights_T::Constant(1.L);
 // clang-format off
 template <>
 std::array<GaussQR<Hexahedron, 8>::Vec_T, 8> const GaussQR<Hexahedron, 8>::node = {{
@@ -334,6 +334,27 @@ std::array<SideGaussQR<Triangle, 2>::Vec_T, 2 * 3> const
         SideGaussQR<Triangle, 2>::Vec_T{0.0, 0.5 * (1. - sqrt13rd)},
         SideGaussQR<Triangle, 2>::Vec_T{0.0, 0.5 * (1. + sqrt13rd)},
     }};
+
+// clang-format off
+template <>
+SideGaussQR<Triangle, 3>::Weights_T const SideGaussQR<Triangle, 3>::weight =
+    (SideGaussQR<Triangle, 3>::Weights_T{} << 5.L, 8.L, 5.L, 5.L, 8.L, 5.L, 5.L, 8.L, 5.L).finished() / 9.L;
+template <>
+std::array<SideGaussQR<Triangle, 3>::Vec_T, 3 * 3> const
+    SideGaussQR<Triangle, 3>::node = {{
+        SideGaussQR<Triangle, 3>::Vec_T{0.5 * (1. - sqrt35th), 0.0},
+        SideGaussQR<Triangle, 3>::Vec_T{0.5, 0.0},
+        SideGaussQR<Triangle, 3>::Vec_T{0.5 * (1. + sqrt35th), 0.0},
+
+        SideGaussQR<Triangle, 3>::Vec_T{0.5 * (1. + sqrt35th), 0.5 * (1. - sqrt35th)},
+        SideGaussQR<Triangle, 3>::Vec_T{0.5, 0.5},
+        SideGaussQR<Triangle, 3>::Vec_T{0.5 * (1. - sqrt35th), 0.5 * (1. + sqrt35th)},
+
+        SideGaussQR<Triangle, 3>::Vec_T{0.0, 0.5 * (1. - sqrt35th)},
+        SideGaussQR<Triangle, 3>::Vec_T{0.0, 0.5},
+        SideGaussQR<Triangle, 3>::Vec_T{0.0, 0.5 * (1. + sqrt35th)},
+    }};
+// clang-format on
 
 // 2D Quad -----------------------------------------------------------------------------
 template <>

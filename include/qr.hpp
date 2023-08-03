@@ -80,8 +80,8 @@ struct MiniQR
 };
 
 template <typename GeoElem, uint N>
-FVec<MiniQR<GeoElem, N>::numPts> const
-    MiniQR<GeoElem, N>::weight = FVec<MiniQR<GeoElem, N>::numPts>::Constant(
+FVec<MiniQR<GeoElem, N>::numPts> const MiniQR<GeoElem, N>::weight =
+    FVec<MiniQR<GeoElem, N>::numPts>::Constant(
         GeoElem::refVolume / MiniQR<GeoElem, N>::numPts);
 
 template <typename GeoElem, uint N>

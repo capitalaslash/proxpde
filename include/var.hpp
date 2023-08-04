@@ -54,8 +54,15 @@ struct FEVar
       data{fe.dof.size * FESpace_T::dim}
   {}
 
-  explicit FEVar(FESpace_T const & fe): feSpace(&fe), data(fe.dof.size * FESpace_T::dim)
-  {}
+  explicit FEVar(FESpace_T const & fe): FEVar("none", fe) {}
+
+  FEVar() = default;
+
+  void init(std::string_view n, FESpace_T const & fe)
+  {
+    name = n;
+    feSpace = &fe;
+  }
 
   FEVar<FESpace_T> & operator<<(Fun<FESpace_T::physicalDim(), 3> const & f)
   {
@@ -288,7 +295,7 @@ struct FEVar
     getComponent(data, feSpace, v, feSpaceVec, component);
   }
 
-  std::string const name = "";
+  std::string name = "none";
   FESpace_T const * feSpace;
   Vec data;
 

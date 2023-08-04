@@ -2,7 +2,6 @@
 
 #include "def.hpp"
 
-#include "qr.hpp"
 #include "reffe.hpp"
 
 namespace proxpde

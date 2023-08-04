@@ -10,7 +10,112 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-using namespace proxpde;
+namespace proxpde
+{
+
+template <int N>
+FVec<N>
+addSUPG(double const h, double const eps, Vec3 const & vel, FMat<N, 3> const & dphi)
+{
+  double const velNorm = vel.norm();
+  double const peclet = 0.5 * velNorm * h / eps;
+  double const aOpt = (1. / std::tanh(peclet) - 1. / peclet);
+  return 0.5 * aOpt * h * (dphi * vel) / velNorm;
+}
+
+template <typename FESpace, typename FESpaceVel>
+struct AssemblyMassSUPG: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceVel_T = FESpaceVel;
+  using Super_T = Diagonal<FESpace_T>;
+  using LMat_T = typename Super_T::LMat_T;
+
+  AssemblyMassSUPG(
+      double const c,
+      FEVar<FESpaceVel_T> & u,
+      double const e,
+      FESpace_T const & fe,
+      bool supg,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>{fe, cmp},
+      coef{c},
+      vel{&u},
+      eps{e},
+      enableSUPG{supg}
+  {}
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    CurFE_T const & curFE = this->feSpace->curFE;
+    double const h = curFE.elem->hMin();
+    vel->reinit(*curFE.elem);
+
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    {
+      Vec3 const velQPoint = promote<3>(vel->evaluate(q));
+      auto const phiiSUPG =
+          curFE.phi[q] + enableSUPG * addSUPG(h, eps, velQPoint, curFE.dphi[q]);
+
+      Ke += coef * this->feSpace->curFE.JxW[q] * phiiSUPG *
+            this->feSpace->curFE.phi[q].transpose();
+    }
+  }
+
+  double coef = 1.0;
+  FEVar<FESpaceVel_T> * vel;
+  double const eps;
+  bool const enableSUPG;
+};
+
+template <typename FESpace, typename FESpaceVel>
+struct AssemblyAdvectionSUPG: public Diagonal<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceVel_T = FESpaceVel;
+  using Super_T = Diagonal<FESpace_T>;
+  using LMat_T = typename Super_T::LMat_T;
+
+  AssemblyAdvectionSUPG(
+      double const c,
+      FEVar<FESpaceVel_T> & u,
+      double const e,
+      FESpace_T const & fe,
+      bool supg,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>{fe, cmp},
+      coef{c},
+      vel{&u},
+      eps{e},
+      enableSUPG{supg}
+  {}
+
+  void build(LMat_T & Ke) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    CurFE_T const & curFE = this->feSpace->curFE;
+    double const h = curFE.elem->hMin();
+    vel->reinit(*curFE.elem);
+
+    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    {
+      auto const velQPoint = promote<3>(vel->evaluate(q));
+      auto const phiiSUPG =
+          curFE.phi[q] + enableSUPG * addSUPG(h, eps, velQPoint, curFE.dphi[q]);
+
+      Ke += coef * this->feSpace->curFE.JxW[q] * phiiSUPG *
+            (this->feSpace->curFE.dphi[q] * velQPoint).transpose();
+    }
+  }
+
+  double coef = 1.0;
+  FEVar<FESpaceVel_T> * vel;
+  double const eps;
+  bool const enableSUPG;
+};
 
 template <typename ElemType>
 class DAEqn
@@ -18,7 +123,7 @@ class DAEqn
 public:
   using Elem_T = ElemType;
   using Mesh_T = Mesh<Elem_T>;
-  using FESpaceP1_T = FESpace<
+  using FESpace_T = FESpace<
       Mesh_T,
       typename LagrangeFE<Elem_T, 1>::RefFE_T,
       typename LagrangeFE<Elem_T, 1>::RecommendedQR>;
@@ -29,15 +134,16 @@ public:
       Elem_T::dim>;
 
   DAEqn() = default;
-  DAEqn(double const t): theta(t) {}
+  DAEqn(double const t, bool const supg): theta(t), enableSUPG{supg} {}
   void run();
 
   // theta = 0 explicit Euler
   // theta = 1 implicit Euler
   // theta = 0.5 Crank-Nicholson
   double const theta = 0.5;
+  bool const enableSUPG = true;
 
-  FEVar<FESpaceP1_T> c;
+  FEVar<FESpace_T> c;
 
 private:
   void setupSystem();
@@ -46,8 +152,8 @@ private:
 
   MilliTimer t;
   std::unique_ptr<Mesh_T> mesh;
-  FESpaceP1_T feSpaceP1;
-  std::vector<BCEss<FESpaceP1_T>> bcs;
+  FESpace_T feSpaceP1;
+  std::vector<BCEss<FESpace_T>> bcs;
   Builder<StorageType::ClmMajor> builder;
   Mat<StorageType::RowMajor> massMatrix;
   Mat<StorageType::RowMajor> diffMatrix;
@@ -55,7 +161,7 @@ private:
   Mat<StorageType::ClmMajor> systemMatrix;
   Vec rhs;
   LUSolver solver;
-  IOManager<FESpaceP1_T> io;
+  IOManager<FESpace_T> io;
 
   double time = 0.0;
   double const dt = 0.005;
@@ -67,9 +173,15 @@ private:
   scalarFun_T const ic = [](Vec3 const & p)
   { return (p - Vec3(0.5, 0.75, 0.0)).squaredNorm() < 0.15 * 0.15 ? 1.0 : 0.0; };
 
+  // circle
   Fun<Elem_T::dim, 3> const velocityField = [](Vec3 const & p) {
     return Vec2{M_PI * (p(1) - 0.5), -M_PI * (p(0) - 0.5)};
   };
+
+  // // linear
+  // Fun<Elem_T::dim, 3> const velocityField = [](Vec3 const & ) {
+  //   return Vec2{0.0, -0.25};
+  // };
 
   double const eps = 1.e-3;
 };
@@ -111,11 +223,14 @@ void DAEqn<ElemType>::setupSystem()
   t.start("build");
   Builder<StorageType::RowMajor> builderMatrix{feSpaceP1.dof.size};
 
-  AssemblyMass timeDer{1.0 / dt, feSpaceP1};
+  // AssemblyMass timeDer{1.0 / dt, feSpaceP1};
+  AssemblyMassSUPG<FESpace_T, FESpaceVel_T> timeDer{
+      1.0 / dt, vel, eps, feSpaceP1, enableSUPG};
   builderMatrix.buildLhs(std::tuple{timeDer}, bcs);
   builderMatrix.closeMatrix();
   massMatrix = builderMatrix.A;
 
+  // with linear fe the second derivative is null, no term in SUPG
   AssemblyStiffness diffusion{eps, feSpaceP1};
   builderMatrix.clearLhs();
   builderMatrix.buildLhs(std::tuple{diffusion}, bcs);
@@ -123,7 +238,9 @@ void DAEqn<ElemType>::setupSystem()
   diffMatrix = builderMatrix.A;
 
   builderMatrix.clearLhs();
-  AssemblyAdvection advection{vel, feSpaceP1};
+  // AssemblyAdvection advection{vel, feSpaceP1};
+  AssemblyAdvectionSUPG<FESpace_T, FESpaceVel_T> advection{
+      1.0, vel, eps, feSpaceP1, enableSUPG};
   builderMatrix.buildLhs(std::tuple{advection}, bcs);
   builderMatrix.closeMatrix();
   advMatrix = builderMatrix.A;
@@ -212,26 +329,30 @@ void DAEqn<ElemType>::run()
   t.print();
 }
 
+} // namespace proxpde
+
 int main(/*int argc, char * argv[]*/)
 {
+  using namespace proxpde;
+
   std::bitset<4> tests;
   {
-    DAEqn<Triangle> daEqn{/*theta = */ 1.0};
+    DAEqn<Triangle> daEqn{/*theta = */ 1.0, /*enableSUPG =*/false};
     daEqn.run();
     tests[0] = checkError({daEqn.c.data.maxCoeff()}, {7.997857020567e-01});
   }
   {
-    DAEqn<Triangle> daEqn{/*theta = */ 0.5};
+    DAEqn<Triangle> daEqn{/*theta = */ 0.5, /*enableSUPG =*/false};
     daEqn.run();
     tests[1] = checkError({daEqn.c.data.maxCoeff()}, {9.496437540798e-01});
   }
   {
-    DAEqn<Quad> daEqn{/*theta = */ 1.0};
+    DAEqn<Quad> daEqn{/*theta = */ 1.0, /*enableSUPG =*/false};
     daEqn.run();
     tests[2] = checkError({daEqn.c.data.maxCoeff()}, {7.904235782602e-01});
   }
   {
-    DAEqn<Quad> daEqn{/*theta = */ 0.5};
+    DAEqn<Quad> daEqn{/*theta = */ 0.5, /*enableSUPG =*/false};
     daEqn.run();
     tests[3] = checkError({daEqn.c.data.maxCoeff()}, {9.385255164133e-01});
   }

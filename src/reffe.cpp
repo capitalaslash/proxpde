@@ -1005,22 +1005,22 @@ Vec3 const RefHexahedronRT0::refMidpoint = Vec3{0., 0., 0.};
 
 std::array<threedFun_T, RefHexahedronRT0::numDOFs> const RefHexahedronRT0::phiVectFun =
     {{
-        [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.5 * (p(2) - 1.0)); },
-        [](Vec_T const & p) { return Vec_T(0.0, 0.5 * (p(1) - 1.0), 0.0); },
-        [](Vec_T const & p) { return Vec_T(0.5 * (p(0) + 1.0), 0.0, 0.0); },
-        [](Vec_T const & p) { return Vec_T(0.0, 0.5 * (p(1) + 1.0), 0.0); },
-        [](Vec_T const & p) { return Vec_T(0.5 * (p(0) - 1.0), 0.0, 0.0); },
-        [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.5 * (p(2) + 1.0)); },
+        [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.125 * (p(2) - 1.0)); },
+        [](Vec_T const & p) { return Vec_T(0.0, 0.125 * (p(1) - 1.0), 0.0); },
+        [](Vec_T const & p) { return Vec_T(0.125 * (p(0) + 1.0), 0.0, 0.0); },
+        [](Vec_T const & p) { return Vec_T(0.0, 0.125 * (p(1) + 1.0), 0.0); },
+        [](Vec_T const & p) { return Vec_T(0.125 * (p(0) - 1.0), 0.0, 0.0); },
+        [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.125 * (p(2) + 1.0)); },
     }};
 
 std::array<scalarThreedFun_T, RefHexahedronRT0::numDOFs> const
     RefHexahedronRT0::divphiFun = {{
-        [](Vec_T const &) { return 0.5; },
-        [](Vec_T const &) { return 0.5; },
-        [](Vec_T const &) { return 0.5; },
-        [](Vec_T const &) { return 0.5; },
-        [](Vec_T const &) { return 0.5; },
-        [](Vec_T const &) { return 0.5; },
+        [](Vec_T const &) { return 0.125; },
+        [](Vec_T const &) { return 0.125; },
+        [](Vec_T const &) { return 0.125; },
+        [](Vec_T const &) { return 0.125; },
+        [](Vec_T const &) { return 0.125; },
+        [](Vec_T const &) { return 0.125; },
     }};
 
 // tri-linear mapping

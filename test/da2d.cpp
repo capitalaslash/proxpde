@@ -29,7 +29,15 @@ public:
       Elem_T::dim>;
 
   DAEqn() = default;
+  DAEqn(double const t): theta(t) {}
   void run();
+
+  // theta = 0 explicit Euler
+  // theta = 1 implicit Euler
+  // theta = 0.5 Crank-Nicholson
+  double const theta = 0.5;
+
+  FEVar<FESpaceP1_T> c;
 
 private:
   void setupSystem();
@@ -49,16 +57,11 @@ private:
   LUSolver solver;
   IOManager<FESpaceP1_T> io;
 
-  // theta = 0 explicit Euler
-  // theta = 1 implicit Euler
-  // theta = 0.5 Crank-Nicholson
-  double const theta = 0.5;
   double time = 0.0;
   double const dt = 0.005;
   uint const ntime = 400;
   uint const printStep = 10U;
 
-  FEVar<FESpaceP1_T> c;
   Vec cOld;
 
   scalarFun_T const ic = [](Vec3 const & p)
@@ -211,9 +214,28 @@ void DAEqn<ElemType>::run()
 
 int main(/*int argc, char * argv[]*/)
 {
-  DAEqn<Triangle> daEqn;
-  daEqn.run();
+  std::bitset<4> tests;
+  {
+    DAEqn<Triangle> daEqn{/*theta = */ 1.0};
+    daEqn.run();
+    tests[0] = checkError({daEqn.c.data.maxCoeff()}, {7.997857020567e-01});
+  }
+  {
+    DAEqn<Triangle> daEqn{/*theta = */ 0.5};
+    daEqn.run();
+    tests[1] = checkError({daEqn.c.data.maxCoeff()}, {9.496437540798e-01});
+  }
+  {
+    DAEqn<Quad> daEqn{/*theta = */ 1.0};
+    daEqn.run();
+    tests[2] = checkError({daEqn.c.data.maxCoeff()}, {7.904235782602e-01});
+  }
+  {
+    DAEqn<Quad> daEqn{/*theta = */ 0.5};
+    daEqn.run();
+    tests[3] = checkError({daEqn.c.data.maxCoeff()}, {9.385255164133e-01});
+  }
 
-  // return checkError({errorNorm}, {6.389801046171856e-05});
-  return 0;
+  fmt::print("tests: {}\n", tests.to_string());
+  return tests.any();
 }

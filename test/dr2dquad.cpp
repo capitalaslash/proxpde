@@ -84,7 +84,7 @@ int main(int argc, char * argv[])
   bcBottom << zeroFun;
   auto bcTop = BCEss{feSpace, side::TOP};
   bcTop << zeroFun;
-  auto const bcs = std::tuple{bcRight, bcLeft, bcBottom, bcTop};
+  auto const bcs = std::vector{bcRight, bcLeft, bcBottom, bcTop};
 
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyScalarMass mass{1.0, feSpace};

@@ -2,7 +2,9 @@
 
 #include "def.hpp"
 
+#include "bc.hpp"
 #include "geo.hpp"
+#include "mesh.hpp"
 #include "reffe.hpp"
 
 namespace proxpde
@@ -111,13 +113,15 @@ using SuperBEELimiter = Limiter<LimiterType::SUPERBEE>;
 // template <>
 // struct FacetRefFE<RefTriangleP0> { using type = RefTriangleE1; };
 
-template <typename FESpace, typename BCS, LimiterType L>
+template <typename FESpace, LimiterType L>
 struct FVSolver
 {
-  using Mesh_T = typename FESpace::Mesh_T;
+  using FESpace_T = FESpace;
+  using BCList_T = std::vector<BCEss<FESpace_T>>;
+  using Mesh_T = typename FESpace_T::Mesh_T;
   using Elem_T = typename Mesh_T::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
-  using ElemRefFE_T = typename FESpace::RefFE_T;
+  using ElemRefFE_T = typename FESpace_T::RefFE_T;
   // using FacetFESpace_T = FESpace<Mesh_T,
   //                                typename LagrangeFE<Facet_T, 0>::RefFE_T,
   //                                typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
@@ -126,7 +130,7 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static const uint dim = Elem_T::dim;
 
-  FVSolver(FESpace const & fe, BCS const & bcList, Limiter<L> /*l*/):
+  FVSolver(FESpace_T const & fe, BCList_T const & bcList, Limiter<L> /*l*/):
       feSpace(fe),
       bcs(bcList),
       uOld(fe.dof.size),
@@ -227,17 +231,15 @@ struct FVSolver
         // coming from outside
         else
         {
-          static_for(
-              bcs,
-              [&, elemId = insideElemPtr->id](auto const /*i*/, auto const & bc)
-              {
-                if (bc.marker == facet.marker)
-                {
-                  auto const uLocal = bc.get(elemId);
-                  fluxes[facet.id] = vNorm * uLocal;
-                }
-              });
-          // for (auto const & bc: bcs.bcEssList)
+          for (auto const & bc: bcs)
+          {
+            if (bc.marker == facet.marker)
+            {
+              auto const uLocal = bc.get(insideElemPtr->id);
+              fluxes[facet.id] = vNorm * uLocal;
+            }
+          }
+          // for (auto const & bc: bcs)
           // {
           //   if (bc.marker == facet.marker)
           //   {
@@ -300,7 +302,7 @@ struct FVSolver
   }
 
   FESpace const & feSpace;
-  BCS const & bcs;
+  BCList_T const & bcs;
   Vec uOld;
   Vec uJump;
   Vec fluxes;

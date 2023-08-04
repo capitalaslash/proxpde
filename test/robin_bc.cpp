@@ -55,7 +55,7 @@ int test(YAML::Node const & config)
   t.start();
   auto bc = BCEss{feSpace, side::LEFT};
   bc << [temp0](Vec3 const &) { return temp0; };
-  auto const bcs = std::tuple{bc};
+  auto const bcs = std::vector{bc};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();

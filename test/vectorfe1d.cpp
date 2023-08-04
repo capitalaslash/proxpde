@@ -74,9 +74,7 @@ int main(int argc, char * argv[])
     }
     return vars;
   };
-  auto bc = BCEss{feSpace, side::LEFT};
-  bc << bcValue;
-  auto const bcs = std::tuple{bc};
+  auto const bc = BCEss{feSpace, side::LEFT, bcValue};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   t.start();
@@ -87,13 +85,8 @@ int main(int argc, char * argv[])
   auto const f = AssemblyAnalyticRhs{rhs, feSpace};
   auto const bcNat = AssemblyBCNatural{bcValue, side::RIGHT, feSpace};
   Builder builder{size};
-  builder.buildLhs(std::tuple{stiffness}, bcs);
-  builder.buildRhs(
-      std::tuple{
-          f,
-          bcNat,
-      },
-      bcs);
+  builder.buildLhs(std::tuple{stiffness}, {bc});
+  builder.buildRhs(std::tuple{f, bcNat}, {bc});
   builder.closeMatrix();
   std::cout << "fe assembly: " << t << " ms" << std::endl;
 

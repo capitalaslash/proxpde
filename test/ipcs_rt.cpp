@@ -150,76 +150,55 @@ int main(int argc, char * argv[])
   // auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0] * p[0])};
   // };
   auto const inlet = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
-  auto const inlet0 = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
-  auto const inlet1 = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
+  auto const inletX = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
+  auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
 
   // last essential bc wins on corners
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::LEFT, {0}}};
-  std::get<0>(bcsVel) << inlet;
-  std::get<1>(bcsVel) << zeroV;
-  std::get<2>(bcsVel) << zeroV;
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceVel, side::BOTTOM, inlet},
+      BCEss{feSpaceVel, side::RIGHT, zeroV},
+      BCEss{feSpaceVel, side::LEFT, zeroV, {0}},
+  };
   // TODO: pin a single DOF
-  auto bcTopP = BCEss{feSpaceP, side::TOP};
-  bcTopP << zeroS;
-  auto const bcsP = std::tuple{bcTopP};
+  auto const bcTopP = BCEss{feSpaceP, side::TOP, zeroS};
+  auto const bcsP = std::vector{bcTopP};
   // DofSet_T pinSet = {1};
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
   // split
-  auto bcsUStar = std::tuple{
-      BCEss{feSpaceU, side::BOTTOM},
-      BCEss{feSpaceU, side::RIGHT},
-      BCEss{feSpaceU, side::LEFT}};
-  std::get<0>(bcsUStar) << inlet0;
-  std::get<1>(bcsUStar) << zeroS;
-  std::get<2>(bcsUStar) << zeroS;
-  auto bcsVStar =
-      std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
-  std::get<0>(bcsVStar) << inlet1;
-  std::get<1>(bcsVStar) << zeroS;
-  auto bcTopPSplit = BCEss{feSpacePSplit, side::TOP};
-  bcTopPSplit << zeroS;
-  auto const bcsPSplit = std::tuple{bcTopPSplit};
+  auto const bcsUStar = std::vector{
+      BCEss{feSpaceU, side::BOTTOM, inletX},
+      BCEss{feSpaceU, side::RIGHT, zeroS},
+      BCEss{feSpaceU, side::LEFT, zeroS},
+  };
+  auto const bcsVStar = std::vector{
+      BCEss{feSpaceU, side::BOTTOM, inletY},
+      BCEss{feSpaceU, side::RIGHT, zeroS},
+  };
+
+  auto const bcTopPSplit = BCEss{feSpacePSplit, side::TOP, zeroS};
+  auto const bcsPSplit = std::vector{bcTopPSplit};
   // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
 
   // split RT
-  auto bcsUStarRT = std::tuple{
-      BCEss{feSpaceUStarRT, side::BOTTOM},
-      BCEss{feSpaceUStarRT, side::RIGHT},
-      BCEss{feSpaceUStarRT, side::LEFT}};
-  std::get<0>(bcsUStarRT) << inlet0;
-  std::get<1>(bcsUStarRT) << zeroS;
-  std::get<2>(bcsUStarRT) << zeroS;
-  auto bcsVStarRT = std::tuple{
-      BCEss{feSpaceUStarRT, side::BOTTOM}, BCEss{feSpaceUStarRT, side::RIGHT}};
-  std::get<0>(bcsVStarRT) << inlet1;
-  std::get<1>(bcsVStarRT) << zeroS;
-  auto bcsVelRT = std::tuple{
-      BCEss{feSpaceVelRT, side::BOTTOM},
-      BCEss{feSpaceVelRT, side::RIGHT},
-      BCEss{feSpaceVelRT, side::LEFT}};
-  // TODO: do integration on facet
-  // std::get<0>(bcsVelRT) << [] (Vec3 const & p) {
-  //   if (p[0] < 0.5)
-  //     return -11./8.;
-  //   return -5./8.;
-  // };
-  std::get<0>(bcsVelRT) << [&inlet](Vec3 const & p)
-  {
-    return promote<3>(inlet(p));
-    // if (p[0] < 0.75)
-    //   return -4./ 3.;
-    // return 0.;
-    // return -1.;
+  auto const bcsUStarRT = std::vector{
+      BCEss{feSpaceUStarRT, side::BOTTOM, inletX},
+      BCEss{feSpaceUStarRT, side::RIGHT, zeroS},
+      BCEss{feSpaceUStarRT, side::LEFT, zeroS},
+  };
+  auto const bcsVStarRT = std::vector{
+      BCEss{feSpaceUStarRT, side::BOTTOM, inletY},
+      BCEss{feSpaceUStarRT, side::RIGHT, zeroS},
   };
   auto const zero3d = [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
-  std::get<1>(bcsVelRT) << zero3d;
-  std::get<2>(bcsVelRT) << zero3d;
-  // auto const bcsVelRT = std::tuple{};
-  auto const bcsLambda = std::tuple{};
+  auto const inlet3d = [&inlet](Vec3 const & p) { return promote<3>(inlet(p)); };
+  auto const bcsVelRT = std::vector{
+      BCEss{feSpaceVelRT, side::BOTTOM, inlet3d},
+      BCEss{feSpaceVelRT, side::RIGHT, zero3d},
+      BCEss{feSpaceVelRT, side::LEFT, zero3d},
+  };
+  auto const bcsLambda = std::vector<BCEss<FESpaceLambda_T>>{};
+  // TODO: do integration on facet
   t.stop();
 
   auto const dt = config["dt"].as<double>();
@@ -332,11 +311,11 @@ int main(int argc, char * argv[])
   eqnP.buildLhs();
   eqnP.compute();
 
-  Eqn eqnU{u, uLhs, uRhs, std::tuple{}};
+  Eqn eqnU{u, uLhs, uRhs};
   // eqnU lhs does not change in time, we can pre-compute and factorize it
   eqnU.buildLhs();
   eqnU.compute();
-  Eqn eqnV{v, vLhs, vRhs, std::tuple{}};
+  Eqn eqnV{v, vLhs, vRhs};
   // eqnV lhs does not change in time, we can pre-compute and factorize it
   eqnV.buildLhs();
   eqnV.compute();
@@ -459,7 +438,7 @@ int main(int argc, char * argv[])
   IOManager ioLambda{feSpaceLambda, "output_ipcs_rt/lambda"};
   if (config["split_rt"].as<bool>())
   {
-    ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol});
+    ioUsplitRT.print(std::tuple{eqnUstarRT.sol, eqnVstarRT.sol});
     ioVelRT.print(std::tuple{velRT});
     ioFacet.print(std::tuple{velRT});
     ioLambda.print({lambda});
@@ -623,7 +602,7 @@ int main(int argc, char * argv[])
 
       if (config["split_rt"].as<bool>())
       {
-        ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol}, time);
+        ioUsplitRT.print(std::tuple{eqnUstarRT.sol, eqnVstarRT.sol}, time);
         ioVelRT.print(std::tuple{velRT}, time);
         ioFacet.print(std::tuple{velRT}, time);
         ioLambda.print({lambda}, time);

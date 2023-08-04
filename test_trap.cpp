@@ -9,6 +9,8 @@
 
 int main()
 {
+  using namespace proxpde;
+
   scalarFun_T const rhs = [](Vec3 const & p) { return M_PI * std::sin(M_PI * p(0)); };
 
   scalarFun_T const exactSol = [](Vec3 const & p)
@@ -39,16 +41,13 @@ int main()
 
   FESpace_T feSpace{*mesh};
 
-  // bc setup
-  auto const bcs = std::tuple{};
-
   AssemblyScalarMass mass{1.0, feSpace};
 
   AssemblyAnalyticRhs f{exactSol, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(std::tuple{mass}, bcs);
-  builder.buildRhs(std::tuple{f}, bcs);
+  builder.buildLhs(std::tuple{mass});
+  builder.buildRhs(std::tuple{f});
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;

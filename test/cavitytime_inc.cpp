@@ -1,6 +1,5 @@
 #include "def.hpp"
 
-#include "assembler.hpp"
 #include "assembly.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
@@ -63,17 +62,14 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bcs");
-  auto zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::LEFT},
-      BCEss{feSpaceVel, side::TOP},
+  auto const zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
+  auto const wallSlip = [](Vec3 const &) { return Vec2{1.0, 0.0}; };
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceVel, side::BOTTOM, zero},
+      BCEss{feSpaceVel, side::RIGHT, zero},
+      BCEss{feSpaceVel, side::LEFT, zero},
+      BCEss{feSpaceVel, side::TOP, wallSlip},
   };
-  std::get<0>(bcsVel) << zero;
-  std::get<1>(bcsVel) << zero;
-  std::get<2>(bcsVel) << zero;
-  std::get<3>(bcsVel) << [](Vec3 const &) { return Vec2{1.0, 0.0}; };
 
   // select the point(s) on the bottom boundary in the middle
   auto const o = config["mesh"]["origin"].as<Vec3>();
@@ -88,7 +84,7 @@ int main(int argc, char * argv[])
   };
   auto bcPin = BCEss{feSpaceP, pinSet.ids};
   bcPin << [](Vec3 const &) { return 0.; };
-  auto const bcsP = std::tuple{bcPin};
+  auto const bcsP = std::vector{bcPin};
   t.stop();
 
   t.start("assembly def");

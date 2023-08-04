@@ -108,7 +108,7 @@ int main(int argc, char * argv[])
   // bcRightP1 << zero;
   // auto bcTopP1 = BCEss{feSpaceP1, side::TOP};
   // bcTopP1 << zero;
-  auto const bcsP1 = std::tuple{bcLeftP1 /*, bcBottomP1, bcRightP1, bcTopP1*/};
+  auto const bcsP1 = std::vector{bcLeftP1 /*, bcBottomP1, bcRightP1, bcTopP1*/};
   auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
   bcLeftP0 << one;
   // bcLeftP0 << zero;
@@ -118,7 +118,7 @@ int main(int argc, char * argv[])
   // bcRightP0 << zero;
   // auto bcTopP0 = BCEss{feSpaceP0, side::TOP};
   // bcTopP0 << zero;
-  auto const bcsP0 = std::tuple{bcLeftP0 /*, bcBottomP0, bcRightP0, bcTopP0*/};
+  auto const bcsP0 = std::vector{bcLeftP0 /*, bcBottomP0, bcRightP0, bcTopP0*/};
   t.stop();
 
   t.start("velocity");

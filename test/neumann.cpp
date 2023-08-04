@@ -68,18 +68,17 @@ int test(YAML::Node const & config)
   t.start("bcs");
   auto bc = BCEss{feSpace, side::LEFT};
   bc << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::tuple{bc};
   t.stop();
 
   t.start("assembly");
   auto const size = feSpace.dof.size;
   Builder builder{size};
-  builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
+  builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, {bc});
   auto const rhs = std::tuple{
       AssemblyAnalyticRhs{rhsFun, feSpace},
       AssemblyBCNatural{[](Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
   };
-  builder.buildRhs(rhs, bcs);
+  builder.buildRhs(rhs, {bc});
   builder.closeMatrix();
   t.stop();
 

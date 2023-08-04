@@ -16,20 +16,17 @@ struct Diagonal;
 template <typename FESpace>
 struct AssemblyVector;
 
-template <
-    typename LhsTup,
-    typename RhsTup,
-    typename BCS,
-    auto Storage = StorageType::ClmMajor>
+template <typename LhsTup, typename RhsTup, auto Storage = StorageType::ClmMajor>
 struct Eqn
 {
   using FESpace_T = typename std::tuple_element_t<0, LhsTup>::FESpace_T;
+  using BCList_T = std::vector<BCEss<FESpace_T>>;
   static uint const dim = FESpace_T::dim;
 
   Eqn(Var & s,
       LhsTup const & lhs,
       RhsTup const & rhs,
-      BCS const & bcs,
+      BCList_T const & bcs = BCList_T{},
       EqnSolver<Storage> /*solver*/ = EqnSolver<Storage>{}):
       lhsAssemblies{lhs},
       rhsAssemblies{rhs},
@@ -60,7 +57,7 @@ struct Eqn
 
   LhsTup const & lhsAssemblies;
   RhsTup const & rhsAssemblies;
-  BCS const & bcList;
+  BCList_T const & bcList;
   Var & sol;
   Builder<Storage> builder;
   RecommendedSolverType<Storage> solver;

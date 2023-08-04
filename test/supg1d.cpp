@@ -355,12 +355,8 @@ int main(int argc, char * argv[])
   t.start("bcs");
   auto const one = [](Vec3 const &) { return 1.; };
   // auto const zero = [] (Vec3 const & ) { return 0.; };
-  auto bcLeftCG = BCEss{feSpaceCG, side::LEFT};
-  bcLeftCG << one;
-  auto const bcsCG = std::tuple{bcLeftCG};
-  auto bcLeftFV = BCEss{feSpaceFV, side::LEFT};
-  bcLeftFV << one;
-  auto const bcsFV = std::tuple{bcLeftFV};
+  auto const bcsCG = std::vector{BCEss{feSpaceCG, side::LEFT, one}};
+  auto const bcsFV = std::vector{BCEss{feSpaceFV, side::LEFT, one}};
   t.stop();
 
   auto const dt = config["dt"].as<double>();

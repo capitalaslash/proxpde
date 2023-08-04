@@ -74,7 +74,6 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   // we don't need any boundary condition
-  auto const bcs = std::tuple{};
   t.stop();
 
   t.start("fe build");
@@ -93,8 +92,8 @@ int test(YAML::Node const & config)
   AssemblyProjection bdf2Rhs1{1.0 / dt, uOld, feSpace};
   AssemblyProjection bdf2Rhs2{-0.5 / dt, uOldOld, feSpace};
   Builder builder{feSpace.dof.size};
-  // builder.buildLhs(timeder, bcs);
-  // builder.buildLhs(mass, bcs);
+  // builder.buildLhs(timeder);
+  // builder.buildLhs(mass);
   // builder.closeMatrix();
   t.stop();
 
@@ -132,17 +131,15 @@ int test(YAML::Node const & config)
 
     uOldOld = uOld;
     uOld = u.data;
-    builder.buildLhs(std::tuple{bdf1Lhs, mass}, bcs);
-    builder.buildRhs(std::tuple{bdf1Rhs}, bcs);
+    builder.buildLhs(std::tuple{bdf1Lhs, mass});
+    builder.buildRhs(std::tuple{bdf1Rhs});
     if (method == TimeIntegrationMethod::BDF2 && itime > 1)
     {
-      builder.buildLhs(std::tuple{bdf2Lhs}, bcs);
-      builder.buildRhs(std::tuple{bdf2Rhs1, bdf2Rhs2}, bcs);
+      builder.buildLhs(std::tuple{bdf2Lhs});
+      builder.buildRhs(std::tuple{bdf2Rhs1, bdf2Rhs2});
     }
-    builder.buildRhs(
-        std::tuple{AssemblyAnalyticRhs{
-            [&rhs, time](Vec3 const &) { return rhs(time); }, feSpace}},
-        bcs);
+    builder.buildRhs(std::tuple{AssemblyAnalyticRhs{
+        [&rhs, time](Vec3 const &) { return rhs(time); }, feSpace}});
     builder.closeMatrix();
 
     solver.analyzePattern(builder.A);

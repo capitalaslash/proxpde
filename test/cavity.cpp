@@ -36,22 +36,22 @@ int main(int argc, char * argv[])
   auto const dofVel = dim * feSpaceVel.dof.size;
   FESpaceP_T feSpaceP{*mesh, dofVel};
 
-  auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::LEFT},
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::TOP}};
-  std::get<0>(bcsVel) << zero;
-  std::get<1>(bcsVel) << zero;
-  std::get<2>(bcsVel) << zero;
-  std::get<3>(bcsVel) << [](Vec3 const &) { return Vec2{1.0, 0.0}; };
+  auto const zero = [](Vec3 const &) { return Vec2::Constant(0.); };
+  auto const slipWall = [](Vec3 const &) { return Vec2{1.0, 0.0}; };
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceVel, side::RIGHT, zero},
+      BCEss{feSpaceVel, side::LEFT, zero},
+      BCEss{feSpaceVel, side::BOTTOM, zero},
+      BCEss{feSpaceVel, side::TOP, slipWall},
+  };
   // select the point on the bottom boundary in the middle
-  DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
-                       return std::fabs(p[0] - 0.5) < 1e-12 && std::fabs(p[1]) < 1e-12;
-                     }};
-  auto bcsP = std::tuple{BCEss{feSpaceP, pinSet.ids}};
-  std::get<0>(bcsP) << [](Vec3 const &) { return 0.; };
+  DOFCoordSet pinSet{
+      feSpaceP,
+      [](Vec3 const & p) {
+        return (p - Vec3{0.5, 0.0, 0.0}).squaredNorm() < 1.e-12;
+      },
+  };
+  auto bcsP = std::vector{BCEss{feSpaceP, pinSet.ids, [](Vec3 const &) { return 0.; }}};
 
   AssemblyStiffness stiffness{1.0, feSpaceVel};
   AssemblyGrad grad{-1.0, feSpaceVel, feSpaceP};

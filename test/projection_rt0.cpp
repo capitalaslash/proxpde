@@ -90,15 +90,16 @@ int test(
   // bcBottom << [] (Vec3 const & ) { return -0.5; };
   auto bcLeft = BCEss{feSpaceRT0, side::LEFT};
   bcLeft << [](Vec3 const &) { return Vec3{1.0, 0.0, 0.0}; };
-  auto const bcs = std::tuple{bcLeft};
+  auto const bcsURT0 = std::vector{bcLeft};
+  auto const bcsLambda = std::vector<BCEss<FESpaceP0Scalar_T>>{};
   Builder builder{sizeRT0 + sizeP0};
-  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcs);
+  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcsURT0);
   builder.buildCoupling(
-      AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcs, std::tuple{});
+      AssemblyVectorGrad(1.0, feSpaceRT0, feSpaceLambda), bcsURT0, bcsLambda);
   builder.buildCoupling(
-      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceRT0), std::tuple{}, bcs);
+      AssemblyVectorDiv(1.0, feSpaceLambda, feSpaceRT0), bcsLambda, bcsURT0);
   builder.buildRhs(
-      std::tuple{AssemblyProjection(1.0, uP1.data, feSpaceP1, feSpaceRT0)}, bcs);
+      std::tuple{AssemblyProjection(1.0, uP1.data, feSpaceP1, feSpaceRT0)}, bcsURT0);
   builder.closeMatrix();
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;

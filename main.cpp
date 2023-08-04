@@ -53,14 +53,13 @@ int main()
 
   auto bc = BCEss{feSpace, side::LEFT};
   bc << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::tuple{bc};
 
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyAnalyticRhs f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
-  builder.buildLhs(std::tuple{stiffness}, bcs);
-  builder.buildRhs(std::tuple{f}, bcs);
+  builder.buildLhs(std::tuple{stiffness}, std::vector{bc});
+  builder.buildRhs(std::tuple{f}, std::vector{bc});
   builder.closeMatrix();
 
   // std::cout << "builder.A:\n" << builder.A << std::endl;

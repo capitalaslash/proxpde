@@ -57,6 +57,8 @@ struct NSSolverMonolithic
       Mesh_T,
       typename LagrangeFE<Elem_T, 1>::RefFE_T,
       typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
+  using BCVelList_T = std::vector<BCEss<FESpaceVel_T>>;
+  using BCPList_T = std::vector<BCEss<FESpaceP_T>>;
 
   // using Backend = amgcl::backend::eigen<double>;
   // using USolver = amgcl::make_solver<
@@ -129,8 +131,7 @@ struct NSSolverMonolithic
     ioP.init(feSpaceP, outDir / "p");
   }
 
-  template <typename BCsVel, typename BCsP>
-  void init(BCsVel const & bcsVel, BCsP const & bcsP)
+  void init(BCVelList_T const & bcsVel, BCPList_T const & bcsP)
   {
     // TODO: assert that this comes after setting up bcs
     builder.buildLhs(
@@ -140,14 +141,16 @@ struct NSSolverMonolithic
         bcsVel);
     builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
     builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
-    builder.buildLhs(std::tuple{AssemblyDummy{feSpaceP}}, bcsP);
+    if (bcsP.size() > 0)
+    {
+      builder.buildLhs(std::tuple{AssemblyDummy{feSpaceP}}, bcsP);
+    }
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
   }
 
-  template <typename BCsVel>
-  void assemblyStep(BCsVel const & bcsVel)
+  void assemblyStep(BCVelList_T const & bcsVel)
   {
     velOld = sol.data;
     builder.clear();
@@ -230,8 +233,8 @@ struct NSSolverMonolithic
     ioP.print({p}, time);
   }
 
-  FESpaceVel_T const feSpaceVel;
-  FESpaceP_T const feSpaceP;
+  FESpaceVel_T feSpaceVel;
+  FESpaceP_T feSpaceP;
   ParameterDict const config;
   Builder<StorageType::RowMajor> builder;
   Var sol;
@@ -271,6 +274,9 @@ struct NSSolverSplit
       typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
   using BuilderVel_T = Builder<StorageType::RowMajor>;
   using BuilderP_T = Builder<StorageType::ClmMajor>;
+  using BCVelList_T = std::vector<BCEss<FESpaceVel_T>>;
+  using BCPList_T = std::vector<BCEss<FESpaceP_T>>;
+
   // using Backend = amgcl::backend::eigen<double>;
   // using Solver = amgcl::make_solver<
   //     amgcl::amg<
@@ -313,8 +319,7 @@ struct NSSolverSplit
     ioP.init(feSpaceP, outDir / "p");
   }
 
-  template <typename BCsVel, typename BCsP>
-  void init(BCsVel const & bcsVel, BCsP const & bcsP)
+  void init(BCVelList_T const & bcsVel, BCPList_T const & bcsP)
   {
     // TODO: assert that this comes after setting up bcs
     builderP.buildLhs(
@@ -330,11 +335,7 @@ struct NSSolverSplit
     solverVel.factorize(builderVel.A);
   }
 
-  template <typename BCsVel>
-  void assemblyStep(BCsVel const & bcsVel)
-  {
-    assemblyStepVelStar(bcsVel);
-  }
+  void assemblyStep(BCVelList_T const & bcsVel) { assemblyStepVelStar(bcsVel); }
 
   template <VelStarSolverType SolverType, typename BCsP>
   void solve(BCsP const & bcsP)
@@ -346,8 +347,7 @@ struct NSSolverSplit
     solveVel();
   }
 
-  template <typename BCsVel>
-  void assemblyStepVelStar(BCsVel const & bcsVel)
+  void assemblyStepVelStar(BCVelList_T const & bcsVel)
   {
     velStarOld = velStar.data;
     pOld += dp;
@@ -391,8 +391,7 @@ struct NSSolverSplit
     }
   }
 
-  template <typename BCsP>
-  void assemblyStepP(BCsP const & bcsP)
+  void assemblyStepP(BCPList_T const & bcsP)
   {
     builderP.clearRhs();
     builderP.buildRhs(std::tuple{assemblyDivVelStar}, bcsP);
@@ -405,8 +404,7 @@ struct NSSolverSplit
     p.data += dp;
   }
 
-  template <typename BCsVel>
-  void assemblyStepVel(BCsVel const & bcsVel)
+  void assemblyStepVel(BCVelList_T const & bcsVel = BCVelList_T{})
   {
     builderVel.clearRhs();
     builderVel.buildRhs(std::tuple{assemblyVelStarRhs, assemblyGradPRhs}, bcsVel);

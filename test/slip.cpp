@@ -147,9 +147,7 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bc");
-  auto const zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   // auto const one = [] (Vec3 const &) { return -1.; };
-  // auto const oneY = [] (Point const &) { return Vec2{0.0, 1.0}; };
   // auto const inlet = [&R] (Vec3 const & p)
   // {
   //   return narrow<2>(R * Vec3{0., 5 * p[0] * (1. - p[0]), 0.});
@@ -158,10 +156,14 @@ int main(int argc, char * argv[])
   // }; auto const inlet = [&R] (Vec3 const & p) {
   //   return narrow<2>(R * Vec3{0., (2. - p[0]), 0.});
   // };
-  auto bcBottom = BCEssNormal{feSpaceVel, side::BOTTOM};
-  // bcBottom << inlet;
-  bcBottom << [](double const & /*s*/) { return 1. /*6. * s * (1. - s)*/; };
-  auto const bcsVel = std::tuple{bcBottom};
+
+  // auto bcBottom = BCEssNormal{feSpaceVel, side::BOTTOM};
+  // // bcBottom << inlet;
+  // bcBottom << [](double const & /*s*/) { return 1. /*6. * s * (1. - s)*/; };
+  auto const oneY = [](Vec3 const &) { return Vec2{0.0, 1.0}; };
+  auto const bcBottom = BCEss{feSpaceVel, side::BOTTOM, oneY};
+
+  auto const bcsVel = std::vector{bcBottom};
 
   // auto const pinPt = bend(Vec3{0.5, 1., 0.}, totalAngle);
   // auto const toll = 1.e-12;
@@ -180,7 +182,7 @@ int main(int argc, char * argv[])
   // bcPTop << [] (Vec3 const &) { return 0.; };
   // auto const bcsP = std::tuple{bcPTop};
 
-  auto const bcsP = std::tuple{};
+  auto const bcsP = std::vector<BCEss<FESpaceP_T>>{};
   t.stop();
 
   auto const dofU = feSpaceVel.dof.size;
@@ -194,6 +196,7 @@ int main(int argc, char * argv[])
   auto const grad = AssemblyGrad{-1., feSpaceVel, feSpaceP};
   auto const div = AssemblyDiv{-1., feSpaceP, feSpaceVel};
   auto const dummy = AssemblyDummy{feSpaceP};
+  auto const zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
   auto const bcNat = AssemblyBCNatural{zero, side::TOP, feSpaceVel};
 
   Builder builder{dofU * FESpaceVel_T::dim + dofP};
@@ -281,7 +284,9 @@ int main(int argc, char * argv[])
     // std::cout << "bcLeft: " << bcLeft.data.transpose() << std::endl;
     bcRight << sol.data;
     bcRight.makeTangent();
-    auto const bcsVelNew = std::tuple_cat(bcsVel, std::tuple{bcLeft, bcRight});
+    auto bcsVelNew = bcsVel;
+    bcsVelNew.push_back(bcLeft);
+    bcsVelNew.push_back(bcRight);
     t.stop();
 
     t.start("build");

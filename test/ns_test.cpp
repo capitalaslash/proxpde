@@ -51,16 +51,12 @@ int main(int argc, char * argv[])
   // auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.0}; };
   auto const zero2d = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
   auto const zero = [](Vec3 const &) { return 0.0; };
-  auto bcsVel = std::tuple{
-      BCEss{ns.feSpaceVel, side::BOTTOM},
-      BCEss{ns.feSpaceVel, side::RIGHT},
-      BCEss{ns.feSpaceVel, side::TOP, Comp::u},
-      BCEss{ns.feSpaceVel, side::LEFT, Comp::u},
+  auto const bcsVel = std::vector{
+      BCEss{ns.feSpaceVel, side::BOTTOM, inlet},
+      BCEss{ns.feSpaceVel, side::RIGHT, zero2d},
+      BCEss{ns.feSpaceVel, side::TOP, zero2d, Comp::u},
+      BCEss{ns.feSpaceVel, side::LEFT, zero2d, Comp::u},
   };
-  std::get<0>(bcsVel) << inlet;
-  std::get<1>(bcsVel) << zero2d;
-  std::get<2>(bcsVel) << zero2d;
-  std::get<3>(bcsVel) << zero2d;
 
   // auto const bcsP = std::tuple{};
 
@@ -77,11 +73,11 @@ int main(int argc, char * argv[])
   };
   auto bcPin = BCEss{ns.feSpaceP, pinSet.ids};
   bcPin << [](Vec3 const &) { return 0.; };
-  auto const bcsP = std::tuple{bcPin};
+  auto const bcsP = std::vector{bcPin};
 
   auto bcPTop = BCEss{split.feSpaceP, side::TOP};
   bcPTop << zero;
-  auto const bcsPSplit = std::tuple{bcPTop};
+  auto const bcsPSplit = std::vector{bcPTop};
   t.stop();
 
   t.start("monolithic init");
@@ -90,7 +86,7 @@ int main(int argc, char * argv[])
 
   t.start("split init");
   // no bcs for the velocity, they are derived from velStar
-  split.init(std::tuple{}, bcsPSplit);
+  split.init(NSSolverSplit<Mesh_T>::BCVelList_T{}, bcsPSplit);
   t.stop();
 
   t.start("ic");
@@ -141,7 +137,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     t.start("split assembly");
-    split.assemblyStepVel(std::tuple{});
+    split.assemblyStepVel();
     t.stop();
 
     t.start("split solve");

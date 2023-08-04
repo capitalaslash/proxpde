@@ -63,7 +63,7 @@ int main(int argc, char * argv[])
   bcLeft << [](Vec3 const &) { return 0.; };
   auto bcBottom = BCEss{feSpace, side::BOTTOM};
   bcBottom << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::tuple{bcLeft, bcBottom};
+  auto const bcs = std::vector{bcLeft, bcBottom};
   t.stop();
 
   t.start("fe build");

@@ -51,7 +51,7 @@ int main(int argc, char * argv[])
   bcLeft << [tLeft](Vec3 const &) { return tLeft; };
   auto bcRight = BCEss{feSpace, side::RIGHT};
   bcRight << [tRight](Vec3 const &) { return tRight; };
-  auto const bcs = std::tuple{bcLeft, bcRight};
+  auto const bcs = std::vector{bcLeft, bcRight};
   t.stop();
 
   t.start("assembly def");

@@ -52,7 +52,6 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("bcs");
-  auto const bcs = std::tuple{};
   // bcs.addBC(BCEss{feSpace, side::LEFT, [](Vec3 const &){return 4.;}});
   // bcs.addBC(BCEss{feSpace, side::RIGHT, [](Vec3 const &){return 3.;}});
   t.stop();
@@ -98,8 +97,8 @@ int test(YAML::Node const & config)
 
     t.start("build");
     builder.clear();
-    builder.buildLhs(std::tuple{timeDer, stiffness, mixBC}, bcs);
-    builder.buildRhs(std::tuple{timeRhs, f, natBC}, bcs);
+    builder.buildLhs(std::tuple{timeDer, stiffness, mixBC});
+    builder.buildRhs(std::tuple{timeRhs, f, natBC});
     builder.closeMatrix();
     t.stop();
     // std::cout << "A:\n" << builder.A << std::endl;

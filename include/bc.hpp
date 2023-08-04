@@ -39,6 +39,29 @@ public:
 
   BCEss(
       FESpace_T const & fe,
+      DofMap_T const dofMap,
+      Fun<FESpace::physicalDim(), 3> const & fun):
+      feSpace(&fe),
+      _constrainedDofMap(std::move(dofMap)),
+      data{Vec::Zero(_constrainedDofMap.size())}
+  {
+    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
+    //           << std::endl;
+    operator<<(fun);
+  }
+
+  BCEss(FESpace_T const & fe, DofMap_T const dofMap, scalarFun_T const & fun):
+      feSpace(&fe),
+      _constrainedDofMap(std::move(dofMap)),
+      data{Vec::Zero(_constrainedDofMap.size())}
+  {
+    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
+    //           << std::endl;
+    operator<<(fun);
+  }
+
+  BCEss(
+      FESpace_T const & fe,
       marker_T const m,
       std::vector<short_T> const & c = allComp<FESpace>()):
       feSpace(&fe),
@@ -48,6 +71,36 @@ public:
     setupDofMap();
     // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
     //           << " dofs" << std::endl;
+  }
+
+  BCEss(
+      FESpace_T const & fe,
+      marker_T const m,
+      Fun<FESpace::physicalDim(), 3> const & fun,
+      std::vector<short_T> const & c = allComp<FESpace>()):
+      feSpace(&fe),
+      marker(m),
+      comp(c)
+  {
+    setupDofMap();
+    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
+    //           << " dofs" << std::endl;
+    operator<<(fun);
+  }
+
+  BCEss(
+      FESpace_T const & fe,
+      marker_T const m,
+      scalarFun_T const & fun,
+      std::vector<short_T> const & c = allComp<FESpace>()):
+      feSpace(&fe),
+      marker(m),
+      comp(c)
+  {
+    setupDofMap();
+    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
+    //           << " dofs" << std::endl;
+    operator<<(fun);
   }
 
   void init(FESpace_T const & fe, marker_T const m)
@@ -399,18 +452,16 @@ public:
 };
 
 // apply a list of bcs to an already-assembled vector
-template <typename BCList>
-void applyBCs(Vec & v, BCList bcs)
+template <typename FESpace>
+void applyBCs(Vec & v, std::vector<BCEss<FESpace>> const & bcs)
 {
-  static_for(
-      bcs,
-      [&v]([[maybe_unused]] auto const i, auto const & bc)
-      {
-        for (auto const & [dof, counter]: bc._constrainedDofMap)
-        {
-          v[dof] = bc.data[counter];
-        }
-      });
+  for (auto const & bc: bcs)
+  {
+    for (auto const & [dof, counter]: bc._constrainedDofMap)
+    {
+      v[dof] = bc.data[counter];
+    }
+  }
 }
 
 } // namespace proxpde

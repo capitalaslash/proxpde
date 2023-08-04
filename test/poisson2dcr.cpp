@@ -45,7 +45,7 @@ int main(/*int argc, char * argv[]*/)
   bcLeft << [](Vec3 const &) { return 0.; };
   auto bcBottom = BCEss{feSpace, side::BOTTOM};
   bcBottom << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::tuple{bcLeft, bcBottom};
+  auto const bcs = std::vector{bcLeft, bcBottom};
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);

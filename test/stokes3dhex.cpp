@@ -42,22 +42,18 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bcs");
-  auto zero = [](Vec3 const &) { return Vec3::Constant(0.); };
-  auto inlet = [](Vec3 const & p) { return Vec3(0., 0.5 * (1. - p(0) * p(0)), 0.); };
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::TOP, {0, 2}},
-      BCEss{feSpaceVel, side::LEFT, {0, 2}},
-      BCEss{feSpaceVel, side::BACK, {2}},
-      BCEss{feSpaceVel, side::FRONT, {2}}};
-  std::get<0>(bcsVel) << inlet;
-  std::get<1>(bcsVel) << zero;
-  std::get<2>(bcsVel) << zero;
-  std::get<3>(bcsVel) << zero;
-  std::get<4>(bcsVel) << zero;
-  std::get<5>(bcsVel) << zero;
-  auto const bcsP = std::tuple{};
+  auto const zero = [](Vec3 const &) { return Vec3::Constant(0.); };
+  auto const inlet = [](Vec3 const & p)
+  { return Vec3(0., 0.5 * (1. - p(0) * p(0)), 0.); };
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceVel, side::BOTTOM, inlet},
+      BCEss{feSpaceVel, side::RIGHT, zero},
+      BCEss{feSpaceVel, side::TOP, zero, {0, 2}},
+      BCEss{feSpaceVel, side::LEFT, zero, {0, 2}},
+      BCEss{feSpaceVel, side::BACK, zero, {2}},
+      BCEss{feSpaceVel, side::FRONT, zero, {2}},
+  };
+  auto const bcsP = std::vector<BCEss<FESpaceP_T>>{};
   t.stop();
 
   t.start("assembly");

@@ -51,23 +51,27 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   using FESpaceRT0_T =
       FESpace<Mesh_T, typename RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
   FESpaceRT0_T feSpaceRT0{*mesh};
-
-  // auto bcU = std::tuple{BCEss{feSpaceRT0, 3}};
-  // std::get<0>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
-  auto bcU = std::tuple{BCEss{feSpaceRT0, 2}, BCEss{feSpaceRT0, 5}};
-  std::get<0>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
-  std::get<1>(bcU) << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
-
   using FESpaceLambda_T =
       FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
   FESpaceLambda_T feSpaceLambda{*mesh, feSpaceRT0.dof.size};
 
+
+  // auto const bcU = std::vector{BCEss{feSpaceRT0, 3, [](Vec3 const &) {
+  //                                      return Vec3{0.0, 0.0, 0.0};
+  //                                    }}};
+  auto const zero = [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  auto const bcU = std::vector{
+      BCEss{feSpaceRT0, 2, zero},
+      BCEss{feSpaceRT0, 5, zero},
+  };
+  auto const bcLambda = std::vector<BCEss<FESpaceLambda_T>>{};
+
   Builder builder{feSpaceRT0.dof.size + feSpaceLambda.dof.size};
   builder.buildLhs(std::tuple{AssemblyMass{1.0, feSpaceRT0}}, bcU);
   builder.buildCoupling(
-      AssemblyVectorGrad{1.0, feSpaceRT0, feSpaceLambda}, bcU, std::tuple{});
+      AssemblyVectorGrad{1.0, feSpaceRT0, feSpaceLambda}, bcU, bcLambda);
   builder.buildCoupling(
-      AssemblyVectorDiv{1.0, feSpaceLambda, feSpaceRT0}, std::tuple{}, bcU);
+      AssemblyVectorDiv{1.0, feSpaceLambda, feSpaceRT0}, bcLambda, bcU);
   builder.closeMatrix();
   builder.buildRhs(std::tuple{AssemblyAnalyticRhs{rhs, feSpaceRT0}}, bcU);
 

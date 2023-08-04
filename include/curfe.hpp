@@ -295,7 +295,7 @@ struct VectorCurFE
         qpoint[q] = elem->origin() + jac[q] * QR::node[q];
 
         // Piola transformation
-        double detJInv = 1. / detJ[q];
+        double const detJInv = 1. / detJ[q];
         phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
         phiVect0[q] = detJ0Inv * phiVectRef[q] * jac0.transpose();
         divphi[q] = detJInv * divphiRef[q];

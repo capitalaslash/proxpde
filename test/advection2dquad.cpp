@@ -20,10 +20,10 @@ int main(/*int argc, char * argv[]*/)
       Mesh_T,
       LagrangeFE<Elem_T, 0>::RefFE_T,
       LagrangeFE<Elem_T, 0>::RecommendedQR>;
-  using FESpaceP1_T = FESpace<
-      Mesh_T,
-      LagrangeFE<Elem_T, 1>::RefFE_T,
-      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  // using FESpaceP1_T = FESpace<
+  //     Mesh_T,
+  //     LagrangeFE<Elem_T, 1>::RefFE_T,
+  //     LagrangeFE<Elem_T, 1>::RecommendedQR>;
   using FESpaceVel_T = FESpace<
       Mesh_T,
       LagrangeFE<Elem_T, 1>::RefFE_T,
@@ -55,14 +55,14 @@ int main(/*int argc, char * argv[]*/)
 
   t.start("fespace");
   FESpaceP0_T feSpace{*mesh};
-  FESpaceP1_T feSpaceP1{*mesh};
+  // FESpaceP1_T feSpaceP1{*mesh};
   t.stop();
 
   t.start("bcs");
   auto const one = [](Vec3 const &) { return 1.; };
   auto bc = BCEss{feSpace, side::LEFT};
   bc << one;
-  auto const bcs = std::tuple{bc};
+  auto const bcs = std::vector{bc};
   t.stop();
 
   t.start("velocity");

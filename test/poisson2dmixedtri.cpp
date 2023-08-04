@@ -63,19 +63,18 @@ int test(YAML::Node const & config)
   FESpaceP0_T feSpaceU{*mesh, sizeW};
   uint const sizeU = feSpaceU.dof.size;
 
-  auto const bcsU = std::tuple{};
+  // u = 0 is the natural condition in mixed formulation, no need to impose it
+  // explicitly
+  auto const bcsU = std::vector<BCEss<FESpaceP0_T>>{};
 
-  // the function is multiplied by the normal in the bc
-  auto bcWRight = BCEss{feSpaceW, side::RIGHT};
-  bcWRight << [&exactGrad](Vec3 const & p) { return promote<3>(exactGrad(p)); };
+  auto const bcWRight = BCEss{feSpaceW, side::RIGHT, wExactFun};
 
   // symmetry
-  auto bcWTop = BCEss{feSpaceW, side::TOP};
-  bcWTop << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  auto const bcWTop = BCEss{feSpaceW, side::TOP, wExactFun};
   auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
   bcWBottom << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
 
-  auto const bcsW = std::tuple{bcWRight, bcWBottom, bcWTop};
+  auto const bcsW = std::vector{bcWRight, bcWTop};
 
   Var w("w", sizeW);
   Var u("u", sizeU);

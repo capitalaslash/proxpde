@@ -213,14 +213,12 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // bcBottom << [](Vec3 const &) { return 0.; };
   // auto const bcs = std::array{bcLeft, bcBottom};
 
-  std::array<std::array<BCEss<FESpace_T>, 2>, numRefs + 1> bcLists;
+  std::array<std::vector<BCEss<FESpace_T>>, numRefs + 1> bcLists;
   auto const zero = [](Vec3 const &) { return 0.; };
   for (short_T level = 0; level < numRefs + 1; ++level)
   {
-    bcLists[level][0].init(feSpaces[level], side::LEFT);
-    bcLists[level][0] << zero;
-    bcLists[level][1].init(feSpaces[level], side::BOTTOM);
-    bcLists[level][1] << zero;
+    bcLists[level].push_back(BCEss{feSpaces[level], side::LEFT, zero});
+    bcLists[level].push_back(BCEss{feSpaces[level], side::BOTTOM, zero});
   }
   auto const & bcListTop = bcLists.back();
   t.stop();

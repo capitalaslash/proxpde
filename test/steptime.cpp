@@ -41,16 +41,14 @@ int main()
   auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   auto bcLeft = BCEss{feSpaceVel, side::LEFT};
   bcLeft << [](Vec3 const & p) { return p[1] > .05 ? Vec2(1.0, 0.0) : Vec2(0.0, 0.0); };
-  auto bcBottom = BCEss{feSpaceVel, side::BOTTOM};
-  bcBottom << zero;
-  auto bcTop = BCEss{feSpaceVel, side::TOP};
-  bcTop << zero;
-  auto const bcsVel = std::tuple{bcLeft, bcBottom, bcTop};
+  auto const bcBottom = BCEss{feSpaceVel, side::BOTTOM, zero};
+  auto const bcTop = BCEss{feSpaceVel, side::TOP, zero};
+  auto const bcsVel = std::vector{bcLeft, bcBottom, bcTop};
 
-  auto const bcsP = std::tuple{};
+  auto const bcsP = std::vector<BCEss<FESpaceP_T>>{};
   // DofSet_T pinSet = {1};
   // auto const bcsP =
-  //     std::tuple{BCEss{feSpaceP, pinSet, [](Vec3 const &) { return 0.; }}};
+  //     std::vector{BCEss{feSpaceP, pinSet, [](Vec3 const &) { return 0.; }}};
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   // t.start();

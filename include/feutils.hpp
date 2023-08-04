@@ -17,7 +17,7 @@ struct L2Projector
       projFromTo{1.0, dummy, feSpaceFrom, feSpaceTo},
       builder{feSpaceTo.dof.size * FESpaceTo::dim}
   {
-    builder.buildLhs(std::tuple{massTo}, std::tuple{});
+    builder.buildLhs(std::tuple{massTo});
     builder.closeMatrix();
     solver.analyzePattern(builder.A);
     solver.factorize(builder.A);
@@ -31,7 +31,7 @@ struct L2Projector
 
   Vec apply()
   {
-    builder.buildRhs(std::tuple{projFromTo}, std::tuple());
+    builder.buildRhs(std::tuple{projFromTo});
     return solver.solve(builder.b);
   }
 
@@ -52,8 +52,8 @@ void l2Projection(
   AssemblyMass massTo(1.0, feSpaceTo);
   AssemblyProjection projFromTo(1.0, from, feSpaceFrom, feSpaceTo);
   Builder builder{feSpaceTo.dof.size * FESpaceTo::dim};
-  builder.buildLhs(std::tuple{massTo}, std::tuple{});
-  builder.buildRhs(std::tuple{projFromTo}, std::tuple{});
+  builder.buildLhs(std::tuple{massTo});
+  builder.buildRhs(std::tuple{projFromTo});
   builder.closeMatrix();
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
@@ -77,8 +77,8 @@ void projectAnalyticFunction(
   AssemblyAnalyticRhs projFromTo{fun, feSpace};
   uint const size = feSpace.dof.size * FESpace::dim;
   Builder builder{size};
-  builder.buildLhs(std::tuple{massTo}, std::tuple{});
-  builder.buildRhs(std::tuple{projFromTo}, std::tuple{});
+  builder.buildLhs(std::tuple{massTo});
+  builder.buildRhs(std::tuple{projFromTo});
   builder.closeMatrix();
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
@@ -112,11 +112,9 @@ void computeGradient(
 {
   static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);
 
-  std::tuple<> bcsGrad;
   Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
-  builderGrad.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceGrad}}, bcsGrad);
-  builderGrad.buildRhs(
-      std::tuple{AssemblyGradRhs{1.0, u, feSpaceOrig, feSpaceGrad}}, bcsGrad);
+  builderGrad.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceGrad}});
+  builderGrad.buildRhs(std::tuple{AssemblyGradRhs{1.0, u, feSpaceOrig, feSpaceGrad}});
   builderGrad.closeMatrix();
   Solver solverGrad;
   solverGrad.compute(builderGrad.A);

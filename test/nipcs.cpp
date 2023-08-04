@@ -64,42 +64,34 @@ int main(int argc, char * argv[])
   auto const zeroV = [](Vec3 const &) { return Vec2{0., 0.}; };
   // auto const inlet = [] (Vec3 const &) { return Vec2(0.0, 1.0); };
   auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p[0] * p[0])}; };
-  auto const inlet0 = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
-  auto const inlet1 = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
+  auto const inletX = [&inlet](Vec3 const & p) { return inlet(p)[0]; };
+  auto const inletY = [&inlet](Vec3 const & p) { return inlet(p)[1]; };
   // auto const pIn = [] (Vec3 const &) {return 3. * hy * nu;};
 
   // last essential bc wins on corners
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceVel, side::BOTTOM},
-      BCEss{feSpaceVel, side::RIGHT},
-      BCEss{feSpaceVel, side::LEFT, {0}}};
-  std::get<0>(bcsVel) << inlet;
-  std::get<1>(bcsVel) << zeroV;
-  std::get<2>(bcsVel) << zeroV;
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceVel, side::BOTTOM, inlet},
+      BCEss{feSpaceVel, side::RIGHT, zeroV},
+      BCEss{feSpaceVel, side::LEFT, zeroV, {0}},
+  };
 
-  auto bcTopP = BCEss{feSpaceP, side::TOP};
-  bcTopP << zeroS;
-  auto const bcsP = std::tuple{bcTopP};
+  auto const bcTopP = BCEss{feSpaceP, side::TOP, zeroS};
+  auto const bcsP = std::vector{bcTopP};
   // DofSet_T pinSet = {1};
   // bcsP.addBC(BCEss{feSpaceP, pinSet, zeroS});
 
-  auto bcsUStar = std::tuple{
-      BCEss{feSpaceU, side::BOTTOM},
-      BCEss{feSpaceU, side::RIGHT},
-      BCEss{feSpaceU, side::LEFT}};
-  std::get<0>(bcsUStar) << inlet0;
-  std::get<1>(bcsUStar) << zeroS;
-  std::get<2>(bcsUStar) << zeroS;
+  auto const bcsUStar = std::vector{
+      BCEss{feSpaceU, side::BOTTOM, inletX},
+      BCEss{feSpaceU, side::RIGHT, zeroS},
+      BCEss{feSpaceU, side::LEFT, zeroS},
+  };
+  auto const bcsVStar = std::vector{
+      BCEss{feSpaceU, side::BOTTOM, inletY},
+      BCEss{feSpaceU, side::RIGHT, zeroS},
+  };
 
-  // last essential bc wins on corners
-  auto bcsVStar =
-      std::tuple{BCEss{feSpaceU, side::BOTTOM}, BCEss{feSpaceU, side::RIGHT}};
-  std::get<0>(bcsVStar) << inlet1;
-  std::get<1>(bcsVStar) << zeroS;
-
-  auto bcTopPSplit = BCEss{feSpacePSplit, side::TOP};
-  bcTopPSplit << zeroS;
-  auto const bcsPSplit = std::tuple{bcTopPSplit};
+  auto const bcTopPSplit = BCEss{feSpacePSplit, side::TOP, zeroS};
+  auto const bcsPSplit = std::vector{bcTopPSplit};
   // eqnP.bcList.addBC(BCEss{eqnP.feSpace, side::BOTTOM, pIn});
   t.stop();
 
@@ -189,11 +181,11 @@ int main(int argc, char * argv[])
   eqnP.buildLhs();
   eqnP.compute();
 
-  Eqn eqnU{u, uLhs, uRhs, std::tuple{}};
+  Eqn eqnU{u, uLhs, uRhs};
   // eqnU lhs does not change in time, we can pre-compute and factorize it
   eqnU.buildLhs();
   eqnU.compute();
-  Eqn eqnV{v, vLhs, vRhs, std::tuple{}};
+  Eqn eqnV{v, vLhs, vRhs};
   // eqnV lhs does not change in time, we can pre-compute and factorize it
   eqnV.buildLhs();
   eqnV.compute();
@@ -220,7 +212,7 @@ int main(int argc, char * argv[])
   getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
   Var pM{"pM", dofP};
   IOManager ioV{feSpaceU, "output_nipcs/sol_v"};
-  ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
+  ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
   ioP.print({pM, eqnP.sol});
   t.stop();
@@ -314,7 +306,7 @@ int main(int argc, char * argv[])
       std::cout << "printing" << std::endl;
       getComponent(uM.data, feSpaceU, solM, feSpaceVel, 0);
       getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
-      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
+      ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
       pM.data = solM.tail(dofP);
       ioP.print({pM, eqnP.sol}, time);

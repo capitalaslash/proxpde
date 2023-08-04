@@ -74,10 +74,10 @@ int main(int argc, char * argv[])
   auto const one = [](Vec3 const &) { return 1.; };
   auto bcLeftP1 = BCEss{feSpaceP1, side::LEFT};
   bcLeftP1 << one;
-  auto const bcsP1 = std::tuple{bcLeftP1};
+  auto const bcsP1 = std::vector{bcLeftP1};
   auto bcLeftP0 = BCEss{feSpaceP0, side::LEFT};
   bcLeftP0 << one;
-  auto const bcsP0 = std::tuple{bcLeftP0};
+  auto const bcsP0 = std::vector{bcLeftP0};
   t.stop();
 
   auto const dt = config["dt"].as<double>();

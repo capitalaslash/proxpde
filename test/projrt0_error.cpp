@@ -76,34 +76,26 @@ int test(
   uint const sizeRT0 = feSpaceRT0.dof.size;
   FESpaceP0_T feSpaceLambda{*mesh, sizeRT0};
   uint const sizeP0 = feSpaceLambda.dof.size;
-  auto bcsVel = std::tuple{
-      BCEss{feSpaceRT0, side::BOTTOM},
-      BCEss{feSpaceRT0, side::RIGHT},
-      BCEss{feSpaceRT0, side::LEFT},
-      BCEss{feSpaceRT0, side::TOP},
-      BCEss{feSpaceRT0, side::BACK},
-      BCEss{feSpaceRT0, side::FRONT},
+  auto const bcsVel = std::vector{
+      BCEss{feSpaceRT0, side::BOTTOM, uExact3d},
+      BCEss{feSpaceRT0, side::RIGHT, uExact3d},
+      BCEss{feSpaceRT0, side::LEFT, uExact3d},
+      BCEss{feSpaceRT0, side::TOP, uExact3d},
+      BCEss{feSpaceRT0, side::BACK, uExact3d},
+      BCEss{feSpaceRT0, side::FRONT, uExact3d},
   };
-  std::get<0>(bcsVel) << uExact3d;
-  std::get<1>(bcsVel) << uExact3d;
-  std::get<2>(bcsVel) << uExact3d;
-  std::get<3>(bcsVel) << uExact3d;
-  std::get<4>(bcsVel) << uExact3d;
-  std::get<5>(bcsVel) << uExact3d;
 
-  auto bcsLambda = std::tuple{
-      BCEss{feSpaceLambda, side::TOP},
+  auto const bcsLambda = std::vector{
+      BCEss{feSpaceLambda, side::TOP, fun.lambdaExact},
   };
   // auto const h = std::fabs(mesh->pointList[1].coord[0] -
   // mesh->pointList[0].coord[0]); DOFCoordSet pinSet{
   //     feSpaceLambda, [h](Vec3 const & p) { return p[0] * p[0] + p[1] * p[1] < h * h;
   //     }};
   // // assert(pinSet.ids.size() == 1);
-  // auto bcsLambda = std::tuple{
+  // auto bcsLambda = std::vector{
   //     BCEss{feSpaceLambda, pinSet.ids},
   // };
-
-  std::get<0>(bcsLambda) << fun.lambdaExact;
 
   Builder builder{sizeRT0 + sizeP0};
   builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceRT0}}, bcsVel);

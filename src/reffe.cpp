@@ -629,22 +629,25 @@ std::array<threedFun_T, RefTetrahedronP2::numGeoDOFs> const RefTetrahedronP2::ma
     RefTetrahedronP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefTetrahedronRT0::refMidpoint = Vec3{1. / 6, 1. / 6, 1. / 6};
+Vec3 const RefTetrahedronRT0::refMidpoint = Vec3{0.25, 0.25, 0.25};
 
 std::array<threedFun_T, RefTetrahedronRT0::numDOFs> const
     RefTetrahedronRT0::phiVectFun = {{
-        [](Vec_T const & p) { return Vec_T(p(0), p(1), p(2) - 1.0); },
-        [](Vec_T const & p) { return Vec_T(p(0), p(1) - 1.0, p(2)); },
-        [](Vec_T const & p) { return Vec_T(p(0) - 1.0, p(1), p(2)); },
-        [](Vec_T const & p) { return Vec_T(p(0), p(1), p(2)); },
+        [](Vec_T const & p)
+        { return Vec_T(2.0 * p(0), 2.0 * p(1), 2.0 * (p(2) - 1.0)); },
+        [](Vec_T const & p)
+        { return Vec_T(2.0 * p(0), 2.0 * (p(1) - 1.0), 2.0 * p(2)); },
+        [](Vec_T const & p)
+        { return Vec_T(2.0 * (p(0) - 1.0), 2.0 * p(1), 2.0 * p(2)); },
+        [](Vec_T const & p) { return Vec_T(2.0 * p(0), 2.0 * p(1), 2.0 * p(2)); },
     }};
 
 std::array<scalarThreedFun_T, RefTetrahedronRT0::numDOFs> const
     RefTetrahedronRT0::divphiFun = {{
-        [](Vec_T const &) { return 2.; },
-        [](Vec_T const &) { return 2.; },
-        [](Vec_T const &) { return 2.; },
-        [](Vec_T const &) { return 2.; },
+        [](Vec_T const &) { return 6.0; },
+        [](Vec_T const &) { return 6.0; },
+        [](Vec_T const &) { return 6.0; },
+        [](Vec_T const &) { return 6.0; },
     }};
 
 // linear mapping

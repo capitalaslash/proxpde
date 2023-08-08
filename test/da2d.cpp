@@ -335,27 +335,38 @@ int main(/*int argc, char * argv[]*/)
 {
   using namespace proxpde;
 
-  std::bitset<4> tests;
-  {
-    DAEqn<Triangle> daEqn{/*theta = */ 1.0, /*enableSUPG =*/false};
-    daEqn.run();
-    tests[0] = checkError({daEqn.c.data.maxCoeff()}, {7.997857020567e-01});
-  }
-  {
-    DAEqn<Triangle> daEqn{/*theta = */ 0.5, /*enableSUPG =*/false};
-    daEqn.run();
-    tests[1] = checkError({daEqn.c.data.maxCoeff()}, {9.496437540798e-01});
-  }
-  {
-    DAEqn<Quad> daEqn{/*theta = */ 1.0, /*enableSUPG =*/false};
-    daEqn.run();
-    tests[2] = checkError({daEqn.c.data.maxCoeff()}, {7.904235782602e-01});
-  }
-  {
-    DAEqn<Quad> daEqn{/*theta = */ 0.5, /*enableSUPG =*/false};
-    daEqn.run();
-    tests[3] = checkError({daEqn.c.data.maxCoeff()}, {9.385255164133e-01});
-  }
+  std::bitset<8> tests;
+  uint testCounter = 0U;
+  auto const expectedValues = std::vector{{
+      7.997857020567e-01,
+      7.937748763851e-01,
+      9.496437540798e-01,
+      9.492604651605e-01,
+      7.904235782602e-01,
+      7.834533565465e-01,
+      9.385255164133e-01,
+      9.433922227426e-01,
+  }};
+
+  for (auto const theta: {1.0, 0.5})
+    for (auto const enableSUPG: {false, true})
+    {
+      DAEqn<Triangle> daEqn{theta, enableSUPG};
+      daEqn.run();
+      tests[testCounter] =
+          checkError({daEqn.c.data.maxCoeff()}, {expectedValues[testCounter]});
+      testCounter++;
+    }
+
+  for (auto const theta: {1.0, 0.5})
+    for (auto const enableSUPG: {false, true})
+    {
+      DAEqn<Quad> daEqn{theta, enableSUPG};
+      daEqn.run();
+      tests[testCounter] =
+          checkError({daEqn.c.data.maxCoeff()}, {expectedValues[testCounter]});
+      testCounter++;
+    }
 
   fmt::print("tests: {}\n", tests.to_string());
   return tests.any();

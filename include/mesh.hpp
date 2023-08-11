@@ -112,6 +112,7 @@ public:
   PointList_T pointList;
   ElementList_T elementList;
   FacetList_T facetList;
+  uint numBdFacets;
   elemToPoint_T elemToPoint;
   elemToFacet_T elemToFacet;
   MeshFlags::T flags;
@@ -273,6 +274,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   assert(iFacetCount == facetCount);
   // always set the BOUNDARY_FACETS flags
   mesh.flags |= MeshFlags::BOUNDARY_FACETS;
+  mesh.numBdFacets = bFacetSize;
   // set INTERNAL_FACETS flag based on the input flags
   mesh.flags |= flags & MeshFlags::INTERNAL_FACETS;
 }

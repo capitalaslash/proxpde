@@ -71,6 +71,8 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
   auto const numRidges = meshCoarse.countRidges();
 
+  // the number of facets is equal to the size of the list when the internal are stored
+  // or to the sum of all the facets of all the elements divided by 2
   auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS).any()
                              ? meshCoarse.facetList.size()
                              : (Elem_T::numFacets * meshCoarse.elementList.size() +

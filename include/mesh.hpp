@@ -154,6 +154,29 @@ enum side : marker_T
   CIRCLE = 101,
 };
 
+template <uint dim>
+struct AllSides
+{};
+
+template <>
+struct AllSides<1U>
+{
+  static constexpr std::array<marker_T, 2> values = {LEFT, RIGHT};
+};
+
+template <>
+struct AllSides<2U>
+{
+  static constexpr std::array<marker_T, 4> values = {BOTTOM, RIGHT, TOP, LEFT};
+};
+
+template <>
+struct AllSides<3U>
+{
+  static constexpr std::array<marker_T, 6> values = {
+      BOTTOM, RIGHT, TOP, LEFT, BACK, FRONT};
+};
+
 template <typename Mesh>
 void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
 {

@@ -77,39 +77,40 @@ void buildSquare(
   mesh.elementList.reserve(numElems[0] * numElems[1]);
   id_T counter = 0;
   for (uint j = 0; j < numElems[1]; ++j)
+  {
+    bool flip = (j % 2 == 1);
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      std::array<id_T, 3> triplet_b, triplet_t;
-      if (base % 2)
+      std::array<std::array<id_T, 3>, 2> triplets;
+      if (flip)
       {
-        triplet_b[0] = base;
-        triplet_b[1] = base + 1;
-        triplet_b[2] = base + numPts[0];
-        triplet_t[0] = base + 1;
-        triplet_t[1] = base + numPts[0] + 1;
-        triplet_t[2] = base + numPts[0];
+        triplets[0][0] = base;
+        triplets[0][1] = base + 1;
+        triplets[0][2] = base + numPts[0];
+        triplets[1][0] = base + 1;
+        triplets[1][1] = base + numPts[0] + 1;
+        triplets[1][2] = base + numPts[0];
+        flip = false;
       }
       else
       {
-        triplet_b[0] = base;
-        triplet_b[1] = base + 1;
-        triplet_b[2] = base + numPts[0] + 1;
-        triplet_t[0] = base;
-        triplet_t[1] = base + numPts[0] + 1;
-        triplet_t[2] = base + numPts[0];
+        triplets[0][0] = base;
+        triplets[0][1] = base + 1;
+        triplets[0][2] = base + numPts[0] + 1;
+        triplets[1][0] = base;
+        triplets[1][1] = base + numPts[0] + 1;
+        triplets[1][2] = base + numPts[0];
+        flip = true;
       }
-      mesh.elementList.emplace_back(Triangle{
-          {&mesh.pointList[triplet_b[0]],
-           &mesh.pointList[triplet_b[1]],
-           &mesh.pointList[triplet_b[2]]},
-          counter++});
-      mesh.elementList.emplace_back(Triangle{
-          {&mesh.pointList[triplet_t[0]],
-           &mesh.pointList[triplet_t[1]],
-           &mesh.pointList[triplet_t[2]]},
-          counter++});
+      for (uint e = 0; e < 2U; ++e)
+        mesh.elementList.emplace_back(Triangle{
+            {&mesh.pointList[triplets[e][0]],
+             &mesh.pointList[triplets[e][1]],
+             &mesh.pointList[triplets[e][2]]},
+            counter++});
     }
+  }
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);

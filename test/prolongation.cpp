@@ -1,7 +1,6 @@
 #include "def.hpp"
 
 #include "fespace.hpp"
-#include "feutils.hpp"
 #include "geo.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
@@ -95,9 +94,11 @@ int main()
   auto const fVector = [](Vec3 const & p) { return Vec3{p[0], -p[1], 0.0}; };
 
   tests[0] = test<RefTriangleP1>(fScalar, 3.009757793463e+00);
-  tests[1] = test<RefTriangleRT0>(fVector, 1.359125535858e+00);
+  tests[1] = test<RefTriangleRT0>(fVector, 1.263812574009e+00);
   tests[2] = test<RefQuadQ1>(fScalar, 3.009757793463e+00);
   tests[3] = test<RefQuadRT0>(fVector, 9.718253158076e-01);
+
+  fmt::print("tests: {}\n", tests.to_string());
 
   return tests.any();
 }

@@ -107,7 +107,7 @@ struct FEVar
     }
   }
 
-  auto getFacetMeanValue(uint const side)
+  auto getFacetMeanValue(uint const side) const
   {
     assert(side < FESpace_T::Mesh_T::Elem_T::numFacets);
     FVec<FESpace_T::dim> sum = FVec<FESpace_T::dim>::Zero();

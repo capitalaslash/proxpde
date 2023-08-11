@@ -1,7 +1,7 @@
 .cache/*
 build*/*
 contrib/*
-spack_env*/*
+spack_env/.spack-env/*
 stagit/*
 website/*
 *.gch

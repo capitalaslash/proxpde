@@ -19,4 +19,4 @@ find_package(UMFPack REQUIRED)
 # yaml-cpp
 find_package(yaml-cpp REQUIRED)
 
-find_package(MPI COMPONENTS CXX)
+# find_package(MPI COMPONENTS CXX)

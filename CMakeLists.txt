@@ -205,5 +205,8 @@ if (PROXPDE_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
 
-
 feature_summary(WHAT ALL)
+
+add_custom_target(doc
+  SOURCES README.md
+)

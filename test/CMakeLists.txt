@@ -54,6 +54,7 @@ proxpde_add_test(poisson3dtet_p2 LABELS 3d pde tet)
 proxpde_add_test(projection_p1top2 LABELS 2d fe)
 proxpde_add_test(projection_p2top1 LABELS 2d fe)
 proxpde_add_test(projection_rt0 LABELS 2d 3d fe rt WILL_FAIL)
+proxpde_add_test(projection_q2rt0 LABELS 2d fe rt)
 proxpde_add_test(projrt0_error
     LABELS 2d 3d fe rt
     DATA cube_uns.msh cube_skew.msh square_skew.msh square_uns.msh

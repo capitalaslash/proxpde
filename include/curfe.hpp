@@ -107,7 +107,7 @@ struct CurFE
 
   Vec3 approxMap(FVec<dim> const & pt)
   {
-    // jac is constant on the element only for linear mappings (not for bi-linear)
+    // jac is constant on the element only for affine mappings
     return elem->origin() + jac[QR_T::bestPt] * pt;
   }
 
@@ -126,7 +126,7 @@ struct CurFE
   {
     // TODO: jacPlus should be computed on the point
     // here we assume that jacPlus does not change on the element
-    // (this is true only for linear mappings)
+    // (this is true only for affine mappings)
     FVec<dim> const ptHat = jacPlus[QR_T::bestPt] * (pt - elem->origin());
     // check that the approximate inverse mapping is close enough to the
     // requested point
@@ -314,6 +314,70 @@ struct VectorCurFE
     //   std::cout << "warning: no reinit, element coincide" << std::endl;
     // }
   }
+
+  Vec3 approxMap(FVec<dim> const & pt)
+  {
+    // jac is constant on the element only for affine mappings
+    return elem->origin() + jac[QR_T::bestPt] * pt;
+  }
+
+  Vec3 map(FVec<dim> const & pt)
+  {
+    JacMat_T jac = JacMat_T::Zero();
+    auto const mappingPts = RefFE::mappingPts(*elem);
+    for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
+    {
+      jac += mappingPts[n] * (RefFE::mapping[n](pt)).transpose();
+    }
+    return elem->origin() + jac * pt;
+  }
+
+  FVec<dim> approxInverseMap(Vec3 const & pt)
+  {
+    // TODO: jacPlus should be computed on the point
+    // here we assume that jacPlus does not change on the element
+    // (this is true only for affine mappings)
+    FVec<dim> const ptHat = jacPlus[QR_T::bestPt] * (pt - elem->origin());
+    // check that the approximate inverse mapping is close enough to the
+    // requested point
+    assert((pt - approxMap(ptHat)).norm() < 1.e-14);
+    return ptHat;
+  }
+
+  std::tuple<FVec<dim>, int> inverseMap(Vec3 const & pt, double const toll = 1.e-4)
+  {
+    FVec<dim> approxPt = approxInverseMap(pt);
+    auto const mappingPts = RefFE::mappingPts(*elem);
+    auto const origin = elem->origin();
+    int iter = 0;
+    static constexpr int maxIter = 30;
+    while (iter < maxIter)
+    {
+      JacMat_T jac = JacMat_T::Zero();
+      for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
+      {
+        jac += mappingPts[n] * (RefFE::mapping[n](approxPt)).transpose();
+      }
+      Vec3 const predictedPt = origin + jac * approxPt;
+      // filelog << iter << " " << std::setprecision(16) << approxPt.transpose() << " "
+      // << (pt - predictedPt).norm() << std::endl;
+      Vec3 const deltaReal = pt - predictedPt;
+      auto const jacPlus = (jac.transpose() * jac).inverse() * jac.transpose();
+      // Newton iteration
+      FVec<dim> deltaRef = jacPlus * deltaReal;
+      approxPt += deltaRef;
+      iter++;
+      if (!RefFE_T::inside(approxPt) || deltaRef.norm() < toll)
+        break;
+    }
+    // if we reach the maximum number of iterations for a point inside the search failed
+    assert(iter < maxIter || !RefFE_T::inside(approxPt));
+    return std::tie(approxPt, iter);
+  }
+
+  bool approxInside(Vec3 const & pt) { return RefFE_T::inside(approxInverseMap(pt)); }
+
+  bool inside(Vec3 const & pt) { return RefFE_T::inside(inverseMap(pt)); }
 
   GeoElem const * elem = nullptr;
   std::array<int, RefFE_T::GeoElem_T::numFacets> facetSign;

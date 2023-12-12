@@ -3,7 +3,6 @@
 #include "def.hpp"
 
 #include "geo.hpp"
-#include "reffe.hpp"
 
 namespace proxpde
 {
@@ -134,6 +133,46 @@ miniNodes()
 template <typename GeoElem, uint N>
 std::array<typename MiniQR<GeoElem, N>::Vec_T, MiniQR<GeoElem, N>::numPts> const
     MiniQR<GeoElem, N>::node = miniNodes<GeoElem, N>();
+
+// =====================================================================================
+
+template <typename GeoElem, short_T N>
+struct DynamicQR
+{
+  using Real_T = double;
+  using GeoElem_T = GeoElem;
+  using Vec_T = FVec<GeoElem_T::dim>;
+  using Weights_T = FVec<N>;
+  // using Vec_T = Eigen::Matrix<long double, GeoElem::dim, 1>;
+  // using Weights_T = Eigen::Matrix<long double, N, 1>;
+  static short_T constexpr numPts = N;
+  static short_T const bestPt;
+
+  static Weights_T weight;
+  static std::array<Vec_T, N> node;
+};
+
+template <typename GeoElem, short_T N>
+DynamicQR<GeoElem, N>::Weights_T DynamicQR<GeoElem, N>::weight =
+    FVec<N>::Constant(1.0 / N);
+
+namespace details
+{
+template <typename GeoElem, short_T N>
+static constexpr auto generateFixedNodes()
+{
+  auto data = std::array<FVec<GeoElem::dim>, N>{};
+  for (uint n = 0; n < N; ++n)
+  {
+    data[n] = FVec<GeoElem::dim>::Constant(0.0);
+  }
+  return data;
+}
+} // namespace details
+
+template <typename GeoElem, short_T N>
+std::array<typename DynamicQR<GeoElem, N>::Vec_T, N> DynamicQR<GeoElem, N>::node =
+    details::generateFixedNodes<GeoElem, N>();
 
 // =====================================================================================
 

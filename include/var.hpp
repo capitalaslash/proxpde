@@ -3,6 +3,7 @@
 #include "def.hpp"
 
 #include "fespace.hpp"
+#include "qr.hpp"
 
 namespace proxpde
 {
@@ -102,7 +103,7 @@ struct FEVar
       for (uint n = 0; n < FESpace_T::RefFE_T::numDOFs; ++n)
       {
         auto const id = feSpace->dof.getId(elemId, n, d);
-        _localData(n, d) = data[id];
+        dataLocal(n, d) = data[id];
       }
     }
   }
@@ -113,7 +114,7 @@ struct FEVar
     FVec<FESpace_T::dim> sum = FVec<FESpace_T::dim>::Zero();
     for (auto const dofFacet: RefFE_T::dofOnFacet[side])
     {
-      sum += _localData.row(dofFacet).transpose();
+      sum += dataLocal.row(dofFacet).transpose();
     }
     sum /= RefFE_T::dofPerFacet;
     return sum;
@@ -135,14 +136,14 @@ struct FEVar
 
   auto l2NormSquared()
   {
-    FVec<FESpace_T::dim> integral = FVec<FESpace_T::dim>::Zero();
+    double integral = 0.0;
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
       for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluate(q);
-        integral += feSpace->curFE.JxW[q] * cepow(localValue, 2);
+        integral += feSpace->curFE.JxW[q] * localValue.dot(localValue);
       }
     }
     return integral;
@@ -210,13 +211,18 @@ struct FEVar
     assert(q < FESpace_T::QR_T::numPts);
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
-      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
       return dataQ;
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
-      Vec3 const dataQ = feSpace->curFE.phiVect[q].transpose() * _localData;
+      Vec3 const dataQ = feSpace->curFE.phiVect[q].transpose() * dataLocal;
       return dataQ;
+    }
+    else
+    {
+      std::cerr << "only Lagrange and Raviart-Thomas implemented." << std::endl;
+      std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }
 
@@ -227,7 +233,7 @@ struct FEVar
         "gradient is available only for Lagrange elements.");
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
-    return feSpace->curFE.dphi[q].transpose() * _localData;
+    return feSpace->curFE.dphi[q].transpose() * dataLocal;
   }
 
   auto evaluateDiv(uint const q) const
@@ -237,12 +243,12 @@ struct FEVar
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       auto const gradQ = evaluateGrad(q);
-      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
       return gradQ[0] + gradQ[1] + gradQ[2];
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
-      double const dataQ = feSpace->curFE.divphi[q].transpose() * _localData;
+      double const dataQ = feSpace->curFE.divphi[q].transpose() * dataLocal;
       return dataQ;
     }
   }
@@ -254,25 +260,67 @@ struct FEVar
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       auto const gradQ = evaluateGrad(q);
-      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * _localData;
+      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
       return gradQ[0] + gradQ[1] + gradQ[2];
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
-      double const dataQ = feSpace->curFE.divphi0[q].transpose() * _localData;
+      double const dataQ = feSpace->curFE.divphi0[q].transpose() * dataLocal;
       return dataQ;
     }
   }
 
-  // expensive version for points that are not the ones defined by the qr rule
-  auto evaluateOnRef(FVec<FESpace_T::RefFE_T::dim> const & p) const
+  // expensive version for points that are not the ones defined by the fixed qr rule
+  auto evaluateOnRef(FVec<RefFE_T::dim> const & p) const
   {
-    FVec<FESpace_T::dim> value = FVec<FESpace_T::dim>::Zero();
-    for (uint k = 0; k < FESpace_T::RefFE_T::numDOFs; ++k)
+    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
-      value += FESpace_T::RefFE_T::phiFun[k](p) * _localData.row(k);
+      Vec_T value = Vec_T::Zero();
+      for (uint k = 0; k < FESpace_T::RefFE_T::numDOFs; ++k)
+      {
+        value += FESpace_T::RefFE_T::phiFun[k](p) * dataLocal.row(k);
+      }
+      return value;
     }
-    return value;
+    else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      using QRTmp_T = DynamicQR<typename RefFE_T::GeoElem_T, 1U>;
+      QRTmp_T::node = {p};
+      VectorCurFE<RefFE_T, QRTmp_T> curFETmp;
+      curFETmp.reinit(*(feSpace->curFE.elem));
+      Vec3 const value = curFETmp.phiVect[0].transpose() * dataLocal;
+      return value;
+    }
+    else
+    {
+      abort();
+    }
+  }
+
+  // expensive version for points that are not the ones defined by the fixed qr rule
+  auto evaluateGradOnRef(FVec<RefFE_T::dim> const & p) const
+  {
+    // available only for Lagrange fe types currently
+    static_assert(family_v<RefFE_T> == FamilyType::LAGRANGE);
+    using QRTmp_T = DynamicQR<typename RefFE_T::GeoElem_T, 1U>;
+    QRTmp_T::node = {p};
+    CurFE<RefFE_T, QRTmp_T> curFETmp;
+    curFETmp.reinit(*(feSpace->curFE.elem));
+    FMat<3, FESpace_T::dim> gradLocal = curFETmp.dphi[0].transpose() * dataLocal;
+    return gradLocal;
+  }
+
+  // expensive version for points that are not the ones defined by the fixed qr rule
+  auto evaluateDivOnRef(FVec<RefFE_T::dim> const & p) const
+  {
+    // available only for raviart-Thomas fe types currently
+    static_assert(family_v<RefFE_T> == FamilyType::RAVIART_THOMAS);
+    using QRTmp_T = DynamicQR<typename RefFE_T::GeoElem_T, 1U>;
+    QRTmp_T::node = {p};
+    VectorCurFE<RefFE_T, QRTmp_T> curFETmp;
+    curFETmp.reinit(*(feSpace->curFE.elem));
+    double const divOnPt = curFETmp.divphi[0].transpose() * dataLocal;
+    return divOnPt;
   }
 
   // super-expensive version for points that are not the ones defined by the qr rule
@@ -281,6 +329,22 @@ struct FEVar
   {
     auto const pRef = feSpace->curFE.approxInverseMap(p);
     return evaluateOnRef(pRef);
+  }
+
+  // super-expensive version for points that are not the ones defined by the qr rule
+  // and that we need to trace back to the ref element
+  auto evaluateGradOnReal(Vec3 const & p) const
+  {
+    auto const pRef = feSpace->curFE.approxInverseMap(p);
+    return evaluateGradOnRef(pRef);
+  }
+
+  // super-expensive version for points that are not the ones defined by the qr rule
+  // and that we need to trace back to the ref element
+  auto evaluateDivOnReal(Vec3 const & p) const
+  {
+    auto const pRef = feSpace->curFE.approxInverseMap(p);
+    return evaluateDivOnRef(pRef);
   }
 
   template <typename FESpaceVec>
@@ -298,9 +362,7 @@ struct FEVar
   std::string name = "none";
   FESpace_T const * feSpace;
   Vec data;
-
-private:
-  FMat<FESpace_T::RefFE_T::numDOFs, FESpace_T::dim> _localData;
+  FMat<FESpace_T::RefFE_T::numDOFs, FESpace_T::dim> dataLocal;
 };
 
 // template <typename FEList>

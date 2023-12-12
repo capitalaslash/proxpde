@@ -62,6 +62,7 @@ struct FESpace
         "reference element and quad rule are not compatible.");
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
+      static_assert(dim == 1, "Vector FESpaces can only be scalar on the dof.");
       // RT0 requires internal facets and facet ptrs
       assert(
           (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
@@ -80,6 +81,18 @@ struct FESpace
       // return Mesh_T::Elem_T::dim;
       // when using RT elements, all physical structures are 3d
       return 3;
+    }
+  }
+
+  static uint constexpr refDim()
+  {
+    if constexpr (fedim_v<RefFE_T> == FEDimType::SCALAR)
+    {
+      return Dimension;
+    }
+    else if constexpr (fedim_v<RefFE_T> == FEDimType::VECTOR)
+    {
+      return Mesh_T::Elem_T::dim;
     }
   }
 

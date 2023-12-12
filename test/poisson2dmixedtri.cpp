@@ -7,7 +7,8 @@
 #include "fespace.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
-#include "reffe.hpp"
+
+using namespace proxpde;
 
 // solve
 // (w, t) + (u, \nabla /cdot t) = 0
@@ -15,15 +16,12 @@
 // w, t \in RT_0
 // u, v \in P_0
 
-using namespace proxpde;
-
 using Elem_T = Triangle;
 using Mesh_T = Mesh<Elem_T>;
 using QR_T = RaviartThomasFE<Elem_T, 0>::RecommendedQR;
+// using QR_T = LagrangeFE<Elem_T, 2>::RecommendedQR;
 using FESpaceRT0_T = FESpace<Mesh_T, RaviartThomasFE<Elem_T, 0>::RefFE_T, QR_T>;
 using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
-using FESpaceP0Vec_T =
-    FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T, Elem_T::dim>;
 
 int test(YAML::Node const & config)
 {
@@ -46,17 +44,19 @@ int test(YAML::Node const & config)
   // std::cout << "mesh: " << *mesh << std::endl;
 
   auto const g = config["g"].as<double>();
-  scalarFun_T rhs = [](Vec3 const &)
-  {
-    return -2.;
-    // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
-  };
-  scalarFun_T exactSol = [g](Vec3 const & p)
+  scalarFun_T uExactFun = [g](Vec3 const & p)
   {
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  Fun<2, 3> exactGrad = [g](Vec3 const & p) { return Vec2(2. + g - 2. * p(0), 0.); };
+  Fun<3, 3> wExactFun = [g](Vec3 const & p) {
+    return Vec3{2. + g - 2. * p(0), 0.0, 0.0};
+  };
+  scalarFun_T rhsFun = [](Vec3 const & /*p*/)
+  {
+    return -2.;
+    // return 2.5*M_PI*M_PI*std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
+  };
 
   FESpaceRT0_T feSpaceW{*mesh};
   uint const sizeW = feSpaceW.dof.size;
@@ -71,24 +71,24 @@ int test(YAML::Node const & config)
 
   // symmetry
   auto const bcWTop = BCEss{feSpaceW, side::TOP, wExactFun};
-  auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
-  bcWBottom << [](Vec3 const &) { return Vec3{0.0, 0.0, 0.0}; };
+  auto bcWBottom = BCEss{feSpaceW, side::BOTTOM, wExactFun};
 
-  auto const bcsW = std::vector{bcWRight, bcWTop};
+  // auto const bcsW = std::vector{bcWRight, bcWTop};
+  auto const bcsW = std::vector{bcWRight, bcWTop, bcWBottom};
 
-  Var w("w", sizeW);
-  Var u("u", sizeU);
+  FEVar w{"w", feSpaceW};
+  FEVar u{"u", feSpaceU};
   Builder builder{sizeW + sizeU};
-  builder.buildLhs(std::tuple{AssemblyVectorMass(1.0, feSpaceW)}, bcsW);
-  builder.buildCoupling(AssemblyVectorGrad(1.0, feSpaceW, feSpaceU), bcsW, bcsU);
-  builder.buildCoupling(AssemblyVectorDiv(1.0, feSpaceU, feSpaceW), bcsU, bcsW);
+  builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceW}}, bcsW);
+  builder.buildCoupling(AssemblyVectorGrad{1.0, feSpaceW, feSpaceU}, bcsW, bcsU);
+  builder.buildCoupling(AssemblyVectorDiv{1.0, feSpaceU, feSpaceW}, bcsU, bcsW);
   // fixed u value
   // builder.buildProblem(AssemblyBCNatural(
   //                        [] (Vec3 const & ) { return 5.; },
   //                      side::TOP,
   //                      feSpaceW), bcsW);
-  FESpaceP0Vec_T feSpaceP0Vec{*mesh};
-  auto const bcsDummy = std::tuple{};
+  // FESpaceP0Vec_T feSpaceP0Vec{*mesh};
+  // auto const bcsDummy = std::tuple{};
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 - p(1) -
   // p(0)); }, feSpaceP0Vec, rhsW); builder.buildRhs(AssemblyS2VProjection(1.0, rhsW,
@@ -98,54 +98,57 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
 
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
-  Vec f = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(rhs, feSpaceU, f);
-  builder.buildRhs(std::tuple{AssemblyProjection(1.0, f.tail(sizeU), feSpaceU)}, bcsU);
+  Vec rhs = Vec::Zero(sizeW + sizeU);
+  interpolateAnalyticFunction(rhsFun, feSpaceU, rhs);
+  builder.buildRhs(
+      std::tuple{AssemblyProjection{1.0, rhs.tail(sizeU), feSpaceU}}, bcsU);
   builder.closeMatrix();
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
 
-  Vec sol;
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
-  sol = solver.solve(builder.b);
+  Vec const sol = solver.solve(builder.b);
   w.data = sol.head(sizeW);
   u.data = sol.tail(sizeU);
 
   // std::cout << "sol: " << sol.transpose() << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
-  Var exactU{"exactU"};
-  exactU.data = exact.tail(sizeU);
-  Var errorU{"errorU"};
-  errorU.data = u.data - exactU.data;
+  interpolateAnalyticFunction(wExactFun, feSpaceW, exact);
+  interpolateAnalyticFunction(uExactFun, feSpaceU, exact);
+  FEVar uExact{"uExact", feSpaceU};
+  uExact.data = exact.tail(sizeU);
+  Var wExact{"wExact"};
+  wExact.data = exact.head(sizeW);
+
+  FEVar uError{"uError", feSpaceU};
+  uError.data = u.data - uExact.data;
+  Var wError{"wError"};
+  wError.data = w.data - wExact.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedtri/u"};
-  ioP0.print({u, exactU, errorU});
+  ioP0.print(std::tuple{u, uExact, uError});
 
-  Builder builderRT0{feSpaceP0Vec.dof.size * FESpaceP0Vec_T::dim};
-  builderRT0.buildLhs(std::tuple{AssemblyScalarMass(1.0, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.buildRhs(
-      std::tuple{AssemblyV2SProjection(1.0, w.data, feSpaceW, feSpaceP0Vec)}, bcsDummy);
-  builderRT0.closeMatrix();
-  Var wP0("w");
-  LUSolver solverRT0;
-  solverRT0.analyzePattern(builderRT0.A);
-  solverRT0.factorize(builderRT0.A);
-  wP0.data = solverRT0.solve(builderRT0.b);
+  auto const uL2error = u.l2ErrorSquared(uExactFun);
+  fmt::print("l2 error squared of u: {:e}\n", uL2error);
 
-  Var exactW{"exactW"};
-  interpolateAnalyticFunction(exactGrad, feSpaceP0Vec, exactW.data);
-  Var errorW{"errorW"};
-  errorW.data = wP0.data - exactW.data;
+  auto const wL2Error = w.l2ErrorSquared(wExactFun);
+  fmt::print("l2 error squared for w: {:e}\n", wL2Error);
 
-  IOManager ioRT0{feSpaceP0Vec, "output_poisson2dmixedtri/w"};
-  ioRT0.print({wP0, exactW, errorW});
+  auto const divWL2Error = w.DIVL2ErrorSquared(rhsFun);
+  fmt::print("divergence l2 error squared for w: {:e}\n", divWL2Error);
 
-  double const norm = errorU.data.norm();
+  IOManagerP0 ioRT0{feSpaceW, "output_poisson2dmixedquad/w"};
+  // ioRT0.print({wP0, exactW, errorW});
+  ioRT0.print(std::tuple{w, wExact, wError});
+
+  // double const wL2error = l2Error(w, feSpaceW, exactGrad);
+  // fmt::print("l2 error squared of w: {:e}\n", wL2error);
+
+  double const norm = uError.data.norm();
   std::cout << "the norm of the error is " << std::setprecision(16) << norm
             << std::endl;
   return checkError({norm}, {config["expected_error"].as<double>()});

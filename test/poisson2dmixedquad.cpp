@@ -7,7 +7,6 @@
 #include "fespace.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
-#include "reffe.hpp"
 
 using namespace proxpde;
 
@@ -54,20 +53,13 @@ int test(YAML::Node const & config)
   }
 
   // auto const g = config["g"].as<double>();
-  scalarFun_T rhsFun = [](Vec3 const & p)
-  {
-    // return -2.;
-    // return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
-    return -2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
-           std::sin(1.5 * M_PI * p(1));
-  };
-  scalarFun_T exactSol = [/*g*/](Vec3 const & p)
+  scalarFun_T uExactFun = [/*g*/](Vec3 const & p)
   {
     // return p(0) * (2. + g - p(0));
     // return std::sin(0.5 * M_PI * p(0));
     return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1));
   };
-  Fun<3, 3> exactGrad = [/*g*/](Vec3 const & p)
+  Fun<3, 3> wExactFun = [/*g*/](Vec3 const & p)
   {
     // return Vec2(2. + g - 2. * p(0), 0.);
     // return Vec2(0.5 * M_PI * std::cos(0.5 * M_PI * p(0)), 0.);
@@ -75,6 +67,13 @@ int test(YAML::Node const & config)
         0.5 * M_PI * std::cos(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1)),
         1.5 * M_PI * std::sin(0.5 * M_PI * p(0)) * std::cos(1.5 * M_PI * p(1)),
         0.0);
+  };
+  scalarFun_T rhsFun = [](Vec3 const & p)
+  {
+    // return -2.;
+    // return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
+    return -2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
+           std::sin(1.5 * M_PI * p(1));
   };
 
   FESpaceRT0_T feSpaceW{*mesh};
@@ -142,28 +141,29 @@ int test(YAML::Node const & config)
   // std::cout << "sol:\n" << sol << std::endl;
 
   Vec exact = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(exactSol, feSpaceU, exact);
+  interpolateAnalyticFunction(wExactFun, feSpaceW, exact);
+  interpolateAnalyticFunction(uExactFun, feSpaceU, exact);
   FEVar uExact{"uExact", feSpaceU};
   uExact.data = exact.tail(sizeU);
+  Var wExact{"wExact"};
+  wExact.data = exact.head(sizeW);
+
   FEVar uError{"uError", feSpaceU};
   uError.data = u.data - uExact.data;
+  Var wError{"wError"};
+  wError.data = w.data - wExact.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
   ioP0.print(std::tuple{u, uExact, uError});
 
-  auto const uL2error = u.l2ErrorSquared(exactSol);
+  auto const uL2error = u.l2ErrorSquared(uExactFun);
   fmt::print("l2 error squared of u: {:e}\n", uL2error);
 
-  auto const wL2Error = w.l2ErrorSquared(exactGrad);
+  auto const wL2Error = w.l2ErrorSquared(wExactFun);
   fmt::print("l2 error squared for w: {:e}\n", wL2Error);
 
   auto const divWL2Error = w.DIVL2ErrorSquared(rhsFun);
   fmt::print("divergence l2 error squared for w: {:e}\n", divWL2Error);
-
-  Var wExact{"wExact"};
-  interpolateAnalyticFunction(exactGrad, feSpaceW, wExact.data);
-  Var wError{"wError"};
-  wError.data = w.data - wExact.data;
 
   IOManagerP0 ioRT0{feSpaceW, "output_poisson2dmixedquad/w"};
   // ioRT0.print({wP0, exactW, errorW});

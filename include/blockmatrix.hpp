@@ -2,6 +2,9 @@
 
 #include "def.hpp"
 
+namespace proxpde
+{
+
 namespace detail
 {
 static constexpr auto sum() { return 0; }
@@ -79,3 +82,5 @@ std::ostream & operator<<(std::ostream & out, BlockMatrix<Blocks...> const & m)
   out << std::endl << m.data;
   return out;
 }
+
+} // namespace proxpde

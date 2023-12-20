@@ -37,15 +37,22 @@ struct FESpace
   FESpace(Mesh const & m, uint const os): mesh{&m}, dof{m}, offset{os}
   {
     _compatibilityCheck();
+    _dimCheck();
+    _flagCheck();
   }
 
   explicit FESpace(Mesh const & m): FESpace{m, 0} {}
 
-  FESpace() { _compatibilityCheck(); }
+  FESpace()
+  {
+    _compatibilityCheck();
+    _dimCheck();
+  }
 
   void init(Mesh const & m, uint const os)
   {
     mesh = &m;
+    _flagCheck();
     dof.init(m);
     offset = os;
   }
@@ -60,9 +67,20 @@ struct FESpace
     static_assert(
         std::is_same_v<typename RefFE_T::GeoElem_T, typename QR_T::GeoElem_T>,
         "reference element and quad rule are not compatible.");
+  }
+
+  void _dimCheck()
+  {
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       static_assert(dim == 1, "Vector FESpaces can only be scalar on the dof.");
+    }
+  }
+
+  void _flagCheck()
+  {
+    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
       // RT0 requires internal facets and facet ptrs
       assert(
           (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))

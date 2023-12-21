@@ -29,7 +29,7 @@ static const std::string to_string(MeshFlags::T const flag)
     return "NORMALS";
   else if (flag == MeshFlags::FACET_PTRS)
     return "FACET_PTRS";
-  std::cerr << "mesh flag not recognized: " << flag << std::endl;
+  fmt::print(stderr, "mesh flag not recognized: {}\n", flag.to_string());
   abort();
   return "ERROR";
 }
@@ -44,7 +44,7 @@ static const MeshFlags::T to_MeshFlags(std::string_view str)
     return MeshFlags::NORMALS;
   else if (str == "FACET_PTRS")
     return MeshFlags::FACET_PTRS;
-  std::cerr << "mesh flag not recognized: " << str << std::endl;
+  fmt::print(stderr, "mesh flag not recognized: {}\n", str);
   abort();
   return MeshFlags::NONE;
 }
@@ -367,8 +367,7 @@ void buildHyperCube(
   else
   {
     // this should never happen
-    std::cerr << "element type " << typeid(Elem{}).name() << " not recognized."
-              << std::endl;
+    fmt::print(stderr, "elememnt type {} not recognized\n", typeid(Elem{}).name());
     abort();
   }
 
@@ -514,7 +513,7 @@ void buildNormals(Mesh & mesh)
   }
   else
   {
-    std::cerr << "warning: mesh normals were already there" << std::endl;
+    fmt::print(stderr, "warning: mesh normals were already there\n");
   }
 }
 
@@ -543,7 +542,7 @@ void addElemFacetList(Mesh & mesh)
   }
   else
   {
-    std::cerr << "warning: facet pointers were already there" << std::endl;
+    fmt::print(stderr, "warning: facet pointers were already there\n");
   }
 }
 
@@ -663,12 +662,10 @@ void readGMSH(
     std::string_view const filename,
     MeshFlags::T flags = MeshFlags::NONE)
 {
-  using Facet_T = typename Elem::Facet_T;
-
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
   {
-    std::cerr << "mesh file " << filename << " not found" << std::endl;
+    fmt::print(stderr, "mesh file {} not found\n", filename);
     std::exit(PROXPDE_GMSH_ERROR);
   }
 
@@ -677,7 +674,7 @@ void readGMSH(
   in >> buf;
   if (buf != "$MeshFormat")
   {
-    std::cerr << "file format not recognized" << std::endl;
+    fmt::print(stderr, "file format not recognized\n");
     std::exit(PROXPDE_GMSH_ERROR);
   }
 
@@ -685,19 +682,20 @@ void readGMSH(
   in >> buf >> filetype >> datasize;
   if (buf != "2.2" || filetype != 0 || datasize != 8)
   {
-    std::cerr << "file format not recognized" << std::endl;
+    fmt::print(stderr, "file format not recognized\n");
     std::exit(PROXPDE_GMSH_ERROR);
   }
 
   in >> buf;
   if (buf != "$EndMeshFormat")
   {
-    std::cerr << "file format not recognized" << std::endl;
+    fmt::print(stderr, "file format not recognized\n");
     std::exit(PROXPDE_GMSH_ERROR);
   }
 
   std::vector<Point> points;
   std::vector<ElemStub<Elem>> elems;
+  using Facet_T = typename Elem::Facet_T;
   std::set<ElemStub<Facet_T>> facets;
   std::set<marker_T> volumeMarkers;
   std::set<marker_T> facetMarkers;
@@ -724,7 +722,7 @@ void readGMSH(
       in >> buf;
       if (buf != "$EndPhysicalNames")
       {
-        std::cerr << "error reading physical names" << std::endl;
+        fmt::print(stderr, "error reading physical names\n");
         std::exit(PROXPDE_GMSH_ERROR);
       }
     }
@@ -747,7 +745,7 @@ void readGMSH(
       in >> buf;
       if (buf != "$EndNodes")
       {
-        std::cerr << "error reading nodes" << std::endl;
+        fmt::print(stderr, "error reading nodes\n");
         std::exit(PROXPDE_GMSH_ERROR);
       }
     }
@@ -846,20 +844,20 @@ void readGMSH(
         }
         else
         {
-          std::cerr << "error reading elements" << std::endl;
+          fmt::print(stderr, "error reading elements\n");
           std::exit(PROXPDE_GMSH_ERROR);
         }
       }
       in >> buf;
       if (buf != "$EndElements")
       {
-        std::cerr << "error reading elements" << std::endl;
+        fmt::print(stderr, "error reading elements\n");
         std::exit(PROXPDE_GMSH_ERROR);
       }
     }
     else
     {
-      std::cerr << "file section not recognized: " << buf << std::endl;
+      fmt::print(stderr, "file section not recognized: {}\n", buf);
       // discard the whole unrecognized section
       auto sectionEnd = "$End" + buf.substr(1, buf.length() - 1);
       while (buf != sectionEnd)
@@ -871,25 +869,11 @@ void readGMSH(
     // get next section
     in >> buf;
   }
-  std::cout << "ignored elements: " << ignoredElements << std::endl;
-  std::cout << "available volume markers: ";
-  for (auto const marker: volumeMarkers)
-  {
-    std::cout << marker << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "available facet markers: ";
-  for (auto const marker: facetMarkers)
-  {
-    std::cout << marker << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "physical names:\n";
-  for (auto const & [marker, name]: physicalNames)
-  {
-    std::cout << marker << ": " << name << "\n";
-  }
-  std::cout << std::flush;
+  fmt::print("ignored elements: {}\n", ignoredElements);
+  fmt::print("available volume markers: {}\n", volumeMarkers);
+  fmt::print("available facet markers: {}\n", facetMarkers);
+  fmt::print("physical names: {}\n", physicalNames);
+
   // TODO: store physical names in the mesh
 
   id_T ptCount = 0;
@@ -962,7 +946,8 @@ void readGMSH(
   {
     addElemFacetList(mesh);
   }
-  std::cout << "mesh file " << filename << " successfully read" << std::endl;
+
+  fmt::print("mesh file {} successfully read\n", filename);
 }
 
 template <typename Mesh>

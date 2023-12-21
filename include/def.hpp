@@ -34,6 +34,7 @@
 // fmt
 #include <fmt/core.h>
 #include <fmt/ostream.h>
+#include <fmt/ranges.h>
 
 // yaml
 #include <yaml-cpp/yaml.h>

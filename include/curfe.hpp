@@ -233,7 +233,7 @@ struct VectorCurFE
     }
     for (uint i = 0; i < RefFE::numGeoDOFs; ++i)
     {
-      mapping0.row(i) = RefFE::mapping[i](FVec<dim>::Zero());
+      mapping0.row(i) = RefFE::mapping[i](RefFE::midPoint);
     }
   }
 

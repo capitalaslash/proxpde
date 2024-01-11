@@ -438,8 +438,9 @@ public:
       {
         if (predicate(feSpace.curFE.dofPts[d]))
         {
-          ids.insert({feSpace.dof.getId(e.id, d), counter});
-          counter++;
+          auto [_, inserted] = ids.insert({feSpace.dof.getId(e.id, d), counter});
+          if (inserted)
+            counter++;
         }
       }
     }

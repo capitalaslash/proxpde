@@ -64,7 +64,7 @@ struct RefLineP0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 2, 1> constexpr dofOnFacet = {{{{0}}, {{0}}}};
-  static Vec1 const refMidpoint;
+  static Vec1 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<Vec_T, numDOFs> const points;
@@ -104,7 +104,7 @@ struct RefLineP1
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 2, 1> constexpr dofOnFacet = {{{{0}}, {{1}}}};
-  static Vec1 const refMidpoint;
+  static Vec1 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<Vec_T, numDOFs> const points;
@@ -146,7 +146,7 @@ struct RefLineP2
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 1, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 2, 1> constexpr dofOnFacet = {{{{0}}, {{1}}}};
-  static Vec1 const refMidpoint;
+  static Vec1 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<Vec_T, numDOFs> const points;
@@ -186,7 +186,7 @@ struct RefTriangleP0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 3, 1> constexpr dofOnFacet = {{{{0}}, {{0}}, {{0}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -224,7 +224,7 @@ struct RefTriangleP1
   static std::array<uint, 4> constexpr dofPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 2U;
   static array2d<uint, 3, 2> constexpr dofOnFacet = {{{{0, 1}}, {{1, 2}}, {{2, 0}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -270,7 +270,7 @@ struct RefTriangleP2
   static uint constexpr dofPerEdge = 3U;
   static array2d<uint, 3, 3> constexpr dofOnFacet = {
       {{{0, 1, 3}}, {{1, 2, 4}}, {{2, 0, 5}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -313,7 +313,7 @@ struct RefTriangleRT0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 3, 1> constexpr dofOnFacet = {{{{0}}, {{1}}, {{2}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<twodFun_T, numDOFs> const phiVectFun;
@@ -359,7 +359,7 @@ struct RefTriangleCR1
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 3, 1> constexpr dofOnFacet = {{{{0}}, {{1}}, {{2}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -401,7 +401,7 @@ struct RefQuadP0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 4, 1> constexpr dofOnFacet = {{{{0}}, {{0}}, {{0}}, {{0}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -446,7 +446,7 @@ struct RefQuadQ1
   static uint constexpr dofPerFacet = 2U;
   static array2d<uint, 4, 2> constexpr dofOnFacet = {
       {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -488,7 +488,7 @@ struct RefQuadP2
   static uint constexpr dofPerFacet = 3U;
   static array2d<uint, 4, 3> constexpr dofOnFacet = {
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -534,7 +534,7 @@ struct RefQuadQ2
   static uint constexpr dofPerFacet = 3U;
   static array2d<uint, 4, 3> constexpr dofOnFacet = {
       {{{0, 1, 4}}, {{1, 2, 5}}, {{2, 3, 6}}, {{3, 0, 7}}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarTwodFun_T, numDOFs> const phiFun;
@@ -581,7 +581,7 @@ struct RefQuadRT0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 4, 1> constexpr dofOnFacet = {{{0}, {1}, {2}, {3}}};
-  static Vec2 const refMidpoint;
+  static Vec2 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<twodFun_T, numDOFs> const phiVectFun;
@@ -634,7 +634,7 @@ struct RefTetrahedronP0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 4, 1> constexpr dofOnFacet = {{{{0}}, {{0}}, {{0}}, {{0}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -678,7 +678,7 @@ struct RefTetrahedronP1
   static uint constexpr dofPerFacet = 3U;
   static array2d<uint, 4, 3> constexpr dofOnFacet = {
       {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -720,7 +720,7 @@ struct RefTetrahedronP2
        {{0, 1, 3, 4, 8, 7}},
        {{0, 3, 2, 7, 9, 6}},
        {{1, 2, 3, 5, 9, 8}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -769,7 +769,7 @@ struct RefTetrahedronRT0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 4, 1> constexpr dofOnFacet = {{{{0}}, {{1}}, {{2}}, {{3}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<threedFun_T, numDOFs> const phiVectFun;
@@ -815,7 +815,7 @@ struct RefHexahedronP0
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 6, 1> constexpr dofOnFacet = {
       {{{0}}, {{0}}, {{0}}, {{0}}, {{0}}, {{0}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -868,7 +868,7 @@ struct RefHexahedronQ1
        {{2, 3, 7, 6}},
        {{3, 0, 4, 7}},
        {{4, 5, 6, 7}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -920,7 +920,7 @@ struct RefHexahedronQ2
        {{2, 3, 7, 6, 10, 15, 18, 14, 23}},
        {{3, 0, 4, 7, 11, 12, 19, 15, 24}},
        {{4, 5, 6, 7, 16, 17, 18, 19, 25}}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<scalarThreedFun_T, numDOFs> const phiFun;
@@ -985,7 +985,7 @@ struct RefHexahedronRT0
   static std::array<uint, 4> inline constexpr geoPlace{{0, 0, 0, 1}};
   static uint constexpr dofPerFacet = 1U;
   static array2d<uint, 6, 1> constexpr dofOnFacet = {{{0}, {1}, {2}, {3}, {4}, {5}}};
-  static Vec3 const refMidpoint;
+  static Vec3 const midPoint;
   using Vec_T = FVec<dim>;
 
   static std::array<threedFun_T, numDOFs> const phiVectFun;

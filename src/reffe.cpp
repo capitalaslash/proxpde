@@ -17,7 +17,7 @@ std::array<onedFun_T, RefPoint::numDOFs> const RefPoint::dphiFun = {
 std::array<onedFun_T, RefPoint::numGeoDOFs> const RefPoint::mapping = RefPoint::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec1 const RefLineP0::refMidpoint = Vec1{0.};
+Vec1 const RefLineP0::midPoint = Vec1{0.};
 
 std::array<RefLineP0::Vec_T, RefLineP0::numDOFs> const RefLineP0::points = {
     {Vec_T::Constant(0.L)}};
@@ -40,7 +40,7 @@ std::array<onedFun_T, RefLineP0::numGeoDOFs> const RefLineP0::mapping = {
      [](Vec_T const &) { return Vec_T::Constant(+0.5L); }}};
 
 // ----------------------------------------------------------------------------
-Vec1 const RefLineP1::refMidpoint = Vec1{0.};
+Vec1 const RefLineP1::midPoint = Vec1{0.};
 
 std::array<RefLineP1::Vec_T, RefLineP1::numDOFs> const RefLineP1::points = {
     {Vec_T::Constant(-1.L), Vec_T::Constant(1.L)}};
@@ -61,7 +61,7 @@ std::array<onedFun_T, RefLineP1::numGeoDOFs> const RefLineP1::mapping =
     RefLineP1::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec1 const RefLineP2::refMidpoint = Vec1{0.};
+Vec1 const RefLineP2::midPoint = Vec1{0.};
 
 // static Point line_p0{-1., 0., 0.};
 // static Point line_p1{ 1., 0., 0.};
@@ -89,7 +89,7 @@ std::array<onedFun_T, RefLineP2::numGeoDOFs> const RefLineP2::mapping =
     RefLineP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleP1::refMidpoint = Vec2{1. / 3, 1. / 3};
+Vec2 const RefTriangleP1::midPoint = Vec2{1. / 3, 1. / 3};
 
 std::array<scalarTwodFun_T, RefTriangleP1::numDOFs> const RefTriangleP1::phiFun = {
     {[](Vec_T const & p) { return 1. - p(0) - p(1); },
@@ -136,7 +136,7 @@ std::array<FMat<3, 3>, 4> const RefTriangleP1::embeddingMatrix =
 // clang-format on
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleP0::refMidpoint = Vec2{1. / 3, 1. / 3};
+Vec2 const RefTriangleP0::midPoint = Vec2{1. / 3, 1. / 3};
 
 std::array<scalarTwodFun_T, RefTriangleP0::numDOFs> const RefTriangleP0::phiFun = {
     {[](Vec_T const &) { return 1.; }}};
@@ -149,7 +149,7 @@ std::array<twodFun_T, RefTriangleP0::numGeoDOFs> const RefTriangleP0::mapping =
     RefTriangleP1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleP2::refMidpoint = Vec2{1. / 3, 1. / 3};
+Vec2 const RefTriangleP2::midPoint = Vec2{1. / 3, 1. / 3};
 
 std::array<scalarTwodFun_T, RefTriangleP2::numDOFs> const RefTriangleP2::phiFun = {{
     [](Vec_T const & p) { return 2. * (1. - p(0) - p(1)) * (0.5 - p(0) - p(1)); },
@@ -175,7 +175,7 @@ std::array<twodFun_T, RefTriangleP2::numGeoDOFs> const RefTriangleP2::mapping =
     RefTriangleP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleRT0::refMidpoint = Vec2{1. / 3, 1. / 3};
+Vec2 const RefTriangleRT0::midPoint = Vec2{1. / 3, 1. / 3};
 
 std::array<twodFun_T, RefTriangleRT0::numDOFs> const RefTriangleRT0::phiVectFun = {{
     [](Vec_T const & p) { return Vec_T(p(0), p(1) - 1.); },
@@ -226,7 +226,7 @@ std::array<twodFun_T, RefTriangleRT0::numGeoDOFs> const RefTriangleRT0::mapping 
     RefTriangleP1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefTriangleCR1::refMidpoint = Vec2{1. / 3, 1. / 3};
+Vec2 const RefTriangleCR1::midPoint = Vec2{1. / 3, 1. / 3};
 
 std::array<scalarTwodFun_T, RefTriangleCR1::numDOFs> const RefTriangleCR1::phiFun = {
     {[](Vec_T const & p) { return 2. * p(0) + 2. * p(1) - 1.; },
@@ -252,7 +252,7 @@ static std::array<feFun_T, 2> const dfunQ1 = {
     [](const double) { return +0.5; },
 };
 
-Vec2 const RefQuadQ1::refMidpoint = Vec2{0., 0.};
+Vec2 const RefQuadQ1::midPoint = Vec2{0., 0.};
 
 std::array<scalarTwodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::phiFun = {
     {[](Vec_T const & p) { return funQ1[0](p(0)) * funQ1[0](p(1)); },
@@ -312,7 +312,7 @@ std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 
 // clang-format on
 
 // ----------------------------------------------------------------------------
-Vec2 const RefQuadP2::refMidpoint = Vec2{0., 0.};
+Vec2 const RefQuadP2::midPoint = Vec2{0., 0.};
 
 std::array<scalarTwodFun_T, RefQuadP2::numDOFs> const RefQuadP2::phiFun = {
     {[](Vec_T const & p)
@@ -378,7 +378,7 @@ static std::array<feFun_T, 3> const dfunQ2 = {
     [](const double x) { return -2. * x; },
 };
 
-Vec2 const RefQuadQ2::refMidpoint = Vec2{0., 0.};
+Vec2 const RefQuadQ2::midPoint = Vec2{0., 0.};
 
 std::array<scalarTwodFun_T, RefQuadQ2::numDOFs> const RefQuadQ2::phiFun = {
     {[](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]); },
@@ -425,7 +425,7 @@ std::array<twodFun_T, RefQuadQ2::numGeoDOFs> const RefQuadQ2::mapping =
     RefQuadQ2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefQuadP0::refMidpoint = Vec2{0., 0.};
+Vec2 const RefQuadP0::midPoint = Vec2{0., 0.};
 
 std::array<scalarTwodFun_T, RefQuadP0::numDOFs> const RefQuadP0::phiFun = {
     {[](Vec_T const &) { return 1.; }}};
@@ -438,7 +438,7 @@ std::array<twodFun_T, RefQuadP0::numGeoDOFs> const RefQuadP0::mapping =
     RefQuadQ1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec2 const RefQuadRT0::refMidpoint = Vec2{0., 0.};
+Vec2 const RefQuadRT0::midPoint = Vec2{0., 0.};
 
 std::array<twodFun_T, RefQuadRT0::numDOFs> const RefQuadRT0::phiVectFun = {{
     [](Vec_T const & p) { return Vec_T(0., 0.25 * (p(1) - 1.)); },
@@ -494,7 +494,7 @@ std::array<twodFun_T, RefQuadRT0::numGeoDOFs> const RefQuadRT0::mapping =
     RefQuadQ1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefTetrahedronP1::refMidpoint = Vec3{0.25, 0.25, 0.25};
+Vec3 const RefTetrahedronP1::midPoint = Vec3{0.25, 0.25, 0.25};
 
 static double constexpr z0(double const x, double const y, double const z)
 {
@@ -526,7 +526,7 @@ std::array<threedFun_T, RefTetrahedronP1::numGeoDOFs> const RefTetrahedronP1::ma
     RefTetrahedronP1::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefTetrahedronP2::refMidpoint = Vec3{0.25, 0.25, 0.25};
+Vec3 const RefTetrahedronP2::midPoint = Vec3{0.25, 0.25, 0.25};
 
 std::array<scalarThreedFun_T, RefTetrahedronP2::numDOFs> const
     RefTetrahedronP2::phiFun = {{
@@ -629,7 +629,7 @@ std::array<threedFun_T, RefTetrahedronP2::numGeoDOFs> const RefTetrahedronP2::ma
     RefTetrahedronP2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefTetrahedronRT0::refMidpoint = Vec3{0.25, 0.25, 0.25};
+Vec3 const RefTetrahedronRT0::midPoint = Vec3{0.25, 0.25, 0.25};
 
 std::array<threedFun_T, RefTetrahedronRT0::numDOFs> const
     RefTetrahedronRT0::phiVectFun = {{
@@ -655,7 +655,7 @@ std::array<threedFun_T, RefTetrahedronRT0::numGeoDOFs> const
     RefTetrahedronRT0::mapping = RefTetrahedronP1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefTetrahedronP0::refMidpoint = Vec3{0.25, 0.25, 0.25};
+Vec3 const RefTetrahedronP0::midPoint = Vec3{0.25, 0.25, 0.25};
 
 std::array<scalarThreedFun_T, RefTetrahedronP0::numDOFs> const
     RefTetrahedronP0::phiFun = {{[](Vec_T const &) { return 1.; }}};
@@ -668,7 +668,7 @@ std::array<threedFun_T, RefTetrahedronP0::numGeoDOFs> const RefTetrahedronP0::ma
     RefTetrahedronP1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefHexahedronQ1::refMidpoint = Vec3{0., 0., 0.};
+Vec3 const RefHexahedronQ1::midPoint = Vec3{0., 0., 0.};
 
 std::array<
     scalarThreedFun_T,
@@ -746,7 +746,7 @@ std::array<threedFun_T, RefHexahedronQ1::numGeoDOFs> const RefHexahedronQ1::mapp
     RefHexahedronQ1::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefHexahedronQ2::refMidpoint = Vec3{0., 0., 0.};
+Vec3 const RefHexahedronQ2::midPoint = Vec3{0., 0., 0.};
 
 std::array<
     scalarThreedFun_T,
@@ -988,7 +988,7 @@ std::array<threedFun_T, RefHexahedronQ2::numGeoDOFs> const RefHexahedronQ2::mapp
     RefHexahedronQ2::dphiFun;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefHexahedronP0::refMidpoint = Vec3{0., 0., 0.};
+Vec3 const RefHexahedronP0::midPoint = Vec3{0., 0., 0.};
 
 std::array<scalarThreedFun_T, RefHexahedronP0::numDOFs> const RefHexahedronP0::phiFun =
     {{[](Vec_T const &) { return 1.; }}};
@@ -1001,7 +1001,7 @@ std::array<threedFun_T, RefHexahedronP0::numGeoDOFs> const RefHexahedronP0::mapp
     RefHexahedronQ1::mapping;
 
 // ----------------------------------------------------------------------------
-Vec3 const RefHexahedronRT0::refMidpoint = Vec3{0., 0., 0.};
+Vec3 const RefHexahedronRT0::midPoint = Vec3{0., 0., 0.};
 
 std::array<threedFun_T, RefHexahedronRT0::numDOFs> const RefHexahedronRT0::phiVectFun =
     {{

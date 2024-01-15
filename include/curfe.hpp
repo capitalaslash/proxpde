@@ -290,6 +290,7 @@ struct VectorCurFE
         jacPlus[q] = jTjI * jac[q].transpose();
 
         JxW[q] = detJ[q] * QR::weight[q];
+        JxW0[q] = detJ0 * QR::weight[q];
         // forward mapping on qpoint
         qpoint[q] = elem->origin() + jac[q] * QR::node[q];
 
@@ -390,6 +391,7 @@ struct VectorCurFE
   std::array<double, QR::numPts> detJ;
   double detJ0;
   std::array<double, QR::numPts> JxW;
+  std::array<double, QR::numPts> JxW0;
   std::array<Vec3, QR::numPts> qpoint;
   std::array<FMat<numDOFs, dim>, QR::numPts> phiVectRef;
   std::array<FMat<numDOFs, 3>, QR::numPts> phiVect;

@@ -141,8 +141,8 @@ struct FVSolver
   {
     static_assert(
         order_v<ElemRefFE_T> == 0, "finite volume solver works only on order 0.");
-    assert((feSpace.mesh->flags & MeshFlags::INTERNAL_FACETS).any());
-    assert((feSpace.mesh->flags & MeshFlags::NORMALS).any());
+    assert(feSpace.mesh->flags & MeshFlags::INTERNAL_FACETS);
+    assert(feSpace.mesh->flags & MeshFlags::NORMALS);
 
     for (auto const & elem: feSpace.mesh->elementList)
     {

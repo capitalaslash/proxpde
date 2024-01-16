@@ -2,6 +2,7 @@ mesh:
   origin: [0.0, 0.0, 0.0]
   length: [1.0, 0.0, 0.0]
   n: [10, 0, 0]
+  flags: [INTERNAL_FACETS, NORMALS, FACET_PTRS]
 dt: 0.1
 velocity: 0.5
 threshold: 0.37

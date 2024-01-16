@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
   config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
   config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
   config["mesh"]["n"] = std::array{4U, 4U, 0U};
-  config["mesh"]["flags"] = MeshFlags::BOUNDARY_FACETS;
+  config["mesh"]["flags"] = Bitmask{MeshFlags::BOUNDARY_FACETS};
   config["dt"] = 0.1;
   config["ntime"] = 10U;
   config["nu"] = 0.1;

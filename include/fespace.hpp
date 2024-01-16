@@ -82,9 +82,8 @@ struct FESpace
     if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       // RT0 requires internal facets and facet ptrs
-      assert(
-          (mesh->flags & (MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS))
-              .count() == 2);
+      assert(mesh->flags & MeshFlags::INTERNAL_FACETS);
+      assert(mesh->flags & MeshFlags::FACET_PTRS);
     }
   }
 
@@ -204,7 +203,7 @@ void interpolateAnalyticFunction(
 
   if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::RAVIART_THOMAS)
   {
-    assert((feSpace.mesh->flags & MeshFlags::NORMALS).any());
+    assert(feSpace.mesh->flags & MeshFlags::NORMALS);
   }
 
   for (auto const & elem: feSpace.mesh->elementList)

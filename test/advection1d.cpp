@@ -38,23 +38,22 @@ int main(int argc, char * argv[])
   }
   else
   {
-    config["n"] = 10U;
+    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+    config["mesh"]["length"] = Vec3{1.0, 0.0, 0.0};
+    config["mesh"]["n"] = std::array{10U, 0U, 0U};
+    config["mesh"]["flags"] =
+        MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS;
     config["dt"] = 0.1;
     config["final_time"] = 3.0;
     config["velocity"] = 0.5;
     config["threshold"] = 0.37;
   }
-  config.validate({"n", "dt", "velocity", "threshold", "final_time"});
+  config.validate({"mesh", "dt", "velocity", "threshold", "final_time"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uint const numElems = config["n"].as<uint>();
-  buildHyperCube(
-      *mesh,
-      Vec3{0.0, 0.0, 0.0},
-      Vec3{1.0, 0.0, 0.0},
-      {numElems, 0, 0},
-      MeshFlags::INTERNAL_FACETS | MeshFlags::NORMALS | MeshFlags::FACET_PTRS);
+  buildHyperCube(*mesh, config["mesh"]);
+  auto const numElems = config["mesh"]["n"].as<std::array<uint, 3>>()[0];
   // auto const r = 1. / 1.1;
   // auto const starting = (1. - r) / (1. - cepow(r, numElems));
   // auto counter = 0;

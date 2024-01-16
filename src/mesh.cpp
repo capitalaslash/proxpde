@@ -17,7 +17,7 @@ void buildLine(
     Vec3 const & origin,
     Vec3 const & length,
     uint const numElems,
-    MeshFlags::T flags)
+    Bitmask<MeshFlags> flags)
 {
   assert(numElems > 0);
   assert(length.norm() > 0.);
@@ -46,7 +46,7 @@ void buildSquare(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 2> const numElems,
-    MeshFlags::T flags)
+    Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
@@ -121,7 +121,7 @@ void buildSquare(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 2> const numElems,
-    MeshFlags::T flags)
+    Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0);
   // TODO: generalize for planes in 3D space
@@ -343,7 +343,7 @@ void buildCube(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 3> const numElems,
-    MeshFlags::T flags)
+    Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
@@ -443,7 +443,7 @@ void buildCube(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 3> const numElems,
-    MeshFlags::T flags)
+    Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
@@ -639,7 +639,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
   std::cout << mesh << std::endl;
 }
 
-void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags)
+void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
 {
   id_T counter = 0;
   double const h = 0.1;

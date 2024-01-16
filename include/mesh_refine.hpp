@@ -73,7 +73,7 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
   // the number of facets is equal to the size of the list when the internal are stored
   // or to the sum of all the facets of all the elements divided by 2
-  auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS).any()
+  auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS)
                              ? meshCoarse.facetList.size()
                              : (Elem_T::numFacets * meshCoarse.elementList.size() +
                                 meshCoarse.facetList.size()) /
@@ -217,11 +217,11 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
   buildFacets(meshFine, meshCoarse.flags);
 
-  if ((meshCoarse.flags & MeshFlags::NORMALS).any())
+  if (meshCoarse.flags & MeshFlags::NORMALS)
   {
-    buildNormals(meshFine);
+    buildNormals(meshFine, meshCoarse.flags);
   }
-  if ((meshCoarse.flags & MeshFlags::FACET_PTRS).any())
+  if (meshCoarse.flags & MeshFlags::FACET_PTRS)
   {
     addElemFacetList(meshFine);
   }

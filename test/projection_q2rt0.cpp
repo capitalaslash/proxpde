@@ -121,7 +121,7 @@ int main()
 
   // evaluate divergence
   FMat<3, 2> const uGradInterpQ1 = uQ1.evaluateGradOnReal(pt);
-  fmt::print("uDivInterpQ1: {}\n", uGradInterpQ1(0, 0) + uGradInterpQ1(1, 1));
+  fmt::print("uDivInterpQ1: {}\n", uGradInterpQ1.trace());
 
   // set up fe variable on the given element
   uQ2.reinit(elem);
@@ -133,7 +133,7 @@ int main()
 
   // evaluate divergence
   FMat<3, 2> const uGradInterpQ2 = uQ2.evaluateGradOnReal(pt);
-  fmt::print("uDivInterpQ2: {}\n", uGradInterpQ2(0, 0) + uGradInterpQ2(1, 1));
+  fmt::print("uDivInterpQ2: {}\n", uGradInterpQ2.trace());
 
   // set up fe variable on the givan element
   uRT0.reinit(elem);

@@ -7,34 +7,52 @@
 namespace proxpde
 {
 
-struct MeshFlags
+enum class MeshFlags : uint8_t
 {
-  using T = std::bitset<4>;
-  static constexpr T NONE = 0b0000;
-  static constexpr T BOUNDARY_FACETS = 0b0001;
-  static constexpr T INTERNAL_FACETS = 0b0010;
-  static constexpr T NORMALS = 0b0100;
-  static constexpr T FACET_PTRS = 0b1000;
-  static constexpr std::array<T, 4> ALL = {
-      {BOUNDARY_FACETS, INTERNAL_FACETS, NORMALS, FACET_PTRS}};
+  NONE = 0U,
+  BOUNDARY_FACETS = 0x1 << 0,
+  INTERNAL_FACETS = 0x1 << 1,
+  NORMALS = 0x1 << 2,
+  FACET_PTRS = 0x1 << 3,
+  CHECK_FACET_PLANAR = 0x1 << 4,
 };
 
-static const std::string to_string(MeshFlags::T const flag)
+static constexpr std::array<MeshFlags, 5> MeshFlags_ALL = {
+    MeshFlags::BOUNDARY_FACETS,
+    MeshFlags::INTERNAL_FACETS,
+    MeshFlags::NORMALS,
+    MeshFlags::FACET_PTRS,
+    MeshFlags::CHECK_FACET_PLANAR,
+};
+
+template <>
+struct enable_bitmask_operators<MeshFlags>
 {
-  if (flag == MeshFlags::BOUNDARY_FACETS)
+  static const bool value = true;
+};
+
+static constexpr const char * to_string(MeshFlags const flag)
+{
+  switch (flag)
+  {
+  case MeshFlags::NONE:
+    return "NONE";
+  case MeshFlags::BOUNDARY_FACETS:
     return "BOUNDARY_FACETS";
-  else if (flag == MeshFlags::INTERNAL_FACETS)
+  case MeshFlags::INTERNAL_FACETS:
     return "INTERNAL_FACETS";
-  else if (flag == MeshFlags::NORMALS)
+  case MeshFlags::NORMALS:
     return "NORMALS";
-  else if (flag == MeshFlags::FACET_PTRS)
+  case MeshFlags::FACET_PTRS:
     return "FACET_PTRS";
-  fmt::print(stderr, "mesh flag not recognized: {}\n", flag.to_string());
+  case MeshFlags::CHECK_FACET_PLANAR:
+    return "CHECK_FACET_PLANAR";
+  }
   abort();
   return "ERROR";
 }
 
-static const MeshFlags::T to_MeshFlags(std::string_view str)
+static constexpr MeshFlags to_MeshFlags(std::string_view str)
 {
   if (str == "BOUNDARY_FACETS")
     return MeshFlags::BOUNDARY_FACETS;
@@ -61,53 +79,8 @@ public:
   using elemToPoint_T = std::vector<std::array<id_T, Elem::numPts>>;
   using elemToFacet_T = std::vector<std::array<id_T, Elem::numFacets>>;
 
-  void buildConnectivity()
-  {
-    elemToPoint.reserve(elementList.size());
-    for (auto const & e: elementList)
-    {
-      std::array<id_T, Elem::numPts> elemConn;
-      uint counter = 0;
-      for (auto const & p: e.pts)
-      {
-        elemConn[counter] = p->id;
-        counter++;
-      }
-      elemToPoint.push_back(elemConn);
-    }
-  }
-
-  uint countRidges()
-  {
-    // ridges are relevant only in 3d
-    if (Elem_T::dim < 3)
-    {
-      return 0;
-    }
-
-    // identify a ridge by its points (unordered)
-    using Ridge_T = std::set<id_T>;
-    using RidgeList_T = std::set<Ridge_T>;
-
-    RidgeList_T ridges;
-    auto ridgeCount = 0U;
-    for (auto const & elem: elementList)
-    {
-      for (auto const ridgeIds: Elem_T::elemToRidge)
-      {
-        Ridge_T ridge;
-        ridge.insert(elem.pts[ridgeIds[0]]->id);
-        ridge.insert(elem.pts[ridgeIds[1]]->id);
-
-        [[maybe_unused]] auto const [ptr, inserted] = ridges.insert(ridge);
-        if (inserted)
-        {
-          ridgeCount++;
-        }
-      }
-    }
-    return ridgeCount;
-  }
+  void buildConnectivity();
+  uint countRidges();
 
   PointList_T pointList;
   ElementList_T elementList;
@@ -115,8 +88,58 @@ public:
   uint numBdFacets;
   elemToPoint_T elemToPoint;
   elemToFacet_T elemToFacet;
-  MeshFlags::T flags;
+  Bitmask<MeshFlags> flags;
 };
+
+template <typename Elem>
+void Mesh<Elem>::buildConnectivity()
+{
+  elemToPoint.reserve(elementList.size());
+  for (auto const & e: elementList)
+  {
+    std::array<id_T, Elem::numPts> elemConn;
+    uint counter = 0;
+    for (auto const & p: e.pts)
+    {
+      elemConn[counter] = p->id;
+      counter++;
+    }
+    elemToPoint.push_back(elemConn);
+  }
+}
+
+template <typename Elem>
+uint Mesh<Elem>::countRidges()
+{
+  // ridges are relevant only in 3d
+  if (Elem_T::dim < 3)
+  {
+    return 0;
+  }
+
+  // identify a ridge by its points (unordered)
+  using Ridge_T = std::set<id_T>;
+  using RidgeList_T = std::set<Ridge_T>;
+
+  RidgeList_T ridges;
+  auto ridgeCount = 0U;
+  for (auto const & elem: elementList)
+  {
+    for (auto const ridgeIds: Elem_T::elemToRidge)
+    {
+      Ridge_T ridge;
+      ridge.insert(elem.pts[ridgeIds[0]]->id);
+      ridge.insert(elem.pts[ridgeIds[1]]->id);
+
+      [[maybe_unused]] auto const [ptr, inserted] = ridges.insert(ridge);
+      if (inserted)
+      {
+        ridgeCount++;
+      }
+    }
+  }
+  return ridgeCount;
+}
 
 template <typename Elem>
 std::ostream & operator<<(std::ostream & out, Mesh<Elem> const & mesh)
@@ -178,7 +201,7 @@ struct AllSides<3U>
 };
 
 template <typename Mesh>
-void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
+void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
 {
   using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Mesh::Facet_T;
@@ -251,14 +274,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   assert(oldFacetCount == oldBd + 2 * (mesh.facetList.size() - oldBd));
 
   uint bFacetSize = facetCount - iFacetCount;
-  if ((flags & MeshFlags::INTERNAL_FACETS).any())
-  {
-    mesh.facetList.resize(facetCount);
-  }
-  else
-  {
-    mesh.facetList.resize(bFacetSize);
-  }
+  mesh.facetList.resize((flags & MeshFlags::INTERNAL_FACETS) ? facetCount : bFacetSize);
   mesh.elemToFacet.resize(
       mesh.elementList.size(), fillArray<Elem_T::numFacets>(dofIdNotSet));
 
@@ -281,7 +297,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
     else
     {
       // this is an internal facet
-      if ((flags & MeshFlags::INTERNAL_FACETS).any())
+      if (flags & MeshFlags::INTERNAL_FACETS)
       {
         mesh.facetList[iFacetCount] = facet;
         mesh.facetList[iFacetCount].id = iFacetCount;
@@ -299,7 +315,7 @@ void buildFacets(Mesh & mesh, MeshFlags::T flags = MeshFlags::NONE)
   mesh.flags |= MeshFlags::BOUNDARY_FACETS;
   mesh.numBdFacets = bFacetSize;
   // set INTERNAL_FACETS flag based on the input flags
-  mesh.flags |= flags & MeshFlags::INTERNAL_FACETS;
+  mesh.flags |= (flags & MeshFlags::INTERNAL_FACETS);
 }
 
 void buildLine(
@@ -307,21 +323,21 @@ void buildLine(
     Vec3 const & origin,
     Vec3 const & length,
     uint const numElems,
-    MeshFlags::T flags);
+    Bitmask<MeshFlags> flags);
 
 void buildSquare(
     Mesh<Triangle> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 2> const numElems,
-    MeshFlags::T flags);
+    Bitmask<MeshFlags> flags);
 
 void buildSquare(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 2> const numElems,
-    MeshFlags::T flags);
+    Bitmask<MeshFlags> flags);
 
 void buildCircleMesh(
     Mesh<Quad> & mesh,
@@ -334,14 +350,14 @@ void buildCube(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 3> const numElems,
-    MeshFlags::T flags);
+    Bitmask<MeshFlags> flags);
 
 void buildCube(
     Mesh<Hexahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 3> const numElems,
-    MeshFlags::T flags);
+    Bitmask<MeshFlags> flags);
 
 template <typename Elem>
 void buildHyperCube(
@@ -349,7 +365,7 @@ void buildHyperCube(
     Vec3 const & origin,
     Vec3 const & length,
     std::array<uint, 3> const numElems,
-    MeshFlags::T flags = MeshFlags::NONE)
+    Bitmask<MeshFlags> flags = MeshFlags::NONE)
 {
   if constexpr (std::is_same_v<Elem, Line>)
   {
@@ -371,11 +387,11 @@ void buildHyperCube(
     abort();
   }
 
-  if ((flags & MeshFlags::NORMALS).any())
+  if (flags & MeshFlags::NORMALS)
   {
     buildNormals(mesh);
   }
-  if ((flags & MeshFlags::FACET_PTRS).any())
+  if (flags & MeshFlags::FACET_PTRS)
   {
     addElemFacetList(mesh);
   }
@@ -384,10 +400,10 @@ void buildHyperCube(
 template <typename Elem>
 void buildHyperCube(Mesh<Elem> & mesh, ParameterDict const & config)
 {
-  auto flags = MeshFlags::NONE;
+  auto flags = Bitmask{MeshFlags::NONE};
   if (config["flags"])
   {
-    flags = config["flags"].as<MeshFlags::T>();
+    flags |= config["flags"].as<Bitmask<MeshFlags>>();
   }
 
   config.validate({"origin", "length", "n"});
@@ -447,7 +463,7 @@ void refQuadMesh(Mesh<Quad> & mesh);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
 void refHexahedronMesh(Mesh<Hexahedron> & mesh);
 void hexagonMesh(Mesh<Triangle> & mesh);
-void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags::T flags = MeshFlags::NONE);
+void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags = MeshFlags::NONE);
 
 template <typename Elem>
 void referenceMesh(Mesh<Elem> & mesh)
@@ -486,7 +502,7 @@ void referenceMesh(Mesh<Elem> & mesh)
 template <typename Mesh>
 void buildNormals(Mesh & mesh)
 {
-  if ((mesh.flags & MeshFlags::NORMALS).none())
+  if (!(mesh.flags & MeshFlags::NORMALS))
   {
     for (auto & facet: mesh.facetList)
     {
@@ -520,7 +536,7 @@ void buildNormals(Mesh & mesh)
 template <typename Mesh>
 void addElemFacetList(Mesh & mesh)
 {
-  if ((mesh.flags & MeshFlags::FACET_PTRS).none())
+  if (!(mesh.flags & MeshFlags::FACET_PTRS))
   {
     for (auto & elem: mesh.elementList)
     {
@@ -660,7 +676,7 @@ template <typename Elem>
 void readGMSH(
     Mesh<Elem> & mesh,
     std::string_view const filename,
-    MeshFlags::T flags = MeshFlags::NONE)
+    Bitmask<MeshFlags> flags = MeshFlags::NONE)
 {
   auto in = std::ifstream(filename.data());
   if (!in.is_open())
@@ -869,10 +885,19 @@ void readGMSH(
     // get next section
     in >> buf;
   }
-  fmt::print("ignored elements: {}\n", ignoredElements);
-  fmt::print("available volume markers: {}\n", volumeMarkers);
-  fmt::print("available facet markers: {}\n", facetMarkers);
-  fmt::print("physical names: {}\n", physicalNames);
+  fmt::print("number of ignored elements: {}\n", ignoredElements);
+  fmt::print("available volume markers: [");
+  for (auto const m: volumeMarkers)
+    fmt::print("{}, ", m);
+  fmt::print("]\n");
+  fmt::print("available facet markers: [");
+  for (auto const m: facetMarkers)
+    fmt::print("{}, ", m);
+  fmt::print("]\n");
+  fmt::print("physical names: [");
+  for (auto const & n: physicalNames)
+    fmt::print("{} -> {}, ", n.first, n.second);
+  fmt::print("]\n");
 
   // TODO: store physical names in the mesh
 
@@ -938,11 +963,11 @@ void readGMSH(
   // check that all facets have been found in the mesh
   assert(facets.size() == 0);
 
-  if ((flags & MeshFlags::NORMALS).any())
+  if (flags & MeshFlags::NORMALS)
   {
     buildNormals(mesh);
   }
-  if ((flags & MeshFlags::FACET_PTRS).any())
+  if (flags & MeshFlags::FACET_PTRS)
   {
     addElemFacetList(mesh);
   }
@@ -961,10 +986,10 @@ void readMesh(Mesh & mesh, ParameterDict const & config)
   }
   else if (mesh_type == "msh")
   {
-    auto flags = MeshFlags::NONE;
+    Bitmask flags{MeshFlags::NONE};
     if (config["flags"])
     {
-      flags = config["flags"].as<MeshFlags::T>();
+      flags |= config["flags"].as<Bitmask<MeshFlags>>();
     }
     readGMSH(mesh, config["filename"].as<std::string>(), flags);
   }
@@ -983,24 +1008,25 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
 namespace YAML
 {
 template <>
-struct convert<proxpde::MeshFlags::T>
+struct convert<proxpde::Bitmask<proxpde::MeshFlags>>
 {
-  static Node encode(proxpde::MeshFlags::T const & rhs)
+  using T = proxpde::Bitmask<proxpde::MeshFlags>;
+  static Node encode(T const & rhs)
   {
     // string array implementation
     Node node;
-    for (auto const flag: proxpde::MeshFlags::ALL)
+    for (auto const flag: proxpde::MeshFlags_ALL)
     {
-      if ((rhs & flag).any())
+      if (rhs & flag)
         node.push_back(proxpde::to_string(flag));
     }
     return node;
 
-    // ulong implementation
-    // return Node{rhs.to_ulong()};
+    // // ulong implementation
+    // return Node{rhs.value};
   }
 
-  static bool decode(Node const & node, proxpde::MeshFlags::T & rhs)
+  static bool decode(Node const & node, T & rhs)
   {
     // string array implementation
     if (!node.IsSequence())
@@ -1012,10 +1038,10 @@ struct convert<proxpde::MeshFlags::T>
     }
     return true;
 
-    // ulong implementation
+    // // ulong implementation
     // if (!node.IsScalar())
     //   return false;
-    // rhs = node.as<ulong>();
+    // rhs = node.as<T>();
     // return true;
   }
 };

@@ -50,7 +50,7 @@ void adaptiveRefine(
   using Elem_T = Triangle;
   // using Facet_T = typename Elem_T::Facet_T;
 
-  assert((meshCoarse.flags & MeshFlags::INTERNAL_FACETS).any());
+  assert(meshCoarse.flags & MeshFlags::INTERNAL_FACETS);
 
   auto facetWeight = std::vector<int>(meshCoarse.facetList.size());
 

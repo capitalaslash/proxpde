@@ -34,7 +34,8 @@
 // fmt
 #include <fmt/core.h>
 #include <fmt/ostream.h>
-#include <fmt/ranges.h>
+// fmt ranges conflicts with Eigen::DenseBase begin()/end()
+// #include <fmt/ranges.h>
 
 // yaml
 #include <yaml-cpp/yaml.h>
@@ -429,17 +430,130 @@ inline bool checkError(
   return !check;
 }
 
+// ----------------------------------------------------------------------------
+template <typename E>
+struct enable_bitmask_operators
+{
+  static constexpr bool value = false;
+};
+
+template <typename E>
+auto constexpr enable_bitmask_operators_v = enable_bitmask_operators<E>::value;
+
+template <typename E>
+struct Enumerator
+{
+  using Underlying_T = std::underlying_type_t<E>;
+
+  constexpr Enumerator() = default;
+  constexpr Enumerator(const E v): value{v} {}
+
+  constexpr explicit operator bool() const
+  {
+    return static_cast<Underlying_T>(value) != 0;
+  }
+  constexpr operator E() const { return value; }
+
+  E value = static_cast<Underlying_T>(0);
+};
+
+template <typename E>
+struct Bitmask
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+
+  constexpr Bitmask() = default;
+
+  constexpr Bitmask(E const v): value{static_cast<Underlying_T>(v)} {}
+
+  constexpr explicit operator bool() const { return value != 0; }
+
+  Underlying_T value = static_cast<Underlying_T>(0);
+};
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Enumerator<E>>
+    operator&(E const lhs, E const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  return Enumerator<E>{
+      static_cast<E>(static_cast<Underlying_T>(lhs) & static_cast<Underlying_T>(rhs))};
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Enumerator<E>>
+    operator&(Bitmask<E> const lhs, E const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  return Enumerator<E>{static_cast<E>(lhs.value & static_cast<Underlying_T>(rhs))};
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Bitmask<E>>
+    operator|(E const lhs, E const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  return Bitmask<E>{
+      static_cast<E>(static_cast<Underlying_T>(lhs) | static_cast<Underlying_T>(rhs))};
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Bitmask<E>>
+    operator|(Bitmask<E> const lhs, E const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  return Bitmask<E>{static_cast<E>(lhs.value | static_cast<Underlying_T>(rhs))};
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Bitmask<E> &>
+    operator|=(Bitmask<E> & lhs, E const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  lhs.value |= static_cast<Underlying_T>(rhs);
+  return lhs;
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Bitmask<E> &>
+    operator|=(Bitmask<E> & lhs, Enumerator<E> const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  lhs.value |= static_cast<Underlying_T>(rhs.value);
+  return lhs;
+}
+
+template <typename E>
+constexpr std::
+    enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Bitmask<E> &>
+    operator|=(Bitmask<E> & lhs, Bitmask<E> const rhs)
+{
+  using Underlying_T = typename std::underlying_type<E>::type;
+  lhs.value |= static_cast<Underlying_T>(rhs.value);
+  return lhs;
+}
+
 } // namespace proxpde
 
+// ----------------------------------------------------------------------------
 template <typename T>
 requires std::is_base_of_v<Eigen::DenseBase<T>, T>
 struct fmt::formatter<T>: ostream_formatter
 {};
 
+// ----------------------------------------------------------------------------
 template <typename T, int S>
+requires std::is_floating_point_v<T>
 struct fmt::formatter<Eigen::SparseMatrix<T, S>>: ostream_formatter
 {};
 
+// ----------------------------------------------------------------------------
 namespace YAML
 {
 template <>

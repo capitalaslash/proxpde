@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  if (!(mesh->flags & MeshFlags::INTERNAL_FACETS).any())
+  if (!(mesh->flags & MeshFlags::INTERNAL_FACETS))
   {
     std::cerr << "missing flag INTERNAL_FACETS" << std::endl;
     return 1;

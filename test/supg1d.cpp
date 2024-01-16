@@ -13,9 +13,9 @@
 namespace proxpde
 {
 
-// int constexpr sigma = +1;  // MS
-// int constexpr sigma =  0;  // SUPG
-// int constexpr sigma = -1;  // GLS
+// int constexpr sigma = +1; // MS
+int constexpr sigma = 0; // SUPG
+// int constexpr sigma = -1; // GLS
 
 int constexpr orderCG = 1;
 

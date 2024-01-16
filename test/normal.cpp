@@ -20,7 +20,7 @@ int main()
 {
   std::shared_ptr<Mesh<Triangle>> triangleMesh{new Mesh<Triangle>()};
   refTriangleMesh(*triangleMesh);
-  buildNormals(*triangleMesh);
+  buildNormals(*triangleMesh, MeshFlags::NONE);
 
   std::bitset<3> tests;
   tests[0] = vectorTest(triangleMesh->facetList[0]._normal, Vec3(0.0, -1.0, 0.0));

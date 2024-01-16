@@ -62,6 +62,8 @@ static constexpr MeshFlags to_MeshFlags(std::string_view str)
     return MeshFlags::NORMALS;
   else if (str == "FACET_PTRS")
     return MeshFlags::FACET_PTRS;
+  else if (str == "CHECK_FACET_PLANAR")
+    return MeshFlags::CHECK_FACET_PLANAR;
   fmt::print(stderr, "mesh flag not recognized: {}\n", str);
   abort();
   return MeshFlags::NONE;
@@ -389,7 +391,7 @@ void buildHyperCube(
 
   if (flags & MeshFlags::NORMALS)
   {
-    buildNormals(mesh);
+    buildNormals(mesh, flags);
   }
   if (flags & MeshFlags::FACET_PTRS)
   {
@@ -500,13 +502,20 @@ void referenceMesh(Mesh<Elem> & mesh)
 }
 
 template <typename Mesh>
-void buildNormals(Mesh & mesh)
+void buildNormals(Mesh & mesh, Bitmask<MeshFlags> flags)
 {
   if (!(mesh.flags & MeshFlags::NORMALS))
   {
+    Bitmask<GeoElemFlags> facetFlags = GeoElemFlags::NONE;
+    // CHECK_PLANAR makes sense only on quad facets
+    if constexpr (std::is_same_v<typename Mesh::Elem_T, Hexahedron>)
+    {
+      facetFlags |= (flags & MeshFlags::CHECK_FACET_PLANAR) ? GeoElemFlags::CHECK_PLANAR
+                                                            : GeoElemFlags::NONE;
+    }
     for (auto & facet: mesh.facetList)
     {
-      facet.buildNormal();
+      facet.buildNormal(facetFlags);
 
       // normals on boundary facets should all point outside
       if (facet.onBoundary())
@@ -1002,6 +1011,8 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
   facetMesh.elementList = mesh.facetList;
   facetMesh.buildConnectivity();
 }
+
+uint checkPlanarFacets(Mesh<Hexahedron> const & mesh);
 
 } // namespace proxpde
 

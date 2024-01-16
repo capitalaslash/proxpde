@@ -23,6 +23,7 @@ constexpr std::string_view to_string(XDMFGridType const type)
   case XDMFGridType::COLLECTION:
     return "Collection";
   }
+  abort();
   return "ERROR";
 }
 
@@ -42,6 +43,7 @@ constexpr std::string_view to_string(XDMFNumberType const type)
   case XDMFNumberType::FLOAT:
     return "Float";
   }
+  abort();
   return "ERROR";
 }
 
@@ -61,6 +63,7 @@ constexpr std::string_view to_string(XDMFFormat const format)
   case XDMFFormat::INLINE:
     return "XML";
   }
+  abort();
   return "ERROR";
 }
 
@@ -80,6 +83,7 @@ constexpr std::string_view to_string(XDMFCenter const center)
   case XDMFCenter::NODE:
     return "Node";
   }
+  abort();
   return "ERROR";
 }
 
@@ -243,7 +247,8 @@ struct XDMFTraits<RefHexahedronQ2>
   //  0-- 8--1
   // clang-format off
   static constexpr std::array<short_T, 27> mapping = {
-    0, 1, 2, 3, 4, 5, 6, 7,
+    0, 1, 2, 3,
+    4, 5, 6, 7,
     8, 9, 10, 11,
     16, 17, 18, 19,
     12, 13, 14, 15,

@@ -45,6 +45,18 @@ inline bool operator==(ChildElem const & e1, ChildElem const & e2)
   return e1.ptr == e2.ptr && e1.corner == e2.corner;
 }
 
+enum class GeoElemFlags : uint8_t
+{
+  NONE = 0x0,
+  CHECK_PLANAR = 0x1 << 0,
+};
+
+template <>
+struct enable_bitmask_operators<GeoElemFlags>
+{
+  static const bool value = true;
+};
+
 struct GeoElem
 {
   using Pts_T = std::vector<Point *>;
@@ -63,12 +75,12 @@ struct GeoElem
 
   GeoElem() = default;
 
-  virtual ~GeoElem();
+  virtual ~GeoElem() = default;
 
   virtual Vec3 midpoint() const = 0;
   virtual Vec3 origin() const = 0;
   virtual double volume() const = 0;
-  virtual void buildNormal() = 0;
+  virtual void buildNormal(Bitmask<GeoElemFlags> flags = GeoElemFlags::NONE) = 0;
   virtual Vec3 normal() const = 0;
   virtual double hMin() const = 0;
   virtual double hMax() const = 0;
@@ -158,7 +170,10 @@ struct PointElem: public GeoElem
 
   double volume() const final { return 1.; }
 
-  void buildNormal() final { _normal = Vec3{1.0, 0.0, 0.0}; }
+  void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
+  {
+    _normal = Vec3{1.0, 0.0, 0.0};
+  }
 
   Vec3 normal() const final { return Vec3{1.0, 0.0, 0.0}; }
 
@@ -212,7 +227,7 @@ public:
 
   double volume() const final { return (pts[1]->coord - pts[0]->coord).norm(); }
 
-  void buildNormal() final
+  void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
   {
     Vec3 const length = pts[1]->coord - pts[0]->coord;
     _normal = Vec3{length[1], -length[0], 0.0};
@@ -305,7 +320,7 @@ public:
     return .5 * v1.cross(v2).norm();
   }
 
-  void buildNormal() final
+  void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
   {
     auto const v1 = pts[1]->coord - pts[0]->coord;
     auto const v2 = pts[2]->coord - pts[0]->coord;
@@ -424,14 +439,7 @@ public:
     return .5 * (v2.cross(v1).norm() + v2.cross(v3).norm());
   }
 
-  void buildNormal() final
-  {
-    // TODO: we consider only planar quads
-    auto const v1 = pts[1]->coord - pts[0]->coord;
-    auto const v2 = pts[2]->coord - pts[0]->coord;
-    _normal = v1.cross(v2);
-    _normal.normalize();
-  }
+  void buildNormal(Bitmask<GeoElemFlags> flags = GeoElemFlags::NONE) final;
 
   Vec3 normal() const final
   {
@@ -559,20 +567,30 @@ public:
     return std::fabs((v1.cross(v2)).dot(v3)) / 6.;
   }
 
-  void buildNormal() final { std::abort(); }
+  void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
+  {
+    fmt::print(stderr, "trying to build a normal for a tetrahedron!\n");
+    std::abort();
+  }
 
-  Vec3 normal() const final { std::abort(); }
+  Vec3 normal() const final
+  {
+    fmt::print(stderr, "trying to build a normal for a tetrahedron!\n");
+    std::abort();
+  }
 
   double hMin() const final
   {
+    // TODO: not implemented yet
     std::abort();
-    return 1.;
+    return 0.0;
   }
 
   double hMax() const final
   {
+    // TODO: not implemented yet
     std::abort();
-    return 0;
+    return 0.0;
   }
 };
 
@@ -705,20 +723,30 @@ public:
            6.;
   }
 
-  void buildNormal() final { std::abort(); }
+  void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
+  {
+    fmt::print(stderr, "trying to build a normal for a hexahedron!\n");
+    std::abort();
+  }
 
-  Vec3 normal() const final { std::abort(); }
+  Vec3 normal() const final
+  {
+    fmt::print(stderr, "trying to build a normal for a hexahedron!\n");
+    std::abort();
+  }
 
   double hMin() const final
   {
+    // TODO: not implemented yet
     std::abort();
-    return 1.;
+    return 0.0;
   }
 
   double hMax() const final
   {
+    // TODO: not implemented yet
     std::abort();
-    return 0;
+    return 0.0;
   }
 };
 
@@ -869,3 +897,23 @@ bool inside(Elem const & e, Vec3 const & pt)
 }
 
 } // namespace proxpde
+
+// template <>
+// struct fmt::formatter<proxpde::Point>: formatter<string_view>
+// {
+//   auto format(proxpde::Point const & p, format_context & ctx) const;
+// };
+
+template <>
+struct fmt::formatter<proxpde::Point>: ostream_formatter
+{};
+
+// does not work with concepts without the explicit namepsace
+// https://github.com/fmtlib/fmt/issues/2584
+namespace fmt
+{
+template <typename T>
+requires std::is_base_of_v<proxpde::GeoElem, T>
+struct formatter<T>: ostream_formatter
+{};
+} // namespace fmt

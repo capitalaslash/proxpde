@@ -51,7 +51,7 @@ int test(
   {
     oneElemMesh->pointList[i].coord = coords[i];
   }
-  buildNormals(*oneElemMesh);
+  buildNormals(*oneElemMesh, MeshFlags::CHECK_FACET_PLANAR);
 
   oneElemMesh->facetList[0].marker = side::BOTTOM;
   if (oneElemMesh->facetList.size() == 4)

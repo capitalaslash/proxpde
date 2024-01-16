@@ -30,6 +30,8 @@ void test()
       MeshFlags::INTERNAL_FACETS);
   // readGMSH(*mesh, "square_uns.msh");
   // readGMSH(*mesh, "square_q.msh");
+  // readGMSH(*mesh, "cube_uns.msh");
+  // readGMSH(*mesh, "cube_skew.msh", MeshFlags::CHECK_PLANAR_FACETS);
 
   std::cout << Utils::separator << "mesh coarse\n" << *meshCoarse << std::endl;
 

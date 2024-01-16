@@ -2,15 +2,11 @@
 
 namespace proxpde
 {
-
-// -------------------------------------------------------------------------------------
-GeoElem::~GeoElem() = default;
-
 // -------------------------------------------------------------------------------------
 std::ostream & operator<<(std::ostream & out, Point const & p)
 {
-  out << "(" << p[0] << "," << p[1] << "," << p[2] << "), id: " << p.id
-      << ", m: " << p.marker;
+  out << "Point((" << p[0] << "," << p[1] << "," << p[2] << "), id: " << p.id
+      << ", m: " << p.marker << ")";
   return out;
 }
 
@@ -156,6 +152,26 @@ std::array<FMat<3, 3>, 4> const Triangle::embeddingMatrix =
 // clang-format on
 
 // -------------------------------------------------------------------------------------
+void Quad::buildNormal(Bitmask<GeoElemFlags> flags)
+{
+  auto const v10 = pts[1]->coord - pts[0]->coord;
+  auto const v30 = pts[3]->coord - pts[0]->coord;
+  _normal = (v10.cross(v30)).normalized();
+
+  if (flags & GeoElemFlags::CHECK_PLANAR)
+  {
+    auto const v12 = pts[1]->coord - pts[2]->coord;
+    auto const v32 = pts[3]->coord - pts[2]->coord;
+    Vec3 const normal123 = (v32.cross(v12)).normalized();
+    double const aligned = _normal.dot(normal123);
+    if (std::fabs(aligned - 1.0) > 1e-6)
+    {
+      fmt::print(stderr, "this element is not planar!\n{}\n", *this);
+      abort();
+    }
+  }
+}
+
 // children dofs:
 // coarse: 3 - 2
 //         |   |
@@ -342,3 +358,16 @@ bool geoEqual(GeoElem const & e1, GeoElem const & e2)
 }
 
 } // namespace proxpde
+
+// auto fmt::formatter<proxpde::Point>::format(
+//     proxpde::Point const & p, format_context & ctx) const
+// {
+//   return format_to(
+//       ctx.out(),
+//       "Point(c:({}, {}, {}), id: {}, m: {})",
+//       p[0],
+//       p[1],
+//       p[2],
+//       p.id,
+//       p.marker);
+// }

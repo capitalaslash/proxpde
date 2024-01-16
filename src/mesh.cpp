@@ -1,5 +1,7 @@
 #include "mesh.hpp"
 
+#include "geo.hpp"
+
 namespace proxpde
 {
 
@@ -635,7 +637,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
       }
     }
   }
-  buildNormals(mesh);
+  buildNormals(mesh, MeshFlags::NONE);
   std::cout << mesh << std::endl;
 }
 
@@ -785,7 +787,53 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
   markFacetsCube(mesh, {0., 0., 0.}, {1., (2 + 2 * rows) * h * oneOnSr3, 0.});
-  buildNormals(mesh);
+  buildNormals(mesh, MeshFlags::NONE);
+}
+
+uint checkPlanarFacets(Mesh<Hexahedron> const & mesh)
+{
+  auto nonPlanarCount = 0U;
+  std::ranges::for_each(
+      mesh.facetList,
+      [&nonPlanarCount](auto const & facet)
+      {
+        // check diagonal 0-2
+        auto const v10 = facet.pts[1]->coord - facet.pts[0]->coord;
+        auto const v20 = facet.pts[2]->coord - facet.pts[0]->coord;
+
+        // plane equation: normal.dot(p) = d
+        Vec3 const normal012 = v10.cross(v20);
+        double const d = normal012.dot(facet.pts[0]->coord);
+
+        assert(std::fabs(normal012.dot(facet.pts[1]->coord) - d) < 1e-12);
+        assert(std::fabs(normal012.dot(facet.pts[2]->coord) - d) < 1e-12);
+
+        // check if forth point is on the plane defined by the other three
+        if (std::fabs(normal012.dot(facet.pts[3]->coord) - d) > 1e-12)
+        {
+          nonPlanarCount++;
+          fmt::print(stderr, "facet not planar along diagonal 0-2!\n");
+          return;
+        }
+
+        // check diagonal 1-3
+        auto const v30 = facet.pts[3]->coord - facet.pts[0]->coord;
+
+        // plane equation: normal.dot(p) = d
+        Vec3 const normal013 = v10.cross(v30);
+        double const d013 = normal013.dot(facet.pts[0]->coord);
+
+        assert(std::fabs(normal013.dot(facet.pts[1]->coord) - d013) < 1e-12);
+        assert(std::fabs(normal013.dot(facet.pts[2]->coord) - d013) < 1e-12);
+
+        // check if forth point is on the plane defined by the other three
+        if (std::fabs(normal013.dot(facet.pts[3]->coord) - d013) > 1e-12)
+        {
+          nonPlanarCount++;
+          fmt::print(stderr, "facet not planar along diagonal 1-3!\n");
+        }
+      });
+  return nonPlanarCount;
 }
 
 } // namespace proxpde

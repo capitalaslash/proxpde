@@ -571,19 +571,20 @@ void addElemFacetList(Mesh & mesh)
   }
 }
 
-enum GMSHElemType : short_T
+enum class GMSHElemType : short_T
 {
-  GMSHNull = 0,
-  GMSHLine = 1,
-  GMSHTriangle = 2,
-  GMSHQuad = 3,
-  GMSHTet = 4,
-  GMSHHexa = 5,
-  GMSHQuadraticLine = 8,
-  GMSHQuadraticTriangle = 9,
-  GMSHQuadraticQuad = 10,
-  GMSHQuadraticTet = 11,
-  GMSHQuadraticHexa = 12
+  NONE = 0,
+  LINE = 1,
+  TRIANGLE = 2,
+  QUAD = 3,
+  TET = 4,
+  HEX = 5,
+  QUADRATIC_LINE = 8,
+  QUADRATIC_TRIANGLE = 9,
+  QUADRATIC_QUAD = 10,
+  QUADRATIC_TET = 11,
+  BIQUADRATIC_HEX = 12,
+  POINT = 15,
 };
 
 template <typename Elem, short_T Order = 1>
@@ -593,77 +594,78 @@ struct ElemToGmsh
 template <>
 struct ElemToGmsh<PointElem, 1>
 {
-  static GMSHElemType constexpr value = GMSHNull;
+  static GMSHElemType constexpr value = GMSHElemType::POINT;
 };
 
 template <>
 struct ElemToGmsh<PointElem, 2>
 {
-  static GMSHElemType constexpr value = GMSHNull;
+  static GMSHElemType constexpr value = GMSHElemType::POINT;
+  static short_T constexpr connSize = 1U;
 };
 
 template <>
 struct ElemToGmsh<Line, 1>
 {
-  static GMSHElemType constexpr value = GMSHLine;
+  static GMSHElemType constexpr value = GMSHElemType::LINE;
 };
 
 template <>
 struct ElemToGmsh<Line, 2>
 {
-  static GMSHElemType constexpr value = GMSHQuadraticLine;
+  static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_LINE;
   static short_T constexpr connSize = 3U;
 };
 
 template <>
 struct ElemToGmsh<Triangle, 1>
 {
-  static GMSHElemType constexpr value = GMSHTriangle;
+  static GMSHElemType constexpr value = GMSHElemType::TRIANGLE;
 };
 
 template <>
 struct ElemToGmsh<Triangle, 2>
 {
-  static GMSHElemType constexpr value = GMSHQuadraticTriangle;
+  static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_TRIANGLE;
   static short_T constexpr connSize = 6U;
 };
 
 template <>
 struct ElemToGmsh<Quad, 1>
 {
-  static GMSHElemType constexpr value = GMSHQuad;
+  static GMSHElemType constexpr value = GMSHElemType::QUAD;
 };
 
 template <>
 struct ElemToGmsh<Quad, 2>
 {
-  static GMSHElemType constexpr value = GMSHQuadraticQuad;
+  static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_QUAD;
   static short_T constexpr connSize = 9U;
 };
 
 template <>
 struct ElemToGmsh<Tetrahedron, 1>
 {
-  static GMSHElemType constexpr value = GMSHTet;
+  static GMSHElemType constexpr value = GMSHElemType::TET;
 };
 
 template <>
 struct ElemToGmsh<Tetrahedron, 2>
 {
-  static GMSHElemType constexpr value = GMSHQuadraticTet;
+  static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_TET;
   static short_T constexpr connSize = 10U;
 };
 
 template <>
 struct ElemToGmsh<Hexahedron, 1>
 {
-  static GMSHElemType constexpr value = GMSHHexa;
+  static GMSHElemType constexpr value = GMSHElemType::HEX;
 };
 
 template <>
 struct ElemToGmsh<Hexahedron, 2>
 {
-  static GMSHElemType constexpr value = GMSHQuadraticHexa;
+  static GMSHElemType constexpr value = GMSHElemType::BIQUADRATIC_HEX;
   static short_T constexpr connSize = 27U;
 };
 
@@ -679,6 +681,45 @@ template <typename Elem>
 inline bool operator<(ElemStub<Elem> const & e1, ElemStub<Elem> const & e2)
 {
   return e1.id < e2.id;
+}
+
+template <typename Elem>
+void setFacetMarkers(
+    Mesh<Elem> & mesh,
+    std::set<ElemStub<typename Elem::Facet_T>> & facets,
+    std::unordered_map<id_T, id_T> ptIdMap)
+{
+  using Facet_T = typename Elem::Facet_T;
+  assert(
+      std::count_if(
+          mesh.facetList.begin(),
+          mesh.facetList.end(),
+          [](Facet_T const & f)
+          { return f.onBoundary(); }) == static_cast<long int>(facets.size()));
+
+  // use file facets to set boundary flags
+  for (auto & meshFacet: mesh.facetList)
+  {
+    // iterator loop required to use std::set::erase()?
+    for (auto it = facets.begin(); it != facets.end(); ++it)
+    {
+      std::vector<Point *> connPts;
+      connPts.reserve(Facet_T::numPts);
+      for (auto const c: it->conn)
+      {
+        connPts.push_back(&mesh.pointList[ptIdMap.at(c)]);
+      };
+      Facet_T tempFacet{connPts, it->id, it->marker};
+      if (geoEqual(meshFacet, tempFacet))
+      {
+        meshFacet.marker = it->marker;
+        facets.erase(it);
+        break;
+      }
+    }
+  }
+  // check that all facets have been found in the mesh
+  assert(facets.size() == 0);
 }
 
 template <typename Elem>
@@ -721,6 +762,7 @@ void readGMSH(
   std::vector<Point> points;
   std::vector<ElemStub<Elem>> elems;
   using Facet_T = typename Elem::Facet_T;
+  using Ridge_T = typename Facet_T::Facet_T;
   std::set<ElemStub<Facet_T>> facets;
   std::set<marker_T> volumeMarkers;
   std::set<marker_T> facetMarkers;
@@ -784,8 +826,11 @@ void readGMSH(
       uint eVol = 0, eBd = 0;
       for (uint e = 0; e < numElements; e++)
       {
-        uint id, elType, numTags;
-        in >> id >> elType >> numTags;
+        uint id;
+        int tmp;
+        uint numTags;
+        in >> id >> tmp >> numTags;
+        GMSHElemType elType = static_cast<GMSHElemType>(tmp);
         assert(numTags > 0);
         std::vector<uint> tags(numTags);
         for (uint t = 0; t < numTags; t++)
@@ -793,7 +838,7 @@ void readGMSH(
           in >> tags[t];
         }
 
-        // check element type (volume or boundary, linear or quadratic
+        // check element type (volume or boundary, linear or quadratic)
         if (ElemToGmsh<Elem, 1>::value == elType ||
             ElemToGmsh<Elem, 2>::value == elType)
         {
@@ -837,7 +882,7 @@ void readGMSH(
             // gmsh starts from 1
             conn[c]--;
           }
-          // read eventual additional connectivity from quadratic elements
+          // read possible additional connectivity from quadratic elements
           if (ElemToGmsh<Facet_T, 2>::value == elType)
           {
             for (uint c = Facet_T::numPts; c < ElemToGmsh<Facet_T, 2>::connSize; ++c)
@@ -851,20 +896,22 @@ void readGMSH(
           eBd++;
         }
         else if (
-            ElemToGmsh<typename Facet_T::Facet_T, 1>::value == elType ||
-            ElemToGmsh<typename Facet_T::Facet_T, 2>::value == elType)
+            ElemToGmsh<Ridge_T, 1>::value == elType ||
+            ElemToGmsh<Ridge_T, 2>::value == elType)
         {
           // ignore ridges
-          for (uint c = 0; c < Facet_T::Facet_T::numPts; c++)
+          for (uint c = 0; c < Ridge_T::numPts; c++)
           {
             in >> buf;
           }
-          ignoredElements++;
-        }
-        else if (elType == 15)
-        {
-          // ignore points
-          in >> buf;
+          // read possible additional connectivity from quadratic ridges
+          if (ElemToGmsh<Ridge_T, 2>::value == elType)
+          {
+            for (uint c = Ridge_T::numPts; c < ElemToGmsh<Ridge_T, 2>::connSize; ++c)
+            {
+              in >> buf;
+            }
+          }
           ignoredElements++;
         }
         else
@@ -876,7 +923,7 @@ void readGMSH(
       in >> buf;
       if (buf != "$EndElements")
       {
-        fmt::print(stderr, "error reading elements\n");
+        fmt::print(stderr, "error detecting the end of the elements section\n");
         std::exit(PROXPDE_GMSH_ERROR);
       }
     }
@@ -941,40 +988,11 @@ void readGMSH(
   // TODO: this does not work if the mesh has internal boundaries
   buildFacets(mesh, flags);
 
-  assert(
-      std::count_if(
-          mesh.facetList.begin(),
-          mesh.facetList.end(),
-          [](Facet_T const & f)
-          { return f.onBoundary(); }) == static_cast<long int>(facets.size()));
-
-  // use file facets to set boundary flags
-  for (auto & meshFacet: mesh.facetList)
-  {
-    // iterator loop required to use std::set::erase()?
-    for (auto it = facets.begin(); it != facets.end(); ++it)
-    {
-      std::vector<Point *> connPts;
-      connPts.reserve(Facet_T::numPts);
-      for (auto const c: it->conn)
-      {
-        connPts.push_back(&mesh.pointList[ptIdMap.at(c)]);
-      };
-      Facet_T tempFacet{connPts, it->id, it->marker};
-      if (geoEqual(meshFacet, tempFacet))
-      {
-        meshFacet.marker = it->marker;
-        facets.erase(it);
-        break;
-      }
-    }
-  }
-  // check that all facets have been found in the mesh
-  assert(facets.size() == 0);
+  setFacetMarkers(mesh, facets, ptIdMap);
 
   if (flags & MeshFlags::NORMALS)
   {
-    buildNormals(mesh);
+    buildNormals(mesh, flags);
   }
   if (flags & MeshFlags::FACET_PTRS)
   {

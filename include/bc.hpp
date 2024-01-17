@@ -152,7 +152,7 @@ public:
         for (uint d = 0; d < size * FESpace_T::dim; ++d)
         {
           auto const dof = feSpace->dof.elemMap(elem.id, d);
-          if (_constrainedDofMap.count(dof) > 1)
+          if (_constrainedDofMap.contains(dof))
           {
             feSpace->curFE.reinit(elem);
             auto const localDof = d % size;
@@ -192,7 +192,7 @@ public:
 
   bool isConstrained(DOFid_T const id, int const d = 0) const
   {
-    return _constrainedDofMap.count(id + d * feSpace->dof.size) > 0;
+    return _constrainedDofMap.contains(id + d * feSpace->dof.size);
   }
 
   double get(DOFid_T const id) const { return data[_constrainedDofMap.at(id)]; }
@@ -438,9 +438,12 @@ public:
       {
         if (predicate(feSpace.curFE.dofPts[d]))
         {
-          auto [_, inserted] = ids.insert({feSpace.dof.getId(e.id, d), counter});
+          [[maybe_unused]] auto const [ptr, inserted] =
+              ids.insert({feSpace.dof.getId(e.id, d), counter});
           if (inserted)
+          {
             counter++;
+          }
         }
       }
     }

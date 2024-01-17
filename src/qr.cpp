@@ -404,6 +404,87 @@ std::array<SideGaussQR<Quad, 3>::Vec_T, 3 * 4> const SideGaussQR<Quad, 3>::node 
 }};
 // clang-format on
 
+// 3D Tet ------------------------------------------------------------------------------
+// clang-format off
+template <>
+SideGaussQR<Tetrahedron, 3>::Weights_T const SideGaussQR<Tetrahedron, 3>::weight =
+    (SideGaussQR<Tetrahedron, 3>::Weights_T{} <<
+     1.L, 1.L, 1.L,
+     1.L, 1.L, 1.L,
+     1.L, 1.L, 1.L,
+     sqrt(3) / 4., sqrt(3) / 4., sqrt(3) / 4.)
+        .finished() /
+    6.L;
+
+template <>
+std::array<SideGaussQR<Tetrahedron, 3>::Vec_T, 3 * 4> const
+    SideGaussQR<Tetrahedron, 3>::node = {{
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 1. / 6, 0.0},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{2. / 3, 1. / 6, 0.0},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 2. / 3, 0.0},
+
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 0.0, 1. / 6},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{2. / 3, 0.0, 1. / 6},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 0.0, 2. / 3},
+
+        SideGaussQR<Tetrahedron, 3>::Vec_T{0.0, 1. / 6, 1. / 6},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{0.0, 2. / 3, 1. / 6},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{0.0, 1. / 6, 2. / 3},
+
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 1. / 6, 2. / 3},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{2. / 3, 1. / 6, 1. / 6},
+        SideGaussQR<Tetrahedron, 3>::Vec_T{1. / 6, 2. / 3, 1. / 6},
+}};
+// clang-format on
+
+// 3D Hex ------------------------------------------------------------------------------
+// clang-format off
+template <>
+SideGaussQR<Hexahedron, 4>::Weights_T const SideGaussQR<Hexahedron, 4>::weight =
+    (SideGaussQR<Hexahedron, 4>::Weights_T{} <<
+     0.5L, 0.5L, 0.5L, 0.5L,
+     0.5L, 0.5L, 0.5L, 0.5L,
+     0.5L, 0.5L, 0.5L, 0.5L,
+     0.5L, 0.5L, 0.5L, 0.5L,
+     0.5L, 0.5L, 0.5L, 0.5L,
+     0.5L, 0.5L, 0.5L, 0.5L)
+        .finished();
+
+template <>
+std::array<SideGaussQR<Hexahedron, 4>::Vec_T, 4 * 6> const
+    SideGaussQR<Hexahedron, 4>::node = {{
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, -sqrt13rd, -1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, -sqrt13rd, -1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, +sqrt13rd, -1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, +sqrt13rd, -1.0},
+
+        SideGaussQR<Hexahedron, 4>::Vec_T{-1.0, -sqrt13rd, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-1.0, +sqrt13rd, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-1.0, +sqrt13rd, +sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-1.0, -sqrt13rd, +sqrt13rd},
+
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, -1.0, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, -1.0, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, -1.0, +sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, -1.0, +sqrt13rd},
+
+        SideGaussQR<Hexahedron, 4>::Vec_T{+1.0, -sqrt13rd, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+1.0, +sqrt13rd, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+1.0, +sqrt13rd, +sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+1.0, -sqrt13rd, +sqrt13rd},
+
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, +1.0, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, +1.0, -sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, +1.0, +sqrt13rd},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, +1.0, +sqrt13rd},
+
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, -sqrt13rd, +1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, -sqrt13rd, +1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{+sqrt13rd, +sqrt13rd, +1.0},
+        SideGaussQR<Hexahedron, 4>::Vec_T{-sqrt13rd, +sqrt13rd, +1.0},
+}};
+// clang-format on
+
 // TrapQR ==============================================================================
 
 // 1D ----------------------------------------------------------------------------------

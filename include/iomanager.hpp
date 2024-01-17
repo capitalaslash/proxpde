@@ -188,21 +188,31 @@ struct HDF5Var
 {};
 
 template <>
+struct HDF5Var<int>
+{
+  static hid_t const value;
+  static hid_t const type = H5T_INTEGER;
+};
+
+template <>
 struct HDF5Var<uint>
 {
   static hid_t const value;
+  static hid_t const type = H5T_INTEGER;
 };
 
 template <>
 struct HDF5Var<double>
 {
   static hid_t const value;
+  static hid_t const type = H5T_FLOAT;
 };
 
 enum class HDF5FileMode : int8_t
 {
   OVERWRITE,
-  APPEND
+  APPEND,
+  READ,
 };
 
 class HDF5
@@ -218,6 +228,64 @@ public:
     {
       fileId = H5Fopen(filePath.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
     }
+    else if (mode == HDF5FileMode::READ)
+    {
+      fileId = H5Fopen(filePath.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    }
+    else
+    {
+      fmt::print(stderr, "mode {} not recognized, aborting!\n", static_cast<int>(mode));
+    }
+    assert(fileId != H5I_INVALID_HID);
+  }
+
+  ~HDF5() { status = H5Fclose(fileId); }
+
+  int readAttribute(
+      std::string_view const datasetName, std::string_view const attributeName)
+  {
+    hid_t const dataset = H5Dopen(fileId, datasetName.data(), H5P_DEFAULT);
+    const hid_t attributeId = H5Aopen_name(dataset, attributeName.data());
+
+    int numVals = -1;
+    H5Aread(attributeId, H5T_NATIVE_INT, &numVals);
+    H5Aclose(attributeId);
+    assert(numVals != -1);
+
+    H5Dclose(dataset);
+
+    return numVals;
+  }
+
+  template <typename T>
+  void readDataset(std::string_view const datasetName, std::vector<T> & buf)
+  {
+    hid_t const dataset = H5Dopen(fileId, datasetName.data(), H5P_DEFAULT);
+    const hid_t attributeId = H5Aopen_name(dataset, "NBR");
+
+    int numVals = -1;
+    H5Aread(attributeId, H5T_NATIVE_INT, &numVals);
+    H5Aclose(attributeId);
+    assert(numVals != -1);
+
+    hid_t const dataType = H5Dget_type(dataset);
+    const hid_t type = H5Tget_class(dataType);
+    assert(type == HDF5Var<T>::type);
+
+    if constexpr (HDF5Var<T>::type == H5T_FLOAT)
+    {
+      H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf.data());
+    }
+    else if constexpr (HDF5Var<T>::type == H5T_INTEGER)
+    {
+      H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf.data());
+    }
+    else
+    {
+      std::abort();
+    }
+
+    H5Dclose(dataset);
   }
 
   // template <typename FESpace>
@@ -278,11 +346,11 @@ public:
     H5Sclose(dspace);
   }
 
-  ~HDF5() { status = H5Fclose(fileId); }
-
 protected:
   std::filesystem::path filePath;
   hid_t fileId;
+
+public:
   herr_t status;
 };
 

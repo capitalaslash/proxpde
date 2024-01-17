@@ -13,7 +13,7 @@
 
 using namespace proxpde;
 
-static auto constexpr numTests = 1 << 16;
+static auto constexpr numTests = 1 << 16; // 64k
 
 template <typename RandomEngine, typename Elem>
 int test(RandomEngine & gen)
@@ -84,20 +84,21 @@ int main()
 {
   std::bitset<5> tests;
 
+  using Engine_T = std::mt19937;
   // std::random_device rd;
-  // std::mt19937 gen(rd());
-  std::mt19937 gen(19800513);
+  // Engine_T gen(rd());
+  Engine_T gen(20240117);
 
   std::cout << "Line\n" << Utils::separator;
-  tests[0] = test<std::mt19937, Line>(gen);
+  tests[0] = test<Engine_T, Line>(gen);
   std::cout << "Triangle\n" << Utils::separator;
-  tests[1] = test<std::mt19937, Triangle>(gen);
+  tests[1] = test<Engine_T, Triangle>(gen);
   std::cout << "Quad\n" << Utils::separator;
-  tests[2] = test<std::mt19937, Quad>(gen);
+  tests[2] = test<Engine_T, Quad>(gen);
   std::cout << "Tetrahedron\n" << Utils::separator;
-  tests[3] = test<std::mt19937, Tetrahedron>(gen);
-  // std::cout << "Hexahedron\n" << Utils::separator;
-  // tests[4] = test<std::mt19937, Hexahedron>(gen);
+  tests[3] = test<Engine_T, Tetrahedron>(gen);
+  std::cout << "Hexahedron\n" << Utils::separator;
+  tests[4] = test<Engine_T, Hexahedron>(gen);
   std::cout << tests << std::endl;
   return tests.any();
 }

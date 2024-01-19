@@ -408,6 +408,7 @@ public:
       {{{{3, 3}}, {{0, 3}}}},
   }};
   static double constexpr refVolume = 4.;
+  static double planarToll;
 
   Quad(
       std::initializer_list<Point *> const & pList,

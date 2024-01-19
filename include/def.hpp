@@ -472,6 +472,13 @@ struct Bitmask
 };
 
 template <typename E>
+constexpr std::enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, bool>
+operator==(Bitmask<E> const lhs, Bitmask<E> const rhs)
+{
+  return lhs.value == rhs.value;
+}
+
+template <typename E>
 constexpr std::
     enable_if_t<std::is_enum_v<E> && enable_bitmask_operators_v<E>, Enumerator<E>>
     operator&(E const lhs, E const rhs)

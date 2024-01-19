@@ -22,9 +22,9 @@ constexpr std::string_view to_string(XDMFGridType const type)
     return "Uniform";
   case XDMFGridType::COLLECTION:
     return "Collection";
+  default:
+    abort();
   }
-  abort();
-  return "ERROR";
 }
 
 enum class XDMFNumberType : int8_t
@@ -42,9 +42,9 @@ constexpr std::string_view to_string(XDMFNumberType const type)
     return "Int";
   case XDMFNumberType::FLOAT:
     return "Float";
+  default:
+    abort();
   }
-  abort();
-  return "ERROR";
 }
 
 enum class XDMFFormat : int8_t
@@ -62,9 +62,9 @@ constexpr std::string_view to_string(XDMFFormat const format)
     return "HDF";
   case XDMFFormat::INLINE:
     return "XML";
+  default:
+    abort();
   }
-  abort();
-  return "ERROR";
 }
 
 enum class XDMFCenter : int8_t
@@ -82,6 +82,11 @@ constexpr std::string_view to_string(XDMFCenter const center)
     return "Cell";
   case XDMFCenter::NODE:
     return "Node";
+  default:
+    abort();
+  }
+}
+
   }
   abort();
   return "ERROR";

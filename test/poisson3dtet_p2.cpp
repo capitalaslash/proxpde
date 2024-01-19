@@ -112,7 +112,7 @@ int main(int argc, char * argv[])
   {
     {
       YAML::Node config;
-      config["mesh"]["type"] = "structured";
+      config["mesh"]["type"] = MeshType::STRUCTURED;
       auto const n = 4U;
       config["mesh"]["n"] = std::array{n, n, n};
       config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
@@ -122,13 +122,13 @@ int main(int argc, char * argv[])
     }
     {
       YAML::Node config;
-      config["mesh"]["type"] = "structured";
+      config["mesh"]["type"] = MeshType::STRUCTURED;
       auto const n = 8U;
       config["mesh"]["n"] = std::array{n, n, n};
       config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
       config["mesh"]["length"] = Vec3{1.0, 1.0, 1.0};
       config["expected_error"] = 0.02265721054353444;
-      tests[0] = test(config);
+      tests[1] = test(config);
     }
   }
   return tests.any();

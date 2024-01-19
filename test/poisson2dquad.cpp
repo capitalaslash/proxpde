@@ -31,16 +31,24 @@ int main(int argc, char * argv[])
 
   MilliTimer t;
 
-  uint const numElemsX = (argc < 3) ? 10 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3) ? 10 : std::stoi(argv[2]);
-
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  t.start("mesh build");
+  ParameterDict config;
+  if (argc > 1)
+  {
+    config = YAML::LoadFile(argv[1]);
+  }
+  else
+  {
+    config["mesh"]["type"] = MeshType::STRUCTURED;
+    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+    config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+    config["mesh"]["n"] = std::array{10U, 10U, 0U};
+    // config["mesh"]["type"] = MeshType::GMSH;
+    // config["mesh"]["filename"] = "square_q.msh";
+  }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-
-  t.start("mesh build");
-  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
+  readMesh(*mesh, config["mesh"]);
   t.stop();
 
   t.start("fespace");

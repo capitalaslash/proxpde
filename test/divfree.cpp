@@ -21,27 +21,7 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
 
   std::shared_ptr<Mesh_T> meshCoarse{new Mesh_T{}};
 
-  if (config["mesh"]["type"].as<std::string>() == "structured")
-  {
-    buildHyperCube(
-        *meshCoarse,
-        config["mesh"]["origin"].as<Vec3>(),
-        config["mesh"]["length"].as<Vec3>(),
-        config["mesh"]["n"].as<std::array<uint, 3>>(),
-        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
-  }
-  else if (config["mesh"]["type"].as<std::string>() == "gmsh")
-  {
-    readGMSH(
-        *meshCoarse,
-        config["mesh"]["filename"].as<std::string>(),
-        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
-  }
-  else
-  {
-    std::cerr << "mesh type not recognized" << std::endl;
-    std::abort();
-  }
+  readMesh(*meshCoarse, config["mesh"]);
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   // uniformRefine(*meshCoarse, *mesh);
@@ -54,7 +34,6 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   using FESpaceLambda_T =
       FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
   FESpaceLambda_T feSpaceLambda{*mesh, feSpaceRT0.dof.size};
-
 
   // auto const bcU = std::vector{BCEss{feSpaceRT0, 3, [](Vec3 const &) {
   //                                      return Vec3{0.0, 0.0, 0.0};
@@ -116,25 +95,35 @@ int main()
     // return Vec3{1. + p[0], 0., 0.};
   };
 
-  // {
-  //   ParameterDict config;
-  //   // config["mesh"]["type"] = "gmsh";
-  //   // config["mesh"]["filename"] = "elbow.msh";
-  //   config["mesh"]["type"] = "structured";
-  //   config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
-  //   config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
-  //   config["mesh"]["n"] = std::array<uint, 3>{2, 3, 0};
-  //   tests[0] = test<Triangle>(config, rhs);
-  // }
+  {
+    ParameterDict config;
+    // config["mesh"]["type"] = MeshType::GMSH;
+    // config["mesh"]["filename"] = "elbow.msh";
+
+    config["mesh"]["type"] = MeshType::STRUCTURED;
+    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+    config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+    config["mesh"]["n"] = std::array<uint, 3>{2, 3, 0};
+
+    config["mesh"]["flags"] =
+        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS;
+
+    tests[0] = test<Triangle>(config, rhs);
+  }
 
   {
     ParameterDict config;
-    config["mesh"]["type"] = "gmsh";
+    config["mesh"]["type"] = MeshType::GMSH;
     config["mesh"]["filename"] = "elbow_qq.msh";
-    // config["mesh"]["type"] = "structured";
+
+    // config["mesh"]["type"] = MeshType::STRUCTURED;
     // config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
     // config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
     // config["mesh"]["n"] = std::array<uint, 3>{2, 3, 0};
+
+    config["mesh"]["flags"] =
+        MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS;
+
     tests[1] = test<Quad>(config, rhs);
   }
 

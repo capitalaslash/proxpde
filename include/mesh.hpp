@@ -1002,16 +1002,49 @@ void readGMSH(
   fmt::print("mesh file {} successfully read\n", filename);
 }
 
+enum class MeshType : uint8_t
+{
+  STRUCTURED,
+  GMSH,
+};
+
+static constexpr const char * to_string(MeshType const type)
+{
+  switch (type)
+  {
+  case MeshType::STRUCTURED:
+    return "STRUCTURED";
+  case MeshType::GMSH:
+    return "GMSH";
+  default:
+    abort();
+  }
+}
+
+static constexpr MeshType to_MeshType(std::string_view str)
+{
+  if (str == "STRUCTURED")
+    return MeshType::STRUCTURED;
+  else if (str == "GMSH")
+    return MeshType::GMSH;
+  fmt::print(stderr, "mesh type not recognized; {}\n", str);
+  abort();
+}
+
 template <typename Mesh>
 void readMesh(Mesh & mesh, ParameterDict const & config)
 {
   config.validate({"type"});
-  auto const mesh_type = config["type"].as<std::string>();
-  if (mesh_type == "structured")
+  auto const meshType = config["type"].as<MeshType>();
+
+  switch (meshType)
+  {
+  case MeshType::STRUCTURED:
   {
     buildHyperCube(mesh, config);
+    break;
   }
-  else if (mesh_type == "msh")
+  case MeshType::GMSH:
   {
     Bitmask flags{MeshFlags::NONE};
     if (config["flags"])
@@ -1019,6 +1052,13 @@ void readMesh(Mesh & mesh, ParameterDict const & config)
       flags |= config["flags"].as<Bitmask<MeshFlags>>();
     }
     readGMSH(mesh, config["filename"].as<std::string>(), flags);
+    break;
+  }
+  default:
+  {
+    fmt::print(stderr, "mesh type not recognized: {}\n", meshType);
+    abort();
+  }
   }
 }
 
@@ -1074,4 +1114,47 @@ struct convert<proxpde::Bitmask<proxpde::MeshFlags>>
     // return true;
   }
 };
+
+template <>
+struct convert<proxpde::MeshType>
+{
+  using T = proxpde::MeshType;
+  static Node encode(T const & rhs)
+  {
+    // string implementation
+    return Node(proxpde::to_string(rhs));
+
+    // // ulong implementation
+    // return Node{static_cast<std::underlying_t<T>>(rhs)};
+  }
+
+  static bool decode(Node const & node, T & rhs)
+  {
+    // string implementation
+    if (!node.IsScalar())
+      return false;
+
+    rhs = proxpde::to_MeshType(node.as<std::string>());
+    return true;
+
+    // // ulong implementation
+    // if (!node.IsScalar())
+    //   return false;
+    // rhs = node.as<T>();
+    // return true;
+  }
+};
+
 } // namespace YAML
+
+namespace fmt
+{
+template <>
+struct formatter<proxpde::MeshType>: formatter<std::string_view>
+{
+  auto format(proxpde::MeshType t, format_context & ctx) const
+  {
+    return formatter<std::string_view>::format(proxpde::to_string(t), ctx);
+  }
+};
+} // namespace fmt

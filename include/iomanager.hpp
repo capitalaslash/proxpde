@@ -31,32 +31,10 @@ class XDMFDoc
 {
 public:
   explicit XDMFDoc(
-      std::filesystem::path const fp,
-      std::string_view s = "",
-      std::string_view meshS = "mesh",
-      std::string_view dataS = "",
-      XDMFGridType gridType = XDMFGridType::SINGLE):
-      filePath{fp},
-      suffix(s),
-      meshSuffix(meshS),
-      dataSuffix(dataS)
+      std::filesystem::path const fp, XDMFGridType gridType = XDMFGridType::SINGLE):
+      filePath{fp}
   {
-    if (!suffix.empty())
-    {
-      suffix = "." + suffix;
-    }
-    if (!meshSuffix.empty())
-    {
-      meshSuffix = "." + meshSuffix;
-    }
-    if (!dataSuffix.empty())
-    {
-      dataSuffix = "." + dataSuffix;
-    }
-    else
-    {
-      dataSuffix = suffix;
-    }
+    assert(fp.extension() == ".xmf");
 
     auto decl = doc.prepend_child(pugi::node_declaration);
     decl.append_attribute("version") = "1.0";
@@ -78,11 +56,7 @@ public:
     }
   }
 
-  ~XDMFDoc()
-  {
-    auto xmlFilepath = filePath.c_str() + suffix + ".xmf";
-    doc.save_file(xmlFilepath.c_str());
-  }
+  ~XDMFDoc() { doc.save_file(filePath.c_str()); }
 
   void setTime(double const time)
   {
@@ -91,59 +65,74 @@ public:
   }
 
   template <typename RefFE>
-  void
-  setTopology(uint const numElems, std::string_view const connName = "connectivity")
+  void setTopology(
+      std::filesystem::path meshPath,
+      uint const numElems,
+      std::string_view const connName = "connectivity")
   {
+    assert(meshPath.extension() == ".h5");
     auto topoNode = gridNode.append_child("Topology");
     topoNode.append_attribute("TopologyType") = XDMFTraits<RefFE>::shapeName;
     topoNode.append_attribute("Dimensions") = numElems;
 
-    auto const buf =
-        filePath.filename().string() + meshSuffix + ".h5:/" + connName.data();
     createDataItem(
         topoNode,
         {numElems, RefFE::numGeoDOFs},
         XDMFNumberType::INT,
         8,
         XDMFFormat::HDF,
-        buf);
+        meshPath.string() + ":/" + connName.data());
   }
 
-  void setGeometry(uint const mapSize, std::string_view const coordName = "coords")
+  void setGeometry(
+      std::filesystem::path meshPath,
+      uint const mapSize,
+      std::string_view const coordName = "coords")
   {
+    assert(meshPath.extension() == ".h5");
     auto geoNode = gridNode.append_child("Geometry");
     geoNode.append_attribute("GeometryType") = "XYZ";
 
-    auto const buf =
-        filePath.filename().string() + meshSuffix + ".h5:/" + coordName.data();
     createDataItem(
-        geoNode, {mapSize, 3}, XDMFNumberType::FLOAT, 8, XDMFFormat::HDF, buf);
+        geoNode,
+        {mapSize, 3},
+        XDMFNumberType::FLOAT,
+        8,
+        XDMFFormat::HDF,
+        meshPath.string() + ":/" + coordName.data());
   }
 
-  void setVar(XDMFVar const & var)
+  void setVar(std::filesystem::path dataPath, XDMFVar const & var)
   {
+    assert(dataPath.extension() == ".h5");
     auto varNode = gridNode.append_child("Attribute");
     varNode.append_attribute("Name") = var.name.data();
     varNode.append_attribute("Active") = 1;
-    varNode.append_attribute("AttributeType") = "Scalar";
+    varNode.append_attribute("AttributeType") = to_string(var.type).data();
     varNode.append_attribute("Center") = to_string(var.center).data();
 
-    auto const buf = filePath.filename().string() + dataSuffix + ".h5:/" + var.name;
     // auto const buf = filepath.filename().string() + ".time.h5:/" + name + "." + iter;
     createDataItem(
-        varNode, {var.size, 1}, XDMFNumberType::FLOAT, 8, XDMFFormat::HDF, buf);
+        varNode,
+        {var.size, var.dim},
+        var.numberType,
+        8,
+        XDMFFormat::HDF,
+        dataPath.string() + ":/" + var.name);
   }
 
-  void setTimeSeries(std::vector<std::pair<uint, double>> const & timeSeries)
+  void setTimeSeries(
+      std::filesystem::path basePath,
+      std::vector<std::pair<uint, double>> const & timeSeries)
   {
     std::string timesStr = "";
     for (auto const & step: timeSeries)
     {
       timesStr += std::to_string(step.second) + " ";
       auto stepNode = gridNode.append_child("xi:include");
-      stepNode.append_attribute("href") =
-          (filePath.filename().string() + "." + std::to_string(step.first) + ".xmf")
-              .data();
+      std::filesystem::path p = basePath;
+      p += fmt::format(".{}.xmf", step.first);
+      stepNode.append_attribute("href") = p.c_str();
       stepNode.append_attribute("xpointer") = "element(/1/1/1)";
     }
     auto timeNode = gridNode.append_child("Time");
@@ -176,12 +165,11 @@ private:
   }
 
   std::filesystem::path filePath;
-  std::string suffix;
-  std::string meshSuffix;
-  std::string dataSuffix;
   pugi::xml_document doc;
   pugi::xml_node gridNode;
 };
+
+// =====================================================================================
 
 template <typename T>
 struct HDF5Var
@@ -354,6 +342,8 @@ public:
   herr_t status;
 };
 
+// =====================================================================================
+
 template <typename FESpace>
 struct IOManager
 {
@@ -418,93 +408,9 @@ struct IOManager
   void print(VarTup const && data, double const t = 0.0);
 
 protected:
-  void printTimeSeries()
-  {
-    XDMFDoc doc{filePath.value(), "time", "", "", XDMFGridType::COLLECTION};
-    doc.setTimeSeries(timeSeries);
-  }
-
-  void printMeshData()
-  {
-    HDF5 h5Mesh{
-        std::filesystem::path{filePath.value()} += ".mesh.h5", HDF5FileMode::OVERWRITE};
-
-    if constexpr (Traits_T::needsMapping == true)
-    {
-      Table<DOFid_T, RefFE_T::numGeoDOFs> mappedConn(
-          feSpace->mesh->elementList.size(), RefFE_T::numGeoDOFs);
-      for (uint i = 0; i < feSpace->mesh->elementList.size(); ++i)
-      {
-        for (uint j = 0; j < RefFE_T::numGeoDOFs; ++j)
-        {
-          mappedConn(i, j) = feSpace->dof.geoMap(i, Traits_T::mapping[j]);
-        }
-      }
-      h5Mesh.print(mappedConn, "connectivity");
-    }
-    else
-    {
-      h5Mesh.print(feSpace->dof.geoMap, "connectivity");
-    }
-
-    Table<double, 3> coords(feSpace->dof.mapSize, 3);
-    for (auto const & e: feSpace->mesh->elementList)
-    {
-      for (uint p = 0; p < RefFE_T::numGeoDOFs; ++p)
-      {
-        coords.row(feSpace->dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
-      }
-    }
-    h5Mesh.print(coords, "coords");
-  }
-
-  void printBoundary()
-  {
-    using Facet_T = typename Mesh_T::Facet_T;
-    Mesh_T const & mesh = *feSpace->mesh;
-
-    XDMFDoc doc{filePath.value(), "boundary", "mesh", "mesh"};
-    // we always use linear elements for boundary facets
-    doc.setTopology<typename LagrangeFE<Facet_T, 1>::RefFE_T>(
-        mesh.facetList.size(), "connectivity_bd");
-    doc.setGeometry(mesh.pointList.size(), "coords_bd");
-    doc.setVar({"facetMarker", XDMFCenter::CELL, mesh.facetList.size()});
-    doc.setVar({"nodeMarker", XDMFCenter::NODE, mesh.pointList.size()});
-
-    HDF5 h5Mesh{
-        std::filesystem::path{filePath.value()} += ".mesh.h5", HDF5FileMode::APPEND};
-
-    Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
-    for (auto const & f: mesh.facetList)
-    {
-      for (uint p = 0; p < Facet_T::numPts; ++p)
-      {
-        conn(f.id, p) = f.pts[p]->id;
-      }
-    }
-    h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity_bd");
-
-    Table<double, 3> coords(mesh.pointList.size(), 3);
-    for (auto const & p: mesh.pointList)
-    {
-      coords.row(p.id) = p.coord;
-    }
-    h5Mesh.print<double, 3>(coords, "coords_bd");
-
-    Vec facetMarkerData(mesh.facetList.size());
-    for (auto const & f: mesh.facetList)
-    {
-      facetMarkerData[f.id] = static_cast<double>(f.marker);
-    }
-    h5Mesh.print(facetMarkerData, "facetMarker");
-
-    Vec nodeMarkerData(mesh.pointList.size());
-    for (auto const & p: mesh.pointList)
-    {
-      nodeMarkerData[p.id] = static_cast<double>(p.marker);
-    }
-    h5Mesh.print(nodeMarkerData, "nodeMarker");
-  }
+  void printTimeSeries();
+  void printMeshData();
+  void printBoundary();
 
 public:
   FESpace_T const * feSpace;
@@ -515,19 +421,29 @@ public:
   std::vector<std::pair<uint, double>> timeSeries;
 };
 
-// implementation --------------------------------------------------------------
+// implementation ----------------------------------------------------------------------
 
 template <typename FESpace>
 void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
-  XDMFDoc doc{filePath.value(), std::to_string(iter)};
-  doc.setTime(t);
-  doc.setTopology<typename FESpace::RefFE_T>(feSpace->mesh->elementList.size());
-  doc.setGeometry(feSpace->dof.mapSize);
+  printTimeSeries();
 
-  HDF5 h5Iter{
-      filePath->string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  std::filesystem::path fp = filePath.value();
+  fp += fmt::format(".{}.xmf", iter);
+  std::filesystem::path dp = filePath->filename();
+  dp += fmt::format(".{}.h5", iter);
+  std::filesystem::path mp = filePath->filename();
+  mp += ".mesh.h5";
+  XDMFDoc doc{fp};
+  doc.setTime(t);
+  doc.setTopology<typename FESpace::RefFE_T>(mp, feSpace->mesh->elementList.size());
+  doc.setGeometry(mp, feSpace->dof.mapSize);
+
+  std::filesystem::path mh = filePath.value();
+  mh += fmt::format(".{}.h5", iter);
+  HDF5 h5Iter{mh, HDF5FileMode::OVERWRITE};
+
   for (auto const & v: vars)
   {
     // mixed variable vectors can be longer than current fespace
@@ -545,7 +461,14 @@ void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
         name = v.name + "_" + std::to_string(d);
       }
 
-      doc.setVar({name, Traits_T::attributeType, feSpace->dof.size});
+      doc.setVar(
+          dp,
+          {name,
+           XDMFType::SCALAR,
+           Traits_T::center,
+           XDMFNumberType::FLOAT,
+           feSpace->dof.size,
+           1});
 
       // this works only with Lagrange elements
       Vec compdata{feSpace->dof.size};
@@ -584,13 +507,23 @@ template <typename VarTup>
 void IOManager<FESpace>::print(VarTup const && vars, double const t)
 {
   timeSeries.push_back({iter, t});
-  XDMFDoc doc{filePath.value(), std::to_string(iter)};
-  doc.setTime(t);
-  doc.setTopology<typename FESpace::RefFE_T>(feSpace->mesh->elementList.size());
-  doc.setGeometry(feSpace->dof.mapSize);
+  printTimeSeries();
 
-  HDF5 h5Iter{
-      filePath->string() + "." + std::to_string(iter) + ".h5", HDF5FileMode::OVERWRITE};
+  std::filesystem::path fp = filePath.value();
+  fp += fmt::format(".{}.xmf", iter);
+  XDMFDoc doc{fp};
+  doc.setTime(t);
+  std::filesystem::path mp = filePath->filename();
+  mp += ".mesh.h5";
+  doc.setTopology<typename FESpace::RefFE_T>(mp, feSpace->mesh->elementList.size());
+  doc.setGeometry(mp, feSpace->dof.mapSize);
+
+  std::filesystem::path mh = filePath.value();
+  mh += fmt::format(".{}.h5", iter);
+  HDF5 h5Iter{mh, HDF5FileMode::OVERWRITE};
+  std::filesystem::path dp = filePath->filename();
+  dp += fmt::format(".{}.h5", iter);
+
   static_for(
       vars,
       [&](auto const /*i*/, auto const & v)
@@ -598,11 +531,9 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
         assert(v.name != "");
         assert(v.data.size() == feSpace->dof.size * FESpace_T::dim);
         using Var_T = std::decay_t<decltype(v)>;
-        constexpr uint dim = getDim<Var_T, FESpace>();
         if constexpr (!std::is_same_v<Var_T, Var>)
         {
-          // we need only the mesh and reffe to be the same, no need to check the
-          // qr
+          // no need to check the qr
           static_assert(std::is_same_v<
                         typename Var_T::FESpace_T::Mesh_T,
                         typename FESpace::Mesh_T>);
@@ -611,6 +542,7 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
                         typename FESpace::RefFE_T>);
         }
 
+        constexpr uint dim = getDim<Var_T, FESpace>();
         for (uint d = 0; d < dim; ++d)
         {
           std::string name;
@@ -623,7 +555,14 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
             name = v.name + "_" + std::to_string(d);
           }
 
-          doc.setVar({name, Traits_T::attributeType, feSpace->dof.size});
+          doc.setVar(
+              dp,
+              {name,
+               XDMFType::SCALAR,
+               Traits_T::center,
+               XDMFNumberType::FLOAT,
+               feSpace->dof.size,
+               1});
 
           // this works only with Lagrange elements
           // TODO: pass data as const &
@@ -651,6 +590,122 @@ void IOManager<FESpace>::print(VarTup const && vars, double const t)
       });
   iter++;
 }
+
+template <typename FESpace>
+void IOManager<FESpace>::printTimeSeries()
+{
+  std::filesystem::path fp = filePath.value();
+  fp += ".time.xmf";
+  XDMFDoc doc{fp, XDMFGridType::COLLECTION};
+
+  doc.setTimeSeries(filePath->filename(), timeSeries);
+}
+
+template <typename FESpace>
+void IOManager<FESpace>::printMeshData()
+{
+  std::filesystem::path fp = filePath.value();
+  fp += ".mesh.h5";
+  HDF5 h5Mesh{fp, HDF5FileMode::OVERWRITE};
+
+  if constexpr (Traits_T::needsMapping == true)
+  {
+    Table<DOFid_T, RefFE_T::numGeoDOFs> mappedConn(
+        feSpace->mesh->elementList.size(), RefFE_T::numGeoDOFs);
+    for (uint i = 0; i < feSpace->mesh->elementList.size(); ++i)
+    {
+      for (uint j = 0; j < RefFE_T::numGeoDOFs; ++j)
+      {
+        mappedConn(i, j) = feSpace->dof.geoMap(i, Traits_T::mapping[j]);
+      }
+    }
+    h5Mesh.print(mappedConn, "connectivity");
+  }
+  else
+  {
+    h5Mesh.print(feSpace->dof.geoMap, "connectivity");
+  }
+
+  Table<double, 3> coords(feSpace->dof.mapSize, 3);
+  for (auto const & e: feSpace->mesh->elementList)
+  {
+    for (uint p = 0; p < RefFE_T::numGeoDOFs; ++p)
+    {
+      coords.row(feSpace->dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
+    }
+  }
+  h5Mesh.print(coords, "coords");
+}
+
+template <typename FESpace>
+void IOManager<FESpace>::printBoundary()
+{
+  using Facet_T = typename Mesh_T::Facet_T;
+  Mesh_T const & mesh = *feSpace->mesh;
+
+  std::filesystem::path fp = filePath.value();
+  fp += ".boundary.xmf";
+  std::filesystem::path mp = filePath->filename();
+  mp += ".mesh.h5";
+  XDMFDoc doc{fp};
+  // we always use linear elements for boundary facets
+  doc.setTopology<typename LagrangeFE<Facet_T, 1>::RefFE_T>(
+      mp, mesh.facetList.size(), "connectivity_bd");
+  doc.setGeometry(mp, mesh.pointList.size(), "coords_bd");
+  doc.setVar(
+      mp,
+      {"facetMarker",
+       XDMFType::SCALAR,
+       XDMFCenter::CELL,
+       XDMFNumberType::FLOAT,
+       mesh.facetList.size(),
+       1});
+  doc.setVar(
+      mp,
+      {"nodeMarker",
+       XDMFType::SCALAR,
+       XDMFCenter::NODE,
+       XDMFNumberType::FLOAT,
+       mesh.pointList.size(),
+       1});
+
+  std::filesystem::path mh = filePath.value();
+  mh += ".mesh.h5";
+  HDF5 h5Mesh{mh, HDF5FileMode::APPEND};
+
+  Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
+  for (auto const & f: mesh.facetList)
+  {
+    for (uint p = 0; p < Facet_T::numPts; ++p)
+    {
+      conn(f.id, p) = f.pts[p]->id;
+    }
+  }
+  h5Mesh.print<id_T, Facet_T::numPts>(conn, "connectivity_bd");
+
+  Table<double, 3> coords(mesh.pointList.size(), 3);
+  for (auto const & p: mesh.pointList)
+  {
+    coords.row(p.id) = p.coord;
+  }
+  h5Mesh.print<double, 3>(coords, "coords_bd");
+
+  Vec facetMarkerData(mesh.facetList.size());
+  for (auto const & f: mesh.facetList)
+  {
+    facetMarkerData[f.id] = static_cast<double>(f.marker);
+  }
+  h5Mesh.print(facetMarkerData, "facetMarker");
+
+  Vec nodeMarkerData(mesh.pointList.size());
+  for (auto const & p: mesh.pointList)
+  {
+    nodeMarkerData[p.id] = static_cast<double>(p.marker);
+  }
+  h5Mesh.print(nodeMarkerData, "nodeMarker");
+}
+
+// =====================================================================================
 
 template <typename FESpaceOrig>
 struct ToP0
@@ -739,6 +794,8 @@ struct IOManagerP0
   IOManager<FESpaceP0_T> io;
   L2Projector<FESpaceP0_T, FESpaceOrig_T> l2Projector;
 };
+
+// =====================================================================================
 
 template <typename FESpaceOrig>
 struct IOManagerFacet

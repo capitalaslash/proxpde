@@ -1103,7 +1103,7 @@ template <typename RefFE>
 inline constexpr uint order_v = Order<RefFE>::value;
 
 // ----------------------------------------------------------------------------
-enum class FamilyType : int8_t
+enum class FamilyType : uint8_t
 {
   NONE = 0,
   LAGRANGE = 1,
@@ -1230,7 +1230,7 @@ template <typename RefFE>
 inline constexpr FamilyType family_v = Family<RefFE>::value;
 
 // ----------------------------------------------------------------------------
-enum class FEDimType : int8_t
+enum class FEDimType : uint8_t
 {
   NONE = 0,
   SCALAR = 1,

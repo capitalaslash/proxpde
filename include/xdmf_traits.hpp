@@ -7,7 +7,7 @@
 namespace proxpde
 {
 
-enum class XDMFGridType : int8_t
+enum class XDMFGridType : uint8_t
 {
   SINGLE,
   COLLECTION
@@ -27,7 +27,7 @@ constexpr std::string_view to_string(XDMFGridType const type)
   }
 }
 
-enum class XDMFNumberType : int8_t
+enum class XDMFNumberType : uint8_t
 {
   INT,
   FLOAT
@@ -47,7 +47,7 @@ constexpr std::string_view to_string(XDMFNumberType const type)
   }
 }
 
-enum class XDMFFormat : int8_t
+enum class XDMFFormat : uint8_t
 {
   HDF,
   INLINE
@@ -67,10 +67,10 @@ constexpr std::string_view to_string(XDMFFormat const format)
   }
 }
 
-enum class XDMFCenter : int8_t
+enum class XDMFCenter : uint8_t
 {
   CELL,
-  NODE
+  NODE,
 };
 
 constexpr std::string_view to_string(XDMFCenter const center)

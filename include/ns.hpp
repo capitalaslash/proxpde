@@ -251,7 +251,7 @@ struct NSSolverMonolithic
   IOManager<FESpaceP_T> ioP;
 };
 
-enum class VelStarSolverType
+enum class VelStarSolverType : uint8_t
 {
   MONOLITHIC,
   SEGREGATED,

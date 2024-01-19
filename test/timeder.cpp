@@ -11,7 +11,7 @@
 
 using namespace proxpde;
 
-enum class TimeIntegrationMethod : char
+enum class TimeIntegrationMethod : uint8_t
 {
   BDF1 = 1,
   BDF2 = 2,

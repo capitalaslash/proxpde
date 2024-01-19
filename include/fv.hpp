@@ -48,7 +48,7 @@ double superbee(double const r)
 
 double pureUpwind(double const) { return 0.; }
 
-enum class LimiterType
+enum class LimiterType : uint8_t
 {
   NONE,
   UPWIND,

@@ -5,14 +5,14 @@
 namespace proxpde
 {
 
-enum class SolverPackage : int8_t
+enum class SolverPackage : uint8_t
 {
   AMGCL, // not yet implemnted
   EIGEN,
   GINKGO, // not yet implemnted
 };
 
-enum class SolverType : int8_t
+enum class SolverType : uint8_t
 {
   DIRECT,
   ITERATIVE,
@@ -21,7 +21,7 @@ enum class SolverType : int8_t
   MINRES,
 };
 
-enum class PreconditionerType : int8_t
+enum class PreconditionerType : uint8_t
 {
   NONE,
   DIAG,

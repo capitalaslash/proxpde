@@ -8,7 +8,7 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-enum class SolverType
+enum class SolverType : uint8_t
 {
   CHOLESKY,
   BICGSTAB,
@@ -105,6 +105,8 @@ int main()
     sol.data = solver.solve(builder.b);
     break;
   }
+  default:
+    abort();
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 

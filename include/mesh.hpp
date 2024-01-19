@@ -571,7 +571,7 @@ void addElemFacetList(Mesh & mesh)
   }
 }
 
-enum class GMSHElemType : short_T
+enum class GMSHElemType : uint8_t
 {
   NONE = 0,
   LINE = 1,

@@ -1002,6 +1002,51 @@ void readGMSH(
   fmt::print("mesh file {} successfully read\n", filename);
 }
 
+template <typename Elem>
+void writeGMSH(Mesh<Elem> const & mesh, std::string const filename)
+{
+  std::ofstream out{filename};
+
+  out << "$MeshFormat" << std::endl;
+  out << "2.2 0 8" << std::endl;
+  out << "$EndMeshFormat" << std::endl;
+
+  out << "$Nodes" << std::endl;
+  out << mesh.pointList.size() << std::endl;
+  for (auto const & p: mesh.pointList)
+  {
+    out << p.id + 1 << " " << p.coord[0] << " " << p.coord[1] << " " << p.coord[2]
+        << std::endl;
+  }
+  out << "$EndNodes" << std::endl;
+
+  out << "$Elements" << std::endl;
+  out << mesh.facetList.size() + mesh.elementList.size() << std::endl;
+  for (auto const & f: mesh.facetList)
+  {
+    out << f.id + 1 << " "
+        << static_cast<uint>(ElemToGmsh<typename Elem::Facet_T>::value) << " 2 "
+        << f.marker << " " << f.marker << " ";
+    for (uint i = 0; i < Elem::Facet_T::numPts; ++i)
+    {
+      out << f.pts[i]->id + 1 << " ";
+    }
+    out << std::endl;
+  }
+  for (auto const & e: mesh.elementList)
+  {
+    out << e.id + 1 + mesh.facetList.size() << " "
+        << static_cast<uint>(ElemToGmsh<Elem>::value) << " 2 " << e.marker << " "
+        << e.marker << " ";
+    for (uint i = 0; i < Elem::numPts; ++i)
+    {
+      out << e.pts[i]->id + 1 << " ";
+    }
+    out << std::endl;
+  }
+  out << "$EndElements" << std::endl;
+}
+
 enum class MeshType : uint8_t
 {
   STRUCTURED,

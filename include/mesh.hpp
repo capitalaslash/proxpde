@@ -1117,6 +1117,80 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
 
 uint checkPlanarFacets(Mesh<Hexahedron> const & mesh);
 
+template <typename Elem, typename Selector>
+void extractBlock(
+    proxpde::Mesh<Elem> const & mesh,
+    proxpde::Mesh<Elem> & block,
+    Selector const & selector)
+{
+  using namespace proxpde;
+  std::vector<id_T> blockElemIds;
+  blockElemIds.reserve(mesh.elementList.size());
+  std::map<id_T, id_T> blockPtIds;
+  id_T blockPtCounter = 0U;
+  for (auto const & elem: mesh.elementList)
+  {
+    if (selector(elem))
+    {
+      blockElemIds.push_back(elem.id);
+      for (auto const & pt: elem.pts)
+      {
+        [[maybe_unused]] auto const [ptr, inserted] =
+            blockPtIds.insert({pt->id, blockPtCounter});
+        if (inserted)
+        {
+          blockPtCounter++;
+        }
+      }
+    }
+  }
+
+  fmt::print("number of elements in block: {}\n", blockElemIds.size());
+  fmt::print("number of points in block: {}\n", blockPtCounter);
+
+  block.pointList.resize(blockPtCounter);
+  block.elementList.resize(blockElemIds.size());
+
+  for (auto const [meshId, blockId]: blockPtIds)
+  {
+    block.pointList[blockId] = mesh.pointList[meshId];
+    block.pointList[blockId].id = blockId;
+  }
+
+  id_T elemCounter = 0U;
+  for (auto const meshId: blockElemIds)
+  {
+    Elem & blockElem = block.elementList[elemCounter];
+    Elem const & meshElem = mesh.elementList[meshId];
+    blockElem = meshElem;
+    blockElem.id = elemCounter;
+    for (uint p = 0U; p < Elem::numPts; p++)
+    {
+      id_T const blockId = blockPtIds[meshElem.pts[p]->id];
+      blockElem.pts[p] = &block.pointList[blockId];
+    }
+    elemCounter++;
+  }
+
+  block.buildConnectivity();
+
+  buildFacets(block, mesh.flags);
+  // TODO: copy original markers
+
+  if (mesh.flags & MeshFlags::NORMALS)
+  {
+    buildNormals(block, mesh.flags);
+  }
+  if (mesh.flags & MeshFlags::FACET_PTRS)
+  {
+    addElemFacetList(block);
+  }
+
+  block.flags = mesh.flags;
+
+  // fmt::print("block:\n{}\n", block);
+}
+
 } // namespace proxpde
 
 namespace YAML

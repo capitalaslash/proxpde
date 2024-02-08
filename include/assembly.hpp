@@ -2,8 +2,6 @@
 
 #include "def.hpp"
 
-#include "bc.hpp"
-#include "blockmatrix.hpp"
 #include "fespace.hpp"
 #include "var.hpp"
 
@@ -1188,24 +1186,23 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
         fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
         fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
-      assembly = std::make_unique<AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>>(
-          AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>{
-              c, r, feRhs, fe, allComp<FESpace_T>()});
+      assembly = std::make_shared<AssemblyS2SProjection<FESpace_T, FESpaceRhs_T>>(
+          c, r, feRhs, fe, cmp);
     }
     else if constexpr (
         fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&
         fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::SCALAR)
     {
-      assembly = std::make_unique<AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>>(
-          AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe});
+      assembly = std::make_shared<AssemblyS2VProjection<FESpace_T, FESpaceRhs_T>>(
+          c, r, feRhs, fe);
     }
     else if constexpr (
         fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR &&
         fedim_v<typename FESpaceRhs_T::RefFE_T> == FEDimType::VECTOR)
     {
       // static_assert (dependent_false_v<FESpace>, "not yet implemented");
-      assembly = std::make_unique<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
-          AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>{c, r, feRhs, fe, cmp});
+      assembly = std::make_shared<AssemblyV2SProjection<FESpace_T, FESpaceRhs_T>>(
+          c, r, feRhs, fe, cmp);
     }
     else if constexpr (
         fedim_v<typename FESpace_T::RefFE_T> == FEDimType::VECTOR &&

@@ -55,7 +55,7 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/proxpde.h.in"
   "${PROJECT_BINARY_DIR}/proxpde.h"
 )
-include_directories("${PROJECT_BINARY_DIR}")
+# include_directories("${PROJECT_BINARY_DIR}")
 
 set(SOURCES
     src/def.cpp

@@ -208,6 +208,6 @@ endif()
 
 feature_summary(WHAT ALL)
 
-add_custom_target(doc
+add_custom_target(proxpde_doc
   SOURCES README.md
 )

@@ -108,8 +108,8 @@ target_include_directories(proxpde
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include> # or include/proxpde
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
+  # PRIVATE
+  #   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
 )
 
 target_compile_features(proxpde PUBLIC cxx_std_20)

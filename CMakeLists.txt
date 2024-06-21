@@ -99,17 +99,17 @@ set(HEADERS
 
 add_library(proxpde SHARED)
 target_sources(proxpde
-  PUBLIC $<BUILD_INTERFACE:${HEADERS}>
-  PRIVATE ${SOURCES}
+  PRIVATE
+    ${SOURCES}
+    $<BUILD_INTERFACE:${HEADERS}>
 )
 add_library(ProXPDE::proxpde ALIAS proxpde)
 
 target_include_directories(proxpde
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include> # or include/proxpde
-  # PRIVATE
-  #   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> # for generated includes
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> # for generated includes
+    $<INSTALL_INTERFACE:include> # all includes (w/ generated) go to single install folder
 )
 
 target_compile_features(proxpde PUBLIC cxx_std_20)

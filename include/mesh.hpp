@@ -81,6 +81,10 @@ public:
   using elemToPoint_T = std::vector<std::array<id_T, Elem::numPts>>;
   using elemToFacet_T = std::vector<std::array<id_T, Elem::numFacets>>;
 
+  Mesh() = default;
+  Mesh(Mesh<Elem> const &) = default;
+  Mesh<Elem> & operator=(Mesh<Elem> &) = default;
+
   void buildConnectivity();
   uint countRidges();
 
@@ -1076,6 +1080,25 @@ static constexpr MeshType to_MeshType(std::string_view str)
   abort();
 }
 
+} // namespace proxpde
+
+namespace fmt
+{
+
+template <>
+struct formatter<proxpde::MeshType>: formatter<std::string_view>
+{
+  auto format(proxpde::MeshType t, format_context & ctx) const
+  {
+    return formatter<std::string_view>::format(proxpde::to_string(t), ctx);
+  }
+};
+
+} // namespace fmt
+
+namespace proxpde
+{
+
 template <typename Mesh>
 void readMesh(Mesh & mesh, ParameterDict const & config)
 {
@@ -1195,6 +1218,7 @@ void extractBlock(
 
 namespace YAML
 {
+
 template <>
 struct convert<proxpde::Bitmask<proxpde::MeshFlags>>
 {
@@ -1265,15 +1289,3 @@ struct convert<proxpde::MeshType>
 };
 
 } // namespace YAML
-
-namespace fmt
-{
-template <>
-struct formatter<proxpde::MeshType>: formatter<std::string_view>
-{
-  auto format(proxpde::MeshType t, format_context & ctx) const
-  {
-    return formatter<std::string_view>::format(proxpde::to_string(t), ctx);
-  }
-};
-} // namespace fmt

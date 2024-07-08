@@ -133,7 +133,7 @@ std::ostream & operator<<(std::ostream & out, GeoElem const & e);
 
 struct NullElem: public GeoElem
 {
-  static short_T constexpr dim = shortNotSet;
+  static short_T constexpr dim = 0U;
   static short_T constexpr numPts = 0U;
   static short_T constexpr numEdges = 0U;
   static short_T constexpr numFaces = 0U;

@@ -30,6 +30,9 @@ enum class PreconditionerType : uint8_t
 
 struct SolverBase
 {
+  SolverBase() = default;
+  virtual ~SolverBase() = default;
+
   virtual void setup(ParameterDict const &)
   {
     fmt::print("we should never get here!\n");
@@ -161,13 +164,13 @@ struct Solver<SolverPackage::EIGEN, S, P>: public SolverBase
 using SolverEigenIter =
     Solver<SolverPackage::EIGEN, SolverType::ITERATIVE, PreconditionerType::DIAG>;
 
-std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
+SolverBase * buildSolver(ParameterDict const & config)
 {
   if (config["package"].as<std::string>() == "eigen")
   {
     if (config["type"].as<std::string>() == "direct")
     {
-      return std::make_unique<Solver<SolverPackage::EIGEN, SolverType::DIRECT>>(config);
+      return new Solver<SolverPackage::EIGEN, SolverType::DIRECT>(config);
     }
     else if (config["type"].as<std::string>() == "iterative")
     {
@@ -178,10 +181,10 @@ std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
             config["preconditioner"].as<std::string>());
       }
 
-      return std::make_unique<Solver<
+      return new Solver<
           SolverPackage::EIGEN,
           SolverType::ITERATIVE,
-          PreconditionerType::DIAG>>(config);
+          PreconditionerType::DIAG>(config);
     }
     else if (config["type"].as<std::string>() == "gmres")
     {
@@ -195,9 +198,10 @@ std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
 
       if (config["preconditioner"].as<std::string>() == "diag")
       {
-        return std::make_unique<
-            Solver<SolverPackage::EIGEN, SolverType::GMRES, PreconditionerType::DIAG>>(
-            config);
+        return new Solver<
+            SolverPackage::EIGEN,
+            SolverType::GMRES,
+            PreconditionerType::DIAG>(config);
       }
       else if (config["preconditioner"])
       {
@@ -220,10 +224,10 @@ std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
 
       if (config["preconditioner"].as<std::string>() == "diag")
       {
-        return std::make_unique<Solver<
+        return new Solver<
             SolverPackage::EIGEN,
             SolverType::BICGSTAB,
-            PreconditionerType::DIAG>>(config);
+            PreconditionerType::DIAG>(config);
       }
       else if (config["preconditioner"])
       {
@@ -246,9 +250,10 @@ std::unique_ptr<SolverBase> getSolver(ParameterDict const & config)
 
       if (config["preconditioner"].as<std::string>() == "diag")
       {
-        return std::make_unique<
-            Solver<SolverPackage::EIGEN, SolverType::MINRES, PreconditionerType::DIAG>>(
-            config);
+        return new Solver<
+            SolverPackage::EIGEN,
+            SolverType::MINRES,
+            PreconditionerType::DIAG>(config);
       }
       else if (config["preconditioner"])
       {

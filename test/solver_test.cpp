@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
 
   t.start("iterative solver");
   // generic iterative solver
-  auto solver = getSolver(ParameterDict{config["solver"]});
+  std::unique_ptr<SolverBase> solver{buildSolver(ParameterDict{config["solver"]})};
   solver->compute(builderR.A);
   Vec u;
   auto const [iters, err] = solver->solve(builderR.b, u);
@@ -93,7 +93,7 @@ int main(int argc, char * argv[])
   Var solCG{"uBiCGSTAB"};
   config["solver"]["type"] = "bicgstab";
   config["solver"]["preconditioner"] = "diag";
-  auto solverCG = getSolver(ParameterDict{config["solver"]});
+  std::unique_ptr<SolverBase> solverCG{buildSolver(ParameterDict{config["solver"]})};
   solverCG->compute(builderR.A);
   auto const [itersCG, errCG] = solverCG->solve(builderR.b, solCG.data);
   fmt::print("BiCGSTAB DiagPrec\niters: {}\nerror: {}\n", itersCG, errCG);
@@ -103,7 +103,8 @@ int main(int argc, char * argv[])
   Var solMINRES{"uMINRES"};
   config["solver"]["type"] = "minres";
   config["solver"]["preconditioner"] = "diag";
-  auto solverMINRES = getSolver(ParameterDict{config["solver"]});
+  std::unique_ptr<SolverBase> solverMINRES{
+      buildSolver(ParameterDict{config["solver"]})};
   solverMINRES->compute(builderR.A);
   auto const [itersMINRES, errMINRES] = solverMINRES->solve(builderR.b, solMINRES.data);
   fmt::print("MINRES DiagPrec\niters: {}\nerror: {}\n", itersMINRES, errMINRES);
@@ -113,7 +114,7 @@ int main(int argc, char * argv[])
   Var solGMRES{"uGMRES"};
   config["solver"]["type"] = "gmres";
   config["solver"]["preconditioner"] = "diag";
-  auto solverGMRES = getSolver(ParameterDict{config["solver"]});
+  std::unique_ptr<SolverBase> solverGMRES{buildSolver(ParameterDict{config["solver"]})};
   solverGMRES->compute(builderR.A);
   auto const [itersGMRES, errGMRES] = solverGMRES->solve(builderR.b, solGMRES.data);
   fmt::print("GMRES DiagPrec\niters: {}\nerror: {}\n", itersGMRES, errGMRES);

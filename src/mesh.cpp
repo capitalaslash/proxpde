@@ -106,11 +106,12 @@ void buildSquare(
         flip = true;
       }
       for (uint e = 0; e < 2U; ++e)
-        mesh.elementList.emplace_back(Triangle{
-            {&mesh.pointList[triplets[e][0]],
-             &mesh.pointList[triplets[e][1]],
-             &mesh.pointList[triplets[e][2]]},
-            counter++});
+        mesh.elementList.emplace_back(
+            std::vector{
+                {&mesh.pointList[triplets[e][0]],
+                 &mesh.pointList[triplets[e][1]],
+                 &mesh.pointList[triplets[e][2]]}},
+            counter++);
     }
   }
   mesh.buildConnectivity();
@@ -158,12 +159,13 @@ void buildSquare(
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      mesh.elementList.emplace_back(Quad{
-          {&mesh.pointList[base],
-           &mesh.pointList[base + 1],
-           &mesh.pointList[base + numPts[0] + 1],
-           &mesh.pointList[base + numPts[0]]},
-          counter++});
+      mesh.elementList.emplace_back(
+          std::vector{
+              {&mesh.pointList[base],
+               &mesh.pointList[base + 1],
+               &mesh.pointList[base + numPts[0] + 1],
+               &mesh.pointList[base + numPts[0]]}},
+          counter++);
     }
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
@@ -268,52 +270,57 @@ void buildCircleMesh(
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      mesh.elementList.emplace_back(Quad{
-          {&mesh.pointList[base],
-           &mesh.pointList[base + 1],
-           &mesh.pointList[base + numPts[0] + 1],
-           &mesh.pointList[base + numPts[0]]},
-          counter++});
+      mesh.elementList.emplace_back(
+          std::vector{
+              {&mesh.pointList[base],
+               &mesh.pointList[base + 1],
+               &mesh.pointList[base + numPts[0] + 1],
+               &mesh.pointList[base + numPts[0]]}},
+          counter++);
     }
 
   uint blockOffset = numPts[0] * numPts[1] + numPts[0] * (numPts[2] - 1);
   for (uint j = 0; j < numElems[1] - 1; ++j)
   {
     id_T const base = numPts[0] - 1 + j * numPts[0];
-    mesh.elementList.emplace_back(Quad{
-        {&mesh.pointList[base],
-         &mesh.pointList[blockOffset + j * (numPts[2] - 1)],
-         &mesh.pointList[blockOffset + (j + 1) * (numPts[2] - 1)],
-         &mesh.pointList[base + numPts[0]]},
-        counter++});
+    mesh.elementList.emplace_back(
+        std::vector{
+            {&mesh.pointList[base],
+             &mesh.pointList[blockOffset + j * (numPts[2] - 1)],
+             &mesh.pointList[blockOffset + (j + 1) * (numPts[2] - 1)],
+             &mesh.pointList[base + numPts[0]]}},
+        counter++);
   }
-  mesh.elementList.emplace_back(Quad{
-      {&mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0]],
-       &mesh.pointList[blockOffset + (numPts[1] - 2) * (numPts[2] - 1)],
-       &mesh.pointList
-            [numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0] + numPts[0]],
-       &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0]]},
-      counter++});
+  mesh.elementList.emplace_back(
+      std::vector{
+          {&mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0]],
+           &mesh.pointList[blockOffset + (numPts[1] - 2) * (numPts[2] - 1)],
+           &mesh.pointList
+                [numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0] + numPts[0]],
+           &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0]]}},
+      counter++);
 
   for (uint i = 1; i < numElems[2]; ++i)
   {
     for (uint j = 0; j < numElems[1] - 1; ++j)
     {
       id_T const base = blockOffset + i - 1 + j * (numPts[2] - 1);
-      mesh.elementList.emplace_back(Quad{
-          {&mesh.pointList[base],
-           &mesh.pointList[base + 1],
-           &mesh.pointList[base + numPts[2] - 1 + 1],
-           &mesh.pointList[base + numPts[2] - 1]},
-          counter++});
+      mesh.elementList.emplace_back(
+          std::vector{
+              {&mesh.pointList[base],
+               &mesh.pointList[base + 1],
+               &mesh.pointList[base + numPts[2] - 1 + 1],
+               &mesh.pointList[base + numPts[2] - 1]}},
+          counter++);
     }
     id_T const base = blockOffset + i - 1 + (numPts[1] - 2) * (numPts[2] - 1);
-    mesh.elementList.emplace_back(Quad{
-        {&mesh.pointList[base],
-         &mesh.pointList[base + 1],
-         &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * (i + 1)],
-         &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * i]},
-        counter++});
+    mesh.elementList.emplace_back(
+        std::vector{
+            {&mesh.pointList[base],
+             &mesh.pointList[base + 1],
+             &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * (i + 1)],
+             &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * i]}},
+        counter++);
   }
 
   mesh.buildConnectivity();
@@ -427,12 +434,13 @@ void buildCube(
         }
         for (uint r = 0; r < 5; ++r)
         {
-          mesh.elementList.emplace_back(Tetrahedron{
-              {&mesh.pointList[idTable(r, 0)],
-               &mesh.pointList[idTable(r, 1)],
-               &mesh.pointList[idTable(r, 2)],
-               &mesh.pointList[idTable(r, 3)]},
-              counter++});
+          mesh.elementList.emplace_back(
+              std::vector{
+                  {&mesh.pointList[idTable(r, 0)],
+                   &mesh.pointList[idTable(r, 1)],
+                   &mesh.pointList[idTable(r, 2)],
+                   &mesh.pointList[idTable(r, 3)]}},
+              counter++);
         }
       }
   mesh.buildConnectivity();
@@ -502,16 +510,17 @@ void buildCube(
       for (uint i = 0; i < numElems[0]; ++i)
       {
         id_T const base = i + j * numPts[0] + k * numPts[1] * numPts[0];
-        mesh.elementList.emplace_back(Hexahedron{
-            {&mesh.pointList[base],                // 0
-             &mesh.pointList[base + dx],           // 1
-             &mesh.pointList[base + dx + dy],      // 2
-             &mesh.pointList[base + dy],           // 3
-             &mesh.pointList[base + dz],           // 4
-             &mesh.pointList[base + dx + dz],      // 5
-             &mesh.pointList[base + dx + dy + dz], // 6
-             &mesh.pointList[base + dy + dz]},     // 7
-            counter++});
+        mesh.elementList.emplace_back(
+            std::vector{
+                {&mesh.pointList[base],                // 0
+                 &mesh.pointList[base + dx],           // 1
+                 &mesh.pointList[base + dx + dy],      // 2
+                 &mesh.pointList[base + dy],           // 3
+                 &mesh.pointList[base + dz],           // 4
+                 &mesh.pointList[base + dx + dz],      // 5
+                 &mesh.pointList[base + dx + dy + dz], // 6
+                 &mesh.pointList[base + dy + dz]}},    // 7
+            counter++);
       }
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
@@ -647,7 +656,7 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
   double const h = 0.1;
   for (uint p = 0; p < 11; ++p) // id 1-10
   {
-    mesh.pointList.emplace_back(Vec3(p * h, 0.0, 0.0), counter++);
+    mesh.pointList.emplace_back(Vec3{p * h, 0.0, 0.0}, counter++);
   }
   double const oneOnSr3 = 1. / std::sqrt(3.);
   uint const rows = 8;
@@ -656,54 +665,54 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
     for (uint p = 0; p < 5; ++p) // id 11-15
     {
       mesh.pointList.emplace_back(
-          Vec3((1 + 2 * p) * h, (1 + 2 * r) * h * oneOnSr3, 0.0), counter++);
+          Vec3{(1 + 2 * p) * h, (1 + 2 * r) * h * oneOnSr3, 0.0}, counter++);
     }
     for (uint p = 0; p < 6; ++p) // id 16-21
     {
       mesh.pointList.emplace_back(
-          Vec3(2 * p * h, 2 * (1 + r) * h * oneOnSr3, 0.0), counter++);
+          Vec3{2 * p * h, 2 * (1 + r) * h * oneOnSr3, 0.0}, counter++);
     }
   }
   for (uint p = 0; p < 5; ++p) // id 22-26
   {
     mesh.pointList.emplace_back(
-        Vec3((1 + 2 * p) * h, (1 + 2 * rows) * h * oneOnSr3, 0.0), counter++);
+        Vec3{(1 + 2 * p) * h, (1 + 2 * rows) * h * oneOnSr3, 0.0}, counter++);
   }
   for (uint p = 0; p < 11; ++p) // id 27-37
   {
     mesh.pointList.emplace_back(
-        Vec3(p * h, (2 + 2 * rows) * h * oneOnSr3, 0.0), counter++);
+        Vec3{p * h, (2 + 2 * rows) * h * oneOnSr3, 0.0}, counter++);
   }
 
   counter = 0;
   for (uint e = 0; e < 5; ++e)
   {
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[0 + 2 * e],
-            &mesh.pointList[1 + 2 * e],
-            &mesh.pointList[11 + e]},
+        std::vector{
+            {&mesh.pointList[0 + 2 * e],
+             &mesh.pointList[1 + 2 * e],
+             &mesh.pointList[11 + e]}},
         counter++);
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[1 + 2 * e],
-            &mesh.pointList[2 + 2 * e],
-            &mesh.pointList[11 + e]},
+        std::vector{
+            {&mesh.pointList[1 + 2 * e],
+             &mesh.pointList[2 + 2 * e],
+             &mesh.pointList[11 + e]}},
         counter++);
   }
   for (uint e = 0; e < 5; ++e)
   {
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[0 + 2 * e],
-            &mesh.pointList[11 + e],
-            &mesh.pointList[16 + e]},
+        std::vector{
+            {&mesh.pointList[0 + 2 * e],
+             &mesh.pointList[11 + e],
+             &mesh.pointList[16 + e]}},
         counter++);
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[2 + 2 * e],
-            &mesh.pointList[11 + e],
-            &mesh.pointList[17 + e]},
+        std::vector{
+            {&mesh.pointList[2 + 2 * e],
+             &mesh.pointList[11 + e],
+             &mesh.pointList[17 + e]}},
         counter++);
   }
   for (uint r = 0; r < rows - 1; ++r)
@@ -711,77 +720,77 @@ void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
     for (uint e = 0; e < 5; ++e)
     {
       mesh.elementList.emplace_back(
-          std::vector<Point *>{
-              &mesh.pointList[16 + 11 * r + e],
-              &mesh.pointList[11 + 11 * r + e],
-              &mesh.pointList[22 + 11 * r + e]},
+          std::vector{
+              {&mesh.pointList[16 + 11 * r + e],
+               &mesh.pointList[11 + 11 * r + e],
+               &mesh.pointList[22 + 11 * r + e]}},
           counter++);
       mesh.elementList.emplace_back(
-          std::vector<Point *>{
-              &mesh.pointList[17 + 11 * r + e],
-              &mesh.pointList[11 + 11 * r + e],
-              &mesh.pointList[22 + 11 * r + e]},
+          std::vector{
+              {&mesh.pointList[17 + 11 * r + e],
+               &mesh.pointList[11 + 11 * r + e],
+               &mesh.pointList[22 + 11 * r + e]}},
           counter++);
     }
     for (uint e = 0; e < 5; ++e)
     {
       mesh.elementList.emplace_back(
-          std::vector<Point *>{
-              &mesh.pointList[16 + 11 * r + e],
-              &mesh.pointList[22 + 11 * r + e],
-              &mesh.pointList[27 + 11 * r + e]},
+          std::vector{
+              {&mesh.pointList[16 + 11 * r + e],
+               &mesh.pointList[22 + 11 * r + e],
+               &mesh.pointList[27 + 11 * r + e]}},
           counter++);
       mesh.elementList.emplace_back(
-          std::vector<Point *>{
-              &mesh.pointList[17 + 11 * r + e],
-              &mesh.pointList[22 + 11 * r + e],
-              &mesh.pointList[28 + 11 * r + e]},
+          std::vector{
+              {&mesh.pointList[17 + 11 * r + e],
+               &mesh.pointList[22 + 11 * r + e],
+               &mesh.pointList[28 + 11 * r + e]}},
           counter++);
     }
   }
   for (uint e = 0; e < 5; ++e)
   {
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[11 + 11 * (rows - 1) + e],
-            &mesh.pointList[16 + 11 * (rows - 1) + e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e]},
+        std::vector{
+            {&mesh.pointList[11 + 11 * (rows - 1) + e],
+             &mesh.pointList[16 + 11 * (rows - 1) + e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e]}},
         counter++);
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[11 + 11 * (rows - 1) + e],
-            &mesh.pointList[17 + 11 * (rows - 1) + e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e]},
-        counter++);
-  }
-  for (uint e = 0; e < 5; ++e)
-  {
-    mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[16 + 11 * (rows - 1) + e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e],
-            &mesh.pointList[27 + 11 * (rows - 1) + 2 * e]},
-        counter++);
-    mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[17 + 11 * (rows - 1) + e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e],
-            &mesh.pointList[29 + 11 * (rows - 1) + 2 * e]},
+        std::vector{
+            {&mesh.pointList[11 + 11 * (rows - 1) + e],
+             &mesh.pointList[17 + 11 * (rows - 1) + e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e]}},
         counter++);
   }
   for (uint e = 0; e < 5; ++e)
   {
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[27 + 11 * (rows - 1) + 2 * e],
-            &mesh.pointList[28 + 11 * (rows - 1) + 2 * e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e]},
+        std::vector{
+            {&mesh.pointList[16 + 11 * (rows - 1) + e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e],
+             &mesh.pointList[27 + 11 * (rows - 1) + 2 * e]}},
         counter++);
     mesh.elementList.emplace_back(
-        std::vector<Point *>{
-            &mesh.pointList[28 + 11 * (rows - 1) + 2 * e],
-            &mesh.pointList[29 + 11 * (rows - 1) + 2 * e],
-            &mesh.pointList[22 + 11 * (rows - 1) + e]},
+        std::vector{
+            {&mesh.pointList[17 + 11 * (rows - 1) + e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e],
+             &mesh.pointList[29 + 11 * (rows - 1) + 2 * e]}},
+        counter++);
+  }
+  for (uint e = 0; e < 5; ++e)
+  {
+    mesh.elementList.emplace_back(
+        std::vector{
+            {&mesh.pointList[27 + 11 * (rows - 1) + 2 * e],
+             &mesh.pointList[28 + 11 * (rows - 1) + 2 * e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e]}},
+        counter++);
+    mesh.elementList.emplace_back(
+        std::vector{
+            {&mesh.pointList[28 + 11 * (rows - 1) + 2 * e],
+             &mesh.pointList[29 + 11 * (rows - 1) + 2 * e],
+             &mesh.pointList[22 + 11 * (rows - 1) + e]}},
         counter++);
   }
   mesh.buildConnectivity();

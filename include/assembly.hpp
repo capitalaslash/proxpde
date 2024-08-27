@@ -14,7 +14,7 @@ struct ScalarCoef
 
   void reinit(GeoElem const & /*elem*/) {}
 
-  double evaluate(short_T const /*q*/) const { return coef; }
+  Vec1 evaluate(short_T const /*q*/) const { return Vec1{coef}; }
 
   double coef;
 };
@@ -391,7 +391,7 @@ struct AssemblyMassFE: public Diagonal<FESpace>
 
     for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
     {
-      double const coefQPoint = coefFE->evaluate(q);
+      double const coefQPoint = coefFE->evaluate(q)[0];
       for (auto const c: this->comp)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(

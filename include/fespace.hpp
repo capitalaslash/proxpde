@@ -530,4 +530,13 @@ using Scalar_T = FESpace<
     FESpaceVec::type,
     FESpaceVec::ordering>;
 
+template <typename FESpaceScalar, uint Dim>
+using Vector_T = FESpace<
+    typename FESpaceScalar::Mesh_T,
+    typename FESpaceScalar::RefFE_T,
+    typename FESpaceScalar::QR_T,
+    Dim,
+    FESpaceScalar::type,
+    FESpaceScalar::ordering>;
+
 } // namespace proxpde

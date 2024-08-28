@@ -563,28 +563,26 @@ struct fmt::formatter<Eigen::SparseMatrix<T, S>>: ostream_formatter
 // ----------------------------------------------------------------------------
 namespace YAML
 {
-template <>
-struct convert<proxpde::Vec3>
+template <int Size>
+struct convert<proxpde::FVec<Size>>
 {
-  static Node encode(const proxpde::Vec3 & rhs)
+  static Node encode(const proxpde::FVec<Size> & rhs)
   {
     Node node;
-    node.push_back(rhs[0]);
-    node.push_back(rhs[1]);
-    node.push_back(rhs[2]);
+    for (uint k = 0U; k < Size; k++)
+      node.push_back(rhs[k]);
     return node;
   }
 
-  static bool decode(const Node & node, proxpde::Vec3 & rhs)
+  static bool decode(const Node & node, proxpde::FVec<Size> & rhs)
   {
-    if (!node.IsSequence() || node.size() != 3)
+    if (!node.IsSequence() || node.size() != Size)
     {
       return false;
     }
 
-    rhs[0] = node[0].as<double>();
-    rhs[1] = node[1].as<double>();
-    rhs[2] = node[2].as<double>();
+    for (uint k = 0U; k < Size; k++)
+      rhs[k] = node[k].as<double>();
     return true;
   }
 };

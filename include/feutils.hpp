@@ -11,13 +11,31 @@ namespace proxpde
 template <typename FESpaceTo, typename FESpaceFrom, typename Solver = LUSolver>
 struct L2Projector
 {
+  L2Projector() = default;
+  ~L2Projector() = default;
+
   L2Projector(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom):
       dummy{feSpaceTo.dof.size * FESpaceTo::dim},
-      massTo{1.0, feSpaceTo},
-      projFromTo{1.0, dummy, feSpaceFrom, feSpaceTo},
+      massTo{new AssemblyMass{1.0, feSpaceTo}},
+      projFromTo{new AssemblyProjection{1.0, dummy, feSpaceFrom, feSpaceTo}},
       builder{feSpaceTo.dof.size * FESpaceTo::dim}
   {
-    builder.buildLhs(std::tuple{massTo});
+    build();
+  }
+
+  void init(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom)
+  {
+    dummy.resize(feSpaceTo.dof.size * FESpaceTo::dim);
+    massTo.reset(new AssemblyMass{1.0, feSpaceTo});
+    projFromTo.reset(new AssemblyProjection{1.0, dummy, feSpaceFrom, feSpaceTo});
+    builder.init(feSpaceTo.dof.size * FESpaceTo::dim);
+
+    build();
+  }
+
+  void build()
+  {
+    builder.buildLhs(std::tuple{*massTo});
     builder.closeMatrix();
     solver.analyzePattern(builder.A);
     solver.factorize(builder.A);
@@ -31,13 +49,13 @@ struct L2Projector
 
   Vec apply()
   {
-    builder.buildRhs(std::tuple{projFromTo});
+    builder.buildRhs(std::tuple{*projFromTo});
     return solver.solve(builder.b);
   }
 
   Vec dummy;
-  AssemblyMass<FESpaceTo> massTo;
-  AssemblyProjection<FESpaceTo, FESpaceFrom> projFromTo;
+  std::unique_ptr<AssemblyMass<FESpaceTo>> massTo;
+  std::unique_ptr<AssemblyProjection<FESpaceTo, FESpaceFrom>> projFromTo;
   Builder<StorageType::ClmMajor> builder;
   Solver solver;
 };

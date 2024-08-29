@@ -125,6 +125,7 @@ public:
       std::filesystem::path basePath,
       std::vector<std::pair<uint, double>> const & timeSeries)
   {
+    // TODO: validate that the timeSeries contains unique time values
     std::string timesStr = "";
     for (auto const & step: timeSeries)
     {
@@ -738,13 +739,24 @@ struct IOManagerP0
   using FESpaceOrig_T = FESpaceOrig;
   using FESpaceP0_T = ToP0_T<FESpaceOrig>;
 
+  IOManagerP0() = default;
+  ~IOManagerP0() = default;
+
   IOManagerP0(
       FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
-      feSpaceOrig{fe},
+      feSpaceOrig{&fe},
       feSpaceP0{*fe.mesh},
       io{feSpaceP0, fp, it},
-      l2Projector{feSpaceP0, feSpaceOrig}
+      l2Projector{feSpaceP0, *feSpaceOrig}
   {}
+
+  void init(FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0)
+  {
+    feSpaceOrig->init(fe);
+    feSpaceP0.init(*fe.mesh);
+    io.init(feSpaceP0, fp, it);
+    l2Projector.init(feSpaceP0, *feSpaceOrig);
+  }
 
   void print(std::vector<Var> const && data, double const t = 0.0)
   {
@@ -752,7 +764,8 @@ struct IOManagerP0
     for (short_T i = 0; i < data.size(); ++i)
     {
       dataP0[i].name = data[i].name + "P0";
-      l2Projection(dataP0[i].data, feSpaceP0, data[i].data, feSpaceOrig);
+      l2Projector.setRhs(data[i].data);
+      dataP0[i].data = l2Projector.apply();
     }
     io.print(dataP0, t);
   }
@@ -778,10 +791,9 @@ struct IOManagerP0
                           typename FESpaceOrig_T::Mesh_T>);
             static_assert(std::is_same_v<
                           typename Var_T::FESpace_T::RefFE_T,
-                          typename FESpaceOrig::RefFE_T>);
+                          typename FESpaceOrig_T::RefFE_T>);
           }
           vP0.name = v.name + "P0";
-          // l2Projection(vP0.data, this->feSpaceP0, v.data, v.feSpace);
           l2Projector.setRhs(v.data);
           vP0.data = l2Projector.apply();
         });
@@ -789,7 +801,7 @@ struct IOManagerP0
     io.print(std::move(dataP0), t);
   }
 
-  FESpaceOrig_T const & feSpaceOrig;
+  FESpaceOrig_T const * feSpaceOrig;
   FESpaceP0_T feSpaceP0;
   IOManager<FESpaceP0_T> io;
   L2Projector<FESpaceP0_T, FESpaceOrig_T> l2Projector;
@@ -810,11 +822,23 @@ struct IOManagerFacet
       typename LagrangeFE<Facet_T, 0>::RefFE_T,
       typename LagrangeFE<Facet_T, 0>::RecommendedQR>;
 
+  IOManagerFacet() = default;
+  ~IOManagerFacet() = default;
+
   IOManagerFacet(
       FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
-      feSpaceOrig{fe},
+      feSpaceOrig{&fe},
       meshFacet{new MeshFacet_T}
   {
+    buildFacetMesh(*meshFacet, *fe.mesh);
+    feSpaceFacet.init(*meshFacet);
+    io.init(feSpaceFacet, fp, it);
+  }
+
+  void init(FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0)
+  {
+    feSpaceOrig->init(&fe);
+    meshFacet.reset(new MeshFacet_T);
     buildFacetMesh(*meshFacet, *fe.mesh);
     feSpaceFacet.init(*meshFacet);
     io.init(feSpaceFacet, fp, it);
@@ -839,7 +863,7 @@ struct IOManagerFacet
                           typename FESpaceOrig_T::Mesh_T>);
             static_assert(std::is_same_v<
                           typename Var_T::FESpace_T::RefFE_T,
-                          typename FESpaceOrig::RefFE_T>);
+                          typename FESpaceOrig_T::RefFE_T>);
           }
           vFacet.name = v.name + "Facet";
           vFacet.data = Vec::Zero(static_cast<uint>(meshFacet->elementList.size()));
@@ -854,7 +878,7 @@ struct IOManagerFacet
     io.print(std::move(dataFacet), t);
   }
 
-  FESpaceOrig_T const & feSpaceOrig;
+  FESpaceOrig_T const * feSpaceOrig;
   std::unique_ptr<MeshFacet_T> meshFacet;
   FESpaceFacet_T feSpaceFacet;
   IOManager<FESpaceFacet_T> io;

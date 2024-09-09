@@ -527,6 +527,71 @@ void buildCube(
   markFacetsCube(mesh, origin, length);
 }
 
+void extrude(
+    Mesh<Triangle> const & mesh2d,
+    Mesh<Tetrahedron> & mesh3d,
+    uint const numLayers,
+    Vec3 const & direction,
+    double const distance)
+{
+  auto const pt2dSize = mesh2d.pointList.size();
+  mesh3d.pointList.reserve(pt2dSize * (numLayers + 1));
+  auto const h = distance / numLayers;
+  auto ptCounter = 0U;
+  for (auto k = 0U; k < numLayers + 1; k++)
+  {
+    for (auto const & p: mesh2d.pointList)
+    {
+      mesh3d.pointList.emplace_back(p.coord + k * h * direction, ptCounter);
+      ptCounter++;
+    }
+  }
+
+  mesh3d.elementList.reserve(mesh2d.elementList.size() * numLayers * 3);
+  auto elemCounter = 0U;
+  for (auto k = 0U; k < numLayers; k++)
+  {
+    for (auto const & elem2d: mesh2d.elementList)
+    {
+      mesh3d.elementList.emplace_back(
+          GeoElem::Pts_T{
+              &mesh3d.pointList[elem2d.pts[0]->id + k * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[1]->id + k * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize]},
+          elemCounter);
+      mesh3d.elementList.emplace_back(
+          GeoElem::Pts_T{
+              &mesh3d.pointList[elem2d.pts[0]->id + k * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[0]->id + (k + 1) * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize]},
+          elemCounter + 1U);
+      mesh3d.elementList.emplace_back(
+          GeoElem::Pts_T{
+              &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[0]->id + (k + 1) * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize],
+              &mesh3d.pointList[elem2d.pts[2]->id + (k + 1) * pt2dSize]},
+          elemCounter + 2U);
+      elemCounter += 3U;
+    }
+  }
+
+  mesh3d.buildConnectivity();
+  buildFacets(mesh3d, mesh2d.flags);
+  if (mesh2d.flags & MeshFlags::NORMALS)
+  {
+    buildNormals(mesh3d, mesh2d.flags);
+  }
+  if (mesh2d.flags & MeshFlags::FACET_PTRS)
+  {
+    addElemFacetList(mesh3d);
+  }
+
+  mesh3d.flags = mesh2d.flags;
+}
+
 void refTriangleMesh(Mesh<Triangle> & mesh)
 {
   mesh.pointList = {

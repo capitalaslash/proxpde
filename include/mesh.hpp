@@ -464,6 +464,13 @@ void markFacetsCube(Mesh & mesh, Vec3 const & origin, Vec3 const & length)
   }
 }
 
+void extrude(
+    Mesh<Triangle> const & mesh2d,
+    Mesh<Tetrahedron> & mesh3d,
+    uint const numLayers,
+    Vec3 const & direction,
+    double const distance);
+
 void refTriangleMesh(Mesh<Triangle> & mesh);
 void refQuadMesh(Mesh<Quad> & mesh);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);

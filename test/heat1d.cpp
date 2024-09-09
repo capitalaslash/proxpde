@@ -146,7 +146,7 @@ int main(int argc, char * argv[])
     std::cout << "diffNorm: " << diffNorm << std::endl;
     if (diffNorm > toll)
     {
-      fmt::print(stderr, "the norm of the difference is too big, aborting.");
+      fmt::print(stderr, "the norm of the difference is too big, aborting.\n");
       return 2;
     }
     io.print({temp, tempInc, dTemp}, time);

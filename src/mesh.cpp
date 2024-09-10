@@ -548,6 +548,7 @@ void extrude(
   }
 
   mesh3d.elementList.reserve(mesh2d.elementList.size() * numLayers * 3);
+  std::vector<std::array<id_T, 3U>> childIds(mesh2d.elementList.size());
   auto elemCounter = 0U;
   for (auto k = 0U; k < numLayers; k++)
   {
@@ -559,23 +560,121 @@ void extrude(
               &mesh3d.pointList[elem2d.pts[1]->id + k * pt2dSize],
               &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize],
               &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize]},
-          elemCounter);
+          elemCounter,
+          elem2d.marker);
+
       mesh3d.elementList.emplace_back(
           GeoElem::Pts_T{
               &mesh3d.pointList[elem2d.pts[0]->id + k * pt2dSize],
               &mesh3d.pointList[elem2d.pts[0]->id + (k + 1) * pt2dSize],
               &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize],
               &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize]},
-          elemCounter + 1U);
+          elemCounter + 1U,
+          elem2d.marker);
+
       mesh3d.elementList.emplace_back(
           GeoElem::Pts_T{
               &mesh3d.pointList[elem2d.pts[2]->id + k * pt2dSize],
               &mesh3d.pointList[elem2d.pts[0]->id + (k + 1) * pt2dSize],
               &mesh3d.pointList[elem2d.pts[1]->id + (k + 1) * pt2dSize],
               &mesh3d.pointList[elem2d.pts[2]->id + (k + 1) * pt2dSize]},
-          elemCounter + 2U);
+          elemCounter + 2U,
+          elem2d.marker);
+
+      childIds[elem2d.id] = {elemCounter, elemCounter + 1, elemCounter + 2};
       elemCounter += 3U;
     }
+  }
+
+  mesh3d.facetList.reserve(mesh2d.facetList.size() * 2U);
+  mesh3d.elemToFacet.resize(
+      mesh3d.elementList.size(),
+      std::array<id_T, 4U>{idNotSet, idNotSet, idNotSet, idNotSet});
+  auto facetCounter = 0U;
+  // bottom
+  for (auto const & elem2d: mesh2d.elementList)
+  {
+    mesh3d.facetList.emplace_back(
+        GeoElem::Pts_T{
+            &mesh3d.pointList[elem2d.pts[0]->id],
+            &mesh3d.pointList[elem2d.pts[1]->id],
+            &mesh3d.pointList[elem2d.pts[2]->id]},
+        facetCounter,
+        side::BOTTOM /*elem2d.marker*/);
+    mesh3d.facetList.back().facingElem[0] = {
+        &mesh3d.elementList[childIds[elem2d.id][0]], 0U};
+    mesh3d.elemToFacet[mesh3d.elementList[childIds[elem2d.id][0]].id][0] = facetCounter;
+    facetCounter++;
+  }
+  // lateral
+  for (auto k = 0U; k < numLayers; k++)
+  {
+    for (auto const & facet2d: mesh2d.facetList)
+    {
+      auto childs2d = childIds[facet2d.facingElem[0].ptr->id];
+
+      if (facet2d.facingElem[0].side % 2)
+      {
+        mesh3d.facetList.emplace_back(
+            GeoElem::Pts_T{
+                &mesh3d.pointList[facet2d.pts[0]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[1]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[0]->id + (k + 1) * pt2dSize]},
+            facetCounter,
+            facet2d.marker);
+        mesh3d.facetList.back().facingElem[0] = {&mesh3d.elementList[childs2d[0]], 1U};
+        mesh3d.elemToFacet[mesh3d.elementList[childs2d[0]].id][1] = facetCounter;
+
+        mesh3d.facetList.emplace_back(
+            GeoElem::Pts_T{
+                &mesh3d.pointList[facet2d.pts[1]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[1]->id + (k + 1) * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[0]->id + (k + 1) * pt2dSize]},
+            facetCounter + 1U,
+            facet2d.marker);
+        mesh3d.facetList.back().facingElem[0] = {&mesh3d.elementList[childs2d[1]], 0U};
+        mesh3d.elemToFacet[mesh3d.elementList[childs2d[1]].id][0] = facetCounter + 1U;
+      }
+      else
+      {
+        mesh3d.facetList.emplace_back(
+            GeoElem::Pts_T{
+                &mesh3d.pointList[facet2d.pts[0]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[1]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[1]->id + (k + 1) * pt2dSize]},
+            facetCounter,
+            facet2d.marker);
+        mesh3d.facetList.back().facingElem[0] = {&mesh3d.elementList[childs2d[0]], 1U};
+        mesh3d.elemToFacet[mesh3d.elementList[childs2d[0]].id][1] = facetCounter;
+
+        mesh3d.facetList.emplace_back(
+            GeoElem::Pts_T{
+                &mesh3d.pointList[facet2d.pts[0]->id + k * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[1]->id + (k + 1) * pt2dSize],
+                &mesh3d.pointList[facet2d.pts[0]->id + (k + 1) * pt2dSize]},
+            facetCounter + 1U,
+            facet2d.marker);
+        mesh3d.facetList.back().facingElem[0] = {&mesh3d.elementList[childs2d[1]], 0U};
+        mesh3d.elemToFacet[mesh3d.elementList[childs2d[1]].id][0] = facetCounter + 1U;
+      }
+
+      facetCounter += 2U;
+    }
+  }
+  // top
+  for (auto const & elem2d: mesh2d.elementList)
+  {
+    mesh3d.facetList.emplace_back(
+        GeoElem::Pts_T{
+            &mesh3d.pointList[elem2d.pts[0]->id + numLayers * pt2dSize],
+            &mesh3d.pointList[elem2d.pts[1]->id + numLayers * pt2dSize],
+            &mesh3d.pointList[elem2d.pts[2]->id + numLayers * pt2dSize]},
+        facetCounter,
+        side::TOP /*elem2d.marker + 100*/);
+    mesh3d.facetList.back().facingElem[0] = {
+        &mesh3d.elementList[childIds[elem2d.id][2]], 3U};
+    mesh3d.elemToFacet[mesh3d.elementList[childIds[elem2d.id][2]].id][3] = facetCounter;
+    facetCounter++;
   }
 
   mesh3d.buildConnectivity();

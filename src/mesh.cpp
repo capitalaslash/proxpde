@@ -522,9 +522,123 @@ void buildCube(
                  &mesh.pointList[base + dy + dz]}},    // 7
             counter++);
       }
+
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
+}
+
+void buildWedge(
+    Mesh<Triangle> & mesh,
+    Vec3 const & origin,
+    Vec3 const & radius,
+    Vec3 const & normal,
+    uint const numLayers,
+    double const angle)
+{
+  mesh.pointList.reserve(numLayers * 3U + 1U);
+  auto ptCounter = 0U;
+  mesh.pointList.emplace_back(origin, ptCounter++);
+  double const h = 1.0 / numLayers;
+  RotationMatrix rotMinus{normal, -0.5 * angle};
+  RotationMatrix rotPlus{normal, +0.5 * angle};
+  for (uint k = 0U; k < numLayers; k++)
+  {
+    Vec3 midPoint = origin + (k + 1) * h * radius;
+    mesh.pointList.emplace_back(rotMinus.apply(midPoint), ptCounter, side::RIGHT);
+    mesh.pointList.emplace_back(midPoint, ptCounter + 1U, markerNotSet);
+    mesh.pointList.emplace_back(rotPlus.apply(midPoint), ptCounter + 2U, side::LEFT);
+    ptCounter += 3U;
+  }
+
+  mesh.elementList.reserve(4U * numLayers - 2U);
+  auto elemCounter = 0U;
+  mesh.elementList.emplace_back(
+      Triangle::Pts_T{&mesh.pointList[0], &mesh.pointList[1], &mesh.pointList[2]},
+      elemCounter++);
+  mesh.elementList.emplace_back(
+      Triangle::Pts_T{&mesh.pointList[0], &mesh.pointList[2], &mesh.pointList[3]},
+      elemCounter++);
+  for (uint k = 0U; k < numLayers - 1; k++)
+  {
+    if (k % 2)
+    {
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 1],
+              &mesh.pointList[3 * k + 4],
+              &mesh.pointList[3 * k + 2],
+          },
+          elemCounter);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 2],
+              &mesh.pointList[3 * k + 4],
+              &mesh.pointList[3 * k + 5],
+          },
+          elemCounter + 1U);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 2],
+              &mesh.pointList[3 * k + 5],
+              &mesh.pointList[3 * k + 6],
+          },
+          elemCounter + 2U);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 2],
+              &mesh.pointList[3 * k + 6],
+              &mesh.pointList[3 * k + 3],
+          },
+          elemCounter + 3U);
+    }
+    else
+    {
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 1],
+              &mesh.pointList[3 * k + 4],
+              &mesh.pointList[3 * k + 5],
+          },
+          elemCounter);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 1],
+              &mesh.pointList[3 * k + 5],
+              &mesh.pointList[3 * k + 2],
+          },
+          elemCounter + 1U);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 2],
+              &mesh.pointList[3 * k + 5],
+              &mesh.pointList[3 * k + 3],
+          },
+          elemCounter + 2U);
+      mesh.elementList.emplace_back(
+          Triangle::Pts_T{
+              &mesh.pointList[3 * k + 3],
+              &mesh.pointList[3 * k + 5],
+              &mesh.pointList[3 * k + 6],
+          },
+          elemCounter + 3U);
+    }
+    elemCounter += 4U;
+  }
+
+  mesh.buildConnectivity();
+  buildFacets(mesh, MeshFlags::NONE);
+  for (auto & facet: mesh.facetList)
+  {
+    if (facet.pts[0]->marker == facet.pts[1]->marker)
+      facet.marker = facet.pts[0]->marker;
+    else if (facet.pts[0]->id == 0U)
+      facet.marker = facet.pts[1]->marker;
+    else if (facet.pts[1]->id == 0U)
+      facet.marker = facet.pts[0U]->marker;
+    else
+      facet.marker = side::BACK;
+  }
 }
 
 void extrude(

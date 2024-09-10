@@ -7,6 +7,7 @@
 namespace proxpde
 {
 
+// =====================================================================
 enum class MeshFlags : uint8_t
 {
   NONE = 0U,
@@ -69,10 +70,10 @@ static constexpr MeshFlags to_MeshFlags(std::string_view str)
   return MeshFlags::NONE;
 }
 
+// =====================================================================
 template <typename Elem>
-class Mesh
+struct Mesh
 {
-public:
   using Elem_T = Elem;
   using Facet_T = typename Elem::Facet_T;
   using PointList_T = std::vector<Point>;
@@ -172,6 +173,7 @@ std::ostream & operator<<(std::ostream & out, Mesh<Elem> const & mesh)
   return out;
 }
 
+// =====================================================================
 enum side : marker_T
 {
   BOTTOM = 1,
@@ -206,6 +208,7 @@ struct AllSides<3U>
       BOTTOM, RIGHT, TOP, LEFT, BACK, FRONT};
 };
 
+// =====================================================================
 template <typename Mesh>
 void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
 {
@@ -233,7 +236,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   FacetMap_T facetMap;
   for (auto & e: mesh.elementList)
   {
-    uint side = 0;
+    auto side = 0U;
     for (auto const & f: Elem_T::elemToFacet)
     {
       std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
@@ -324,6 +327,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   mesh.flags |= (flags & MeshFlags::INTERNAL_FACETS);
 }
 
+// =====================================================================
 void buildLine(
     Mesh<Line> & mesh,
     Vec3 const & origin,
@@ -464,6 +468,15 @@ void markFacetsCube(Mesh & mesh, Vec3 const & origin, Vec3 const & length)
   }
 }
 
+void buildWedge(
+    Mesh<Triangle> & mesh,
+    Vec3 const & origin,
+    Vec3 const & radius,
+    Vec3 const & normal,
+    uint const numLayers,
+    double const angle = M_PI / 180.);
+
+// =====================================================================
 void extrude(
     Mesh<Triangle> const & mesh2d,
     Mesh<Tetrahedron> & mesh3d,
@@ -471,6 +484,7 @@ void extrude(
     Vec3 const & direction,
     double const distance);
 
+// =====================================================================
 void refTriangleMesh(Mesh<Triangle> & mesh);
 void refQuadMesh(Mesh<Quad> & mesh);
 void refTetrahedronMesh(Mesh<Tetrahedron> & mesh);
@@ -512,6 +526,7 @@ void referenceMesh(Mesh<Elem> & mesh)
   }
 }
 
+// =====================================================================
 template <typename Mesh>
 void buildNormals(Mesh & mesh, Bitmask<MeshFlags> flags)
 {
@@ -553,6 +568,7 @@ void buildNormals(Mesh & mesh, Bitmask<MeshFlags> flags)
   }
 }
 
+// =====================================================================
 template <typename Mesh>
 void addElemFacetList(Mesh & mesh)
 {
@@ -582,6 +598,7 @@ void addElemFacetList(Mesh & mesh)
   }
 }
 
+// =====================================================================
 enum class GMSHElemType : uint8_t
 {
   NONE = 0,
@@ -694,6 +711,7 @@ inline bool operator<(ElemStub<Elem> const & e1, ElemStub<Elem> const & e2)
   return e1.id < e2.id;
 }
 
+// =====================================================================
 template <typename Elem>
 void setFacetMarkers(
     Mesh<Elem> & mesh,
@@ -733,6 +751,7 @@ void setFacetMarkers(
   assert(facets.size() == 0);
 }
 
+// =====================================================================
 template <typename Elem>
 void readGMSH(
     Mesh<Elem> & mesh,
@@ -1013,6 +1032,7 @@ void readGMSH(
   fmt::print("mesh file {} successfully read\n", filename);
 }
 
+// =====================================================================
 template <typename Elem>
 void writeGMSH(Mesh<Elem> const & mesh, std::string const filename)
 {
@@ -1058,6 +1078,7 @@ void writeGMSH(Mesh<Elem> const & mesh, std::string const filename)
   out << "$EndElements" << std::endl;
 }
 
+// =====================================================================
 enum class MeshType : uint8_t
 {
   STRUCTURED,
@@ -1106,6 +1127,7 @@ struct formatter<proxpde::MeshType>: formatter<std::string_view>
 namespace proxpde
 {
 
+// =====================================================================
 template <typename Mesh>
 void readMesh(Mesh & mesh, ParameterDict const & config)
 {
@@ -1137,6 +1159,7 @@ void readMesh(Mesh & mesh, ParameterDict const & config)
   }
 }
 
+// =====================================================================
 template <typename Elem>
 void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const & mesh)
 {
@@ -1145,8 +1168,10 @@ void buildFacetMesh(Mesh<typename Elem::Facet_T> & facetMesh, Mesh<Elem> const &
   facetMesh.buildConnectivity();
 }
 
+// =====================================================================
 uint checkPlanarFacets(Mesh<Hexahedron> const & mesh);
 
+// =====================================================================
 template <typename Elem, typename Selector>
 void extractBlock(
     proxpde::Mesh<Elem> const & mesh,

@@ -403,10 +403,10 @@ struct IOManager
 
   ~IOManager() { printTimeSeries(); }
 
-  void print(std::vector<Var> const && data, double const t = 0.0);
+  void print(std::vector<Var> const & data, double const t = 0.0);
 
   template <typename VarTup>
-  void print(VarTup const && data, double const t = 0.0);
+  void print(VarTup const & data, double const t = 0.0);
 
 protected:
   void printTimeSeries();
@@ -425,7 +425,7 @@ public:
 // implementation ----------------------------------------------------------------------
 
 template <typename FESpace>
-void IOManager<FESpace>::print(std::vector<Var> const && vars, double const t)
+void IOManager<FESpace>::print(std::vector<Var> const & vars, double const t)
 {
   timeSeries.push_back({iter, t});
   printTimeSeries();
@@ -505,7 +505,7 @@ inline constexpr uint getDim()
 
 template <typename FESpace>
 template <typename VarTup>
-void IOManager<FESpace>::print(VarTup const && vars, double const t)
+void IOManager<FESpace>::print(VarTup const & vars, double const t)
 {
   timeSeries.push_back({iter, t});
   printTimeSeries();
@@ -758,7 +758,7 @@ struct IOManagerP0
     l2Projector.init(feSpaceP0, *feSpaceOrig);
   }
 
-  void print(std::vector<Var> const && data, double const t = 0.0)
+  void print(std::vector<Var> const & data, double const t = 0.0)
   {
     std::vector<Var> dataP0(data.size());
     for (short_T i = 0; i < data.size(); ++i)
@@ -771,7 +771,7 @@ struct IOManagerP0
   }
 
   template <typename... Vars>
-  void print(std::tuple<Vars...> const && data, double const t = 0.0)
+  void print(std::tuple<Vars...> const & data, double const t = 0.0)
   {
     // std::tuple<FEVar<ToP0_T<typename Vars::FESpace_T>...>> dataP0{
     //     FEVar<ToP0_T<typename Vars::FESpace_T>>{"none"}...};
@@ -845,7 +845,7 @@ struct IOManagerFacet
   }
 
   template <typename... Vars>
-  void print(std::tuple<Vars...> const && data, double const t = 0.0)
+  void print(std::tuple<Vars...> const & data, double const t = 0.0)
   {
     std::tuple<ToVar_T<Vars>...> dataFacet{};
     static_for(

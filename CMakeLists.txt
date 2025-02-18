@@ -55,7 +55,6 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/proxpde.h.in"
   "${PROJECT_BINARY_DIR}/proxpde.h"
 )
-# include_directories("${PROJECT_BINARY_DIR}")
 
 set(SOURCES
     src/def.cpp
@@ -67,6 +66,7 @@ set(SOURCES
     src/qr.cpp
     src/reffe.cpp
     src/var.cpp
+    src/xdmf_doc.cpp
 )
 
 set(HEADERS
@@ -84,6 +84,7 @@ set(HEADERS
     include/feutils.hpp
     include/fv.hpp
     include/geo.hpp
+    include/hdf5.hpp
     include/iomanager.hpp
     include/mesh.hpp
     include/mesh_refine.hpp
@@ -94,6 +95,7 @@ set(HEADERS
     include/solver.hpp
     include/timer.hpp
     include/var.hpp
+    include/xdmf_doc.hpp
     include/xdmf_traits.hpp
 )
 
@@ -101,7 +103,7 @@ add_library(proxpde SHARED)
 target_sources(proxpde
   PRIVATE
     ${SOURCES}
-    $<BUILD_INTERFACE:${HEADERS}>
+    ${HEADERS}
 )
 add_library(ProXPDE::proxpde ALIAS proxpde)
 
@@ -136,8 +138,8 @@ target_link_options(proxpde
   PRIVATE ${PROXPDE_LINK_FLAGS}
 )
 
-add_executable(main main.cpp)
-target_link_libraries(main PUBLIC ProXPDE::proxpde)
+add_executable(test_base main.cpp)
+target_link_libraries(test_base PUBLIC ProXPDE::proxpde)
 # set_target_properties(main
 #   PROPERTIES
 #     CXX_CLANG_TIDY "clang-tidy;-checks=*,readability-*"
@@ -156,7 +158,7 @@ install(TARGETS proxpde
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
-  )
+)
 
 install(FILES ${HEADERS} DESTINATION include/proxpde)
 install(FILES ${PROJECT_BINARY_DIR}/proxpde.h DESTINATION include/proxpde)

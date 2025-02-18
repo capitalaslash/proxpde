@@ -8,6 +8,7 @@
 namespace proxpde
 {
 
+// ---------------------------------------------------------------------
 struct Var
 {
   explicit Var(std::string_view const n = "none", unsigned long const size = 0):
@@ -28,6 +29,7 @@ struct Var
 
 std::vector<uint> offsetInit(std::vector<uint> blocks);
 
+// ---------------------------------------------------------------------
 struct BlockVar: public Var
 {
   BlockVar(std::string_view const n, std::vector<uint> const & bs):
@@ -42,6 +44,7 @@ struct BlockVar: public Var
   std::vector<uint> const blocks;
 };
 
+// ---------------------------------------------------------------------
 template <typename FESpace>
 struct FEVar
 {
@@ -171,6 +174,38 @@ struct FEVar
     return l2ErrorSquared([exact](Vec3 const & p) { return Vec1{exact(p)}; });
   }
 
+  auto l2ErrorSquared0(Fun<FESpace_T::physicalDim(), 3> const & exact)
+  {
+    double error = 0.0;
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localValue = this->evaluate0(q);
+        auto const exactQ = exact(feSpace->curFE.qpoint[q]);
+        error +=
+            feSpace->curFE.JxW[q] * ((localValue - exactQ).dot(localValue - exactQ));
+      }
+    }
+    return error;
+  }
+
+  auto h1SemiNormSquared()
+  {
+    double integral = 0.0;
+    for (auto const & elem: feSpace->mesh->elementList)
+    {
+      this->reinit(elem);
+      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      {
+        auto const localGrad = this->evaluateGrad(q);
+        integral += feSpace->curFE.JxW[q] * (localGrad.transpose() * localGrad).trace();
+      }
+    }
+    return integral;
+  }
+
   auto divL2ErrorSquared(scalarFun_T const & exact)
   {
     double error = 0.0;
@@ -212,6 +247,8 @@ struct FEVar
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
+      // if constexpr (FESpace_T::dim == 1U)
+      //   return dataQ[0]; // return a double directly
       return dataQ;
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
@@ -222,6 +259,22 @@ struct FEVar
     else
     {
       std::cerr << "only Lagrange and Raviart-Thomas implemented." << std::endl;
+      std::exit(PROXPDE_NOT_IMPLEMENTED);
+    }
+  }
+
+  auto evaluate0(uint const q) const
+  {
+    // check that the qr is compatible
+    assert(q < FESpace_T::QR_T::numPts);
+    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    {
+      Vec3 const dataQ = feSpace->curFE.phiVect0[q].transpose() * dataLocal;
+      return dataQ;
+    }
+    else
+    {
+      std::cerr << "only Raviart-Thomas should require evaluate0()." << std::endl;
       std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }
@@ -243,8 +296,7 @@ struct FEVar
     if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
     {
       auto const gradQ = evaluateGrad(q);
-      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
-      return gradQ[0] + gradQ[1] + gradQ[2];
+      return gradQ[0] + gradQ[4] + gradQ[8];
     }
     else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
@@ -257,16 +309,15 @@ struct FEVar
   {
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
-    if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
-    {
-      auto const gradQ = evaluateGrad(q);
-      FVec<FESpace_T::dim> dataQ = feSpace->curFE.phi[q].transpose() * dataLocal;
-      return gradQ[0] + gradQ[1] + gradQ[2];
-    }
-    else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
+    if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
     {
       double const dataQ = feSpace->curFE.divphi0[q].transpose() * dataLocal;
       return dataQ;
+    }
+    else
+    {
+      std::cerr << "only Raviart-Thomas should require evaluateDIV()." << std::endl;
+      std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }
 

@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
   double const alpha = kappa / rhoCp;
   // advection velocity
   double const vMean = 1.0;
-  Fun<2, 3> const velocity = [vMean](Vec3 const & p)
+  Fun<2, 3> const velocity = [vMean](Vec3 const & /*p*/)
   {
     return Vec2{0.0, vMean};
     // the parabolic profile in T holds for T_bulk when the velocity is not constant
@@ -97,9 +97,9 @@ int main(int argc, char * argv[])
   // the lhs terms are the same for full and incremental versions
   auto const lhs = std::tuple{mass, diffusion, advection};
   AssemblyProjection massOld{1.0 / dt, tempOld, feSpace};
-  AssemblyAnalyticRhs heatGeneration{qiii, feSpace};
-  AssemblyBCNatural heatSurface{qiiRight, side::RIGHT, feSpace};
-  AssemblyBCNatural bcOutlet{outlet, side::TOP, feSpace};
+  AssemblyRhsAnalytic heatGeneration{qiii, feSpace};
+  AssemblyBCNaturalAnalytic heatSurface{qiiRight, side::RIGHT, feSpace};
+  AssemblyBCNaturalAnalytic bcOutlet{outlet, side::TOP, feSpace};
   auto const rhs = std::tuple{massOld, heatGeneration, heatSurface, bcOutlet};
 
   Var tempInc{"tempInc"};

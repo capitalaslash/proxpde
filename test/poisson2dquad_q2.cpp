@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
-  builder.buildRhs(std::tuple{AssemblyAnalyticRhs(rhs, feSpace)}, bcs);
+  builder.buildRhs(std::tuple{AssemblyRhsAnalytic(rhs, feSpace)}, bcs);
   builder.closeMatrix();
 
   Var sol{"u"};

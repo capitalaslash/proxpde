@@ -221,7 +221,7 @@ int main(int argc, char * argv[])
   AssemblyGrad grad(-1.0, feSpaceVel, feSpaceP);
   AssemblyDiv div(-1.0, feSpaceP, feSpaceVel);
   AssemblyProjection timederRhs(1. / dt, velOldMonolithic, feSpaceVel);
-  AssemblyAnalyticRhs gravity(g, feSpaceVel);
+  AssemblyRhsAnalytic gravity(g, feSpaceVel);
 
   Builder<StorageType::RowMajor> builderM{dofU * FESpaceVel_T::dim + dofP};
   // builderM.buildLhs(dummy, bcsP);
@@ -256,7 +256,7 @@ int main(int argc, char * argv[])
   auto const uStarRhs = std::tuple{
       AssemblyProjection{1. / dt, u.data, feSpaceU},
       AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {0}},
-      AssemblyAnalyticRhs{g0, feSpaceU},
+      AssemblyRhsAnalytic{g0, feSpaceU},
   };
 
   // vStar / dt + (vel \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
@@ -269,7 +269,7 @@ int main(int argc, char * argv[])
   auto const vStarRhs = std::tuple{
       AssemblyProjection{1. / dt, v.data, feSpaceU},
       AssemblyGradRhs2{1.0, pOld, feSpacePSplit, feSpaceU, {1}},
-      AssemblyAnalyticRhs{g1, feSpaceU},
+      AssemblyRhsAnalytic{g1, feSpaceU},
   };
   // AssemblyGradRhs{-1.0, pOld, feSpaceVel, feSpaceP});
 
@@ -341,7 +341,7 @@ int main(int argc, char * argv[])
       AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {0}},
       // AssemblyProjection{-1. / dt, uStarRT.data, feSpaceUStarRT},
       AssemblyGradRhs2{-1.0, lambdaOld, feSpaceLambda, feSpaceUStarRT, {0}},
-      AssemblyAnalyticRhs{g0, feSpaceUStarRT},
+      AssemblyRhsAnalytic{g0, feSpaceUStarRT},
   };
 
   // 2 * vStar / dt + (velRT \cdot \nabla) vStar - \nabla \cdot (nu \nabla vStar) =
@@ -355,7 +355,7 @@ int main(int argc, char * argv[])
       AssemblyProjection{2. / dt, velRT.data, feSpaceVelRT, feSpaceUStarRT, {1}},
       // AssemblyProjection{-1. / dt, vStarRT.data, feSpaceUStarRT},
       AssemblyGradRhs2{-1.0, lambdaOld, feSpaceLambda, feSpaceUStarRT, {1}},
-      AssemblyAnalyticRhs{g1, feSpaceUStarRT},
+      AssemblyRhsAnalytic{g1, feSpaceUStarRT},
   };
   t.stop();
 

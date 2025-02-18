@@ -91,8 +91,8 @@ int main(int argc, char * argv[])
   // auto rotatedRhs = [&Rt] (Vec3 const& p) { return rhs(Rt * p); };
   auto modifiedRhs = [&rhs, &mesh_mod_inv](Vec3 const & p)
   { return rhs(mesh_mod_inv(p)); };
-  AssemblyAnalyticRhs f{modifiedRhs, feSpace};
-  // AssemblyAnalyticRhs f{rhs, feSpace};
+  AssemblyRhsAnalytic f{modifiedRhs, feSpace};
+  // AssemblyRhsAnalytic f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{stiffness, mass}, bcs);

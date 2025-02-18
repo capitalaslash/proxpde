@@ -115,9 +115,9 @@ int main(int argc, char * argv[])
   // the lhs terms are the same for full and incremental versions
   auto const lhs = std::tuple{mass, diffusion, advection};
   AssemblyProjection massOld{1.0 / dt, tempOld, feSpace};
-  AssemblyAnalyticRhs heatGeneration{qiii, feSpace};
-  AssemblyBCNatural heatSurface{qii, side::BACK, feSpace};
-  AssemblyBCNatural bcOutlet{outlet, side::TOP, feSpace};
+  AssemblyRhsAnalytic heatGeneration{qiii, feSpace};
+  AssemblyBCNaturalAnalytic heatSurface{qii, side::BACK, feSpace};
+  AssemblyBCNaturalAnalytic bcOutlet{outlet, side::TOP, feSpace};
   auto const rhs = std::tuple{massOld, heatGeneration, heatSurface, bcOutlet};
 
   Var tempInc{"tempInc"};

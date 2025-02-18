@@ -491,14 +491,14 @@ struct AssemblyMass: public Diagonal<FESpace>
 };
 
 template <typename FESpace>
-struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
+struct AssemblyRhsAnalytic: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
   using Super_T = AssemblyVector<FESpace_T>;
   using LMat_T = typename Super_T::LMat_T;
   using LVec_T = typename Super_T::LVec_T;
 
-  AssemblyAnalyticRhs(
+  AssemblyRhsAnalytic(
       Fun<FESpace::physicalDim(), 3> const r,
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
@@ -506,11 +506,11 @@ struct AssemblyAnalyticRhs: public AssemblyVector<FESpace>
       rhs(std::move(r))
   {}
 
-  AssemblyAnalyticRhs(
+  AssemblyRhsAnalytic(
       scalarFun_T const r,
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyAnalyticRhs<FESpace_T>(
+      AssemblyRhsAnalytic<FESpace_T>(
           [r](Vec3 const & p) { return Vec1(r(p)); }, fe, cmp)
   {
     static_assert(
@@ -1628,7 +1628,7 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
 };
 
 template <typename FESpace>
-struct AssemblyBCNatural: public AssemblyVector<FESpace>
+struct AssemblyBCNaturalAnalytic: public AssemblyVector<FESpace>
 {
   using FESpace_T = FESpace;
   using Super_T = AssemblyVector<FESpace_T>;
@@ -1639,7 +1639,7 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
   using FacetCurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
 
-  AssemblyBCNatural(
+  AssemblyBCNaturalAnalytic(
       Fun<FESpace_T::dim, 3> const r,
       marker_T const m,
       FESpace_T const & fe,
@@ -1649,12 +1649,12 @@ struct AssemblyBCNatural: public AssemblyVector<FESpace>
       marker(m)
   {}
 
-  AssemblyBCNatural(
+  AssemblyBCNaturalAnalytic(
       scalarFun_T const r,
       marker_T const m,
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyBCNatural<FESpace_T>(
+      AssemblyBCNaturalAnalytic<FESpace_T>(
           [r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
   {
     static_assert(FESpace_T::dim == 1);

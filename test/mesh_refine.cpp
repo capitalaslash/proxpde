@@ -41,7 +41,7 @@ void test()
 
   std::cout << Utils::separator << "mesh fine:\n" << *meshFine << std::endl;
 
-  uint checked = 0;
+  auto checked = 0U;
   for (auto const & f: meshFine->facetList)
   {
     // check that our facing elem is the child of the facing elem of our parent

@@ -62,7 +62,7 @@ int main(int argc, char * argv[])
   AssemblyStiffness diffusion{k, feSpace};
   // the lhs terms are the same for full and incremental versions
   auto const lhs = std::tuple{mass, diffusion};
-  AssemblyAnalyticRhs heatGeneration{qiii, feSpace};
+  AssemblyRhsAnalytic heatGeneration{qiii, feSpace};
   AssemblyProjection massOld{1. / dt, tempOld, feSpace};
   auto const rhs = std::tuple{massOld, heatGeneration};
 

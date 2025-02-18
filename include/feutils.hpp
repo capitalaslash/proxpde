@@ -4,6 +4,7 @@
 
 #include "builder.hpp"
 #include "fe.hpp"
+#include "fespace.hpp"
 
 namespace proxpde
 {
@@ -92,7 +93,7 @@ void projectAnalyticFunction(
     v = Vec::Zero(feSpace.dof.size * FESpace::dim);
   }
   AssemblyMass massTo{1.0, feSpace};
-  AssemblyAnalyticRhs projFromTo{fun, feSpace};
+  AssemblyRhsAnalytic projFromTo{fun, feSpace};
   uint const size = feSpace.dof.size * FESpace::dim;
   Builder builder{size};
   builder.buildLhs(std::tuple{massTo});
@@ -105,7 +106,7 @@ void projectAnalyticFunction(
 }
 
 template <typename FESpace>
-void projectAnalyticFunction(
+inline void projectAnalyticFunction(
     scalarFun_T const & f, FESpace & feSpace, Vec & v, uint const offset = 0)
 {
   projectAnalyticFunction(
@@ -317,5 +318,11 @@ double l2Error(Var const & u, FESpace const & feSpace, scalarFun_T const & exact
 {
   return l2Error(u, feSpace, [exact](Vec3 const & p) { return Vec1{exact(p)}; });
 }
+
+template <typename Mesh_T, uint Order>
+using LagrangeFESpace = FESpace<
+    Mesh_T,
+    typename LagrangeFE<typename Mesh_T::Elem_T, Order>::RefFE_T,
+    typename LagrangeFE<typename Mesh_T::Elem_T, Order>::RecommendedQR>;
 
 } // namespace proxpde

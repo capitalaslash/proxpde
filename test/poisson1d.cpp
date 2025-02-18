@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
   t.start("fe build");
   AssemblyStiffness stiffness(1.0, feSpace);
   auto rotatedRhs = [&Rt, &rhs](Vec3 const & p) { return rhs(Rt * p); };
-  AssemblyAnalyticRhs f(rotatedRhs, feSpace);
+  AssemblyRhsAnalytic f(rotatedRhs, feSpace);
   // // using an interpolated rhs makes its quality independent of the chosen qr
   // Vec rhsProj;
   // interpolateAnalyticFunction(rotatedRhs, feSpace, rhsProj);

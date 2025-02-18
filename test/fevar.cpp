@@ -61,7 +61,7 @@ int main(int argc, char * argv[])
   ScalarCoef one{1.};
   AssemblyMassFE mass{1., one, feSpace};
   AssemblyStiffnessFE stiffness{nu, feSpace};
-  AssemblyAnalyticRhs f(rhs, feSpace);
+  AssemblyRhsAnalytic f(rhs, feSpace);
   // // using an interpolated rhs makes its quality independent of the chosen qr
   // Vec rhsProj;
   // interpolateAnalyticFunction(rhs, feSpace, rhsProj);

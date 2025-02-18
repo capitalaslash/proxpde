@@ -60,7 +60,7 @@ int test(YAML::Node const & config)
 
   t.start();
   AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyAnalyticRhs f{rhsFun, feSpace};
+  AssemblyRhsAnalytic rhsAssembly{rhsFun, feSpace};
   Builder builder{feSpace.dof.size};
 
   // mixed bc: a u + \nabla u = b
@@ -79,8 +79,8 @@ int test(YAML::Node const & config)
       AssemblyBCMixed{[hConv](Vec3 const &) { return hConv; }, side::RIGHT, feSpace}};
   builder.buildLhs(lhs, bcs);
   auto const rhs = std::tuple{
-      f,
-      AssemblyBCNatural{
+      rhsAssembly,
+      AssemblyBCNaturalAnalytic{
           [hConv, tempA](Vec3 const &) { return hConv * tempA; },
           side::RIGHT,
           feSpace}};

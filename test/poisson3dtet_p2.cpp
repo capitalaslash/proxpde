@@ -66,7 +66,7 @@ int test(YAML::Node const & config)
   t.start("fe build");
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
-  // builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
+  // builder.buildRhs(AssemblyRhsAnalytic(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   Vec rhsProj;
   interpolateAnalyticFunction(rhs, feSpace, rhsProj);

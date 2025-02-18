@@ -209,7 +209,7 @@ std::tuple<bool, double> test(YAML::Node const & config)
 
     timeDer.update(u.data);
     auto const fTime =
-        AssemblyAnalyticRhs{[&rhs, time](Vec3 const &) { return rhs(time); }, feSpace};
+        AssemblyRhsAnalytic{[&rhs, time](Vec3 const &) { return rhs(time); }, feSpace};
     builder.buildLhs(std::tuple_cat(timeDer.getLhs(itime), std::tuple{reaction}));
     builder.buildRhs(std::tuple_cat(timeDer.getRhs(itime), std::tuple{fTime}));
     builder.closeMatrix();

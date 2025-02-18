@@ -76,7 +76,7 @@ int main(int argc, char * argv[])
   builder.buildCoupling(grad, bcsU, bcsP);
   builder.buildCoupling(div, bcsP, bcsU);
   builder.buildRhs(
-      std::tuple{AssemblyBCNatural{
+      std::tuple{AssemblyBCNaturalAnalytic{
           [](Vec3 const &) {
             return Vec2{1., 0.};
           },

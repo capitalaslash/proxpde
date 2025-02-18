@@ -68,7 +68,7 @@ int test(YAML::Node const & config)
 
   AssemblyScalarMass timeDer{1. / dt, feSpace};
   AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyAnalyticRhs f{rhs, feSpace};
+  AssemblyRhsAnalytic f{rhs, feSpace};
   AssemblyProjection timeRhs{1. / dt, solOld, feSpace};
   // mixed bc: a u + \nabla u = b
   // - \nabla u = hConv (u - tempA)
@@ -77,7 +77,7 @@ int test(YAML::Node const & config)
   // hConv -> inf: u = b / a = tempA, Dirichlet
   // the matrix block and the rhs block must be added separatly
   AssemblyBCMixed mixBC{[hConv](Vec3 const &) { return hConv; }, side::RIGHT, feSpace};
-  AssemblyBCNatural natBC{
+  AssemblyBCNaturalAnalytic natBC{
       [hConv, tempA](Vec3 const &) { return hConv * tempA; }, side::RIGHT, feSpace};
 
   Var flux{"flux", size};

@@ -154,7 +154,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   MilliTimer t;
 
-  uint const nCoarse = 4;
+  auto const nCoarse = 4U;
 
   t.start("mesh");
   // std::unique_ptr<Mesh_T> meshCoarse{new Mesh_T};
@@ -170,7 +170,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // //     "square_uns.msh",
   // //     MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
 
-  short_T constexpr numRefs = 3;
+  auto const numRefs = 3U;
 
   std::array<std::unique_ptr<Mesh_T>, numRefs + 1> meshes;
   for (short_T ref = 0; ref < numRefs + 1; ++ref)
@@ -181,7 +181,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
       *meshes[0],
       {0.0, 0.0, 0.0},
       {1.0, 1.0, 0.0},
-      {nCoarse, nCoarse, 0},
+      {nCoarse, nCoarse, 0U},
       MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS | MeshFlags::NORMALS);
   t.stop();
 
@@ -246,7 +246,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
     builders[level].buildLhs(
         std::tuple{AssemblyStiffness{1.0, feSpaces[level]}}, bcLists[level]);
     builders[level].buildRhs(
-        std::tuple{AssemblyAnalyticRhs{rhs, feSpaces[level]}}, bcLists[level]);
+        std::tuple{AssemblyRhsAnalytic{rhs, feSpaces[level]}}, bcLists[level]);
     builders[level].closeMatrix();
     // Mat<StorageType::RowMajor> Acoarse = rest.mat * builder.A * rest.mat.transpose();
   }

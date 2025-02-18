@@ -197,7 +197,7 @@ int main(int argc, char * argv[])
   auto const div = AssemblyDiv{-1., feSpaceP, feSpaceVel};
   auto const dummy = AssemblyDummy{feSpaceP};
   auto const zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
-  auto const bcNat = AssemblyBCNatural{zero, side::TOP, feSpaceVel};
+  auto const bcNat = AssemblyBCNaturalAnalytic{zero, side::TOP, feSpaceVel};
 
   Builder builder{dofU * FESpaceVel_T::dim + dofP};
   builder.buildLhs(std::tuple{stiffness, advection}, bcsVel);

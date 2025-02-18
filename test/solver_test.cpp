@@ -69,7 +69,7 @@ int main(int argc, char * argv[])
   t.start("fe build");
   Builder<StorageType::RowMajor> builderR{feSpace.dof.size};
   builderR.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
-  builderR.buildRhs(std::tuple{AssemblyAnalyticRhs{rhs, feSpace}}, bcs);
+  builderR.buildRhs(std::tuple{AssemblyRhsAnalytic{rhs, feSpace}}, bcs);
   builderR.closeMatrix();
   fmt::print("the matrix is compressed? {}\n", builderR.A.isCompressed());
   t.stop();

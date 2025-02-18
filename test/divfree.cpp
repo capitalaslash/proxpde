@@ -52,7 +52,7 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   builder.buildCoupling(
       AssemblyVectorDiv{1.0, feSpaceLambda, feSpaceRT0}, bcLambda, bcU);
   builder.closeMatrix();
-  builder.buildRhs(std::tuple{AssemblyAnalyticRhs{rhs, feSpaceRT0}}, bcU);
+  builder.buildRhs(std::tuple{AssemblyRhsAnalytic{rhs, feSpaceRT0}}, bcU);
 
   LUSolver solver;
   solver.analyzePattern(builder.A);

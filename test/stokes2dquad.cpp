@@ -105,7 +105,7 @@ int main(int argc, char * argv[])
   Var vExact{"ve"};
   getComponent(uExact.data, feSpaceComponent, exact, feSpaceVel, 0);
   getComponent(vExact.data, feSpaceComponent, exact, feSpaceVel, 1);
-  Var p_exact{"p", exact, FESpaceVel_T::dim * dofU, dofP};
+  Var p_exact{"pe", exact, FESpaceVel_T::dim * dofU, dofP};
 
   // wall shear stress
   t.start("wssCell");

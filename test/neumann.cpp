@@ -75,8 +75,9 @@ int test(YAML::Node const & config)
   Builder builder{size};
   builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, {bc});
   auto const rhs = std::tuple{
-      AssemblyAnalyticRhs{rhsFun, feSpace},
-      AssemblyBCNatural{[](Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
+      AssemblyRhsAnalytic{rhsFun, feSpace},
+      AssemblyBCNaturalAnalytic{
+          [](Vec3 const &) { return -M_PI; }, side::RIGHT, feSpace},
   };
   builder.buildRhs(rhs, {bc});
   builder.closeMatrix();

@@ -81,9 +81,9 @@ int main(int argc, char * argv[])
   auto const size = numVars * feSpace.dof.size;
   auto const stiffness = AssemblyStiffness{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
-  // AssemblyAnalyticRhs f{rotatedRhs, feSpace};
-  auto const f = AssemblyAnalyticRhs{rhs, feSpace};
-  auto const bcNat = AssemblyBCNatural{bcValue, side::RIGHT, feSpace};
+  // AssemblyRhsAnalytic f{rotatedRhs, feSpace};
+  auto const f = AssemblyRhsAnalytic{rhs, feSpace};
+  auto const bcNat = AssemblyBCNaturalAnalytic{bcValue, side::RIGHT, feSpace};
   Builder builder{size};
   builder.buildLhs(std::tuple{stiffness}, {bc});
   builder.buildRhs(std::tuple{f, bcNat}, {bc});

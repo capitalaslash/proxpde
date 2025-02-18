@@ -65,7 +65,7 @@ int main(int argc, char * argv[])
   builder.buildLhs(std::tuple{AssemblyStiffness(1.0, feSpace)}, bcs);
   std::cout << tBuild << std::endl;
   tBuild.start();
-  // builder.buildRhs(AssemblyAnalyticRhs(rhs, feSpace), bcs);
+  // builder.buildRhs(AssemblyRhsAnalytic(rhs, feSpace), bcs);
   // using an interpolated rhs makes its quality independent of the chosen qr
   std::cout << tBuild << std::endl;
   tBuild.start();

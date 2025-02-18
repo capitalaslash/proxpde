@@ -47,7 +47,7 @@ int main(int argc, char * argv[])
   std::cout << "bcs: " << t << " ms" << std::endl;
 
   AssemblyStiffness stiffness(1.0, feSpace);
-  AssemblyAnalyticRhs f(rhs, feSpace);
+  AssemblyRhsAnalytic f(rhs, feSpace);
 
   t.start();
   Builder builder{feSpace.dof.size};

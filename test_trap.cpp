@@ -43,7 +43,7 @@ int main()
 
   AssemblyScalarMass mass{1.0, feSpace};
 
-  AssemblyAnalyticRhs f{exactSol, feSpace};
+  AssemblyRhsAnalytic f{exactSol, feSpace};
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{mass});

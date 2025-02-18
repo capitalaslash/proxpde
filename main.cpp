@@ -55,7 +55,7 @@ int main()
   bc << [](Vec3 const &) { return 0.; };
 
   AssemblyStiffness stiffness{1.0, feSpace};
-  AssemblyAnalyticRhs f{rhs, feSpace};
+  AssemblyRhsAnalytic f{rhs, feSpace};
 
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{stiffness}, std::vector{bc});

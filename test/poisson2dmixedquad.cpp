@@ -154,7 +154,7 @@ int test(YAML::Node const & config)
   wError.data = w.data - wExact.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
-  ioP0.print(std::tuple{u, uExact, uError});
+  ioP0.print({u, uExact, uError});
 
   auto const uL2error = u.l2ErrorSquared(uExactFun);
   fmt::print("l2 error squared of u: {:e}\n", uL2error);
@@ -166,8 +166,7 @@ int test(YAML::Node const & config)
   fmt::print("divergence l2 error squared for w: {:e}\n", divWL2Error);
 
   IOManagerP0 ioRT0{feSpaceW, "output_poisson2dmixedquad/w"};
-  // ioRT0.print({wP0, exactW, errorW});
-  ioRT0.print(std::tuple{w, wExact, wError});
+  ioRT0.print(std::vector{w, wExact, wError});
 
   // double const wL2error = l2Error(w, feSpaceW, exactGrad);
   // fmt::print("l2 error squared of w: {:e}\n", wL2error);

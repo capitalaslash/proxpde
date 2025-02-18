@@ -88,7 +88,7 @@ int main(int argc, char * argv[])
     id2d.data[e.id] = e.id;
   }
   IOManager io2d{feSpace2d, "output_heatwedge/mesh2d"};
-  io2d.print(std::tuple{id2d});
+  io2d.print({id2d});
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   extrude(*mesh2d, *mesh, numLayersZ, normal, h);
   t.stop();
@@ -147,7 +147,7 @@ int main(int argc, char * argv[])
   IOManager io{feSpace, "output_heatwedge/temp"};
   io.print({temp, tempInc, dTemp});
   IOManager ioVel{feSpaceVel, "output_heatwedge/vel"};
-  ioVel.print(std::tuple{vel});
+  ioVel.print({vel});
   t.stop();
 
   // TODO: compute tBulk and check it against analytic solution

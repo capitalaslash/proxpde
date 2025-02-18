@@ -215,7 +215,7 @@ int main(int argc, char * argv[])
   Var pSplit{"p"};
   pSplit.data = Vec::Zero(feSpacePSplit.dof.size);
   IOManager ioV{feSpaceU, "output_ipcs/sol_v"};
-  ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
+  ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_ipcs/sol_p"};
   ioP.print({pM, pSplit});
   t.stop();
@@ -312,7 +312,7 @@ int main(int argc, char * argv[])
       std::cout << "printing" << std::endl;
       getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
       getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
-      ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
+      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
       pM.data = velM.data.tail(dofP);
       ioP.print({pM, pSplit}, time);

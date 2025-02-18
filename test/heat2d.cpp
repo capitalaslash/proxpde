@@ -129,7 +129,7 @@ int main(int argc, char * argv[])
   IOManager io{feSpace, "output_heat2d/temp"};
   io.print({temp, tempInc, dTemp});
   IOManager ioVel{feSpaceVel, "output_heat2d/vel"};
-  ioVel.print(std::tuple{vel});
+  ioVel.print({vel});
   t.stop();
 
   // TODO: compute tBulk and check it against analytic solution

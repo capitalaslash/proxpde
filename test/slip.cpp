@@ -34,8 +34,7 @@ struct BCEssNormal: public BCEss<FESpace>
         auto const normal = narrow<dim>(facet.normal());
         auto const & [elem, side] = facet.facingElem[0];
         this->feSpace->curFE.reinit(*elem);
-        if constexpr (
-            order_v < RefFE_T >> 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
+        if constexpr (order_v<RefFE_T> > 0 || family_v<RefFE_T> != FamilyType::LAGRANGE)
         {
           for (auto const dofFacet: RefFE_T::dofOnFacet[side])
           {

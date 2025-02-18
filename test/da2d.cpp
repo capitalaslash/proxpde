@@ -267,7 +267,7 @@ template <typename ElemType>
 void DAEqn<ElemType>::outputResults()
 {
   t.start("print");
-  io.print(std::tuple{c}, time);
+  io.print({c}, time);
   t.stop();
 }
 

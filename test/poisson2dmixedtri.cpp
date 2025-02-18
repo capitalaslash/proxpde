@@ -49,9 +49,8 @@ int test(YAML::Node const & config)
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  Fun<3, 3> wExactFun = [g](Vec3 const & p) {
-    return Vec3{2. + g - 2. * p(0), 0.0, 0.0};
-  };
+  auto wExactFun = [g](Vec3 const & p) -> Vec3
+  { return Vec3{2. + g - 2. * p(0), 0.0, 0.0}; };
   scalarFun_T rhsFun = [](Vec3 const & /*p*/)
   {
     return -2.;
@@ -121,16 +120,16 @@ int test(YAML::Node const & config)
   interpolateAnalyticFunction(uExactFun, feSpaceU, exact);
   FEVar uExact{"uExact", feSpaceU};
   uExact.data = exact.tail(sizeU);
-  Var wExact{"wExact"};
+  FEVar wExact{"wExact", feSpaceW};
   wExact.data = exact.head(sizeW);
 
   FEVar uError{"uError", feSpaceU};
   uError.data = u.data - uExact.data;
-  Var wError{"wError"};
+  FEVar wError{"wError", feSpaceW};
   wError.data = w.data - wExact.data;
 
-  IOManager ioP0{feSpaceU, "output_poisson2dmixedtri/u"};
-  ioP0.print(std::tuple{u, uExact, uError});
+  IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
+  ioP0.print({u, uExact, uError});
 
   auto const uL2error = u.l2ErrorSquared(uExactFun);
   fmt::print("l2 error squared of u: {:e}\n", uL2error);
@@ -142,8 +141,7 @@ int test(YAML::Node const & config)
   fmt::print("divergence l2 error squared for w: {:e}\n", divWL2Error);
 
   IOManagerP0 ioRT0{feSpaceW, "output_poisson2dmixedquad/w"};
-  // ioRT0.print({wP0, exactW, errorW});
-  ioRT0.print(std::tuple{w, wExact, wError});
+  ioRT0.print(std::vector{w, wExact, wError});
 
   // double const wL2error = l2Error(w, feSpaceW, exactGrad);
   // fmt::print("l2 error squared of w: {:e}\n", wL2error);

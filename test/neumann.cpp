@@ -118,9 +118,9 @@ int test(YAML::Node const & config)
   Var error{"error"};
   error.data = sol.data - exact.data;
 
-  Var eGrad{"exactGrad"};
+  FEVar eGrad{"exactGrad", feSpaceGrad};
   interpolateAnalyticFunction(exactGrad, feSpaceGrad, eGrad.data);
-  Var errorGrad{"errorGrad"};
+  FEVar errorGrad{"errorGrad", feSpaceGrad};
   errorGrad.data = grad.data - eGrad.data;
   t.stop();
 

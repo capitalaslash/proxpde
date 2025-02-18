@@ -39,7 +39,7 @@ void test(uint expectedElems, uint expectedPts)
       });
 
   IOManager io{feSpace, "output_block/mesh"};
-  io.print(std::tuple{id, volume});
+  io.print({id, volume});
 
   std::unique_ptr<Mesh_T> block{new Mesh_T};
   extractBlock(
@@ -65,7 +65,7 @@ void test(uint expectedElems, uint expectedPts)
       });
 
   IOManager ioBlock{feSpaceBlock, "output_block/block"};
-  ioBlock.print(std::tuple{idBlock, volumeBlock});
+  ioBlock.print({idBlock, volumeBlock});
 
   assert(block->elementList.size() == expectedElems);
   assert(block->pointList.size() == expectedPts);

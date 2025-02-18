@@ -81,8 +81,7 @@ struct IOManager
 
   void print(std::vector<Var> const & data, double const t = 0.0);
 
-  template <typename VarTup>
-  void print(VarTup const & data, double const t = 0.0);
+  void print(std::vector<FEVar<FESpace_T>> const & data, double const t = 0.0);
 
 protected:
   void printTimeSeries();
@@ -180,8 +179,8 @@ inline constexpr uint getDim()
 }
 
 template <typename FESpace>
-template <typename VarTup>
-void IOManager<FESpace>::print(VarTup const & vars, double const t)
+void IOManager<FESpace>::print(
+    std::vector<FEVar<FESpace_T>> const & vars, double const t)
 {
   timeSeries.push_back({iter, t});
   printTimeSeries();
@@ -201,70 +200,67 @@ void IOManager<FESpace>::print(VarTup const & vars, double const t)
   std::filesystem::path dp = filePath->filename();
   dp += fmt::format(".{}.h5", iter);
 
-  static_for(
-      vars,
-      [&](auto const /*i*/, auto const & v)
+  for (auto const & v: vars)
+  {
+    assert(v.name != "");
+    assert(v.data.size() == feSpace->dof.size * FESpace_T::dim);
+    using Var_T = std::decay_t<decltype(v)>;
+    if constexpr (!std::is_same_v<Var_T, Var>)
+    {
+      // no need to check the qr
+      static_assert(
+          std::is_same_v<typename Var_T::FESpace_T::Mesh_T, typename FESpace::Mesh_T>);
+      static_assert(
+          std::
+              is_same_v<typename Var_T::FESpace_T::RefFE_T, typename FESpace::RefFE_T>);
+    }
+
+    constexpr uint dim = getDim<Var_T, FESpace>();
+    for (uint d = 0; d < dim; ++d)
+    {
+      std::string name;
+      if constexpr (dim == 1)
       {
-        assert(v.name != "");
-        assert(v.data.size() == feSpace->dof.size * FESpace_T::dim);
-        using Var_T = std::decay_t<decltype(v)>;
-        if constexpr (!std::is_same_v<Var_T, Var>)
+        name = v.name;
+      }
+      else if constexpr (dim > 1)
+      {
+        name = v.name + "_" + std::to_string(d);
+      }
+
+      doc.setVar(
+          dp,
+          {name,
+           XDMFType::SCALAR,
+           Traits_T::center,
+           XDMFNumberType::FLOAT,
+           feSpace->dof.size,
+           1});
+
+      // this works only with Lagrange elements
+      // TODO: pass data as const &
+      if constexpr (dim > 1)
+      {
+        // TODO: print vector variable as vector xdmf data
+        Vec compData{feSpace->dof.size};
+        if constexpr (std::is_same_v<Var_T, Var>)
         {
-          // no need to check the qr
-          static_assert(std::is_same_v<
-                        typename Var_T::FESpace_T::Mesh_T,
-                        typename FESpace::Mesh_T>);
-          static_assert(std::is_same_v<
-                        typename Var_T::FESpace_T::RefFE_T,
-                        typename FESpace::RefFE_T>);
+          getComponent(compData, feSpaceScalar, v.data, *feSpace, d);
         }
-
-        constexpr uint dim = getDim<Var_T, FESpace>();
-        for (uint d = 0; d < dim; ++d)
+        else
         {
-          std::string name;
-          if constexpr (dim == 1)
-          {
-            name = v.name;
-          }
-          else if constexpr (dim > 1)
-          {
-            name = v.name + "_" + std::to_string(d);
-          }
-
-          doc.setVar(
-              dp,
-              {name,
-               XDMFType::SCALAR,
-               Traits_T::center,
-               XDMFNumberType::FLOAT,
-               feSpace->dof.size,
-               1});
-
-          // this works only with Lagrange elements
-          // TODO: pass data as const &
-          if constexpr (dim > 1)
-          {
-            // TODO: print vector variable as vector xdmf data
-            Vec compData{feSpace->dof.size};
-            if constexpr (std::is_same_v<Var_T, Var>)
-            {
-              getComponent(compData, feSpaceScalar, v.data, *feSpace, d);
-            }
-            else
-            {
-              getComponent(compData, feSpaceScalar, v.data, *v.feSpace, d);
-            }
-            h5Iter.print(compData, name);
-            // h5Time.print(compdata, name + "." + std::to_string(iter));
-          }
-          else
-          {
-            h5Iter.print(v.data, name);
-            // h5Time.print(v.data, name + "." + std::to_string(iter));
-          }
+          getComponent(compData, feSpaceScalar, v.data, *v.feSpace, d);
         }
-      });
+        h5Iter.print(compData, name);
+        // h5Time.print(compdata, name + "." + std::to_string(iter));
+      }
+      else
+      {
+        h5Iter.print(v.data, name);
+        // h5Time.print(v.data, name + "." + std::to_string(iter));
+      }
+    }
+  }
   iter++;
 }
 
@@ -303,12 +299,14 @@ void IOManager<FESpace>::printMeshData()
     h5Mesh.print(feSpace->dof.geoMap, "connectivity");
   }
 
-  Table<double, 3> coords(feSpace->dof.mapSize, 3);
+  Table<double, 3u> coords(feSpace->dof.mapSize, 3u);
   for (auto const & e: feSpace->mesh->elementList)
   {
-    for (uint p = 0; p < RefFE_T::numGeoDOFs; ++p)
+    auto const elemMappingPts = RefFE_T::mappingPts(e);
+    for (auto p = 0u; p < RefFE_T::numGeoDOFs; ++p)
     {
-      coords.row(feSpace->dof.geoMap(e.id, p)) = RefFE_T::mappingPts(e)[p];
+      auto const row = feSpace->dof.geoMap(e.id, p);
+      coords.row(row) = elemMappingPts[p];
     }
   }
   h5Mesh.print(coords, "coords");
@@ -326,7 +324,7 @@ void IOManager<FESpace>::printBoundary()
   mp += ".mesh.h5";
   XDMFDoc doc{fp};
   // we always use linear elements for boundary facets
-  doc.setTopology<typename LagrangeFE<Facet_T, 1>::RefFE_T>(
+  doc.setTopology<typename LagrangeFE<Facet_T, 1u>::RefFE_T>(
       mp, mesh.facetList.size(), "connectivity_bd");
   doc.setGeometry(mp, mesh.pointList.size(), "coords_bd");
   doc.setVar(
@@ -446,35 +444,26 @@ struct IOManagerP0
     io.print(dataP0, t);
   }
 
-  template <typename... Vars>
-  void print(std::tuple<Vars...> const & data, double const t = 0.0)
+  template <typename FEVar>
+  void print(std::vector<FEVar> const & vars, double const t = 0.0)
   {
-    // std::tuple<FEVar<ToP0_T<typename Vars::FESpace_T>...>> dataP0{
-    //     FEVar<ToP0_T<typename Vars::FESpace_T>>{"none"}...};
-    std::tuple<ToVar_T<Vars>...> dataP0{};
-    static_for(
-        dataP0,
-        data,
-        [this](uint const /*i*/, auto & vP0, auto const & v)
-        {
-          using Var_T = std::decay_t<decltype(v)>;
-          if constexpr (!std::is_same_v<Var_T, Var>)
-          {
-            // we need only the mesh and reffe to be the same, no need to check the
-            // qr
-            static_assert(std::is_same_v<
-                          typename Var_T::FESpace_T::Mesh_T,
-                          typename FESpaceOrig_T::Mesh_T>);
-            static_assert(std::is_same_v<
-                          typename Var_T::FESpace_T::RefFE_T,
-                          typename FESpaceOrig_T::RefFE_T>);
-          }
-          vP0.name = v.name + "P0";
-          l2Projector.setRhs(v.data);
-          vP0.data = l2Projector.apply();
-        });
+    std::vector<Var> varsP0;
+    for (auto const & v: vars)
+    {
+      // no need to check the qr is the same
+      using Var_T = std::decay_t<decltype(v)>;
+      static_assert(std::is_same_v<
+                    typename Var_T::FESpace_T::Mesh_T,
+                    typename FESpaceOrig_T::Mesh_T>);
+      static_assert(std::is_same_v<
+                    typename Var_T::FESpace_T::RefFE_T,
+                    typename FESpaceOrig_T::RefFE_T>);
+      varsP0.emplace_back(v.name + "P0");
+      l2Projector.setRhs(v.data);
+      varsP0.back().data = l2Projector.apply();
+    }
 
-    io.print(std::move(dataP0), t);
+    io.print(varsP0, t);
   }
 
   FESpaceOrig_T const * feSpaceOrig;
@@ -520,38 +509,30 @@ struct IOManagerFacet
     io.init(feSpaceFacet, fp, it);
   }
 
-  template <typename... Vars>
-  void print(std::tuple<Vars...> const & data, double const t = 0.0)
+  template <typename FEVar>
+  void print(std::vector<FEVar> const & vars, double const t = 0.0)
   {
-    std::tuple<ToVar_T<Vars>...> dataFacet{};
-    static_for(
-        dataFacet,
-        data,
-        [this](uint const /*i*/, auto & vFacet, auto const & v)
-        {
-          using Var_T = std::decay_t<decltype(v)>;
-          if constexpr (!std::is_same_v<Var_T, Var>)
-          {
-            // we need only the mesh and reffe to be the same, no need to check the
-            // qr
-            static_assert(std::is_same_v<
-                          typename Var_T::FESpace_T::Mesh_T,
-                          typename FESpaceOrig_T::Mesh_T>);
-            static_assert(std::is_same_v<
-                          typename Var_T::FESpace_T::RefFE_T,
-                          typename FESpaceOrig_T::RefFE_T>);
-          }
-          vFacet.name = v.name + "Facet";
-          vFacet.data = Vec::Zero(static_cast<uint>(meshFacet->elementList.size()));
-          for (auto const & facet: v.feSpace->mesh->facetList)
-          {
-            auto const [insideElemPtr, side] = facet.facingElem[0];
-            auto const dofId = v.feSpace->dof.getId(insideElemPtr->id, side);
-            vFacet.data[facet.id] = v.data[dofId];
-          }
-        });
-
-    io.print(std::move(dataFacet), t);
+    std::vector<Var> varsFacet;
+    for (auto const & v: vars)
+    {
+      // no need to check the qr is the same
+      using Var_T = std::decay_t<decltype(v)>;
+      static_assert(std::is_same_v<
+                    typename Var_T::FESpace_T::Mesh_T,
+                    typename FESpaceOrig_T::Mesh_T>);
+      static_assert(std::is_same_v<
+                    typename Var_T::FESpace_T::RefFE_T,
+                    typename FESpaceOrig_T::RefFE_T>);
+      varsFacet.emplace_back(v.name + "Facet");
+      varsFacet.back().data = Vec::Zero(meshFacet->elementList.size());
+      for (auto const & facet: v.feSpace->mesh->facetList)
+      {
+        auto const [insideElemPtr, side] = facet.facingElem[0];
+        auto const dofId = v.feSpace->dof.getId(insideElemPtr->id, side);
+        varsFacet.back().data[facet.id] = v.data[dofId];
+      }
+    }
+    io.print(varsFacet, t);
   }
 
   FESpaceOrig_T const * feSpaceOrig;

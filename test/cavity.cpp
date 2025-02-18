@@ -86,10 +86,9 @@ int main(int argc, char * argv[])
   auto vNorm = v.data.norm();
   auto pNorm = p.data.norm();
 
-  std::cout.precision(12);
-  std::cout << "norm of u: " << uNorm << std::endl;
-  std::cout << "norm of v: " << vNorm << std::endl;
-  std::cout << "norm of p: " << pNorm << std::endl;
+  fmt::print("norm of u: {:.16e}\n", uNorm);
+  fmt::print("norm of v: {:.16e}\n", vNorm);
+  fmt::print("norm of p: {:.16e}\n", pNorm);
 
   IOManager ioVel{feSpaceVel, "output_cavity/vel"};
   ioVel.print({sol});
@@ -97,5 +96,7 @@ int main(int argc, char * argv[])
   ioP.print({p});
 
   return checkError(
-      {uNorm, vNorm, pNorm}, {3.15947325663, 0.740498457205, 29.3541392171}, 1.e-10);
+      {uNorm, vNorm, pNorm},
+      {3.1594732567878383e+00, 7.4049845621285981e-01, 2.9354138858082433e+01},
+      1.e-12);
 }

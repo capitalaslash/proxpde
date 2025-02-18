@@ -158,15 +158,15 @@ int main(int argc, char * argv[])
   uint const ntime = config["ntime"].as<uint>();
   double time = 0.0;
   IOManager ioP1{feSpaceP1, "output_advection2dtri/solP1"};
-  ioP1.print(std::array{concP1});
+  ioP1.print({concP1});
   IOManager ioP0{feSpaceP0, "output_advection2dtri/solP0"};
-  ioP0.print(std::array{concP0});
+  ioP0.print({concP0});
   IOManager ioFlux{feSpaceFacet, "output_advection2dtri/flux"};
   ioFlux.print({flux});
   Var velP0{"velP0", feSpaceVelP0.dof.size * FESpaceVelP0_T::dim};
   l2Projection(velP0.data, feSpaceVelP0, vel.data, feSpaceVel);
   IOManager ioVel{feSpaceVelP0, "output_advection2dtri/vel"};
-  ioVel.print(std::array{velP0});
+  ioVel.print({velP0});
 
   for (uint itime = 0; itime < ntime; itime++)
   {
@@ -201,8 +201,8 @@ int main(int argc, char * argv[])
 
     // print
     t.start("print");
-    ioP1.print(std::array{concP1}, time);
-    ioP0.print(std::array{concP0}, time);
+    ioP1.print({concP1}, time);
+    ioP0.print({concP0}, time);
     flux.data = fv.fluxes;
     ioFlux.print({flux}, time);
     t.stop();

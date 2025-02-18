@@ -438,9 +438,9 @@ int main(int argc, char * argv[])
   IOManager ioLambda{feSpaceLambda, "output_ipcs_rt/lambda"};
   if (config["split_rt"].as<bool>())
   {
-    ioUsplitRT.print(std::tuple{eqnUstarRT.sol, eqnVstarRT.sol});
-    ioVelRT.print(std::tuple{velRT});
-    ioFacet.print(std::tuple{velRT});
+    ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol});
+    ioVelRT.print(std::vector{velRT});
+    ioFacet.print(std::vector{velRT});
     ioLambda.print({lambda});
   }
   t.stop();
@@ -602,9 +602,9 @@ int main(int argc, char * argv[])
 
       if (config["split_rt"].as<bool>())
       {
-        ioUsplitRT.print(std::tuple{eqnUstarRT.sol, eqnVstarRT.sol}, time);
-        ioVelRT.print(std::tuple{velRT}, time);
-        ioFacet.print(std::tuple{velRT}, time);
+        ioUsplitRT.print({eqnUstarRT.sol, eqnVstarRT.sol}, time);
+        ioVelRT.print(std::vector{velRT}, time);
+        ioFacet.print(std::vector{velRT}, time);
         ioLambda.print({lambda}, time);
       }
     }

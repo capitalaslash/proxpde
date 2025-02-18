@@ -161,7 +161,7 @@ int main(int argc, char * argv[])
   auto const ntime = config["ntime"].as<uint>();
   double time = 0.0;
   IOManager io{feSpace, "output_periodic/sol"};
-  io.print(std::tuple{u});
+  io.print({u});
   std::cout << "solution integral: " << u.integrate() << std::endl;
 
   t.start("solver");
@@ -185,7 +185,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     // print
-    io.print(std::tuple{u}, time);
+    io.print({u}, time);
     std::cout << "solution integral: " << u.integrate() << std::endl;
 
     builder.clearRhs();

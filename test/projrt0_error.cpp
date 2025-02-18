@@ -62,7 +62,7 @@ int test(
   // std::cout << "uRhs:\n" << uRhs.data << std::endl;
 
   FESpaceRT0_T feSpaceRT0{*mesh};
-  Var uRT0{"uRT0"};
+  FEVar uRT0{"uRT0", feSpaceRT0};
   l2Projection(uRT0.data, feSpaceRT0, uRhs.data, feSpaceRhs);
   // std::cout << "uRT0:\n" << uRT0.data << std::endl;
 
@@ -129,23 +129,23 @@ int test(
   auto exact = Vec{sizeRT0 + sizeP0};
   interpolateAnalyticFunction(uExact3d, feSpaceRT0, exact);
   interpolateAnalyticFunction(fun.lambdaExact, feSpaceLambda, exact);
-  Var uExactRT0{"uExactRT0"};
+  FEVar uExactRT0{"uExactRT0", feSpaceRT0};
   uExactRT0.data = exact.head(sizeRT0);
   // std::cout << "uExactRT0:\n" << uExactRT0.data << std::endl;
-  Var lambdaExact{"lambdaExact"};
+  FEVar lambdaExact{"lambdaExact", feSpaceLambda};
   lambdaExact.data = exact.tail(sizeP0);
 
-  Var lambdaError{"lambdaError"};
+  FEVar lambdaError{"lambdaError", feSpaceLambda};
   lambdaError.data = lambdaExact.data - lambda.data;
 
   IOManager ioRhs{feSpaceRhs, "output_projrt0err/uRhs"};
   ioRhs.print({uRhs});
   IOManagerP0 ioRT0{feSpaceRT0, "output_projrt0err/u"};
-  ioRT0.print(std::tuple{uRT0, uRT0div, uExactRT0});
+  ioRT0.print(std::vector{uRT0, uRT0div, uExactRT0});
   IOManager ioLambda{feSpaceLambda, "output_projrt0err/lambda"};
-  ioLambda.print(std::tuple{lambda, lambdaExact, lambdaError});
+  ioLambda.print({lambda, lambdaExact, lambdaError});
   IOManagerFacet ioFacet{feSpaceRT0, "output_projrt0err/flux"};
-  ioFacet.print(std::tuple{uRT0div, uRT0proj});
+  ioFacet.print(std::vector{uRT0div, uRT0proj});
 
   fmt::print("u l2-error: {:.12e}\n", std::sqrt(uRT0div.l2ErrorSquared(uExact3d)));
 

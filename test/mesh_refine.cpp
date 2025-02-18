@@ -79,7 +79,7 @@ void test()
     id.data[elem.id] = elem.id;
   }
   IOManager io{feSpace, "output_refine/fine"};
-  io.print(std::tuple{id});
+  io.print({id});
 }
 
 int main()

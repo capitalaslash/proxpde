@@ -75,7 +75,7 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   std::cout << "total flux: " << sum << std::endl;
 
   IOManagerP0 ioRT0{feSpaceRT0, "output_divfree/urt0"};
-  ioRT0.print(std::tuple{uRT0});
+  ioRT0.print({uRT0});
   IOManager ioLambda{feSpaceLambda, "output_divfree/lambda"};
   ioLambda.print({lambda});
 

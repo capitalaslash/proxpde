@@ -212,7 +212,7 @@ int main(int argc, char * argv[])
   getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
   Var pM{"pM", dofP};
   IOManager ioV{feSpaceU, "output_nipcs/sol_v"};
-  ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
+  ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol});
   IOManager ioP{feSpaceP, "output_nipcs/sol_p"};
   ioP.print({pM, eqnP.sol});
   t.stop();
@@ -306,7 +306,7 @@ int main(int argc, char * argv[])
       std::cout << "printing" << std::endl;
       getComponent(uM.data, feSpaceU, solM, feSpaceVel, 0);
       getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
-      ioV.print(std::tuple{uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
+      ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
 
       pM.data = solM.tail(dofP);
       ioP.print({pM, eqnP.sol}, time);

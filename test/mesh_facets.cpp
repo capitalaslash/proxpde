@@ -55,7 +55,7 @@ void test()
   }
   IOManager io{
       feSpace, std::string{"output_meshfacets/mesh_"} + XDMFTraits<RefFE_T>::shapeName};
-  io.print(std::tuple{id});
+  io.print({id});
 
   using FESpaceV_T = FESpace<Mesh_T, RefFE_T, QR_T, 2U>;
   FESpaceV_T feSpaceV{*mesh};
@@ -77,7 +77,7 @@ void test()
   auto const baseName = std::filesystem::path{"output_meshfacets/v_"}.concat(
       XDMFTraits<RefFE_T>::shapeName);
   IOManager ioV{feSpaceV, baseName};
-  ioV.print(std::tuple{v});
+  ioV.print({v});
 
   XDMFDoc doc{
       fmt::format("output_meshfacets/test_{}.xmf", XDMFTraits<RefFE_T>::shapeName)};

@@ -72,13 +72,15 @@ int main()
   projectAnalyticFunction(analyticField3d, *uRT0.feSpace, uRT0.data);
 
   IOManager ioQ1{feSpaceQ1, "output_projq2rt0/uq1"};
-  ioQ1.print(std::tuple{uQ1});
+  ioQ1.print({uQ1});
   IOManager ioQ2{feSpaceQ2, "output_projq2rt0/uq2"};
-  ioQ2.print(std::tuple{uQ2});
+  ioQ2.print({uQ2});
   IOManagerP0 ioRT0{feSpaceRT0, "output_projq2rt0/urt0"};
-  ioRT0.print(std::tuple{uRT0});
+  ioRT0.print(std::vector{uRT0});
+  IOManagerNormal ioNormal{feSpaceRT0, "output_projq2rt0/un"};
+  ioNormal.print(std::vector{uRT0});
   IOManagerFacet ioFacet{feSpaceRT0, "output_projq2rt0/ufacet"};
-  ioFacet.print(std::tuple{uRT0});
+  ioFacet.print(std::vector{uRT0});
 
   // pick an element near the maximum
   id_T const elemId = n * n / 4 + n / 2;

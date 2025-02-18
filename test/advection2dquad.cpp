@@ -87,7 +87,7 @@ int main(/*int argc, char * argv[]*/)
   uint const ntime = 200;
   double time = 0.0;
   IOManager io{feSpace, "output_advection2dquad/sol"};
-  io.print(std::array{c});
+  io.print({c});
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
@@ -102,7 +102,7 @@ int main(/*int argc, char * argv[]*/)
 
     // print
     t.start("print");
-    io.print(std::array{c}, time);
+    io.print({c}, time);
     t.stop();
   }
 

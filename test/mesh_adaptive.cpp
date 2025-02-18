@@ -381,7 +381,7 @@ void test()
       { refine.data[elem.id] = toRefine[elem.id]; });
 
   IOManager ioCoarse{feSpaceCoarse, "output_adaptive/coarse"};
-  ioCoarse.print(std::tuple{refine});
+  ioCoarse.print({refine});
 
   std::unique_ptr<Mesh_T> meshFine{new Mesh_T};
   adaptiveRefine(*meshCoarse, *meshFine, toRefine);
@@ -427,7 +427,7 @@ void test()
       [&weight](auto const & elem) { weight.data[elem.id] = elem.marker; });
 
   IOManager ioFine{feSpaceFine, "output_adaptive/fine"};
-  ioFine.print(std::tuple{weight});
+  ioFine.print({weight});
 
   toRefine = BoolVec::Constant(meshFine->elementList.size(), false);
   std::ranges::for_each(
@@ -451,7 +451,7 @@ void test()
       [&weight2](auto const & elem) { weight2.data[elem.id] = elem.marker; });
 
   IOManager ioFine2{feSpaceFine2, "output_adaptive/fine2"};
-  ioFine2.print(std::tuple{weight2});
+  ioFine2.print({weight2});
 }
 
 int main()

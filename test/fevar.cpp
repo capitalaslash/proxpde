@@ -86,14 +86,14 @@ int main(int argc, char * argv[])
 
   // std::cout << "u:\n" << sol.data << std::endl;
 
-  Var exact{"exact"};
-  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
-  Var error{"e"};
+  FEVar exact{"exact", feSpace};
+  interpolateAnalyticFunction(exactSol, *exact.feSpace, exact.data);
+  FEVar error{"e", feSpace};
   error.data = sol.data - exact.data;
 
   t.start("output");
   IOManager io{feSpace, "output/sol_fevar"};
-  io.print(std::tuple{sol, exact, error});
+  io.print({sol, exact, error});
   t.stop();
 
   t.print();

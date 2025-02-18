@@ -40,7 +40,7 @@ int main(int /*argc*/, char * /*argv*/[])
   {
     id3d.data[e.id] = e.id;
   }
-  io3d.print(std::tuple{id3d});
+  io3d.print({id3d});
   t.stop();
 
   t.print();

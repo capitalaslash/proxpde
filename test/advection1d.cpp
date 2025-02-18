@@ -118,9 +118,9 @@ int main(int argc, char * argv[])
   FVSolver fv{feSpaceP0, bcsP0, UpwindLimiter{}};
 
   IOManager ioP1{feSpaceP1, "output_advection1d/solP1"};
-  ioP1.print(std::array{concP1});
+  ioP1.print({concP1});
   IOManager ioP0{feSpaceP0, "output_advection1d/solP0"};
-  ioP0.print(std::array{concP0});
+  ioP0.print({concP0});
 
   auto const lhs = std::tuple{timeDer, advection};
   auto const rhs = std::tuple{timeDerRhs};
@@ -160,8 +160,8 @@ int main(int argc, char * argv[])
 
     // print
     t.start("print");
-    ioP1.print(std::array{concP1}, time);
-    ioP0.print(std::array{concP0}, time);
+    ioP1.print({concP1}, time);
+    ioP0.print({concP0}, time);
     t.stop();
   }
 

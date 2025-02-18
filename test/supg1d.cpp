@@ -424,7 +424,7 @@ int main(int argc, char * argv[])
   FVSolver fv{feSpaceFV, bcsFV, MinModLimiter{}};
 
   IOManager ioCG{feSpaceCG, "output_supg1d/cg"};
-  ioCG.print(std::tuple{uCG, uCGRes});
+  ioCG.print({uCG, uCGRes});
   IOManager ioFV{feSpaceFV, "output_supg1d/fv"};
   ioFV.print({uFV});
 
@@ -485,7 +485,7 @@ int main(int argc, char * argv[])
 
     // print
     t.start("print");
-    ioCG.print(std::tuple{uCG, uCGRes}, time);
+    ioCG.print({uCG, uCGRes}, time);
     ioFV.print({uFV}, time);
     t.stop();
   }

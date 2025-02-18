@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
     vol.data[elem.id] = elem.volume() * n * n * n;
   }
   IOManager io{feSpace, "output_mesh_planar/vol"};
-  io.print(std::tuple{vol});
+  io.print({vol});
   t.stop();
 
   t.print();

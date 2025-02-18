@@ -1,7 +1,6 @@
 #include "def.hpp"
 
 #include "fespace.hpp"
-#include "geo.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "mesh_refine.hpp"
@@ -54,33 +53,33 @@ int test(Function const & f, double const expectedNorm)
     IOManager ioCoarse{
         feSpaceCoarse,
         std::string{"output_prol/coarse_"} + RefFEtoString<RefFE_T>::name};
-    ioCoarse.print(std::tuple{uCoarse});
+    ioCoarse.print({uCoarse});
 
     IOManager ioFine{
         feSpaceFine, std::string{"output_prol/fine_"} + RefFEtoString<RefFE_T>::name};
-    ioFine.print(std::tuple{uFine});
+    ioFine.print({uFine});
   }
   else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
   {
     IOManagerP0 ioCoarse{
         feSpaceCoarse,
         std::string{"output_prol/coarse_"} + RefFEtoString<RefFE_T>::name};
-    ioCoarse.print(std::tuple{uCoarse});
+    ioCoarse.print(std::vector{uCoarse});
 
     IOManagerP0 ioFine{
         feSpaceFine, std::string{"output_prol/fine_"} + RefFEtoString<RefFE_T>::name};
-    ioFine.print(std::tuple{uFine});
+    ioFine.print(std::vector{uFine});
 
     // print facet mesh
     IOManagerFacet ioFacetCoarse{
         feSpaceCoarse,
         std::string{"output_prol/flux_coarse_"} + RefFEtoString<RefFE_T>::name};
-    ioFacetCoarse.print(std::tuple{uCoarse});
+    ioFacetCoarse.print(std::vector{uCoarse});
 
     IOManagerFacet ioFacetFine{
         feSpaceFine,
         std::string{"output_prol/flux_fine_"} + RefFEtoString<RefFE_T>::name};
-    ioFacetFine.print(std::tuple{uFine});
+    ioFacetFine.print(std::vector{uFine});
   }
 
   return checkError({uFine.data.norm()}, {expectedNorm});

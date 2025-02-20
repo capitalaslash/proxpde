@@ -131,6 +131,7 @@ bool operator==(GeoElem const & e1, GeoElem const & e2);
 
 std::ostream & operator<<(std::ostream & out, GeoElem const & e);
 
+// =====================================================================
 struct NullElem: public GeoElem
 {
   static short_T constexpr dim = 0U;
@@ -140,6 +141,7 @@ struct NullElem: public GeoElem
   static short_T constexpr numFacets = 0U;
 };
 
+// =====================================================================
 struct PointElem: public GeoElem
 {
   using Facet_T = NullElem;
@@ -182,9 +184,9 @@ struct PointElem: public GeoElem
   double hMax() const final { return 1.; }
 };
 
-class Line: public GeoElem
+// =====================================================================
+struct Line: public GeoElem
 {
-public:
   using Facet_T = PointElem;
   using Ridge_T = NullElem;
   using Face_T = NullElem;
@@ -195,14 +197,18 @@ public:
   static short_T constexpr numFaces = 0U;
   static short_T constexpr numRidges = 0U;
   static short_T constexpr numEdges = 1U;
-  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
-      {{{0}}, {{1}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {{
+      {{0}},
+      {{1}},
+  }};
   static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {};
   static array2d<short_T, 0, 0> constexpr elemToFace = {{}};
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = {{{{0, 1}}}};
   static short_T constexpr numChildren = 2U;
-  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
-      {{{0, 2}}, {{2, 1}}}};
+  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {{
+      {{0, 2}},
+      {{2, 1}},
+  }};
   static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
   static double constexpr refVolume = 2.;
 
@@ -247,9 +253,9 @@ public:
   double hMax() const final { return this->volume(); }
 };
 
-class Triangle: public GeoElem
+// =====================================================================
+struct Triangle: public GeoElem
 {
-public:
   using Facet_T = Line;
   using Face_T = Triangle;
   using Ridge_T = PointElem;
@@ -260,13 +266,20 @@ public:
   static short_T constexpr numFaces = 1U;
   static short_T constexpr numRidges = 3U;
   static short_T constexpr numEdges = 3U;
-  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
-      {{{0, 1}}, {{1, 2}}, {{2, 0}}}};
-  static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {
-      {{{0}}, {{1}}, {{2}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {{
+      {{0, 1}},
+      {{1, 2}},
+      {{2, 0}},
+  }};
+  static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {{
+      {{0}},
+      {{1}},
+      {{2}},
+  }};
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
-  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
-      {{{0, 1, 2}}}};
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {{
+      {{0, 1, 2}},
+  }};
   static short_T constexpr numChildren = 4U;
   static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
       {{{0, 3, 5}}, {{1, 4, 3}}, {{2, 5, 4}}, {{3, 4, 5}}}};
@@ -363,9 +376,9 @@ public:
   }
 };
 
-class Quad: public GeoElem
+// =====================================================================
+struct Quad: public GeoElem
 {
-public:
   using Facet_T = Line;
   using Face_T = Quad;
   using Ridge_T = PointElem;
@@ -376,13 +389,22 @@ public:
   static short_T constexpr numFaces = 1U;
   static short_T constexpr numRidges = 4U;
   static short_T constexpr numEdges = 4U;
-  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
-      {{{0, 1}}, {{1, 2}}, {{2, 3}}, {{3, 0}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {{
+      {{0, 1}},
+      {{1, 2}},
+      {{2, 3}},
+      {{3, 0}},
+  }};
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToFacet;
-  static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {
-      {{{0}}, {{1}}, {{2}}, {{3}}}};
-  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {
-      {{{0, 1, 2, 3}}}};
+  static array2d<short_T, numRidges, Ridge_T::numPts> constexpr elemToRidge = {{
+      {{0}},
+      {{1}},
+      {{2}},
+      {{3}},
+  }};
+  static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = {{
+      {{0, 1, 2, 3}},
+  }};
   static short_T constexpr numChildren = 4U;
   static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
       {{{0, 4, 8, 7}}, {{4, 1, 5, 8}}, {{8, 5, 2, 6}}, {{7, 8, 6, 3}}}};
@@ -482,9 +504,9 @@ public:
   }
 };
 
-class Tetrahedron: public GeoElem
+// =====================================================================
+struct Tetrahedron: public GeoElem
 {
-public:
   using Facet_T = Triangle;
   using Face_T = Triangle;
   using Ridge_T = Line;
@@ -495,22 +517,27 @@ public:
   static short_T constexpr numFaces = 4U;
   static short_T constexpr numEdges = 6U;
   static short_T constexpr numRidges = 6U;
-  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
-      {{{0, 2, 1}}, {{0, 1, 3}}, {{0, 3, 2}}, {{1, 2, 3}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {{
+      {{0, 2, 1}},
+      {{0, 1, 3}},
+      {{0, 3, 2}},
+      {{1, 2, 3}},
+  }};
   static array2d<short_T, numEdges, Ridge_T::numPts> constexpr elemToRidge = {
       {{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
   static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = elemToFacet;
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToRidge;
   static short_T constexpr numChildren = 8U;
-  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
-      {{{0, 4, 6, 7}},
-       {{4, 1, 5, 8}},
-       {{6, 5, 2, 9}},
-       {{7, 8, 9, 3}},
-       {{4, 6, 7, 8}},
-       {{6, 5, 9, 8}},
-       {{4, 5, 6, 8}},
-       {{6, 9, 7, 8}}}};
+  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {{
+      {{0, 4, 6, 7}},
+      {{4, 1, 5, 8}},
+      {{6, 5, 2, 9}},
+      {{7, 8, 9, 3}},
+      {{4, 6, 7, 8}},
+      {{6, 5, 9, 8}},
+      {{4, 5, 6, 8}},
+      {{6, 9, 7, 8}},
+  }};
   static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
   static array3d<
       short_T,
@@ -595,9 +622,9 @@ public:
   }
 };
 
-class Hexahedron: public GeoElem
+// =====================================================================
+struct Hexahedron: public GeoElem
 {
-public:
   using Facet_T = Quad;
   using Face_T = Quad;
   using Ridge_T = Line;
@@ -608,38 +635,41 @@ public:
   static short_T constexpr numFaces = 6U;
   static short_T constexpr numRidges = 12U;
   static short_T constexpr numEdges = 12U;
-  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {
-      {{{0, 3, 2, 1}},
-       {{0, 1, 5, 4}},
-       {{1, 2, 6, 5}},
-       {{2, 3, 7, 6}},
-       {{3, 0, 4, 7}},
-       {{4, 5, 6, 7}}}};
-  static array2d<short_T, numRidges, Edge_T::numPts> constexpr elemToRidge = {
-      {{{0, 1}},
-       {{1, 2}},
-       {{2, 3}},
-       {{3, 0}},
-       {{0, 4}},
-       {{1, 5}},
-       {{2, 6}},
-       {{3, 7}},
-       {{4, 5}},
-       {{5, 6}},
-       {{6, 7}},
-       {{7, 4}}}};
+  static array2d<short_T, numFacets, Facet_T::numPts> constexpr elemToFacet = {{
+      {{0, 3, 2, 1}},
+      {{3, 0, 4, 7}},
+      {{0, 1, 5, 4}},
+      {{1, 2, 6, 5}},
+      {{2, 3, 7, 6}},
+      {{4, 5, 6, 7}},
+  }};
+  static array2d<short_T, numRidges, Edge_T::numPts> constexpr elemToRidge = {{
+      {{0, 1}},
+      {{1, 2}},
+      {{2, 3}},
+      {{3, 0}},
+      {{0, 4}},
+      {{1, 5}},
+      {{2, 6}},
+      {{3, 7}},
+      {{4, 5}},
+      {{5, 6}},
+      {{6, 7}},
+      {{7, 4}},
+  }};
   static array2d<short_T, numFaces, Face_T::numPts> constexpr elemToFace = elemToFacet;
   static array2d<short_T, numEdges, Edge_T::numPts> constexpr elemToEdge = elemToRidge;
   static short_T constexpr numChildren = 8U;
-  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {
-      {{{0, 8, 20, 11, 12, 21, 26, 24}},
-       {{8, 1, 9, 20, 21, 13, 22, 26}},
-       {{20, 9, 2, 10, 26, 22, 14, 23}},
-       {{11, 20, 10, 3, 24, 26, 23, 15}},
-       {{12, 21, 26, 24, 4, 16, 25, 19}},
-       {{21, 13, 22, 26, 16, 5, 17, 25}},
-       {{26, 22, 14, 23, 25, 17, 6, 18}},
-       {{24, 26, 23, 15, 19, 25, 18, 7}}}};
+  static array2d<short_T, numChildren, numPts> constexpr elemToChild = {{
+      {{0, 8, 20, 11, 12, 21, 26, 24}},
+      {{8, 1, 9, 20, 21, 13, 22, 26}},
+      {{20, 9, 2, 10, 26, 22, 14, 23}},
+      {{11, 20, 10, 3, 24, 26, 23, 15}},
+      {{12, 21, 26, 24, 4, 16, 25, 19}},
+      {{21, 13, 22, 26, 16, 5, 17, 25}},
+      {{26, 22, 14, 23, 25, 17, 6, 18}},
+      {{24, 26, 23, 15, 19, 25, 18, 7}},
+  }};
   static std::array<FMat<numPts, numPts>, numChildren> const embeddingMatrix;
   static array3d<
       short_T,
@@ -649,13 +679,13 @@ public:
       // facet 0
       {{{{0, 11, 20, 8}}, {{8, 20, 9, 1}}, {{20, 10, 2, 9}}, {{11, 3, 10, 20}}}},
       // facet 1
-      {{{{0, 8, 21, 12}}, {{8, 1, 13, 21}}, {{21, 13, 5, 16}}, {{12, 21, 16, 4}}}},
-      // facet 2
-      {{{{1, 9, 22, 13}}, {{9, 2, 14, 22}}, {{22, 14, 6, 17}}, {{13, 22, 17, 5}}}},
-      // facet 3
-      {{{{2, 10, 23, 14}}, {{10, 3, 15, 23}}, {{23, 15, 7, 18}}, {{14, 23, 18, 6}}}},
-      // facet 4
       {{{{3, 11, 24, 15}}, {{11, 0, 12, 24}}, {{24, 12, 4, 19}}, {{15, 24, 19, 7}}}},
+      // facet 2
+      {{{{0, 8, 21, 12}}, {{8, 1, 13, 21}}, {{21, 13, 5, 16}}, {{12, 21, 16, 4}}}},
+      // facet 3
+      {{{{1, 9, 22, 13}}, {{9, 2, 14, 22}}, {{22, 14, 6, 17}}, {{13, 22, 17, 5}}}},
+      // facet 4
+      {{{{2, 10, 23, 14}}, {{10, 3, 15, 23}}, {{23, 15, 7, 18}}, {{14, 23, 18, 6}}}},
       // facet 5
       {{{{4, 16, 25, 19}}, {{16, 5, 17, 25}}, {{25, 17, 6, 18}}, {{19, 25, 18, 7}}}},
   }};
@@ -665,10 +695,10 @@ public:
       Facet_T::numChildren,
       Facet_T::numPts> constexpr elemToFacetChildFacing = {{
       {{{{0, 0}}, {{1, 0}}, {{2, 0}}, {{3, 0}}}},
+      {{{{0, 4}}, {{3, 4}}, {{4, 4}}, {{7, 4}}}},
       {{{{0, 1}}, {{1, 1}}, {{4, 1}}, {{5, 1}}}},
       {{{{1, 2}}, {{2, 2}}, {{5, 2}}, {{6, 2}}}},
       {{{{2, 3}}, {{3, 3}}, {{6, 3}}, {{7, 3}}}},
-      {{{{0, 4}}, {{3, 4}}, {{4, 4}}, {{7, 4}}}},
       {{{{4, 5}}, {{5, 5}}, {{6, 5}}, {{7, 5}}}},
   }};
   static double constexpr refVolume = 8.;
@@ -706,7 +736,7 @@ public:
     // auto const v3 = pts[4]->coord - pts[0]->coord;
     // return std::fabs((v1.cross(v2)).dot(v3));
 
-    // split in 5 tetra as done in mesh generation
+    // split in 5 tetra (same approach in  mesh generation)
     auto const v13 = pts[3]->coord - pts[1]->coord;
     auto const v14 = pts[4]->coord - pts[1]->coord;
     auto const v16 = pts[6]->coord - pts[1]->coord;
@@ -722,6 +752,8 @@ public:
             (v12.cross(v13)).dot(v16) + (v14.cross(v15)).dot(v16) +
             (v34.cross(v36)).dot(v37)) /
            6.;
+    // TODO: permutating indices and checking that all volumes are the same is a way to
+    // check that the hex is affine?
   }
 
   void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
@@ -751,6 +783,41 @@ public:
   }
 };
 
+// =====================================================================
+template <typename Elem>
+struct ElemToStr;
+
+template <>
+struct ElemToStr<Line>
+{
+  static constexpr const char * value = "Line";
+};
+
+template <>
+struct ElemToStr<Triangle>
+{
+  static constexpr const char * value = "Triangle";
+};
+
+template <>
+struct ElemToStr<Quad>
+{
+  static constexpr const char * value = "Quad";
+};
+
+template <>
+struct ElemToStr<Tetrahedron>
+{
+  static constexpr const char * value = "Tetrahedron";
+};
+
+template <>
+struct ElemToStr<Hexahedron>
+{
+  static constexpr const char * value = "Hexahedron";
+};
+
+// =====================================================================
 // rotation matrix from axis and angle
 // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
 class RotationMatrix

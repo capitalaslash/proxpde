@@ -178,11 +178,13 @@ void Quad::buildNormal(Bitmask<GeoElemFlags> flags)
 // coarse: 3 - 2
 //         |   |
 //         0 - 1
+//
 // fine: 3 - 6 - 2
 //       |   |   |
 //       7 - 8 - 5
 //       |   |   |
 //       0 - 4 - 1
+//
 // child: 0: 7 - 8  1: 8 - 5  2: 6 - 2  3: 3 - 6
 //           |   |     |   |     |   |     |   |
 //           0 - 4     4 - 1     8 - 5     7 - 8
@@ -209,6 +211,16 @@ std::array<FMat<4, 4>, 4> const Quad::embeddingMatrix = std::array<FMat<4, 4>, 4
 
 // -------------------------------------------------------------------------------------
 // children dofs:
+// coarse: 3
+//         | +2
+//         0 - 1
+//
+// fine:   3
+//         |  +9
+//         7  - 8
+//         |   2 +
+//         | 6   5+
+//         0 - 4 - 1
 // clang-format off
 std::array<FMat<4, 4>, 8> const Tetrahedron::embeddingMatrix = std::array<FMat<4, 4>, 8>{{
     (FMat<4, 4>{} << 1.0, 0.0, 0.0, 0.0, // 0
@@ -252,6 +264,7 @@ std::array<FMat<4, 4>, 8> const Tetrahedron::embeddingMatrix = std::array<FMat<4
 //       4/ - /5
 //        | 3 | 2
 //        0 - 1/
+//
 // fine:   7 -18 - 6
 //      /       /
 //    19 /  25   /17
@@ -261,6 +274,7 @@ std::array<FMat<4, 4>, 8> const Tetrahedron::embeddingMatrix = std::array<FMat<4
 //    12 -21 -13  / 2
 //     |11 |20 | /9
 //     0 - 8 - 1/
+//
 // child: 0: 24 -26   1: 26 -22
 //         12/ - /21   21/ - /13
 //           | 11| 20    | 20/ 9

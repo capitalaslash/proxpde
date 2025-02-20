@@ -29,9 +29,9 @@ int main(int argc, char * argv[])
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   double const ly = 2.;
-  uint const numElemsX = (argc < 3) ? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3) ? 4 : std::stoi(argv[2]);
-  uint const numElemsZ = (argc < 3) ? 4 : std::stoi(argv[3]);
+  uint const numElemsX = (argc < 4) ? 4u : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 4) ? 4u : std::stoi(argv[2]);
+  uint const numElemsZ = (argc < 4) ? 4u : std::stoi(argv[3]);
   buildHyperCube(*mesh, {0., 0., 0.}, {1., ly, 1.}, {numElemsX, numElemsY, numElemsZ});
   t.stop();
 
@@ -85,7 +85,7 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(
       [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); }, feSpaceP, exact.data);
 
-  std::cout << "solution norm: " << sol.data.norm() << std::endl;
+  fmt::print("solution norm: {:.16e}\n", sol.data.norm());
 
   Var u{"u"};
   Var v{"v"};
@@ -118,10 +118,10 @@ int main(int argc, char * argv[])
   auto wError = (w.data - we.data).norm();
   auto pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << std::setprecision(16) << uError << std::endl;
-  std::cout << "v error norm: " << std::setprecision(16) << vError << std::endl;
-  std::cout << "w error norm: " << std::setprecision(16) << wError << std::endl;
-  std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
+  fmt::print("u error norm: {:.16e}\n", uError);
+  fmt::print("v error norm: {:.16e}\n", vError);
+  fmt::print("w error norm: {:.16e}\n", wError);
+  fmt::print("p error norm: {:.16e}\n", pError);
 
   return checkError(
       {uError, vError, wError, pError},

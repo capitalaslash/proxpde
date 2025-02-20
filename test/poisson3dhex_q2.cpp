@@ -32,6 +32,7 @@ int test(YAML::Node const & config)
   {
     return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1));
     // return 2.*p(0) - p(0)*p(0);
+    // return 1. - p(0);
     // return 1.;
   };
 
@@ -39,11 +40,8 @@ int test(YAML::Node const & config)
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(
-      *mesh,
-      {0., 0., 0.},
-      {1., 1., 1.},
-      {config["n"].as<uint>(), config["n"].as<uint>(), config["n"].as<uint>()});
+  auto const n = config["n"].as<uint>();
+  buildHyperCube(*mesh, {0., 0., 0.}, {1., 1., 1.}, {n, n, n});
   t.stop();
 
   t.start("fe space");
@@ -52,11 +50,12 @@ int test(YAML::Node const & config)
 
   t.start("bcs");
   // face refs with z-axis that exits from the plane, x-axis towards the right
-  auto bcLeft = BCEss{feSpace, side::LEFT};
-  bcLeft << [](Vec3 const &) { return 0.; };
-  auto bcBottom = BCEss{feSpace, side::BOTTOM};
-  bcBottom << [](Vec3 const &) { return 0.; };
+  auto const bcLeft = BCEss{feSpace, side::LEFT, [](Vec3 const &) { return 0.; }};
+  auto const bcBottom = BCEss{feSpace, side::BOTTOM, [](Vec3 const &) { return 0.; }};
   auto const bcs = std::vector{bcLeft, bcBottom};
+  // auto const bcLeft = BCEss{feSpace, side::LEFT, [](Vec3 const &) { return 1.0; }};
+  // auto const bcRight = BCEss{feSpace, side::RIGHT, [](Vec3 const &) { return 0.0; }};
+  // auto const bcs = std::vector{bcLeft, bcRight};
   t.stop();
 
   t.start("fe build");

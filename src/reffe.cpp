@@ -306,7 +306,7 @@ std::array<FMat<4, 4>, 4> const RefQuadQ1::embeddingMatrix = std::array<FMat<4, 
     (FMat<4, 4>{} << 0.5,  0.0,  0.0,  0.5,              // 7
                      0.25, 0.25, 0.25, 0.25,             // 8
                      0.0,  0.0,  0.5,  0.5,              // 6
-                     0.0,  0.0,  0.0,  1.0).finished(),  // 3                     
+                     0.0,  0.0,  0.0,  1.0).finished(),  // 3
 
 }};
 // clang-format on
@@ -751,42 +751,44 @@ Vec3 const RefHexahedronQ2::midPoint = Vec3{0., 0., 0.};
 std::array<
     scalarThreedFun_T,
     RefHexahedronQ2::numDOFs> const RefHexahedronQ2::phiFun = {{
+    // bottom corners
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
-
+    // top corners
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
-
+    // bottom edge middles
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[0](p[2]); },
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
-
+    // middle corners
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
-
+    // top edge middles
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[1](p[2]); },
     [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
-
+    // face centers (z-, x-, y-, x+, y+, z+)
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]); },
+    [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[0](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[1](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[1](p[1]) * funQ2[2](p[2]); },
-    [](Vec_T const & p) { return funQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]); },
-
+    // middle point
     [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]); },
 }};
 
 std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun = {{
+    // bottom corners
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -815,7 +817,7 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
           funQ2[0](p[0]) * dfunQ2[1](p[1]) * funQ2[0](p[2]),
           funQ2[0](p[0]) * funQ2[1](p[1]) * dfunQ2[0](p[2]));
     },
-
+    // top corners
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -844,7 +846,7 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
           funQ2[0](p[0]) * dfunQ2[1](p[1]) * funQ2[1](p[2]),
           funQ2[0](p[0]) * funQ2[1](p[1]) * dfunQ2[1](p[2]));
     },
-
+    // bottom edge middles
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -873,7 +875,7 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
           funQ2[0](p[0]) * dfunQ2[2](p[1]) * funQ2[0](p[2]),
           funQ2[0](p[0]) * funQ2[2](p[1]) * dfunQ2[0](p[2]));
     },
-
+    // middle corners
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -902,7 +904,7 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
           funQ2[0](p[0]) * dfunQ2[1](p[1]) * funQ2[2](p[2]),
           funQ2[0](p[0]) * funQ2[1](p[1]) * dfunQ2[2](p[2]));
     },
-
+    // top edge middles
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -931,13 +933,20 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
           funQ2[0](p[0]) * dfunQ2[2](p[1]) * funQ2[1](p[2]),
           funQ2[0](p[0]) * funQ2[2](p[1]) * dfunQ2[1](p[2]));
     },
-
+    // face centers (z-, x-, y-, x+, y+, z+)
     [](Vec_T const & p)
     {
       return Vec_T(
           dfunQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[0](p[2]),
           funQ2[2](p[0]) * dfunQ2[2](p[1]) * funQ2[0](p[2]),
           funQ2[2](p[0]) * funQ2[2](p[1]) * dfunQ2[0](p[2]));
+    },
+    [](Vec_T const & p)
+    {
+      return Vec_T(
+          dfunQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]),
+          funQ2[0](p[0]) * dfunQ2[2](p[1]) * funQ2[2](p[2]),
+          funQ2[0](p[0]) * funQ2[2](p[1]) * dfunQ2[2](p[2]));
     },
     [](Vec_T const & p)
     {
@@ -963,18 +972,11 @@ std::array<threedFun_T, RefHexahedronQ2::numDOFs> const RefHexahedronQ2::dphiFun
     [](Vec_T const & p)
     {
       return Vec_T(
-          dfunQ2[0](p[0]) * funQ2[2](p[1]) * funQ2[2](p[2]),
-          funQ2[0](p[0]) * dfunQ2[2](p[1]) * funQ2[2](p[2]),
-          funQ2[0](p[0]) * funQ2[2](p[1]) * dfunQ2[2](p[2]));
-    },
-    [](Vec_T const & p)
-    {
-      return Vec_T(
           dfunQ2[2](p[0]) * funQ2[2](p[1]) * funQ2[1](p[2]),
           funQ2[2](p[0]) * dfunQ2[2](p[1]) * funQ2[1](p[2]),
           funQ2[2](p[0]) * funQ2[2](p[1]) * dfunQ2[1](p[2]));
     },
-
+    // middle
     [](Vec_T const & p)
     {
       return Vec_T(
@@ -1006,10 +1008,10 @@ Vec3 const RefHexahedronRT0::midPoint = Vec3{0., 0., 0.};
 std::array<threedFun_T, RefHexahedronRT0::numDOFs> const RefHexahedronRT0::phiVectFun =
     {{
         [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.125 * (p(2) - 1.0)); },
+        [](Vec_T const & p) { return Vec_T(0.125 * (p(0) - 1.0), 0.0, 0.0); },
         [](Vec_T const & p) { return Vec_T(0.0, 0.125 * (p(1) - 1.0), 0.0); },
         [](Vec_T const & p) { return Vec_T(0.125 * (p(0) + 1.0), 0.0, 0.0); },
         [](Vec_T const & p) { return Vec_T(0.0, 0.125 * (p(1) + 1.0), 0.0); },
-        [](Vec_T const & p) { return Vec_T(0.125 * (p(0) - 1.0), 0.0, 0.0); },
         [](Vec_T const & p) { return Vec_T(0.0, 0.0, 0.125 * (p(2) + 1.0)); },
     }};
 

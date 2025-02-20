@@ -31,6 +31,9 @@ int test(YAML::Node const & config)
   using RefFE_T = typename LagrangeFE<Elem_T, order>::RefFE_T;
   using QR_T = typename LagrangeFE<Elem_T, order>::RecommendedQR;
   using FESpace_T = FESpace<Mesh_T, RefFE_T, QR_T>;
+  auto constexpr numPtsQRBC = SideQR_T<typename FESpace_T::QR_T>::numPts;
+  using FESpaceBC_T =
+      FESpace<Mesh_T, RefFE_T, SideGaussQR<Elem_T, numPtsQRBC>, Elem_T::dim>;
 
   auto const rhsFun = [](Vec3 const & p) -> double
   {
@@ -70,6 +73,7 @@ int test(YAML::Node const & config)
 
   t.start("fespace");
   FESpace_T feSpace{*mesh};
+  FESpaceBC_T feSpaceBC{*mesh};
   t.stop();
 
   t.start("bcs");
@@ -80,10 +84,11 @@ int test(YAML::Node const & config)
   auto const size = feSpace.dof.size;
   Builder builder{size};
   builder.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, {bc});
-  auto const bcValue = [](Vec3 const &) { return -M_PI; };
+  FEVar eGradBC{"exactGradBC", feSpaceBC};
+  interpolateAnalyticFunction(exactGrad, feSpaceBC, eGradBC.data);
   auto const rhs = std::tuple{
       AssemblyRhsAnalytic{rhsFun, feSpace},
-      AssemblyBCNaturalAnalytic{bcValue, side::RIGHT, feSpace},
+      AssemblyBCNaturalFE{eGradBC, side::RIGHT, feSpace, {0u}},
   };
   builder.buildRhs(rhs, {bc});
   builder.closeMatrix();
@@ -131,11 +136,11 @@ int test(YAML::Node const & config)
   t.stop();
 
   t.start("io");
-  IOManager io{feSpace, "output_neumann/sol"};
+  IOManager io{feSpace, "output_neumann_fe/sol"};
   io.print({sol, exact, error});
-  IOManager ioFlux{feSpaceRec, "output_neumann/flux"};
+  IOManager ioFlux{feSpaceRec, "output_neumann_fe/flux"};
   ioFlux.print({flux});
-  IOManager ioGrad{feSpaceGrad, "output_neumann/grad"};
+  IOManager ioGrad{feSpaceGrad, "output_neumann_fe/grad"};
   ioGrad.print({grad, eGrad, errorGrad});
   t.stop();
 
@@ -217,7 +222,7 @@ int main()
   t.start("Quad - 1 - 10");
   {
     YAML::Node config;
-    config["n"] = 10;
+    config["n"] = 10u;
     config["expected_error"] = 3.641059630979152e-05;
     config["flux"] = -3.090198062869211;
 
@@ -280,27 +285,28 @@ int main()
   }
   t.stop();
 
-  t.start("Hex  - 2 -  2");
-  {
-    YAML::Node config;
-    config["n"] = 2u;
-    config["expected_error"] = 0.0146283010337763;
-    config["flux"] = -3.090198062869211;
+  // // TODO: missing SideGaussQRs
+  // t.start("Hex  - 2 -  2");
+  // {
+  //   YAML::Node config;
+  //   config["n"] = 2u;
+  //   config["expected_error"] = 0.0146283010337763;
+  //   config["flux"] = -3.090198062869211;
 
-    tests[10] = test<Hexahedron, 2>(config);
-  }
-  t.stop();
+  //   tests[10] = test<Hexahedron, 2>(config);
+  // }
+  // t.stop();
 
-  t.start("Hex  - 2 -  4");
-  {
-    YAML::Node config;
-    config["n"] = 4u;
-    config["expected_error"] = 0.002474679732480007;
-    config["flux"] = -3.090198062869211;
+  // t.start("Hex  - 2 -  4");
+  // {
+  //   YAML::Node config;
+  //   config["n"] = 4u;
+  //   config["expected_error"] = 0.002474679732480007;
+  //   config["flux"] = -3.090198062869211;
 
-    tests[11] = test<Hexahedron, 2>(config);
-  }
-  t.stop();
+  //   tests[11] = test<Hexahedron, 2>(config);
+  // }
+  // t.stop();
 
   t.print();
   fmt::print("test results: {}\n", tests);

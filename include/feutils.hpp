@@ -129,7 +129,7 @@ void computeGradient(
     Vec const & u,
     FESpaceOrig const & feSpaceOrig)
 {
-  static_assert(std::is_same_v<Grad_T<FESpaceOrig>, FESpaceGrad>);
+  static_assert(std::is_same_v<Grad_T<FESpaceOrig>, std::remove_cv_t<FESpaceGrad>>);
 
   Builder builderGrad{feSpaceGrad.dof.size * FESpaceGrad::dim};
   builderGrad.buildLhs(std::tuple{AssemblyScalarMass{1.0, feSpaceGrad}});

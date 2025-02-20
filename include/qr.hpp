@@ -133,6 +133,13 @@ struct SideGaussQR
 
 // forward declarations
 
+// 1D
+template <>
+// SideGaussQR<Line, 1u>::Weights_T const SideGaussQR<Line, 1u>::weight;
+FVec<2u> const SideGaussQR<Line, 1u>::weight;
+template <>
+std::array<SideGaussQR<Line, 1u>::Vec_T, 1u * 2u> const SideGaussQR<Line, 1u>::node;
+
 // 2D
 // - Triangle
 template <>
@@ -162,11 +169,14 @@ SideGaussQR<Tetrahedron, 3U>::Weights_T const SideGaussQR<Tetrahedron, 3U>::weig
 template <>
 std::array<SideGaussQR<Tetrahedron, 3U>::Vec_T, 3U * 4U> const
     SideGaussQR<Tetrahedron, 3U>::node;
+// TODO: quadratic tet
+// - HExahedron
 template <>
 SideGaussQR<Hexahedron, 4U>::Weights_T const SideGaussQR<Hexahedron, 4U>::weight;
 template <>
 std::array<SideGaussQR<Hexahedron, 4U>::Vec_T, 4U * 6U> const
     SideGaussQR<Hexahedron, 4U>::node;
+// TODO: quadratic hexes
 
 // =====================================================================================
 

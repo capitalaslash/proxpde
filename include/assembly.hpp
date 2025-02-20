@@ -1691,8 +1691,82 @@ struct AssemblyBCNaturalAnalytic: public AssemblyVector<FESpace>
     }
   }
 
-  Fun<FESpace_T::dim, 3> const rhs;
+  Fun<FESpace_T::dim, 3> rhs;
   marker_T const marker;
+  FacetCurFE_T mutable facetCurFE;
+};
+
+template <typename FESpace, typename FESpaceData>
+struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace_T>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  using FEFacet_T = typename FESpace_T::RefFE_T::FEFacet_T;
+  using QR_T = SideQR_T<typename FESpace_T::QR_T>;
+  using FacetCurFE_T = typename CurFETraits<FEFacet_T, QR_T>::type;
+
+  static constexpr auto numPtsQR = SideQR_T<typename FESpace_T::QR_T>::numPts;
+
+  AssemblyBCNaturalFE(
+      FEVar<FESpaceData_T> & d,
+      marker_T const m,
+      FESpace_T const & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
+      AssemblyVector<FESpace_T>(fe, cmp),
+      marker{m},
+      data{&d}
+  {
+    // TODO: we should allow different fespaces, as long as they are on sides
+    static_assert(std::is_same_v<
+                  typename FESpaceData_T::QR_T,
+                  SideGaussQR<typename FESpace_T::Mesh_T::Elem_T, numPtsQR>>);
+    // TODO: the data vector is volumetric, it is not sized on the boundary
+    // auto count = 0u;
+    // for (auto const & facet: data->feSpace->mesh->facetList)
+    //   if (facet.marker == marker)
+    //     count++;
+    // // check that data is coherent with marked facets
+    // assert(data->data.size() == count);
+  }
+
+  void build(LVec_T & Fe) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    auto const & mesh = *this->feSpace->mesh;
+    auto const & e = *this->feSpace->curFE.elem;
+    for (auto f = 0u; f < FESpace_T::Mesh_T::Elem_T::numFacets; f++)
+    {
+      auto const facetId = mesh.elemToFacet[e.id][f];
+      if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
+      {
+        data->reinit(e);
+        auto const & facet = mesh.facetList[facetId];
+        auto const [ePtr, side] = facet.facingElem[0];
+        assert(ePtr->id == e.id);
+        facetCurFE.reinit(facet);
+        for (uint q = 0u; q < QR_T::numPts; ++q)
+        {
+          auto const dataQ = data->evaluate(numPtsQR * side + q);
+          for (uint const d: this->comp)
+          {
+            for (uint i = 0u; i < FEFacet_T::numDOFs; ++i)
+            {
+              auto const id = CurFE_T::RefFE_T::dofOnFacet[f][i] + d * CurFE_T::numDOFs;
+              Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * dataQ[d];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  marker_T const marker;
+  FEVar<FESpaceData_T> * data;
   FacetCurFE_T mutable facetCurFE;
 };
 

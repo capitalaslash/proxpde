@@ -29,9 +29,9 @@ int main(int argc, char * argv[])
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   double const ly = 2.;
-  uint const numElemsX = (argc < 3) ? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3) ? 4 : std::stoi(argv[2]);
-  uint const numElemsZ = (argc < 3) ? 4 : std::stoi(argv[3]);
+  uint const numElemsX = (argc < 3) ? 4u : std::stoi(argv[1]);
+  uint const numElemsY = (argc < 3) ? 4u : std::stoi(argv[2]);
+  uint const numElemsZ = (argc < 3) ? 4u : std::stoi(argv[3]);
   buildHyperCube(*mesh, {0., 0., 0.}, {1., ly, 1.}, {numElemsX, numElemsY, numElemsZ});
   // readGMSH(*mesh, "cube_uns.msh");
   t.stop();
@@ -41,12 +41,6 @@ int main(int argc, char * argv[])
   FESpaceP_T feSpaceP{*mesh, FESpaceVel_T::dim * feSpaceVel.dof.size};
   FESpaceComponent_T feSpaceComponent{*mesh};
   t.stop();
-  // std::cout << feSpaceVel.dof << std::endl;
-
-  auto feList = std::tuple{feSpaceVel, feSpaceP};
-  auto assembler = make_assembler(feList);
-  // auto assembler = make_assembler(std::forward_as_tuple(feSpaceU, feSpaceU,
-  // feSpaceP));
 
   t.start("bcs");
   auto const zero = [](Vec3 const &) { return Vec3::Constant(0.); };
@@ -62,8 +56,6 @@ int main(int argc, char * argv[])
   };
   auto const bcsP = std::vector<BCEss<FESpaceP_T>>{};
   t.stop();
-
-  // std::cout << bcsVel.bcEssList.back() << std::endl;
 
   t.start("assembly");
   auto const dofU = feSpaceVel.dof.size;
@@ -94,7 +86,7 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(
       [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); }, feSpaceP, exact.data);
 
-  std::cout << "solution norm: " << sol.data.norm() << std::endl;
+  fmt::print("solution norm: {:.16e}\n", sol.data.norm());
 
   Var u{"u"};
   Var v{"v"};
@@ -103,7 +95,6 @@ int main(int argc, char * argv[])
   getComponent(v.data, feSpaceComponent, sol.data, feSpaceVel, 1);
   getComponent(w.data, feSpaceComponent, sol.data, feSpaceVel, 2);
   Var p{"p", sol.data, 3 * dofU, dofP};
-  // getComponent(p.data, feSpaceP, sol.data, feSpaceP, 0);
 
   Var ue{"ue"};
   Var ve{"ve"};
@@ -128,10 +119,10 @@ int main(int argc, char * argv[])
   auto wError = (w.data - we.data).norm();
   auto pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << std::setprecision(16) << uError << std::endl;
-  std::cout << "v error norm: " << std::setprecision(16) << vError << std::endl;
-  std::cout << "w error norm: " << std::setprecision(16) << wError << std::endl;
-  std::cout << "p error norm: " << std::setprecision(16) << pError << std::endl;
+  fmt::print("u error norm: {:.16e}\n", uError);
+  fmt::print("v error norm: {:.16e}\n", vError);
+  fmt::print("w error norm: {:.16e}\n", wError);
+  fmt::print("p error norm: {:.16e}\n", pError);
 
   return checkError(
       {uError, vError, wError, pError},

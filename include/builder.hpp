@@ -278,12 +278,14 @@ struct Builder
   template <typename Assemblies>
   void buildRhs(
       Assemblies const & assemblies,
-      std::vector<
-          BCEss<typename std::tuple_element_t<0, Assemblies>::FESpace_T>> const & bcs =
-          std::vector<BCEss<typename std::tuple_element_t<0, Assemblies>::FESpace_T>>{})
+      std::vector<BCEss<typename std::remove_reference_t<
+          typename std::tuple_element_t<0, Assemblies>>::FESpace_T>> const & bcs =
+          std::vector<BCEss<typename std::remove_reference_t<
+              typename std::tuple_element_t<0, Assemblies>>::FESpace_T>>{})
   {
     static_assert(std::tuple_size_v<Assemblies> > 0, "we need at least 1 assembly.");
-    using FESpace_T = typename std::tuple_element_t<0, Assemblies>::FESpace_T;
+    using FESpace_T = std::remove_reference_t<
+        typename std::tuple_element_t<0, Assemblies>>::FESpace_T;
     using CurFE_T = typename FESpace_T::CurFE_T;
     using LMat_T = typename Diagonal<FESpace_T>::LMat_T;
     using LVec_T = typename Diagonal<FESpace_T>::LVec_T;

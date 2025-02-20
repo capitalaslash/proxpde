@@ -267,15 +267,25 @@ struct XDMFTraits<RefHexahedronQ2>
   // 11  24  9
   //  |      |
   //  0-- 8--1
+  // order: bottom corners, top corners, bottom middles, top middles, middle corners,
+  // face centers (x-, x+, y-, y+, z-, z+), middle
   // clang-format off
   static constexpr std::array<short_T, 27> mapping = {
+    // bottom corners
     0, 1, 2, 3,
+    // top corners
     4, 5, 6, 7,
+    // bottom middles
     8, 9, 10, 11,
+    // middle corners
     16, 17, 18, 19,
+    // top middles
     12, 13, 14, 15,
-    24, 22, 21, 23, 20, 25,
-    26};
+    // face centers (z-, x-, y-, x+, y+, z+)
+    21, 23, 22, 24, 20, 25,
+    // middle
+    26,
+  };
   // clang-format on
 };
 

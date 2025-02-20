@@ -322,6 +322,16 @@ short_T const GaussQR<Hexahedron, 27U>::bestPt = 13;
 
 // SideGaussQR =========================================================================
 
+// 1D
+template <>
+SideGaussQR<Line, 1u>::Weights_T const SideGaussQR<Line, 1u>::weight =
+    SideGaussQR<Line, 1u>::Weights_T::Constant(1.L);
+template <>
+std::array<SideGaussQR<Line, 1u>::Vec_T, 1u * 2u> const SideGaussQR<Line, 1u>::node = {{
+    FVec<1u>{1.0},
+    FVec<1u>{1.0},
+}};
+
 // 2D
 // - Triangle --------------------------------------------------------------------------
 template <>
@@ -368,15 +378,16 @@ SideGaussQR<Quad, 2U>::Weights_T const SideGaussQR<Quad, 2U>::weight =
         .finished();
 template <>
 std::array<SideGaussQR<Quad, 2U>::Vec_T, 2U * 4U> const SideGaussQR<Quad, 2U>::node = {{
+    // bottom
     SideGaussQR<Quad, 2U>::Vec_T{-sqrt13rd, -1.0},
     SideGaussQR<Quad, 2U>::Vec_T{sqrt13rd, -1.0},
-
+    // right
     SideGaussQR<Quad, 2U>::Vec_T{1.0, -sqrt13rd},
     SideGaussQR<Quad, 2U>::Vec_T{1.0, sqrt13rd},
-
+    // top
     SideGaussQR<Quad, 2U>::Vec_T{-sqrt13rd, 1.0},
     SideGaussQR<Quad, 2U>::Vec_T{sqrt13rd, 1.0},
-
+    // left
     SideGaussQR<Quad, 2U>::Vec_T{-1.0, -sqrt13rd},
     SideGaussQR<Quad, 2U>::Vec_T{-1.0, sqrt13rd},
 }};
@@ -391,18 +402,19 @@ SideGaussQR<Quad, 3U>::Weights_T const
         5.L, 8.L, 5.L).finished() / 9.L;
 template <>
 std::array<SideGaussQR<Quad, 3U>::Vec_T, 3U * 4U> const SideGaussQR<Quad, 3U>::node = {{
+    // bottom
     SideGaussQR<Quad, 3U>::Vec_T{-sqrt35th, -1.0},
     SideGaussQR<Quad, 3U>::Vec_T{     0.0L, -1.0},
     SideGaussQR<Quad, 3U>::Vec_T{ sqrt35th, -1.0},
-
+    // right
     SideGaussQR<Quad, 3U>::Vec_T{1.0, -sqrt35th},
     SideGaussQR<Quad, 3U>::Vec_T{1.0,      0.0L},
     SideGaussQR<Quad, 3U>::Vec_T{1.0,  sqrt35th},
-
+    // top
     SideGaussQR<Quad, 3U>::Vec_T{-sqrt35th, 1.0},
     SideGaussQR<Quad, 3U>::Vec_T{     0.0L, 1.0},
     SideGaussQR<Quad, 3U>::Vec_T{ sqrt35th, 1.0},
-
+    // left
     SideGaussQR<Quad, 3U>::Vec_T{-1.0, -sqrt35th},
     SideGaussQR<Quad, 3U>::Vec_T{-1.0,      0.0L},
     SideGaussQR<Quad, 3U>::Vec_T{-1.0,  sqrt35th},
@@ -458,31 +470,32 @@ SideGaussQR<Hexahedron, 4U>::Weights_T const SideGaussQR<Hexahedron, 4U>::weight
 template <>
 std::array<SideGaussQR<Hexahedron, 4U>::Vec_T, 4U * 6U> const
     SideGaussQR<Hexahedron, 4U>::node = {{
+        // back
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, -sqrt13rd, -1.0},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, -sqrt13rd, -1.0},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, +sqrt13rd, -1.0},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, +sqrt13rd, -1.0},
-
+        // left
         SideGaussQR<Hexahedron, 4U>::Vec_T{-1.0, -sqrt13rd, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-1.0, +sqrt13rd, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-1.0, +sqrt13rd, +sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-1.0, -sqrt13rd, +sqrt13rd},
-
+        // bottom
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, -1.0, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, -1.0, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, -1.0, +sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, -1.0, +sqrt13rd},
-
+        // right
         SideGaussQR<Hexahedron, 4U>::Vec_T{+1.0, -sqrt13rd, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+1.0, +sqrt13rd, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+1.0, +sqrt13rd, +sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+1.0, -sqrt13rd, +sqrt13rd},
-
+        // top
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, +1.0, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, +1.0, -sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, +1.0, +sqrt13rd},
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, +1.0, +sqrt13rd},
-
+        // front
         SideGaussQR<Hexahedron, 4U>::Vec_T{-sqrt13rd, -sqrt13rd, +1.0},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, -sqrt13rd, +1.0},
         SideGaussQR<Hexahedron, 4U>::Vec_T{+sqrt13rd, +sqrt13rd, +1.0},

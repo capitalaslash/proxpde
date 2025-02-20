@@ -1,5 +1,8 @@
 #include "def.hpp"
 
+// libfmt
+#include <fmt/std.h>
+
 #include "assembly.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
@@ -9,16 +12,40 @@
 #include "mesh.hpp"
 #include "timer.hpp"
 
-int main(int argc, char * argv[])
-{
-  using namespace proxpde;
+using namespace proxpde;
 
-  using Elem_T = Quad;
+// =====================================================================
+struct TestQR
+{
+  using Real_T = double;
+  using GeoElem_T = Quad;
+  using Vec_T = Vec2;
+  using Weights_T = FVec<4u>;
+  static short_T constexpr numPts = 4u;
+  static short_T const bestPt;
+
+  static Weights_T const weight;
+  static std::array<Vec_T, 4> const node;
+};
+
+TestQR::Weights_T const TestQR::weight = TestQR::Weights_T::Constant(1.L);
+std::array<TestQR::Vec_T, 4u> const TestQR::node = {{
+    Vec2{0.0, -2. / 3},
+    Vec2{2. / 3, 0.0},
+    Vec2{0.0, 2. / 3},
+    Vec2{-2. / 3, 0.0},
+}};
+
+short_T const TestQR::bestPt = 0u;
+
+// =====================================================================
+using Elem_T = Quad;
+
+template <typename QR>
+int test(ParameterDict const & config)
+{
   using Mesh_T = Mesh<Elem_T>;
-  using FESpace_T = FESpace<
-      Mesh_T,
-      LagrangeFE<Elem_T, 1>::RefFE_T,
-      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+  using FESpace_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 1>::RefFE_T, QR>;
 
   scalarFun_T const rhs = [](Vec3 const & p)
   {
@@ -32,21 +59,6 @@ int main(int argc, char * argv[])
   MilliTimer t;
 
   t.start("mesh build");
-  ParameterDict config;
-  if (argc > 1)
-  {
-    config = YAML::LoadFile(argv[1]);
-  }
-  else
-  {
-    config["mesh"]["type"] = MeshType::STRUCTURED;
-    config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
-    config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
-    config["mesh"]["n"] = std::array{10U, 10U, 0U};
-    // config["mesh"]["type"] = MeshType::GMSH;
-    // config["mesh"]["filename"] = "square_q.msh";
-  }
-
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   readMesh(*mesh, config["mesh"]);
   t.stop();
@@ -96,7 +108,80 @@ int main(int argc, char * argv[])
   t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
-  return checkError({norm}, {0.02049777877937642});
+  fmt::print("the norm of the error is {:.16e}\n", norm);
+  return checkError({norm}, {config["expected_error"].as<double>()});
+}
+
+int main(int argc, char * argv[])
+{
+  if (argc > 1)
+  {
+    ParameterDict config;
+    config = YAML::LoadFile(argv[1]);
+    auto const result = test<LagrangeFE<Elem_T, 1u>::RecommendedQR>(config);
+    return result;
+  }
+  else
+  {
+    std::bitset<6u> tests;
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::STRUCTURED;
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+      config["mesh"]["n"] = std::array{10u, 10u, 0u};
+      config["expected_error"] = 2.049777877938e-02;
+      tests[0] = test<LagrangeFE<Elem_T, 1u>::RecommendedQR>(config);
+    }
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::STRUCTURED;
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+      config["mesh"]["n"] = std::array{20u, 20u, 0u};
+      config["expected_error"] = 9.732187610621e-03;
+      tests[1] = test<LagrangeFE<Elem_T, 1u>::RecommendedQR>(config);
+    }
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::STRUCTURED;
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+      config["mesh"]["n"] = std::array{10u, 10u, 0u};
+      config["expected_error"] = 7.925676692262e-03;
+      tests[2] = test<TestQR>(config);
+    }
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::STRUCTURED;
+      config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+      config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+      config["mesh"]["n"] = std::array{20u, 20u, 0u};
+      config["expected_error"] = 3.914800457522e-03;
+      tests[3] = test<TestQR>(config);
+    }
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::GMSH;
+      config["mesh"]["filename"] = "square_q.msh";
+      config["expected_error"] = 4.138121542136e-02;
+      tests[4] = test<LagrangeFE<Elem_T, 1u>::RecommendedQR>(config);
+    }
+
+    {
+      ParameterDict config;
+      config["mesh"]["type"] = MeshType::GMSH;
+      config["mesh"]["filename"] = "square_q.msh";
+      config["expected_error"] = 3.987220124118e-02;
+      tests[5] = test<TestQR>(config);
+    }
+
+    fmt::print("tests: {}\n", tests);
+    return tests.any();
+  }
 }

@@ -1,3 +1,9 @@
+// solve
+// (w, t) + (u, \nabla /cdot t) = 0
+// (\nabla /cdot w, v) = (f, v)
+// w, t \in RT_0
+// u, v \in P_0
+
 #include "def.hpp"
 
 #include "assembly.hpp"
@@ -30,8 +36,8 @@ int test(YAML::Node const & config)
 
   // create mesh
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  Vec3 const origin{0.0, 0.0, 0.0};
+  Vec3 const length{1.0, 1.0, 0.0};
   buildHyperCube(
       *mesh,
       origin,
@@ -52,28 +58,53 @@ int test(YAML::Node const & config)
     // std::cout << "mesh: " << *mesh << std::endl;
   }
 
-  // auto const g = config["g"].as<double>();
-  scalarFun_T uExactFun = [/*g*/](Vec3 const & p)
+  auto const g = config["g"].as<double>();
+  auto const uExactFun = [g](Vec3 const & p) -> double
   {
-    // return p(0) * (2. + g - p(0));
+    return p(0) * (2.0 + g - p(0));
     // return std::sin(0.5 * M_PI * p(0));
-    return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1));
+    // return std::sin(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1));
+    // return 0.0;
+    // return -0.25 * p[0] * (p[0] - 1.0) * p[1] * (p[1] - 2.0);
   };
-  Fun<3, 3> wExactFun = [/*g*/](Vec3 const & p)
+  // \vec{w} = \nabla u
+  auto const wExactFun = [g](Vec3 const & p) -> Vec3
   {
-    // return Vec2(2. + g - 2. * p(0), 0.);
+    return Vec3{2.0 + g - 2.0 * p(0), 0.0, 0.0};
     // return Vec2(0.5 * M_PI * std::cos(0.5 * M_PI * p(0)), 0.);
-    return Vec3(
-        0.5 * M_PI * std::cos(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1)),
-        1.5 * M_PI * std::sin(0.5 * M_PI * p(0)) * std::cos(1.5 * M_PI * p(1)),
-        0.0);
+    // return Vec3(
+    //     0.5 * M_PI * std::cos(0.5 * M_PI * p(0)) * std::sin(1.5 * M_PI * p(1)),
+    //     1.5 * M_PI * std::sin(0.5 * M_PI * p(0)) * std::cos(1.5 * M_PI * p(1)),
+    //     0.0);
+    // return Vec3{
+    //     M_PI * std::sin(M_PI * p[0]) * std::sin(M_PI * p[0]) *
+    //         std::sin(0.5 * M_PI * p[1]) * std::cos(0.5 * M_PI * p[1]),
+    //     -2.0 * M_PI * std::sin(M_PI * p[0]) * std::cos(M_PI * p[0]) *
+    //         std::sin(0.5 * M_PI * p[1]) * std::sin(0.5 * M_PI * p[1]),
+    //     0.0};
+    // return Vec3{
+    //     p[1] * (p[1] - 2) * (2 * p[0] - 1), p[0] * (p[0] - 1) * (2 * p[1] - 2), 0.0};
   };
-  scalarFun_T rhsFun = [](Vec3 const & p)
+  auto const rhsFun = [](Vec3 const & /*p*/) -> double
   {
-    // return -2.;
+    return -2.;
     // return - .25 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0));
-    return -2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
-           std::sin(1.5 * M_PI * p(1));
+    // return -2.5 * M_PI * M_PI * std::sin(0.5 * M_PI * p(0)) *
+    //        std::sin(1.5 * M_PI * p(1));
+    // return 0.0;
+    // return 2.0 * (p[0] * (p[0] - 1) + p[1] * (p[1] - 2));
+  };
+  auto const uStarFun = [](Vec3 const & /*p*/) -> Vec3
+  {
+    return Vec3{0.0, 0.0, 0.0};
+    // return Vec3{
+    //     M_PI * std::sin(M_PI * p[0]) * std::sin(M_PI * p[0]) *
+    //             std::sin(0.5 * M_PI * p[1]) * std::cos(0.5 * M_PI * p[1]) +
+    //         0.25 * p[1] * (p[1] - 2.0) * (2.0 * p[0] - 1.0),
+    //     -2.0 * M_PI * std::sin(M_PI * p[0]) * std::cos(M_PI * p[0]) *
+    //             std::sin(0.5 * M_PI * p[1]) * std::sin(0.5 * M_PI * p[1]) +
+    //         0.25 * p[0] * (p[0] - 1.0) * (2.0 * p[1] - 2.0),
+    //     0.0};
   };
 
   FESpaceRT0_T feSpaceW{*mesh};
@@ -93,25 +124,24 @@ int test(YAML::Node const & config)
 
   // symmetry
   auto const bcWTop = BCEss{feSpaceW, side::TOP, wExactFun};
-  // auto bcWBottom = BCEss{feSpaceW, side::BOTTOM};
-  // bcWBottom << [] (Vec3 const & ) { return 0.; };
+  auto const bcWBottom = BCEss{feSpaceW, side::BOTTOM, wExactFun};
 
-  auto const bcsW = std::vector{bcWRight, bcWTop};
-  // auto const bcsW = std::tuple{};
+  // auto const bcsW = std::vector{bcWRight, bcWTop};
+  auto const bcsW = std::vector{bcWRight, bcWTop, bcWBottom};
+  // auto const bcsW = std::vector<BCEss<FESpaceRT0_T>>{};
+  // auto const bcsW = std::vector<BCEss<FESpaceRT0_T>>{};
 
   FEVar w{"w", feSpaceW};
   FEVar u{"u", feSpaceU};
   Builder builder{sizeW + sizeU};
   builder.buildLhs(std::tuple{AssemblyVectorMass{1.0, feSpaceW}}, bcsW);
-  builder.buildCoupling(AssemblyVectorGRAD{1.0, feSpaceW, feSpaceU}, bcsW, bcsU);
-  builder.buildCoupling(AssemblyVectorDIV{1.0, feSpaceU, feSpaceW}, bcsU, bcsW);
+  builder.buildCoupling(AssemblyVectorGrad{1.0, feSpaceW, feSpaceU}, bcsW, bcsU);
+  builder.buildCoupling(AssemblyVectorDiv{1.0, feSpaceU, feSpaceW}, bcsU, bcsW);
   // fixed u value
   // builder.buildRhs(AssemblyBCNatural(
   //                        [] (Vec3 const & ) { return 1.; },
   //                      side::RIGHT,
   //                      feSpaceW), bcsW);
-  // FESpaceP0Vec_T feSpaceP0Vec{*mesh};
-  // auto const bcsDummy = std::tuple{};
   // Vec rhsW;
   // interpolateAnalyticFunction([](Vec3 const & p){ return Vec2(p(0), 2.0 -
   // p(1) - p(0)); }, feSpaceP0Vec, rhsW);
@@ -122,14 +152,19 @@ int test(YAML::Node const & config)
   // builder.buildLhs(AssemblyMass(0.0, feSpaceU, {0}, sizeW, sizeW), bcsU);
 
   // builder.buildLhs(AssemblyMass(1.0, feSpaceP0, {0}, sizeW, sizeW), bcsU);
-  Vec rhs = Vec::Zero(sizeW + sizeU);
-  interpolateAnalyticFunction(rhsFun, feSpaceU, rhs);
-  builder.buildRhs(
-      std::tuple{AssemblyProjection{1.0, rhs.tail(sizeU), feSpaceU}}, bcsU);
   builder.closeMatrix();
 
-  // std::cout << "A:\n" << builder.A << std::endl;
-  // std::cout << "b:\n" << builder.b << std::endl;
+  Vec rhs = Vec::Zero(sizeW + sizeU);
+  // interpolateAnalyticFunction(uStarFun, feSpaceW, rhs);
+  interpolateAnalyticFunction(rhsFun, feSpaceU, rhs);
+  // builder.buildRhs(
+  //     std::tuple{AssemblyProjection{1.0, rhs.head(sizeW), feSpaceW}}, bcsW);
+  builder.buildRhs(std::tuple{AssemblyRhsAnalytic{uStarFun, feSpaceW}}, bcsW);
+  builder.buildRhs(
+      std::tuple{AssemblyProjection{1.0, rhs.tail(sizeU), feSpaceU}}, bcsU);
+
+  // fmt::print("A:\n{}\n", builder.A);
+  // fmt::print("b:\n{}\n", builder.b);
 
   LUSolver solver;
   solver.analyzePattern(builder.A);
@@ -138,20 +173,20 @@ int test(YAML::Node const & config)
   w.data = sol.head(sizeW);
   u.data = sol.tail(sizeU);
 
-  // std::cout << "sol:\n" << sol << std::endl;
+  // fmt::print("sol:\n{}\n", sol);
 
   Vec exact = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(wExactFun, feSpaceW, exact);
   interpolateAnalyticFunction(uExactFun, feSpaceU, exact);
+  FEVar wExact{"wExact", feSpaceW};
+  wExact.data = exact.head(sizeW);
   FEVar uExact{"uExact", feSpaceU};
   uExact.data = exact.tail(sizeU);
-  Var wExact{"wExact"};
-  wExact.data = exact.head(sizeW);
 
+  FEVar wError{"wError", feSpaceW};
+  wError.data = w.data - wExact.data;
   FEVar uError{"uError", feSpaceU};
   uError.data = u.data - uExact.data;
-  Var wError{"wError"};
-  wError.data = w.data - wExact.data;
 
   IOManager ioP0{feSpaceU, "output_poisson2dmixedquad/u"};
   ioP0.print({u, uExact, uError});
@@ -171,9 +206,34 @@ int test(YAML::Node const & config)
   // double const wL2error = l2Error(w, feSpaceW, exactGrad);
   // fmt::print("l2 error squared of w: {:e}\n", wL2error);
 
+  IOManagerFacet ioFacet{feSpaceW, "output_poisson2dmixedtri/wFacet"};
+  FEVar facetIds{"facetIds", feSpaceW};
+  facetIds.data = Vec::Zero(facetIds.data.size());
+  for (uint i = 0; i < facetIds.data.size(); ++i)
+  {
+    auto const & facet = mesh->facetList[i];
+    auto const & elemInside = facet.facingElem[0];
+    facetIds.data[i] = feSpaceW.dof.getId(elemInside.ptr->id, elemInside.side);
+  }
+  ioFacet.print(std::vector{w, wExact, facetIds});
+
+  // for (auto const & e: feSpaceW.mesh->elementList)
+  // {
+  //   auto & curFE = feSpaceW.curFE;
+  //   curFE.reinit(e);
+
+  //   auto const & dofIds = feSpaceW.dof.elemMap.row(e.id);
+
+  //   fmt::print("elem {}: dofs {}\n", e.id, dofIds);
+  //   for (auto const & pt: curFE.dofPts)
+  //   {
+  //     fmt::print("{} - ", pt.transpose());
+  //   }
+  //   fmt::print("\n");
+  // }
+
   double const norm = uError.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  fmt::print("the norm of the error is {:16.10e}\n", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 
@@ -186,42 +246,58 @@ int main(int argc, char * argv[])
   }
   else
   {
-    config["test10"]["n"] = 10U;
+    config["test10a"]["n"] = 10u;
+    config["test10a"]["chevron"] = false;
+    config["test10a"]["g"] = 0.0;
+    config["test10a"]["expected_error"] = 8.333333333335e-03;
+
+    config["test20a"]["n"] = 20u;
+    config["test20a"]["chevron"] = false;
+    config["test20a"]["g"] = 0.0;
+    config["test20a"]["expected_error"] = 4.166666666671e-03;
+
+    config["test40a"]["n"] = 40u;
+    config["test40a"]["chevron"] = false;
+    config["test40a"]["g"] = 0.0;
+    config["test40a"]["expected_error"] = 2.083333333340e-03;
+
+    config["test10"]["n"] = 10u;
     config["test10"]["chevron"] = true;
     config["test10"]["g"] = 0.0;
-    config["test10"]["expected_error"] = 8.552056692344e-02;
+    config["test10"]["expected_error"] = 3.366771971342e-03;
 
-    config["test20"]["n"] = 20U;
+    config["test20"]["n"] = 20u;
     config["test20"]["chevron"] = true;
     config["test20"]["g"] = 0.0;
-    config["test20"]["expected_error"] = 4.300932864206e-02;
+    config["test20"]["expected_error"] = 1.564143194727e-03;
 
-    config["test40"]["n"] = 40U;
+    config["test40"]["n"] = 40u;
     config["test40"]["chevron"] = true;
     config["test40"]["g"] = 0.0;
-    config["test40"]["expected_error"] = 2.152590864074e-02;
+    config["test40"]["expected_error"] = 7.546548488526e-04;
 
-    // config["test80"]["n"] = 80;
+    // config["test80"]["n"] = 80u;
     // config["test80"]["chevron"] = true;
     // config["test80"]["g"] = 0.0;
-    // config["test80"]["expected_error"] = 1.077887926675e-02;
+    // config["test80"]["expected_error"] = 3.709477413202e-04;
 
-    // config["test10g"]["n"] = 10;
-    // config["test10g"]["chevron"] = true;
-    // config["test10g"]["g"] = 1.0;
-    // config["test10g"]["expected_error"] = 0.01571348402636837;
-    // config["test20g"]["n"] = 20;
-    // config["test20g"]["chevron"] = true;
-    // config["test20g"]["g"] = 1.0;
-    // config["test20g"]["expected_error"] = 0.007856742013184393;
-    // config["test40g"]["n"] = 40;
-    // config["test40g"]["chevron"] = true;
-    // config["test40g"]["g"] = 1.0;
-    // config["test40g"]["expected_error"] = 0.003928371006596717;
+    config["test10g"]["n"] = 10u;
+    config["test10g"]["chevron"] = true;
+    config["test10g"]["g"] = 1.0;
+    config["test10g"]["expected_error"] = 3.366771971342e-03;
+
+    config["test20g"]["n"] = 20u;
+    config["test20g"]["chevron"] = true;
+    config["test20g"]["g"] = 1.0;
+    config["test20g"]["expected_error"] = 1.564143194728e-03;
+
+    config["test40g"]["n"] = 40u;
+    config["test40g"]["chevron"] = true;
+    config["test40g"]["g"] = 1.0;
+    config["test40g"]["expected_error"] = 7.546548488533e-04;
   }
-  // config.validate({"n", "g", "expected_error"});
 
-  uint result = 0U;
+  auto result = 0u;
   for (auto const & it: config)
   {
     auto const name = it.first.as<std::string>();

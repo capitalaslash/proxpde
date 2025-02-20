@@ -481,13 +481,13 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
   using Mesh_T = typename FESpace_T::Mesh_T;
   using Elem_T = typename Mesh_T::Elem_T;
   using RefFE_T = typename FESpace_T::RefFE_T;
-  using FacetFE_T = typename RefFE_T::FacetFE_T;
-  using FacetQR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using FacetCurFE_T = typename CurFETraits<FacetFE_T, FacetQR_T>::type;
+  using FEFacet_T = typename RefFE_T::FEFacet_T;
+  using QRFacet_T = SideQR_T<typename FESpace_T::QR_T>;
+  using CurFEFacet_T = typename CurFETraits<FEFacet_T, QRFacet_T>::type;
   using FacetFESpace_T =
-      FESpace<Mesh_T, RefFE_T, SideGaussQR<Elem_T, FacetQR_T::numPts>>;
+      FESpace<Mesh_T, RefFE_T, SideGaussQR<Elem_T, QRFacet_T::numPts>>;
 
-  FacetCurFE_T facetCurFE;
+  CurFEFacet_T facetCurFE;
   FacetFESpace_T facetFESpace{*feSpace.mesh};
   FEVar uFacet{facetFESpace};
   uFacet.data = u;
@@ -502,17 +502,17 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
       auto elem = facet.facingElem[0].ptr;
       auto const side = facet.facingElem[0].side;
       uFacet.reinit(*elem);
-      for (uint q = 0; q < FacetQR_T::numPts; ++q)
+      for (uint q = 0; q < QRFacet_T::numPts; ++q)
       {
         double value;
         if constexpr (family_v<RefFE_T> == FamilyType::LAGRANGE)
         {
           // TODO: this assumes that the variable is scalar
-          value = uFacet.evaluate(side * FacetQR_T::numPts + q)[0];
+          value = uFacet.evaluate(side * QRFacet_T::numPts + q)[0];
         }
         else if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
         {
-          value = uFacet.evaluate(side * FacetQR_T::numPts + q).dot(facet._normal);
+          value = uFacet.evaluate(side * QRFacet_T::numPts + q).dot(facet._normal);
         }
         integral += facetCurFE.JxW[q] * value;
       }

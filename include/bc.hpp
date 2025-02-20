@@ -304,9 +304,9 @@ template <typename FESpace>
 struct BCNat
 {
   using FESpace_T = FESpace;
-  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
+  using FEFacet_T = typename FESpace_T::RefFE_T::FEFacet_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using CurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
+  using CurFE_T = typename CurFETraits<FEFacet_T, QR_T>::type;
 
   BCNat(
       marker_T const m,
@@ -341,9 +341,9 @@ template <typename FESpace>
 struct BCMixed
 {
   using FESpace_T = FESpace;
-  using FacetFE_T = typename FESpace_T::RefFE_T::FacetFE_T;
+  using FEFacet_T = typename FESpace_T::RefFE_T::FEFacet_T;
   using QR_T = SideQR_T<typename FESpace_T::QR_T>;
-  using CurFE_T = typename CurFETraits<FacetFE_T, QR_T>::type;
+  using CurFE_T = typename CurFETraits<FEFacet_T, QR_T>::type;
   using RefFE_T = typename CurFE_T::RefFE_T;
 
   explicit BCMixed(
@@ -422,9 +422,8 @@ std::ostream & operator<<(std::ostream & out, BCList<FESpace> const & bcList)
 }
 
 template <typename FESpace>
-class DOFCoordSet
+struct DOFCoordSet
 {
-public:
   using FESpace_T = FESpace;
   using Predicate_T = std::function<bool(Vec3 const &)>;
 

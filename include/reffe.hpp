@@ -20,7 +20,7 @@ uint constexpr numDOFs()
 struct RefPoint
 {
   using GeoElem_T = PointElem;
-  using FacetFE_T = NullElem;
+  using FEFacet_T = NullElem;
   static GeoElem_T const geoElem;
   static int constexpr dim = 0;
   static uint constexpr numDOFs = 1U;
@@ -55,7 +55,7 @@ struct RefPoint
 struct RefLineP0
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPoint;
+  using FEFacet_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 1U;
@@ -96,7 +96,7 @@ struct RefLineP0
 struct RefLineP1
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPoint;
+  using FEFacet_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 2U;
@@ -138,7 +138,7 @@ struct RefLineP1
 struct RefLineP2
 {
   using GeoElem_T = Line;
-  using FacetFE_T = RefPoint;
+  using FEFacet_T = RefPoint;
   static GeoElem_T const geoElem;
   static int constexpr dim = 1;
   static uint constexpr numDOFs = 3U;
@@ -177,7 +177,7 @@ struct RefLineP2
 struct RefTriangleP0
 {
   using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP0;
+  using FEFacet_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 1U;
@@ -216,7 +216,7 @@ struct RefTriangleP0
 struct RefTriangleP1
 {
   using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP1;
+  using FEFacet_T = RefLineP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 3U;
@@ -259,7 +259,7 @@ struct RefTriangleP1
 struct RefTriangleP2
 {
   using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP2;
+  using FEFacet_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 6U;
@@ -304,7 +304,7 @@ struct RefTriangleP2
 struct RefTriangleRT0
 {
   using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP0;
+  using FEFacet_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 3U;
@@ -350,7 +350,7 @@ struct RefTriangleRT0
 struct RefTriangleCR1
 {
   using GeoElem_T = Triangle;
-  using FacetFE_T = RefLineP0;
+  using FEFacet_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 3U;
@@ -392,7 +392,7 @@ struct RefTriangleCR1
 struct RefQuadP0
 {
   using GeoElem_T = Quad;
-  using FacetFE_T = RefLineP0;
+  using FEFacet_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 1U;
@@ -436,7 +436,7 @@ struct RefQuadP0
 struct RefQuadQ1
 {
   using GeoElem_T = Quad;
-  using FacetFE_T = RefLineP1;
+  using FEFacet_T = RefLineP1;
 
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
@@ -479,7 +479,7 @@ struct RefQuadQ1
 struct RefQuadP2
 {
   using GeoElem_T = Quad;
-  using FacetFE_T = RefLineP2;
+  using FEFacet_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 8U;
@@ -525,7 +525,7 @@ struct RefQuadP2
 struct RefQuadQ2
 {
   using GeoElem_T = Quad;
-  using FacetFE_T = RefLineP2;
+  using FEFacet_T = RefLineP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 9U;
@@ -572,7 +572,7 @@ struct RefQuadQ2
 struct RefQuadRT0
 {
   using GeoElem_T = Quad;
-  using FacetFE_T = RefLineP0;
+  using FEFacet_T = RefLineP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 2;
   static uint constexpr numDOFs = 4U;
@@ -625,7 +625,7 @@ struct RefQuadRT0
 struct RefTetrahedronP0
 {
   using GeoElem_T = Tetrahedron;
-  using FacetFE_T = RefTriangleP0;
+  using FEFacet_T = RefTriangleP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 1U;
@@ -669,7 +669,7 @@ struct RefTetrahedronP0
 struct RefTetrahedronP1
 {
   using GeoElem_T = Tetrahedron;
-  using FacetFE_T = RefTriangleP1;
+  using FEFacet_T = RefTriangleP1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 4U;
@@ -708,7 +708,7 @@ struct RefTetrahedronP1
 struct RefTetrahedronP2
 {
   using GeoElem_T = Tetrahedron;
-  using FacetFE_T = RefTriangleP2;
+  using FEFacet_T = RefTriangleP2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 10U;
@@ -760,7 +760,7 @@ struct RefTetrahedronP2
 struct RefTetrahedronRT0
 {
   using GeoElem_T = Tetrahedron;
-  using FacetFE_T = RefTriangleP0;
+  using FEFacet_T = RefTriangleP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 4U;
@@ -805,7 +805,7 @@ struct RefTetrahedronRT0
 struct RefHexahedronP0
 {
   using GeoElem_T = Hexahedron;
-  using FacetFE_T = RefQuadP0;
+  using FEFacet_T = RefQuadP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 1U;
@@ -854,7 +854,7 @@ struct RefHexahedronP0
 struct RefHexahedronQ1
 {
   using GeoElem_T = Hexahedron;
-  using FacetFE_T = RefQuadQ1;
+  using FEFacet_T = RefQuadQ1;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 8U;
@@ -906,7 +906,7 @@ struct RefHexahedronQ1
 struct RefHexahedronQ2
 {
   using GeoElem_T = Hexahedron;
-  using FacetFE_T = RefQuadQ2;
+  using FEFacet_T = RefQuadQ2;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 27U;
@@ -976,7 +976,7 @@ struct RefHexahedronQ2
 struct RefHexahedronRT0
 {
   using GeoElem_T = Hexahedron;
-  using FacetFE_T = RefQuadP0;
+  using FEFacet_T = RefQuadP0;
   static GeoElem_T const geoElem;
   static int constexpr dim = 3;
   static uint constexpr numDOFs = 6U;

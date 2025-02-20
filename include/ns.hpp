@@ -48,15 +48,10 @@ struct NSSolverMonolithic
   using Mesh_T = Mesh;
   using Elem_T = typename Mesh_T::Elem_T;
   static int constexpr dim = Elem_T::dim;
-  using FESpaceVel_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 2>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR,
-      dim>;
-  using FESpaceP_T = FESpace<
-      Mesh_T,
-      typename LagrangeFE<Elem_T, 1>::RefFE_T,
-      typename LagrangeFE<Elem_T, 2>::RecommendedQR>;
+  using QR_T = typename LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using FESpaceVel_T =
+      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 2>::RefFE_T, QR_T, dim>;
+  using FESpaceP_T = FESpace<Mesh_T, typename LagrangeFE<Elem_T, 1>::RefFE_T, QR_T>;
   using BCVelList_T = std::vector<BCEss<FESpaceVel_T>>;
   using BCPList_T = std::vector<BCEss<FESpaceP_T>>;
 
@@ -512,7 +507,7 @@ void computeFEWSS(
     double const nu)
 {
   uint constexpr dim = FESpaceVel::dim;
-  using FacetFEVel_T = typename FESpaceVel::RefFE_T::FacetFE_T;
+  using FacetFEVel_T = typename FESpaceVel::RefFE_T::FEFacet_T;
   using FacetQR_T = SideQR_T<typename FESpaceVel::QR_T>;
   using FacetCurFEVel_T = typename CurFETraits<FacetFEVel_T, FacetQR_T>::type;
   using FacetFESpaceVel_T = FESpace<

@@ -122,7 +122,7 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
   std::map<edgeIdList_T, DOFid_T> edgeDOFs;
   std::map<faceIdList_T, DOFid_T> faceDOFs;
 
-  size = 0;
+  size = 0u;
   for (auto const & e: mesh.elementList)
   {
     uint localDofCount = 0;
@@ -154,13 +154,13 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
-            elemMap(e.id, localDofCount) = ptMap[p->id];
+            elemMap(e.id, localDofCount) = ptMap.at(p->id);
           }
           else // ordering == DofOrdering::INTERLEAVED
           {
             for (uint d = 0; d < dim; ++d)
             {
-              elemMap(e.id, localDofCount + d * clms) = ptMap[p->id] * dim + d;
+              elemMap(e.id, localDofCount + d * clms) = ptMap.at(p->id) * dim + d;
             }
           }
         }
@@ -201,13 +201,13 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
-            elemMap(e.id, localDofCount) = edgeDOFs[edgeIDs];
+            elemMap(e.id, localDofCount) = edgeDOFs.at(edgeIDs);
           }
           else // ordering == DofOrdering::INTERLEAVED
           {
             for (uint d = 0; d < dim; ++d)
             {
-              elemMap(e.id, localDofCount + d * clms) = edgeDOFs[edgeIDs] * dim + d;
+              elemMap(e.id, localDofCount + d * clms) = edgeDOFs.at(edgeIDs) * dim + d;
             }
           }
         }
@@ -247,13 +247,13 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
         {
           if constexpr (ordering == DofOrdering::BLOCK)
           {
-            elemMap(e.id, localDofCount) = faceDOFs[faceIDs];
+            elemMap(e.id, localDofCount) = faceDOFs.at(faceIDs);
           }
           else // ordering == DofOrdering::INTERLEAVED
           {
             for (uint d = 0; d < dim; ++d)
             {
-              elemMap(e.id, localDofCount + d * clms) = faceDOFs[faceIDs] * dim + d;
+              elemMap(e.id, localDofCount + d * clms) = faceDOFs.at(faceIDs) * dim + d;
             }
           }
         }
@@ -285,13 +285,13 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
       {
         if constexpr (ordering == DofOrdering::BLOCK)
         {
-          elemMap(e.id, localDofCount) = elemDOFs[e.id];
+          elemMap(e.id, localDofCount) = elemDOFs.at(e.id);
         }
         else // ordering == DofOrdering::INTERLEAVED
         {
           for (uint d = 0; d < dim; ++d)
           {
-            elemMap(e.id, localDofCount + d * clms) = elemDOFs[e.id] * dim + d;
+            elemMap(e.id, localDofCount + d * clms) = elemDOFs.at(e.id) * dim + d;
           }
         }
       }
@@ -325,11 +325,7 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupGeoMap(Mesh const & mesh)
   if constexpr (mappingIsSeparate_v<RefFE>)
   {
     geoPtMap.resize(mesh.pointList.size(), dofIdNotSet);
-  }
-
-  mapSize = 0;
-  if constexpr (mappingIsSeparate_v<RefFE>)
-  {
+    mapSize = 0u;
     for (auto const & e: mesh.elementList)
     {
       // geometric mapping should always have points only
@@ -354,8 +350,7 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupGeoMap(Mesh const & mesh)
       }
     }
   }
-
-  if constexpr (!mappingIsSeparate_v<RefFE>)
+  else
   {
     if constexpr (ordering == DofOrdering::BLOCK)
     {

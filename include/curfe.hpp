@@ -19,12 +19,12 @@ struct CurFE
 
   CurFE()
   {
-    for (uint q = 0; q < QR::numPts; ++q)
+    for (uint q = 0; q < QR_T::numPts; ++q)
     {
       for (uint i = 0; i < numDOFs; ++i)
       {
-        phiRef[q](i) = RefFE::phiFun[i](QR::node[q]);
-        dphiRef[q].row(i) = RefFE::dphiFun[i](QR::node[q]);
+        phiRef[q](i) = RefFE_T::phiFun[i](QR_T::node[q]);
+        dphiRef[q].row(i) = RefFE_T::dphiFun[i](QR_T::node[q]);
 
 #ifdef PROXPDE_ENABLE_SECONDDERIV
         if constexpr (enableSecondDeriv_v<RefFE_T>)
@@ -32,14 +32,14 @@ struct CurFE
           for (uint d = 0; d < dim; ++d)
           {
             d2phiRef[q].row(i + d * numDOFs) =
-                RefFE::d2phiFun[i + d * numDOFs](QR::node[q]);
+                RefFE::d2phiFun[i + d * numDOFs](QR_T::node[q]);
           }
         }
 #endif
       }
       for (uint i = 0; i < RefFE::numGeoDOFs; ++i)
       {
-        mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
+        mapping[q].row(i) = RefFE::mapping[i](QR_T::node[q]);
       }
     }
   }
@@ -58,7 +58,7 @@ struct CurFE
 
       auto const mappingPts = RefFE::mappingPts(*elem);
 
-      for (uint q = 0; q < QR::numPts; ++q)
+      for (uint q = 0; q < QR_T::numPts; ++q)
       {
         jac[q] = JacMat_T::Zero();
         for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
@@ -72,9 +72,9 @@ struct CurFE
         detJ[q] = std::sqrt(jTj.determinant());
         jacPlus[q] = jTjI * jac[q].transpose();
 
-        JxW[q] = detJ[q] * QR::weight[q];
+        JxW[q] = detJ[q] * QR_T::weight[q];
         // forward mapping on qpoint
-        qpoint[q] = elem->origin() + jac[q] * QR::node[q];
+        qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
 
         // TODO: phi values on qpoints are unaffected by the change of coords
         // this update can potentially be done in the constructor
@@ -171,20 +171,20 @@ struct CurFE
 
   GeoElem const * elem = nullptr;
   std::array<Vec3, numDOFs> dofPts;
-  std::array<JacMat_T, QR::numPts> jac;
-  std::array<Transpose_T<JacMat_T>, QR::numPts> jacPlus;
-  std::array<double, QR::numPts> detJ;
-  std::array<double, QR::numPts> JxW;
-  std::array<Vec3, QR::numPts> qpoint;
-  std::array<FVec<numDOFs>, QR::numPts> phiRef;
-  std::array<FVec<numDOFs>, QR::numPts> phi;
-  std::array<FMat<numDOFs, dim>, QR::numPts> dphiRef;
-  std::array<FMat<numDOFs, 3>, QR::numPts> dphi;
+  std::array<JacMat_T, QR_T::numPts> jac;
+  std::array<Transpose_T<JacMat_T>, QR_T::numPts> jacPlus;
+  std::array<double, QR_T::numPts> detJ;
+  std::array<double, QR_T::numPts> JxW;
+  std::array<Vec3, QR_T::numPts> qpoint;
+  std::array<FVec<numDOFs>, QR_T::numPts> phiRef;
+  std::array<FVec<numDOFs>, QR_T::numPts> phi;
+  std::array<FMat<numDOFs, dim>, QR_T::numPts> dphiRef;
+  std::array<FMat<numDOFs, 3>, QR_T::numPts> dphi;
 #ifdef PROXPDE_ENABLE_SECONDDERIV
-  std::array<FMat<numDOFs * dim, dim>, QR::numPts> d2phiRef;
-  std::array<FMat<numDOFs * 3, 3>, QR::numPts> d2phi;
+  std::array<FMat<numDOFs * dim, dim>, QR_T::numPts> d2phiRef;
+  std::array<FMat<numDOFs * 3, 3>, QR_T::numPts> d2phi;
 #endif
-  std::array<FMat<RefFE::numGeoDOFs, dim>, QR::numPts> mapping;
+  std::array<FMat<RefFE::numGeoDOFs, dim>, QR_T::numPts> mapping;
 };
 
 template <typename RefFE, typename QR>
@@ -219,16 +219,16 @@ struct VectorCurFE
 
   VectorCurFE()
   {
-    for (uint q = 0; q < QR::numPts; ++q)
+    for (uint q = 0; q < QR_T::numPts; ++q)
     {
       for (uint i = 0; i < numDOFs; ++i)
       {
-        phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR::node[q]);
-        divphiRef[q](i) = RefFE::divphiFun[i](QR::node[q]);
+        phiVectRef[q].row(i) = RefFE::phiVectFun[i](QR_T::node[q]);
+        divphiRef[q](i) = RefFE::divphiFun[i](QR_T::node[q]);
       }
       for (uint i = 0; i < RefFE::numGeoDOFs; ++i)
       {
-        mapping[q].row(i) = RefFE::mapping[i](QR::node[q]);
+        mapping[q].row(i) = RefFE::mapping[i](QR_T::node[q]);
       }
     }
     for (uint i = 0; i < RefFE::numGeoDOFs; ++i)
@@ -275,7 +275,7 @@ struct VectorCurFE
       detJ0 = std::sqrt(jTj0.determinant());
       double const detJ0Inv = 1. / detJ0;
 
-      for (uint q = 0; q < QR::numPts; ++q)
+      for (uint q = 0; q < QR_T::numPts; ++q)
       {
         jac[q] = JacMat_T::Zero();
         for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
@@ -289,10 +289,10 @@ struct VectorCurFE
         auto const jTjI = jTj.inverse();
         jacPlus[q] = jTjI * jac[q].transpose();
 
-        JxW[q] = detJ[q] * QR::weight[q];
-        JxW0[q] = detJ0 * QR::weight[q];
+        JxW[q] = detJ[q] * QR_T::weight[q];
+        JxW0[q] = detJ0 * QR_T::weight[q];
         // forward mapping on qpoint
-        qpoint[q] = elem->origin() + jac[q] * QR::node[q];
+        qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
 
         // Piola transformation
         double const detJInv = 1. / detJ[q];
@@ -383,23 +383,23 @@ struct VectorCurFE
   GeoElem const * elem = nullptr;
   std::array<int, RefFE_T::GeoElem_T::numFacets> facetSign;
   std::array<Vec3, numDOFs> dofPts;
-  std::array<JacMat_T, QR::numPts> jac;
+  std::array<JacMat_T, QR_T::numPts> jac;
   // TODO: implement the method for general quadrangles with a dedicated MODIFIED_RT
   // CurFE
   JacMat_T jac0;
-  std::array<Transpose_T<JacMat_T>, QR::numPts> jacPlus;
-  std::array<double, QR::numPts> detJ;
+  std::array<Transpose_T<JacMat_T>, QR_T::numPts> jacPlus;
+  std::array<double, QR_T::numPts> detJ;
   double detJ0;
-  std::array<double, QR::numPts> JxW;
-  std::array<double, QR::numPts> JxW0;
-  std::array<Vec3, QR::numPts> qpoint;
-  std::array<FMat<numDOFs, dim>, QR::numPts> phiVectRef;
-  std::array<FMat<numDOFs, 3>, QR::numPts> phiVect;
-  std::array<FMat<numDOFs, 3>, QR::numPts> phiVect0;
-  std::array<FVec<numDOFs>, QR::numPts> divphiRef;
-  std::array<FVec<numDOFs>, QR::numPts> divphi;
-  std::array<FVec<numDOFs>, QR::numPts> divphi0;
-  std::array<FMat<RefFE::numGeoDOFs, dim>, QR::numPts> mapping;
+  std::array<double, QR_T::numPts> JxW;
+  std::array<double, QR_T::numPts> JxW0;
+  std::array<Vec3, QR_T::numPts> qpoint;
+  std::array<FMat<numDOFs, dim>, QR_T::numPts> phiVectRef;
+  std::array<FMat<numDOFs, 3>, QR_T::numPts> phiVect;
+  std::array<FMat<numDOFs, 3>, QR_T::numPts> phiVect0;
+  std::array<FVec<numDOFs>, QR_T::numPts> divphiRef;
+  std::array<FVec<numDOFs>, QR_T::numPts> divphi;
+  std::array<FVec<numDOFs>, QR_T::numPts> divphi0;
+  std::array<FMat<RefFE::numGeoDOFs, dim>, QR_T::numPts> mapping;
   FMat<RefFE::numGeoDOFs, dim> mapping0;
 };
 

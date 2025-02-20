@@ -138,6 +138,7 @@ target_link_options(proxpde
   PRIVATE ${PROXPDE_LINK_FLAGS}
 )
 
+set(TEST_SOURCES "")
 add_executable(test_base main.cpp)
 target_link_libraries(test_base PUBLIC ProXPDE::proxpde)
 # set_target_properties(main
@@ -145,12 +146,15 @@ target_link_libraries(test_base PUBLIC ProXPDE::proxpde)
 #     CXX_CLANG_TIDY "clang-tidy;-checks=*,readability-*"
 #     CXX_INCLUDE_WHAT_YOU_USE "include-what-you-use;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp"
 #   )
+list(APPEND TEST_SOURCES main.cpp)
 
 add_executable(test_eigen EXCLUDE_FROM_ALL test_eigen.cpp)
 target_link_libraries(test_eigen PUBLIC ProXPDE::proxpde)
+list(APPEND TEST_SOURCES test_eigen.cpp)
 
 add_executable(test_trap EXCLUDE_FROM_ALL test_trap.cpp)
 target_link_libraries(test_trap PUBLIC ProXPDE::proxpde)
+list(APPEND TEST_SOURCES test_trap.cpp)
 
 install(TARGETS proxpde
   EXPORT ProXPDETargets
@@ -209,6 +213,20 @@ if (PROXPDE_ENABLE_TESTS)
 endif()
 
 feature_summary(WHAT ALL)
+
+find_program(CLANGFORMAT clang-format)
+if (CLANGFORMAT)
+  add_custom_target(format
+    COMMAND ${CLANGFORMAT}
+    --verbose -i
+    ${SOURCES} ${HEADERS} ${TEST_SOURCES}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+else()
+  add_custom_target(format
+    COMMAND echo "clang-format could not be found"
+  )
+endif()
 
 add_custom_target(proxpde_doc
   SOURCES README.md

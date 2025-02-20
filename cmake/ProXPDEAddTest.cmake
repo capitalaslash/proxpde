@@ -25,7 +25,14 @@ macro(proxpde_add_test name)
   endif()
   # if(NOT ${name}_COMPILE_FLAGS) set(${name}_COMPILE_FLAGS "-Wall -Wpedantic") endif()
 
-  add_executable(${name} ${${name}_SOURCES})
+  add_executable(${name})
+  target_sources(${name}
+    PRIVATE
+      ${${name}_SOURCES}
+  )
+  # TODO: should prepend `test/` to all files
+  list(APPEND TEST_SOURCES test/${${name}_SOURCES})
+  set(TEST_SOURCES ${TEST_SOURCES} PARENT_SCOPE)
   set_target_properties(${name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
   add_dependencies(build_tests ${name})
   # TODO: support COMPONENTS

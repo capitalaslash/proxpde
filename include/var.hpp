@@ -66,6 +66,7 @@ struct FEVar
   {
     name = n;
     feSpace = &fe;
+    data.resize(fe.dof.size * FESpace_T::dim);
   }
 
   FEVar<FESpace_T> & operator<<(Fun<FESpace_T::physicalDim(), 3> const & f)

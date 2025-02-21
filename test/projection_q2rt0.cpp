@@ -77,8 +77,8 @@ int main()
   ioQ2.print({uQ2});
   IOManagerP0 ioRT0{feSpaceRT0, "output_projq2rt0/urt0"};
   ioRT0.print(std::vector{uRT0});
-  IOManagerNormal ioNormal{feSpaceRT0, "output_projq2rt0/un"};
-  ioNormal.print(std::vector{uRT0});
+  // IOManagerNormal ioNormal{feSpaceRT0, "output_projq2rt0/un"};
+  // ioNormal.print(std::vector{uRT0});
   IOManagerFacet ioFacet{feSpaceRT0, "output_projq2rt0/ufacet"};
   ioFacet.print(std::vector{uRT0});
 

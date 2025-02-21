@@ -679,8 +679,17 @@ struct AssemblyAdvectionFE: public Diagonal<FESpace>
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace>()):
       Diagonal<FESpace>(fe, cmp),
-      coef(c),
-      vel(&u)
+      coef{c},
+      vel{&u}
+  {}
+
+  AssemblyAdvectionFE(
+      Vel & u,
+      FESpace_T const & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>(fe, cmp),
+      coef{1.0},
+      vel{&u}
   {}
 
   void reinit(GeoElem const & elem) const override { vel->reinit(elem); }

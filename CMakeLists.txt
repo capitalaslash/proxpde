@@ -72,6 +72,11 @@ set(SOURCES
 set(HEADERS
     include/assembler.hpp
     include/assembly.hpp
+    include/assembly_base.hpp
+    include/assembly_bc.hpp
+    include/assembly_coupling.hpp
+    include/assembly_lhs.hpp
+    include/assembly_rhs.hpp
     include/bc.hpp
     include/blockmatrix.hpp
     include/builder.hpp

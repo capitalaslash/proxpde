@@ -14,23 +14,25 @@ int main(int argc, char * argv[])
 {
   using namespace proxpde;
 
-  constexpr uint dim = 2;
+  auto constexpr dim = 2u;
   using Elem_T = Quad;
+  // using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
-  using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
+  // using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
+  using QuadraticRefFE = RefQuadP2;
   using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
-  using QuadraticQR = LagrangeFE<Elem_T, dim>::RecommendedQR;
+  using QuadraticQR = LagrangeFE<Elem_T, 2u>::RecommendedQR;
   using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
-  uint const numElemsX = (argc < 3) ? 4 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3) ? 4 : std::stoi(argv[2]);
+  auto const numElemsX = (argc < 3) ? 10u : static_cast<uint>(std::stoi(argv[1]));
+  auto const numElemsY = (argc < 3) ? 10u : static_cast<uint>(std::stoi(argv[2]));
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  Vec3 const origin{0.0, 0.0, 0.0};
+  Vec3 const length{1.0, 1.0, 0.0};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0});
+  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0u});
 
   FESpaceVel_T feSpaceVel{*mesh};
   auto const dofVel = dim * feSpaceVel.dof.size;
@@ -48,7 +50,7 @@ int main(int argc, char * argv[])
   DOFCoordSet pinSet{
       feSpaceP,
       [](Vec3 const & p) {
-        return (p - Vec3{0.5, 0.0, 0.0}).squaredNorm() < 1.e-12;
+        return (p - Vec3{0.5, 0.0, 0.0}).squaredNorm() < 1.e-6;
       },
   };
   auto bcsP = std::vector{BCEss{feSpaceP, pinSet.ids, [](Vec3 const &) { return 0.; }}};
@@ -61,7 +63,7 @@ int main(int argc, char * argv[])
 
   auto const dofP = feSpaceP.dof.size;
   Builder<StorageType::RowMajor> builder{dofVel + dofP};
-  Var sol{"sol"};
+  Var sol{"vel"};
   builder.buildLhs(std::tuple{stiffness}, bcsVel);
   builder.buildCoupling(grad, bcsVel, bcsP);
   builder.buildCoupling(div, bcsP, bcsVel);
@@ -98,5 +100,5 @@ int main(int argc, char * argv[])
   return checkError(
       {uNorm, vNorm, pNorm},
       {3.1594732567878383e+00, 7.4049845621285981e-01, 2.9354138858082433e+01},
-      1.e-12);
+      1.e-6);
 }

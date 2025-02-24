@@ -2,7 +2,7 @@
 
 #include "def.hpp"
 
-#include "fespace.hpp"
+#include "reffe.hpp"
 
 namespace proxpde
 {

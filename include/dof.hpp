@@ -2,7 +2,6 @@
 
 #include "def.hpp"
 
-#include "mesh.hpp"
 #include "reffe.hpp"
 
 namespace proxpde
@@ -123,6 +122,7 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
   std::map<faceIdList_T, DOFid_T> faceDOFs;
 
   size = 0u;
+  auto ptCounter = 0u;
   for (auto const & e: mesh.elementList)
   {
     uint localDofCount = 0;
@@ -166,6 +166,16 @@ void DOF<Mesh, RefFE, dimension, t, ord>::setupElemMap(Mesh const & mesh)
         }
         localDofCount++;
       }
+    }
+    else
+    {
+      // set ptMap anyway
+      for (auto & p: e.pts)
+        if (ptMap[p->id] == dofIdNotSet)
+        {
+          ptMap[p->id] = ptCounter;
+          ptCounter++;
+        }
     }
 
     // dofs on edges

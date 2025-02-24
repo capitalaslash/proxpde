@@ -4,6 +4,7 @@
 
 #include "curfe.hpp"
 #include "dof.hpp"
+#include "mesh.hpp"
 #include "qr.hpp"
 
 namespace proxpde

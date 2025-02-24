@@ -14,6 +14,7 @@
 #include "fe.hpp"
 #include "feutils.hpp"
 #include "hdf5.hpp"
+#include "mesh.hpp"
 #include "var.hpp"
 #include "xdmf_doc.hpp"
 #include "xdmf_traits.hpp"
@@ -115,6 +116,14 @@ void IOManager<FESpace>::print(std::vector<Var> const & vars, double const t)
   doc.setTime(t);
   doc.setTopology<typename FESpace::RefFE_T>(mp, feSpace->mesh->elementList.size());
   doc.setGeometry(mp, feSpace->dof.mapSize);
+  doc.setVar(
+      mp,
+      {"ptId",
+       XDMFType::SCALAR,
+       XDMFCenter::NODE,
+       XDMFNumberType::INT,
+       feSpace->dof.mapSize,
+       1u});
 
   std::filesystem::path mh = filePath.value();
   mh += fmt::format(".{}.h5", iter);
@@ -193,6 +202,14 @@ void IOManager<FESpace>::print(
   mp += ".mesh.h5";
   doc.setTopology<typename FESpace::RefFE_T>(mp, feSpace->mesh->elementList.size());
   doc.setGeometry(mp, feSpace->dof.mapSize);
+  doc.setVar(
+      mp,
+      {"ptId",
+       XDMFType::SCALAR,
+       XDMFCenter::NODE,
+       XDMFNumberType::INT,
+       feSpace->dof.mapSize,
+       1u});
 
   std::filesystem::path mh = filePath.value();
   mh += fmt::format(".{}.h5", iter);
@@ -310,6 +327,14 @@ void IOManager<FESpace>::printMeshData()
     }
   }
   h5Mesh.print(coords, "coords");
+  Table<DOFid_T, 1u> pointIds(feSpace->dof.mapSize, 1u);
+  for (auto k = 0u; k < feSpace->dof.mapSize; k++)
+    pointIds[k] = -1;
+  for (auto k = 0u; k < feSpace->mesh->pointList.size(); k++)
+    pointIds[feSpace->dof.ptMap[k]] = k;
+  h5Mesh.print(pointIds, "ptId");
+  // elemIds are the same as IDs in mesh already, no need to print them
+  // Table<id_T, 1u> elemIds(feSpace->mesh->elementList.size(), 1u);
 }
 
 template <typename FESpace>

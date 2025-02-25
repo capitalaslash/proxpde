@@ -94,13 +94,36 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
 
   AssemblyBCNaturalFE(
       FEVar<FESpaceData_T> & d,
+      std::vector<short_T> const components,
       marker_T const m,
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
+      AssemblyVector<FESpace_T>{fe, cmp},
       marker{m},
-      data{&d}
+      data{&d},
+      dataComponents{components}
   {
+    assert(dataComponents.size() == cmp.size());
+    // TODO: we should allow different fespaces, as long as they are on sides
+    static_assert(std::is_same_v<
+                  typename FESpaceData_T::QR_T,
+                  SideGaussQR<typename FESpace_T::Mesh_T::Elem_T, numPtsQR>>);
+    // TODO: the data vector is volumetric, it is not sized on the boundary
+    // auto count = 0u;
+    // for (auto const & facet: data->feSpace->mesh->facetList)
+    //   if (facet.marker == marker)
+    //     count++;
+    // // check that data is coherent with marked facets
+    // assert(data->data.size() == count);
+  }
+
+  AssemblyBCNaturalFE(FEVar<FESpaceData_T> & d, marker_T const m, FESpace_T const & fe):
+      AssemblyVector<FESpace_T>{fe, allComp<FESpace_T>()},
+      marker{m},
+      data{&d},
+      dataComponents(allComp<FESpaceData_T>())
+  {
+    static_assert(FESpaceData_T::dim == FESpace_T::dim);
     // TODO: we should allow different fespaces, as long as they are on sides
     static_assert(std::is_same_v<
                   typename FESpaceData_T::QR_T,
@@ -133,12 +156,15 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
         for (uint q = 0u; q < QR_T::numPts; ++q)
         {
           auto const dataQ = data->evaluate(numPtsQR * side + q);
-          for (uint const d: this->comp)
+          for (uint k = 0u; k < this->comp.size(); k++)
           {
+            auto const comp = this->comp[k];
+            auto const dataComp = dataComponents[k];
             for (uint i = 0u; i < FEFacet_T::numDOFs; ++i)
             {
-              auto const id = CurFE_T::RefFE_T::dofOnFacet[f][i] + d * CurFE_T::numDOFs;
-              Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * dataQ[d];
+              auto const id =
+                  CurFE_T::RefFE_T::dofOnFacet[f][i] + comp * CurFE_T::numDOFs;
+              Fe[id] += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * dataQ[dataComp];
             }
           }
         }
@@ -148,6 +174,7 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
 
   marker_T const marker;
   FEVar<FESpaceData_T> * data;
+  std::vector<short_T> dataComponents;
   FacetCurFE_T mutable facetCurFE;
 };
 

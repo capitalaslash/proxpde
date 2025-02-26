@@ -328,7 +328,7 @@ SideGaussQR<Line, 1u>::Weights_T const SideGaussQR<Line, 1u>::weight =
     SideGaussQR<Line, 1u>::Weights_T::Constant(1.L);
 template <>
 std::array<SideGaussQR<Line, 1u>::Vec_T, 1u * 2u> const SideGaussQR<Line, 1u>::node = {{
-    FVec<1u>{1.0},
+    FVec<1u>{-1.0},
     FVec<1u>{1.0},
 }};
 

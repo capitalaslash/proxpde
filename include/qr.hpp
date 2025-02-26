@@ -125,6 +125,7 @@ struct SideGaussQR
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem_T::dim>;
   static short_T constexpr numPts = N * GeoElem_T::numFacets;
+  static short_T constexpr numPtsSide = N;
   using Weights_T = FVec<numPts>;
 
   static Weights_T const weight;

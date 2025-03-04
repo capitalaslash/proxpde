@@ -9,6 +9,17 @@
 namespace proxpde
 {
 
+struct Comp
+{
+  static const std::vector<short_T> x;
+  static const std::vector<short_T> y;
+  static const std::vector<short_T> z;
+  static const std::vector<short_T> xy;
+  static const std::vector<short_T> xz;
+  static const std::vector<short_T> yz;
+  static const std::vector<short_T> xyz;
+};
+
 using DofSet_T = std::unordered_set<DOFid_T>;
 
 // TODO: add static map to set components via flags

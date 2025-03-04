@@ -31,17 +31,6 @@
 namespace proxpde
 {
 
-struct Comp
-{
-  static const std::vector<short_T> u;
-  static const std::vector<short_T> v;
-  static const std::vector<short_T> w;
-  static const std::vector<short_T> uv;
-  static const std::vector<short_T> uw;
-  static const std::vector<short_T> vw;
-  static const std::vector<short_T> uvw;
-};
-
 template <typename Mesh>
 struct NSSolverMonolithic
 {

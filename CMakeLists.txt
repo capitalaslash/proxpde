@@ -57,12 +57,12 @@ configure_file(
 )
 
 set(SOURCES
+    src/bc.cpp
     src/def.cpp
     src/fespace.cpp
     src/geo.cpp
     src/iomanager.cpp
     src/mesh.cpp
-    src/ns.cpp
     src/qr.cpp
     src/reffe.cpp
     src/var.cpp

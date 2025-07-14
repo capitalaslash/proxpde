@@ -41,6 +41,8 @@ void buildLine(
   buildFacets(mesh, flags);
   mesh.facetList[0].marker = side::LEFT;
   mesh.facetList[1].marker = side::RIGHT;
+  mesh.physicalNames["left"] = side::LEFT;
+  mesh.physicalNames["right"] = side::RIGHT;
 }
 
 void buildSquare(
@@ -345,6 +347,9 @@ void buildCircleMesh(
       f.marker = side::CIRCLE;
     }
   }
+  mesh.physicalNames["left"] = side::LEFT;
+  mesh.physicalNames["top"] = side::TOP;
+  mesh.physicalNames["circle"] = side::CIRCLE;
 }
 
 void buildCube(
@@ -639,6 +644,7 @@ void buildWedge(
     else
       facet.marker = side::BACK;
   }
+  mesh.physicalNames["back"] = side::BACK;
 }
 
 void extrude(
@@ -803,6 +809,10 @@ void extrude(
   }
 
   mesh3d.flags = mesh2d.flags;
+  // TODO: redefine physical names
+  mesh3d.physicalNames = mesh2d.physicalNames;
+  mesh3d.physicalNames["bottom"] = side::BOTTOM;
+  mesh3d.physicalNames["top"] = side::TOP;
 }
 
 void refTriangleMesh(Mesh<Triangle> & mesh)
@@ -925,7 +935,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
     }
   }
   buildNormals(mesh, MeshFlags::NONE);
-  std::cout << mesh << std::endl;
+  // std::cout << mesh << std::endl;
 }
 
 void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)

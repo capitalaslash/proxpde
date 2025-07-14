@@ -227,6 +227,7 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
   }
 
   meshFine.flags = meshCoarse.flags;
+  meshFine.physicalNames = meshCoarse.physicalNames;
 }
 
 } // namespace proxpde

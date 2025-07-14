@@ -120,9 +120,9 @@ template <typename Elem>
 uint Mesh<Elem>::countRidges()
 {
   // ridges are relevant only in 3d
-  if (Elem_T::dim < 3)
+  if (Elem_T::dim < 3u)
   {
-    return 0;
+    return 0u;
   }
 
   // identify a ridge by its points (unordered)
@@ -130,7 +130,7 @@ uint Mesh<Elem>::countRidges()
   using RidgeList_T = std::set<Ridge_T>;
 
   RidgeList_T ridges;
-  auto ridgeCount = 0U;
+  auto ridgeCount = 0u;
   for (auto const & elem: elementList)
   {
     for (auto const ridgeIds: Elem_T::elemToRidge)
@@ -177,13 +177,14 @@ std::ostream & operator<<(std::ostream & out, Mesh<Elem> const & mesh)
 // =====================================================================
 enum side : marker_T
 {
-  BOTTOM = 1,
-  RIGHT = 2,
-  TOP = 3,
-  LEFT = 4,
-  BACK = 5,
-  FRONT = 6,
-  CIRCLE = 101,
+  NONE = 0u,
+  BOTTOM,
+  RIGHT,
+  TOP,
+  LEFT,
+  BACK,
+  FRONT,
+  CIRCLE,
 };
 
 template <uint dim>
@@ -191,22 +192,33 @@ struct AllSides
 {};
 
 template <>
-struct AllSides<1U>
+struct AllSides<1u>
 {
-  static constexpr std::array<marker_T, 2> values = {LEFT, RIGHT};
+  static constexpr std::array<marker_T, 2u> values = {side::LEFT, side::RIGHT};
 };
 
 template <>
-struct AllSides<2U>
+struct AllSides<2u>
 {
-  static constexpr std::array<marker_T, 4> values = {BOTTOM, RIGHT, TOP, LEFT};
+  static constexpr std::array<marker_T, 4u> values = {
+      side::BOTTOM,
+      side::RIGHT,
+      side::TOP,
+      side::LEFT,
+  };
 };
 
 template <>
-struct AllSides<3U>
+struct AllSides<3u>
 {
-  static constexpr std::array<marker_T, 6> values = {
-      BOTTOM, RIGHT, TOP, LEFT, BACK, FRONT};
+  static constexpr std::array<marker_T, 6u> values = {
+      side::BOTTOM,
+      side::RIGHT,
+      side::TOP,
+      side::LEFT,
+      side::BACK,
+      side::FRONT,
+  };
 };
 
 // =====================================================================
@@ -394,8 +406,8 @@ void buildHyperCube(
   else
   {
     // this should never happen
-    fmt::print(stderr, "elememnt type {} not recognized\n", typeid(Elem{}).name());
-    abort();
+    fmt::print(stderr, "element type {} not recognized\n", typeid(Elem{}).name());
+    std::abort();
   }
 
   if (flags & MeshFlags::NORMALS)
@@ -467,6 +479,22 @@ void markFacetsCube(Mesh & mesh, Vec3 const & origin, Vec3 const & length)
       }
     }
   }
+
+  if constexpr (Mesh::Elem_T::dim >= 1u)
+  {
+    mesh.physicalNames["left"] = side::LEFT;
+    mesh.physicalNames["right"] = side::RIGHT;
+  }
+  if constexpr (Mesh::Elem_T::dim >= 2u)
+  {
+    mesh.physicalNames["bottom"] = side::BOTTOM;
+    mesh.physicalNames["top"] = side::TOP;
+  }
+  if constexpr (Mesh::Elem_T::dim >= 3u)
+  {
+    mesh.physicalNames["back"] = side::BACK;
+    mesh.physicalNames["front"] = side::FRONT;
+  }
 }
 
 void buildWedge(
@@ -523,7 +551,7 @@ void referenceMesh(Mesh<Elem> & mesh)
   }
   else
   {
-    abort();
+    std::abort();
   }
 }
 
@@ -600,7 +628,7 @@ void addElemFacetList(Mesh & mesh)
 }
 
 // =====================================================================
-enum class GMSHElemType : uint8_t
+enum class GMSHElemType : int8_t
 {
   NONE = 0,
   LINE = 1,
@@ -1081,31 +1109,36 @@ void writeGMSH(Mesh<Elem> const & mesh, std::string const filename)
 // =====================================================================
 enum class MeshType : uint8_t
 {
+  NONE,
   STRUCTURED,
   GMSH,
 };
 
 static constexpr const char * to_string(MeshType const type)
 {
+  using enum MeshType;
   switch (type)
   {
-  case MeshType::STRUCTURED:
+  case STRUCTURED:
     return "STRUCTURED";
-  case MeshType::GMSH:
+  case GMSH:
     return "GMSH";
   default:
-    abort();
+    std::abort();
   }
+  return "NONE";
 }
 
 static constexpr MeshType to_MeshType(std::string_view str)
 {
+  using enum MeshType;
   if (str == "STRUCTURED")
-    return MeshType::STRUCTURED;
+    return STRUCTURED;
   else if (str == "GMSH")
-    return MeshType::GMSH;
-  fmt::print(stderr, "mesh type not recognized; {}\n", str);
-  abort();
+    return GMSH;
+  fmt::println(stderr, "mesh type not recognized; {}", str);
+  std::abort();
+  return NONE;
 }
 
 } // namespace proxpde

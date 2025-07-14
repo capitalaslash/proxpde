@@ -96,6 +96,7 @@ struct Mesh
   elemToPoint_T elemToPoint;
   elemToFacet_T elemToFacet;
   Bitmask<MeshFlags> flags;
+  std::unordered_map<std::string, marker_T> physicalNames;
 };
 
 template <typename Elem>
@@ -236,7 +237,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   FacetMap_T facetMap;
   for (auto & e: mesh.elementList)
   {
-    auto side = 0U;
+    short_T side = 0u;
     for (auto const & f: Elem_T::elemToFacet)
     {
       std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
@@ -276,20 +277,20 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
       side++;
     }
   }
-  [[maybe_unused]] uint const oldBd = std::count_if(
+  [[maybe_unused]] auto const oldBd = std::count_if(
       mesh.facetList.begin(),
       mesh.facetList.end(),
       [](Facet_T const & f) { return f.onBoundary(); });
   assert(oldFacetCount == oldBd + 2 * (mesh.facetList.size() - oldBd));
 
-  uint bFacetSize = facetCount - iFacetCount;
+  auto const bFacetSize = facetCount - iFacetCount;
   mesh.facetList.resize((flags & MeshFlags::INTERNAL_FACETS) ? facetCount : bFacetSize);
   mesh.elemToFacet.resize(
       mesh.elementList.size(), fillArray<Elem_T::numFacets>(dofIdNotSet));
 
   // store facets in mesh ordering boundary facets first
   iFacetCount = bFacetSize;
-  uint bFacetCount = 0;
+  auto bFacetCount = 0u;
   // check
   // https://stackoverflow.com/questions/40673080/stdignore-with-structured-bindings
   for ([[maybe_unused]] auto const & [idSet, facet]: facetMap)
@@ -796,7 +797,7 @@ void readGMSH(
   std::set<ElemStub<Facet_T>> facets;
   std::set<marker_T> volumeMarkers;
   std::set<marker_T> facetMarkers;
-  std::map<marker_T, std::string> physicalNames;
+  std::unordered_map<std::string, marker_T> physicalNames;
 
   auto ignoredElements = 0U;
   in >> buf;
@@ -814,7 +815,7 @@ void readGMSH(
         in >> dim >> marker >> name;
         name = name.substr(1, name.size() - 2);
         assert(dim == Elem::dim || dim == Elem::dim - 1);
-        physicalNames[marker] = name;
+        physicalNames[name] = marker;
       }
       in >> buf;
       if (buf != "$EndPhysicalNames")
@@ -862,7 +863,7 @@ void readGMSH(
         in >> id >> tmp >> numTags;
         GMSHElemType elType = static_cast<GMSHElemType>(tmp);
         assert(numTags > 0);
-        std::vector<uint> tags(numTags);
+        std::vector<marker_T> tags(numTags);
         for (uint t = 0; t < numTags; t++)
         {
           in >> tags[t];
@@ -984,8 +985,7 @@ void readGMSH(
   for (auto const & n: physicalNames)
     fmt::print("{} -> {}, ", n.first, n.second);
   fmt::print("]\n");
-
-  // TODO: store physical names in the mesh
+  mesh.physicalNames = physicalNames;
 
   id_T ptCount = 0;
   std::unordered_map<id_T, id_T> ptIdMap;

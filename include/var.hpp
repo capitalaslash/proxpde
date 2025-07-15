@@ -2,11 +2,18 @@
 
 #include "def.hpp"
 
+// stl
+#include <filesystem>
+
+// local
 #include "fespace.hpp"
 #include "qr.hpp"
 
 namespace proxpde
 {
+
+template <typename FESpace>
+struct IOManager;
 
 // ---------------------------------------------------------------------
 struct Var
@@ -90,6 +97,13 @@ struct FEVar
   {
     static_assert(FESpace_T::dim == 1, "this is available only on scalar fe spaces");
     return operator<<([&v](Vec3 const &) { return Vec1::Constant(v); });
+  }
+
+  FEVar<FESpace_T> & operator>>(std::filesystem::path const & path)
+  {
+    IOManager io{*feSpace, path};
+    io.print({*this});
+    return *this;
   }
 
   double operator[](id_T const id) const { return data[id]; }

@@ -91,6 +91,7 @@ set(HEADERS
     include/geo.hpp
     include/hdf5.hpp
     include/iomanager.hpp
+    include/l2projection.hpp
     include/mesh.hpp
     include/mesh_refine.hpp
     include/multigrid.hpp

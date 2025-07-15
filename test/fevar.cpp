@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
 
   t.start("mesh build");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  uint const numElems = (argc < 2) ? 20 : std::stoi(argv[1]);
+  auto const numElems = (argc < 2) ? 20u : static_cast<uint>(std::stoul(argv[1]));
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 0., 0.};
   buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
@@ -57,9 +57,9 @@ int main(int argc, char * argv[])
   // AssemblyStiffness stiffness(1.0, feSpace);
   FEVar nu{feSpace};
   nu << [](Vec3 const & p) { return std::sin(0.5 * M_PI * p[0]); };
-  // nu << [] (Vec3 const & ) { return 1.; };
-  ScalarCoef one{1.};
-  AssemblyMassFE mass{1., one, feSpace};
+  // nu << [] (Vec3 const & ) { return 1.0; };
+  auto one = ScalarCoef{1.0};
+  AssemblyMassFE mass{one, feSpace};
   AssemblyStiffnessFE stiffness{nu, feSpace};
   AssemblyRhsAnalytic f(rhs, feSpace);
   // // using an interpolated rhs makes its quality independent of the chosen qr
@@ -92,8 +92,9 @@ int main(int argc, char * argv[])
   error.data = sol.data - exact.data;
 
   t.start("output");
-  IOManager io{feSpace, "output/sol_fevar"};
+  IOManager io{feSpace, "output_fevar/sol"};
   io.print({sol, exact, error});
+  sol >> std::filesystem::path{"output_fevar/u"};
   t.stop();
 
   t.print();

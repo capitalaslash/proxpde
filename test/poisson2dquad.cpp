@@ -21,8 +21,8 @@ struct TestQR
   using GeoElem_T = Quad;
   using Vec_T = Vec2;
   using Weights_T = FVec<4u>;
-  static short_T constexpr numPts = 4u;
-  static short_T const bestPt;
+  static uint constexpr numPts = 4u;
+  static uint const bestPt;
 
   static Weights_T const weight;
   static std::array<Vec_T, 4> const node;
@@ -36,7 +36,7 @@ std::array<TestQR::Vec_T, 4u> const TestQR::node = {{
     Vec2{-2. / 3, 0.0},
 }};
 
-short_T const TestQR::bestPt = 0u;
+uint const TestQR::bestPt = 0u;
 
 // =====================================================================
 using Elem_T = Quad;
@@ -70,13 +70,10 @@ int test(ParameterDict const & config)
   t.stop();
 
   t.start("bcs");
-  // auto bcLeft = BCEss{feSpace, side::LEFT};
-  auto bcLeft = BCEss<FESpace_T>{};
-  bcLeft.init(feSpace, side::LEFT);
-  bcLeft << [](Vec3 const &) { return 0.; };
-  auto bcBottom = BCEss{feSpace, side::BOTTOM};
-  bcBottom << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::vector{bcLeft, bcBottom};
+  auto const bcs = std::vector{
+      BCEss{feSpace, side::LEFT, [](Vec3 const &) { return 0.; }},
+      BCEss{feSpace, side::BOTTOM, [](Vec3 const &) { return 0.; }},
+  };
   t.stop();
 
   t.start("fe space");

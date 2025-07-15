@@ -14,19 +14,18 @@ int main(int argc, char * argv[])
 {
   using namespace proxpde;
 
-  auto constexpr dim = 2u;
   using Elem_T = Quad;
   // using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
   // using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
   using QuadraticRefFE = RefQuadP2;
-  using LinearRefFE = LagrangeFE<Elem_T, 1>::RefFE_T;
+  using LinearRefFE = LagrangeFE<Elem_T, 1u>::RefFE_T;
   using QuadraticQR = LagrangeFE<Elem_T, 2u>::RecommendedQR;
-  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, dim>;
+  using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
-  auto const numElemsX = (argc < 3) ? 10u : static_cast<uint>(std::stoi(argv[1]));
-  auto const numElemsY = (argc < 3) ? 10u : static_cast<uint>(std::stoi(argv[2]));
+  auto const numElemsX = (argc < 3) ? 10u : static_cast<uint>(std::stoul(argv[1]));
+  auto const numElemsY = (argc < 3) ? 10u : static_cast<uint>(std::stoul(argv[2]));
 
   Vec3 const origin{0.0, 0.0, 0.0};
   Vec3 const length{1.0, 1.0, 0.0};
@@ -35,7 +34,7 @@ int main(int argc, char * argv[])
   buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0u});
 
   FESpaceVel_T feSpaceVel{*mesh};
-  auto const dofVel = dim * feSpaceVel.dof.size;
+  auto const dofVel = Elem_T::dim * feSpaceVel.dof.size;
   FESpaceP_T feSpaceP{*mesh, dofVel};
 
   auto const zero = [](Vec3 const &) { return Vec2::Constant(0.); };
@@ -49,9 +48,7 @@ int main(int argc, char * argv[])
   // select the point on the bottom boundary in the middle
   DOFCoordSet pinSet{
       feSpaceP,
-      [](Vec3 const & p) {
-        return (p - Vec3{0.5, 0.0, 0.0}).squaredNorm() < 1.e-6;
-      },
+      [](Vec3 const & p) { return (p - Vec3{0.5, 0.0, 0.0}).squaredNorm() < 1.e-6; },
   };
   auto bcsP = std::vector{BCEss{feSpaceP, pinSet.ids, [](Vec3 const &) { return 0.; }}};
 

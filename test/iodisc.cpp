@@ -21,8 +21,8 @@ int main(int argc, char * argv[])
   std::array<uint, 3> numElems = {{2, 1, 0}};
   if (argc == 3)
   {
-    numElems[0] = static_cast<uint>(std::stoi(argv[1]));
-    numElems[1] = static_cast<uint>(std::stoi(argv[2]));
+    numElems[0] = static_cast<uint>(std::stoul(argv[1]));
+    numElems[1] = static_cast<uint>(std::stoul(argv[2]));
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};

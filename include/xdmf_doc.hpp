@@ -40,12 +40,12 @@ public:
   template <typename RefFE>
   void setTopology(
       std::filesystem::path meshPath,
-      uint const numElems,
+      size_t const numElems,
       std::string_view const connName = "connectivity");
 
   void setGeometry(
       std::filesystem::path meshPath,
-      uint const mapSize,
+      size_t const mapSize,
       std::string_view const coordName = "coords");
 
   void setVar(std::filesystem::path dataPath, XDMFVar const & var);
@@ -71,7 +71,7 @@ private:
 template <typename RefFE>
 void XDMFDoc::setTopology(
     std::filesystem::path meshPath,
-    uint const numElems,
+    size_t const numElems,
     std::string_view const connName)
 {
   assert(meshPath.extension() == ".h5");

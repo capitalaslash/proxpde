@@ -54,15 +54,17 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
 
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace->curFE;
+    double const h = curFE.elem->hMin();
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel.evaluate(q));
-      double const iVelNorm = 1. / velQPoint.norm();
+      double const velNorm = velQPoint.norm();
+      // double const peclet = 0.5 * velNorm * h / k;
+      double const aOpt = 1.0; // (1. / std::tanh(peclet) - 1. / peclet);
 
-      FVec<RefFE_T::numDOFs> phiSUPG = curFE.phi[q] + 0.5 * curFE.elem->hMin() *
-                                                          iVelNorm *
-                                                          (curFE.dphi[q] * velQPoint);
+      FVec<RefFE_T::numDOFs> phiSUPG =
+          curFE.phi[q] + 0.5 * aOpt * h * (curFE.dphi[q] * velQPoint) / velNorm;
 
       for (uint d = 0; d < FESpace_T::dim; ++d)
       {
@@ -119,7 +121,7 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace->curFE;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const uOldQPoint = uOld.evaluate(q);
       auto const velQPoint = promote<3>(vel.evaluate(q));
@@ -180,7 +182,7 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace->curFE;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel.evaluate(q));
       double const iVelNorm = 1. / velQPoint.norm();
@@ -260,7 +262,7 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
     uint constexpr size = CurFE_T::numDOFs;
     CurFE_T const & curFE = this->feSpace->curFE;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const uOldQPoint = uOld.evaluate(q);
       auto const velQPoint = promote<3>(vel.evaluate(q));

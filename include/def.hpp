@@ -19,6 +19,7 @@
 // other std
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <numeric>
@@ -62,29 +63,28 @@ struct Utils
 
 // ----------------------------------------------------------------------------
 using id_T = uint32_t;
-using marker_T = uint16_t;
+using marker_T = uint32_t;
 using DOFid_T = uint32_t;
-using short_T = uint8_t;
 id_T constexpr idNotSet = static_cast<id_T>(-1);
 DOFid_T constexpr dofIdNotSet = static_cast<DOFid_T>(-1);
 marker_T constexpr markerNotSet = static_cast<marker_T>(-1);
-short_T constexpr shortNotSet = static_cast<short_T>(-1);
+uint constexpr uintNotSet = static_cast<uint>(-1);
 
 // ----------------------------------------------------------------------------
 // TODO: maybe use an std::integer_sequence
 template <typename FESpace>
-std::vector<short_T> allComp()
+std::vector<uint> allComp()
 {
-  std::vector<short_T> comp(FESpace::dim);
+  std::vector<uint> comp(FESpace::dim);
   std::iota(comp.begin(), comp.end(), 0);
   return comp;
 }
 
 // ----------------------------------------------------------------------------
-template <typename T, short_T M, short_T N>
+template <typename T, uint M, uint N>
 using array2d = std::array<std::array<T, N>, M>;
 
-template <typename T, short_T M, short_T N, short_T O>
+template <typename T, uint M, uint N, uint O>
 using array3d = std::array<std::array<std::array<T, O>, N>, M>;
 
 // https://stackoverflow.com/questions/57756557/initializing-a-stdarray-with-a-constant-value
@@ -332,7 +332,7 @@ static constexpr int PROXPDE_NOT_IMPLEMENTED = 2;
 
 // ----------------------------------------------------------------------------
 template <class T>
-constexpr T cepow(T const & base, short_T const exponent)
+constexpr T cepow(T const & base, uint const exponent)
 {
   return exponent == 0 ? 1 : base * cepow(base, exponent - 1);
 }

@@ -43,7 +43,7 @@ private:
       auto const & eCoarse = *eFine.parent.ptr;
       auto const childId = eFine.parent.corner;
 
-      for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
+      for (uint iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
       {
         auto const dofCoarse = feSpaceCoarse->dof.getId(eCoarse.id, iCoarse);
         double sign = 1.0;
@@ -52,7 +52,7 @@ private:
           sign = (eCoarse.facets[iCoarse]->facingElem[0].ptr->id != eCoarse.id) ? -1.0
                                                                                 : 1.0;
         }
-        for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
+        for (uint iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
         {
           auto const dofFine = feSpaceFine->dof.getId(eFine.id, iFine);
           if (!done.contains({dofFine, dofCoarse}))
@@ -112,11 +112,11 @@ private:
     using RefFE_T = typename FESpace_T::RefFE_T;
     for (auto const & eCoarse: feSpaceCoarse->mesh->elementList)
     {
-      for (short_T iChild = 0; iChild < RefFE_T::numChildren; ++iChild)
+      for (uint iChild = 0; iChild < RefFE_T::numChildren; ++iChild)
       {
         auto const & eFine = *eCoarse.children[iChild].ptr;
         assert(eFine.parent.corner == iChild);
-        for (short_T iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
+        for (uint iCoarse = 0; iCoarse < RefFE_T::numDOFs; ++iCoarse)
         {
           auto const dofCoarse = feSpaceCoarse->dof.getId(eCoarse.id, iCoarse);
           // don't need this on restriction?!
@@ -126,7 +126,7 @@ private:
           //   auto & facetInsideElem = *(eCoarse.facets[iChild]->facingElem[0].ptr);
           //   sign = (facetInsideElem.id != eCoarse.id) ? -1.0 : 1.0;
           // }
-          for (short_T iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
+          for (uint iFine = 0; iFine < RefFE_T::numDOFs; ++iFine)
           {
             auto const dofFine = feSpaceFine->dof.getId(eFine.id, iFine);
             if (!done.contains({dofCoarse, dofFine}))

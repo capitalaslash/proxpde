@@ -72,7 +72,7 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
   auto const numRidges = meshCoarse.countRidges();
 
   // the number of facets is equal to the size of the list when the internal are stored
-  // or to the sum of all the facets of all the elements divided by 2
+  // or to the sum of all the facets counted 2 times and then divided by 2
   auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS)
                              ? meshCoarse.facetList.size()
                              : (Elem_T::numFacets * meshCoarse.elementList.size() +
@@ -80,7 +80,10 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
                                    2;
 
   auto const predPts = RefineHelper<Elem_T>::totalPts(
-      meshCoarse.pointList.size(), numRidges, numFacets, meshCoarse.elementList.size());
+      static_cast<uint>(meshCoarse.pointList.size()),
+      numRidges,
+      static_cast<uint>(numFacets),
+      static_cast<uint>(meshCoarse.elementList.size()));
   meshFine.pointList.reserve(predPts);
 
   meshFine.elementList.reserve(Elem_T::numChildren * meshCoarse.elementList.size());
@@ -96,13 +99,13 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
   for (auto & elem: meshCoarse.elementList)
   {
-    for (short_T c = 0; c < Elem_T::numChildren; ++c)
+    for (uint c = 0; c < Elem_T::numChildren; ++c)
     {
-      for (short_T pFine = 0; pFine < Elem_T::numPts; ++pFine)
+      for (uint pFine = 0; pFine < Elem_T::numPts; ++pFine)
       {
         auto parentIds = std::set<id_T>{};
         Vec3 newPtCoords = Vec3::Zero();
-        for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+        for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
         {
           auto const weight = Elem_T::embeddingMatrix[c](pFine, pCoarse);
           newPtCoords += weight * elem.pts[pCoarse]->coord;
@@ -130,10 +133,10 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
     // add new elements
     elem.children.reserve(Elem_T::numChildren);
-    for (short_T c = 0; c < Elem_T::numChildren; ++c)
+    for (uint c = 0; c < Elem_T::numChildren; ++c)
     {
       std::vector<Point *> conn(Elem_T::numPts);
-      for (short_T p = 0; p < Elem_T::numPts; ++p)
+      for (uint p = 0; p < Elem_T::numPts; ++p)
       {
         conn[p] = &meshFine.pointList[localPts[Elem_T::elemToChild[c][p]]];
       }
@@ -146,7 +149,7 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
     // add new facets
     // TODO: this works only for boundary facets, internal facets require
     // additional care since they are crossed twice
-    for (short_T f = 0; f < Elem_T::numFacets; ++f)
+    for (uint f = 0; f < Elem_T::numFacets; ++f)
     {
       auto const facetId = meshCoarse.elemToFacet[elem.id][f];
 
@@ -158,10 +161,10 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
         // create facet only when we are the first facing element
         if (facet.facingElem[0].ptr->id == elem.id)
         {
-          for (short_T fc = 0; fc < Facet_T::numChildren; ++fc)
+          for (uint fc = 0; fc < Facet_T::numChildren; ++fc)
           {
             std::vector<Point *> conn(Facet_T::numPts);
-            for (short_T p = 0; p < Facet_T::numPts; ++p)
+            for (uint p = 0; p < Facet_T::numPts; ++p)
             {
               conn[p] =
                   &meshFine.pointList[localPts[Elem_T::elemToFacetChild[f][fc][p]]];
@@ -181,13 +184,13 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 
             // TODO: the elem child id works only in 2D!!!
             meshFine.elemToFacet
-                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
-                [(f + fc) % Elem_T::numChildren] = newFacetId;
+                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numFacets]
+                [(f + fc) % Elem_T::numFacets] = newFacetId;
           }
         }
         else
         {
-          for (short_T fc = 0; fc < Facet_T::numChildren; ++fc)
+          for (uint fc = 0; fc < Facet_T::numChildren; ++fc)
           {
             // loop backwards on facets since an internal facet is crossed alternatively
             // from the two sides
@@ -201,8 +204,8 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
                 Elem_T::elemToFacetChildFacing[f][fc][1]};
 
             meshFine.elemToFacet
-                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numChildren]
-                [(f + fc) % Elem_T::numChildren] = newFacetId;
+                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numFacets]
+                [(f + fc) % Elem_T::numFacets] = newFacetId;
           }
         }
       }

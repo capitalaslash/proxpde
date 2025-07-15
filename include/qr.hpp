@@ -11,7 +11,7 @@ namespace proxpde
 // TODO: define GaussQR by maximum order of the complete 1d polynomial, not number of
 // points
 
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 struct GaussQR
 {
   using Real_T = double;
@@ -20,8 +20,8 @@ struct GaussQR
   using Weights_T = FVec<N>;
   // using Vec_T = Eigen::Matrix<long double, GeoElem::dim, 1>;
   // using Weights_T = Eigen::Matrix<long double, N, 1>;
-  static short_T constexpr numPts = N;
-  static short_T const bestPt;
+  static uint constexpr numPts = N;
+  static uint const bestPt;
 
   static Weights_T const weight;
   static std::array<Vec_T, N> const node;
@@ -119,13 +119,13 @@ std::array<GaussQR<Hexahedron, 27U>::Vec_T, 27U> const GaussQR<Hexahedron, 27U>:
 
 // =====================================================================================
 
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 struct SideGaussQR
 {
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem_T::dim>;
-  static short_T constexpr numPts = N * GeoElem_T::numFacets;
-  static short_T constexpr numPtsSide = N;
+  static uint constexpr numPts = N * GeoElem_T::numFacets;
+  static uint constexpr numPtsSide = N;
   using Weights_T = FVec<numPts>;
 
   static Weights_T const weight;
@@ -186,7 +186,7 @@ struct TrapQR
 {
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
-  static short_T const numPts = GeoElem::numPts;
+  static uint const numPts = GeoElem::numPts;
 
   static FVec<numPts> const weight;
   static std::array<Vec_T, numPts> const node;
@@ -229,7 +229,7 @@ struct SimpsonQR
 {
   using GeoElem_T = GeoElem;
   using Vec_T = FVec<GeoElem::dim>;
-  static short_T const numPts = cepow(3, GeoElem::dim);
+  static uint const numPts = cepow(3, GeoElem::dim);
 
   static FVec<numPts> const weight;
   static std::array<Vec_T, numPts> const node;
@@ -282,7 +282,7 @@ miniNodes()
   if constexpr (std::is_same_v<GeoElem, Line>)
   {
     auto const h = 2. / N;
-    for (short_T k = 0; k < N; ++k)
+    for (uint k = 0; k < N; ++k)
     {
       pts[k] = FVec<1>::Constant(-1. + (k + .5) * h);
     }
@@ -326,7 +326,7 @@ std::array<typename MiniQR<GeoElem, N>::Vec_T, MiniQR<GeoElem, N>::numPts> const
 
 // =====================================================================================
 
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 struct DynamicQR
 {
   using Real_T = double;
@@ -335,20 +335,20 @@ struct DynamicQR
   using Weights_T = FVec<N>;
   // using Vec_T = Eigen::Matrix<long double, GeoElem::dim, 1>;
   // using Weights_T = Eigen::Matrix<long double, N, 1>;
-  static short_T constexpr numPts = N;
-  static short_T const bestPt;
+  static uint constexpr numPts = N;
+  static uint const bestPt;
 
   static Weights_T weight;
   static std::array<Vec_T, N> node;
 };
 
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 typename DynamicQR<GeoElem, N>::Weights_T DynamicQR<GeoElem, N>::weight =
     FVec<N>::Constant(1.0 / N);
 
 namespace details
 {
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 static constexpr auto generateFixedNodes()
 {
   auto data = std::array<FVec<GeoElem::dim>, N>{};
@@ -360,7 +360,7 @@ static constexpr auto generateFixedNodes()
 }
 } // namespace details
 
-template <typename GeoElem, short_T N>
+template <typename GeoElem, uint N>
 std::array<typename DynamicQR<GeoElem, N>::Vec_T, N> DynamicQR<GeoElem, N>::node =
     details::generateFixedNodes<GeoElem, N>();
 

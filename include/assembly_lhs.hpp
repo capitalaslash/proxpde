@@ -52,9 +52,9 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
-      for (short_T d = 0; d < FESpace_T::dim; ++d)
+      for (auto d = 0u; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
@@ -95,10 +95,10 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
   void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       double const coefQPoint = coef->evaluate(q)[0];
-      for (uint d = 0; d < FESpace_T::dim; ++d)
+      for (auto d = 0u; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
@@ -131,16 +131,16 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
   void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
-      for (uint di = 0; di < FESpace_T::dim; ++di)
+      for (auto di = 0u; di < FESpace_T::dim; ++di)
       {
         // d u_i / d x_j * d \phi_i / d x_j
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             di * CurFE_T::numDOFs, di * CurFE_T::numDOFs) +=
             coef * this->feSpace->curFE.JxW[q] * this->feSpace->curFE.dphi[q] *
             this->feSpace->curFE.dphi[q].transpose();
-        for (uint dj = 0; dj < FESpace_T::dim; ++dj)
+        for (auto dj = 0u; dj < FESpace_T::dim; ++dj)
         {
           // d u_j / d x_i * d \phi_i / d x_j
           Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
@@ -148,8 +148,8 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
               coef * this->feSpace->curFE.JxW[q] *
               this->feSpace->curFE.dphi[q].col(di) *
               this->feSpace->curFE.dphi[q].col(dj).transpose();
-          // for (uint i=0; i<CurFE_T::numDOFs; ++i)
-          //   for (uint j=0; j<CurFE_T::numDOFs; ++j)
+          // for (auto i = 0u; i < CurFE_T::numDOFs; ++i)
+          //   for (auto j = 0u; j < CurFE_T::numDOFs; ++j)
           //   {
           //     // d u_j / d x_i * d \phi_i / d x_j
           //     Ke(i+di*CurFE_T::numDOFs, j+dj*CurFE_T::numDOFs) +=
@@ -208,9 +208,9 @@ struct AssemblyScalarMass: public Diagonal<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
-      for (uint d = 0; d < FESpace_T::dim; ++d)
+      for (auto d = 0u; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
@@ -244,8 +244,17 @@ struct AssemblyMassFE: public Diagonal<FESpace>
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace>()):
       Diagonal<FESpace>(fe, cmp),
-      coef(c),
-      coefFE(&cFE)
+      coef{c},
+      coefFE{&cFE}
+  {}
+
+  AssemblyMassFE(
+      Coef & cFE,
+      FESpace_T const & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      Diagonal<FESpace>(fe, cmp),
+      coef{1.0},
+      coefFE{&cFE}
   {}
 
   void reinit(GeoElem const & elem) const override { coefFE->reinit(elem); }
@@ -254,7 +263,7 @@ struct AssemblyMassFE: public Diagonal<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       double const coefQPoint = coefFE->evaluate(q)[0];
       for (auto const c: this->comp)
@@ -293,7 +302,7 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       for (uint d = 0; d < FESpace_T::dim; ++d)
       {
@@ -414,14 +423,14 @@ struct AssemblyAdvection: public Diagonal<FESpace>
   void build(LMat_T & Ke) const override
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       FVec<3> localVel = FVec<3>::Zero();
       if constexpr (family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::LAGRANGE)
       {
-        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
+        for (auto n = 0u; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
         {
-          for (uint d = 0; d < FESpaceVel_T::dim; ++d)
+          for (auto d = 0u; d < FESpaceVel_T::dim; ++d)
           {
             id_T const dofId =
                 feSpaceVel->dof.getId(this->feSpace->curFE.elem->id, n, d);
@@ -432,7 +441,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       else if constexpr (
           family_v<typename FESpaceVel_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
-        for (uint n = 0; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
+        for (auto n = 0u; n < FESpaceVel_T::RefFE_T::numDOFs; ++n)
         {
           id_T const dofId = feSpaceVel->dof.getId(this->feSpace->curFE.elem->id, n);
           localVel +=
@@ -448,7 +457,7 @@ struct AssemblyAdvection: public Diagonal<FESpace>
 
       // TODO: the block is independent from d, so it could be computed once and then
       // copied over to the others
-      for (uint d = 0; d < FESpace_T::dim; ++d)
+      for (auto d = 0u; d < FESpace_T::dim; ++d)
       {
         Ke.template block<CurFE_T::numDOFs, CurFE_T::numDOFs>(
             d * CurFE_T::numDOFs, d * CurFE_T::numDOFs) +=
@@ -503,11 +512,11 @@ struct AssemblyAdvectionFE: public Diagonal<FESpace>
   {
     using CurFE_T = typename FESpace_T::CurFE_T;
     uint constexpr size = CurFE_T::numDOFs;
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const localV = vel->evaluate(q);
       FVec<3> const localVel = promote<3>(localV);
-      for (uint d = 0; d < FESpace_T::dim; ++d)
+      for (auto d = 0u; d < FESpace_T::dim; ++d)
       {
         Ke.template block<size, size>(d * size, d * size) +=
             coef * this->feSpace->curFE.JxW[q] * this->feSpace->curFE.phi[q] *

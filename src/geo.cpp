@@ -18,7 +18,7 @@ bool operator==(GeoElem const & e1, GeoElem const & e2)
     return false;
   }
 
-  for (short_T f = 0; f < e1.facets.size(); ++f)
+  for (uint f = 0; f < e1.facets.size(); ++f)
   {
     if (e1.facets[f] != e2.facets[f])
     {
@@ -41,7 +41,7 @@ bool operator==(GeoElem const & e1, GeoElem const & e2)
     return false;
   }
 
-  for (short_T c = 0; c < e1.children.size(); ++c)
+  for (uint c = 0; c < e1.children.size(); ++c)
   {
     if (e1.children[c] != e2.children[c])
     {
@@ -49,7 +49,7 @@ bool operator==(GeoElem const & e1, GeoElem const & e2)
     }
   }
 
-  for (short_T f = 0; f < 2; ++f)
+  for (uint f = 0; f < 2; ++f)
   {
     if (e1.facingElem[f] != e2.facingElem[f])
     {

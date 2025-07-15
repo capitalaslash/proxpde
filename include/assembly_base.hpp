@@ -13,7 +13,7 @@ struct ScalarCoef
 
   void reinit(GeoElem const & /*elem*/) {}
 
-  Vec1 evaluate(short_T const /*q*/) const { return Vec1{coef}; }
+  Vec1 evaluate(uint const /*q*/) const { return Vec1{coef}; }
 
   double coef;
 };
@@ -21,11 +21,11 @@ struct ScalarCoef
 struct AssemblyBase
 {
   // TODO: convert to std::unordered_set
-  using CompList = std::vector<short_T>;
+  using CompList = std::vector<uint>;
 
   CompList const comp = {};
 
-  bool hasComp(short_T c) const
+  bool hasComp(uint c) const
   {
     return std::find(comp.begin(), comp.end(), c) != comp.end();
   }

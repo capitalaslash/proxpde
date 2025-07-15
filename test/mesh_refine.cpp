@@ -41,7 +41,7 @@ void test()
 
   std::cout << Utils::separator << "mesh fine:\n" << *meshFine << std::endl;
 
-  auto checked = 0U;
+  auto checked = 0u;
   for (auto const & f: meshFine->facetList)
   {
     // check that our facing elem is the child of the facing elem of our parent
@@ -61,15 +61,14 @@ void test()
       }
     }
   }
-  [[maybe_unused]] uint const bdSize = std::count_if(
+  [[maybe_unused]] auto const bdSize = static_cast<std::size_t>(std::count_if(
       meshCoarse->facetList.begin(),
       meshCoarse->facetList.end(),
-      [](Facet_T const & f) { return f.onBoundary(); });
+      [](Facet_T const & f) { return f.onBoundary(); }));
   // we do 1 check for each boundary facet on the fine mesh + 2 checks for each internal
   // facets on the fine mesh
-  assert(
-      checked ==
-      Facet_T::numChildren * (bdSize + 2 * (meshCoarse->facetList.size() - bdSize)));
+  // bd + 2 * (total - bd) = 2 * total - bd
+  assert(checked == Facet_T::numChildren * (2 * meshCoarse->facetList.size() - bdSize));
   std::cout << "facet checks performed: " << checked << std::endl;
 
   FESpace_T feSpace{*meshFine};
@@ -78,7 +77,7 @@ void test()
   {
     id.data[elem.id] = elem.id;
   }
-  IOManager io{feSpace, "output_refine/fine"};
+  IOManager io{feSpace, std::string{"output_refine/fine_"} + elemToStr_v<Elem>};
   io.print({id});
 }
 

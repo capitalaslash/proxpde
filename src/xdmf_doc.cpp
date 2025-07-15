@@ -37,7 +37,7 @@ void XDMFDoc::setTime(double const time)
 
 void XDMFDoc::setGeometry(
     std::filesystem::path meshPath,
-    uint const mapSize,
+    size_t const mapSize,
     std::string_view const coordName)
 {
   assert(meshPath.extension() == ".h5");

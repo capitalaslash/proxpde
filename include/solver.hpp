@@ -51,7 +51,7 @@ struct SolverBase
     std::abort();
   };
 
-  virtual std::pair<short_T, double> solve(Vec const &, Vec &)
+  virtual std::pair<uint, double> solve(Vec const &, Vec &)
   {
     fmt::print("we should never get here!\n");
     std::abort();
@@ -80,7 +80,7 @@ struct Solver<SolverPackage::EIGEN, SolverType::DIRECT, P>: public SolverBase
     std::abort();
   }
 
-  std::pair<short_T, double> solve(Vec const & b, Vec & u)
+  std::pair<uint, double> solve(Vec const & b, Vec & u)
   {
     u = eigenSolver.solve(b);
     return std::pair{0, 0.};
@@ -151,7 +151,7 @@ struct Solver<SolverPackage::EIGEN, S, P>: public SolverBase
 
   void compute(Mat<StorageType::RowMajor> const & m) { eigenSolver.compute(m); }
 
-  std::pair<short_T, double> solve(Vec const & b, Vec & u)
+  std::pair<uint, double> solve(Vec const & b, Vec & u)
   {
     u = eigenSolver.solve(b);
     return std::pair{eigenSolver.iterations(), eigenSolver.error()};

@@ -2,6 +2,7 @@
 
 #include "fe.hpp"
 #include "fespace.hpp"
+#include "feutils.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 

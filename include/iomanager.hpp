@@ -12,8 +12,8 @@
 
 // local
 #include "fe.hpp"
-#include "feutils.hpp"
 #include "hdf5.hpp"
+#include "l2projection.hpp"
 #include "mesh.hpp"
 #include "var.hpp"
 #include "xdmf_doc.hpp"
@@ -329,7 +329,7 @@ void IOManager<FESpace>::printMeshData()
   h5Mesh.print(coords, "coords");
   Table<DOFid_T, 1u> pointIds(feSpace->dof.mapSize, 1u);
   for (auto k = 0u; k < feSpace->dof.mapSize; k++)
-    pointIds[k] = -1;
+    pointIds[k] = uintNotSet;
   for (auto k = 0u; k < feSpace->mesh->pointList.size(); k++)
     pointIds[feSpace->dof.ptMap[k]] = k;
   h5Mesh.print(pointIds, "ptId");
@@ -376,7 +376,7 @@ void IOManager<FESpace>::printBoundary()
   Table<id_T, Facet_T::numPts> conn(mesh.facetList.size(), Facet_T::numPts);
   for (auto const & f: mesh.facetList)
   {
-    for (uint p = 0; p < Facet_T::numPts; ++p)
+    for (auto p = 0u; p < Facet_T::numPts; ++p)
     {
       conn(f.id, p) = f.pts[p]->id;
     }
@@ -460,7 +460,7 @@ struct IOManagerP0
   void print(std::vector<Var> const & data, double const t = 0.0)
   {
     std::vector<Var> dataP0(data.size());
-    for (short_T i = 0; i < data.size(); ++i)
+    for (auto i = 0u; i < data.size(); ++i)
     {
       dataP0[i].name = data[i].name + "P0";
       l2Projector.setRhs(data[i].data);

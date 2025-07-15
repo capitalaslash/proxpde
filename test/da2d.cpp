@@ -53,7 +53,7 @@ struct AssemblyMassSUPG: public Diagonal<FESpace>
     double const h = curFE.elem->hMin();
     vel->reinit(*curFE.elem);
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       Vec3 const velQPoint = promote<3>(vel->evaluate(q));
       auto const phiiSUPG =
@@ -100,7 +100,7 @@ struct AssemblyAdvectionSUPG: public Diagonal<FESpace>
     double const h = curFE.elem->hMin();
     vel->reinit(*curFE.elem);
 
-    for (uint q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       auto const velQPoint = promote<3>(vel->evaluate(q));
       auto const phiiSUPG =

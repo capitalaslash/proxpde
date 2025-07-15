@@ -18,9 +18,9 @@ int main(int argc, char * argv[])
   auto numElems = std::array{2u, 1u, 1u};
   if (argc == 4)
   {
-    numElems[0] = std::stoul(argv[1]);
-    numElems[1] = std::stoul(argv[2]);
-    numElems[2] = std::stoul(argv[3]);
+    numElems[0] = static_cast<uint>(std::stoul(argv[1]));
+    numElems[1] = static_cast<uint>(std::stoul(argv[2]));
+    numElems[2] = static_cast<uint>(std::stoul(argv[3]));
   }
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};

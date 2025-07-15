@@ -270,7 +270,7 @@ struct XDMFTraits<RefHexahedronQ2>
   // order: bottom corners, top corners, bottom middles, top middles, middle corners,
   // face centers (x-, x+, y-, y+, z-, z+), middle
   // clang-format off
-  static constexpr std::array<short_T, 27> mapping = {
+  static constexpr std::array<uint, 27> mapping = {
     // bottom corners
     0, 1, 2, 3,
     // top corners

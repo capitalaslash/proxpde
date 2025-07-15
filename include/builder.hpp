@@ -45,8 +45,8 @@ struct Builder
 
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
-    uint const approxEntryNum =
-        pow(CurFE_T::numDOFs, 2) * FESpace_T::dim * mesh.elementList.size();
+    auto const approxEntryNum =
+        cepow(CurFE_T::numDOFs, 2u) * FESpace_T::dim * mesh.elementList.size();
     _triplets.reserve(approxEntryNum);
 
     for (auto const & elem: mesh.elementList)
@@ -172,7 +172,7 @@ struct Builder
 
     // FIXME: compute a proper sparsity pattern
     // approxEntryNum = n. localMat entries * n. elements
-    uint const approxEntryNum = CurFERow_T::numDOFs * FESpaceRow::dim *
+    auto const approxEntryNum = CurFERow_T::numDOFs * FESpaceRow::dim *
                                 CurFEClm_T::numDOFs * FESpaceClm::dim *
                                 assembly.feSpace1->mesh->elementList.size();
     _triplets.reserve(approxEntryNum);

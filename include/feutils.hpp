@@ -7,7 +7,6 @@
 #include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "sparse_matrix.hpp"
 
 namespace proxpde
 {
@@ -101,7 +100,7 @@ void interpolateOnFacets(
     FESpaceIn const & feSpaceIn,
     // TODO: replace with a proper list of all markers
     std::unordered_set<marker_T> const & markers =
-        std::unordered_set<marker_T>({marker_T(-1)}), // {-1} means all facets
+        std::unordered_set<marker_T>({markerNotSet}), // {markerNotSet} means all facets
     double const coef = 1.0)
 {
   uint constexpr dim = FESpaceIn::dim;
@@ -123,7 +122,7 @@ void interpolateOnFacets(
 
   for (auto const & facet: feSpaceOut.mesh->elementList)
   {
-    if (markers == std::unordered_set<marker_T>({marker_T(-1)}) ||
+    if (markers == std::unordered_set<marker_T>({markerNotSet}) ||
         (markers.contains(facet.marker)))
     {
       // std::cout << "facet " << facet.id << std::endl;
@@ -149,7 +148,7 @@ void interpolateOnFacets(
         comp = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
       }
 
-      for (uint q = 0; q < QRFacet_T::numPts; ++q)
+      for (auto q = 0u; q < QRFacet_T::numPts; ++q)
       {
         FVec<FESpaceIn::physicalDim()> const inLocal =
             coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
@@ -171,16 +170,16 @@ double l2Norm(Var const & u, FESpace const & feSpace)
     feSpace.curFE.reinit(elem);
 
     FMat<FESpace::RefFE_T::numDOFs, FESpace::dim> uLocal;
-    for (uint n = 0; n < FESpace::RefFE_T::numDOFs; ++n)
+    for (auto n = 0u; n < FESpace::RefFE_T::numDOFs; ++n)
     {
-      for (uint d = 0; d < FESpace::dim; ++d)
+      for (auto d = 0u; d < FESpace::dim; ++d)
       {
         id_T const dofId = feSpace.dof.getId(feSpace.curFE.elem->id, n);
         uLocal(n, d) = u.data[dofId];
       }
     }
 
-    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       FVec<FESpace::physicalDim()> uQ;
       if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)
@@ -215,16 +214,16 @@ double l2Error(
     feSpace.curFE.reinit(elem);
 
     FMat<FESpace::RefFE_T::numDOFs, FESpace::dim> uLocal;
-    for (uint n = 0; n < FESpace::RefFE_T::numDOFs; ++n)
+    for (auto n = 0u; n < FESpace::RefFE_T::numDOFs; ++n)
     {
-      for (uint d = 0; d < FESpace::dim; ++d)
+      for (auto d = 0u; d < FESpace::dim; ++d)
       {
         id_T const dofId = feSpace.dof.getId(feSpace.curFE.elem->id, n, d);
         uLocal(n, d) = u.data[dofId];
       }
     }
 
-    for (short_T q = 0; q < CurFE_T::QR_T::numPts; ++q)
+    for (auto q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       FVec<FESpace::physicalDim()> uQ;
       if constexpr (family_v<typename FESpace::RefFE_T> == FamilyType::LAGRANGE)

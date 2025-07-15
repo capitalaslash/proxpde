@@ -222,7 +222,7 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  double const norm = error.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
-  return checkError({norm}, {2.138630383415e-05});
+  double const errorNorm = error.norm();
+  fmt::print("the norm of the error is {:.16e}\n", errorNorm);
+  return checkError({errorNorm}, {2.138630383415e-05});
 }

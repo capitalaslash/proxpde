@@ -29,7 +29,7 @@ struct MGSolver
 
   MGSolver() = delete;
 
-  MGSolver(short_T const n):
+  MGSolver(uint const n):
       numLevels{n},
       As{static_cast<size_t>(n)},
       prols{static_cast<size_t>(n) - 1},
@@ -38,7 +38,7 @@ struct MGSolver
   {}
 
   MGSolver(
-      short_T const n,
+      uint const n,
       std::vector<Mat<StorageType::RowMajor> const *> mats,
       std::vector<Prol_T const *> ps,
       std::vector<Rest_T const *> rs):
@@ -52,7 +52,7 @@ struct MGSolver
   }
 
   void init(
-      short_T const level,
+      uint const level,
       Mat<StorageType::RowMajor> const & mat,
       Prol_T const & p,
       Rest_T const & r)
@@ -67,7 +67,7 @@ struct MGSolver
 
   void solve(Vec const & b, Vec & x) { step(b, x, numLevels - 1); }
 
-  void step(Vec const & b, Vec & x, short_T const level)
+  void step(Vec const & b, Vec & x, uint const level)
   {
     // 1) relax with smoother
     Vec xTilda = smoothers[level - 1].solveWithGuess(b, x);
@@ -107,13 +107,13 @@ struct MGSolver
               << std::endl;
   }
 
-  short_T numLevels;
+  uint numLevels;
   std::vector<Mat<StorageType::RowMajor> const *> As;
   std::vector<Prol_T const *> prols;
   std::vector<Rest_T const *> rests;
   std::vector<Smoother_T> smoothers;
   CoarseSolver_T coarseSolver;
-  short_T smoothIters = 2;
+  uint smoothIters = 2;
 };
 
 template <typename BC, typename FEDest>
@@ -173,7 +173,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   auto const numRefs = 3U;
 
   std::array<std::unique_ptr<Mesh_T>, numRefs + 1> meshes;
-  for (short_T ref = 0; ref < numRefs + 1; ++ref)
+  for (uint ref = 0; ref < numRefs + 1; ++ref)
   {
     meshes[ref] = std::make_unique<Mesh_T>(Mesh_T{});
   }
@@ -188,7 +188,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   t.start("mesh refine");
   // std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   // uniformRefine(*meshCoarse, *mesh);
-  for (short_T ref = 0; ref < numRefs; ++ref)
+  for (uint ref = 0; ref < numRefs; ++ref)
   {
     uniformRefine(*meshes[ref], *meshes[ref + 1]);
   }
@@ -199,7 +199,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // FESpace_T feSpaceCoarse{*meshCoarse};
   // FESpace_T feSpace{*mesh};
   std::array<FESpace_T, numRefs + 1> feSpaces;
-  for (short_T level = 0; level < numRefs + 1; ++level)
+  for (uint level = 0; level < numRefs + 1; ++level)
   {
     feSpaces[level].init(*meshes[level]);
   }
@@ -215,7 +215,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   std::array<std::vector<BCEss<FESpace_T>>, numRefs + 1> bcLists;
   auto const zero = [](Vec3 const &) { return 0.; };
-  for (short_T level = 0; level < numRefs + 1; ++level)
+  for (uint level = 0; level < numRefs + 1; ++level)
   {
     bcLists[level].push_back(BCEss{feSpaces[level], side::LEFT, zero});
     bcLists[level].push_back(BCEss{feSpaces[level], side::BOTTOM, zero});
@@ -231,7 +231,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   using Rest_T = Restrictor<FESpace_T, decltype(bcListTop)>;
   std::array<Prol_T, numRefs> prols;
   std::array<Rest_T, numRefs> rests;
-  for (short_T level = 0; level < numRefs; ++level)
+  for (uint level = 0; level < numRefs; ++level)
   {
     prols[level].init(feSpaces[level], feSpaces[level + 1]);
     rests[level].init(feSpaces[level + 1], feSpaces[level], bcLists[level]);
@@ -240,7 +240,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   t.start("assembly");
   std::array<Builder<StorageType::RowMajor>, numRefs + 1> builders;
-  for (short_T level = 0; level < numRefs + 1; ++level)
+  for (uint level = 0; level < numRefs + 1; ++level)
   {
     builders[level].init(feSpaces[level].dof.size);
     builders[level].buildLhs(
@@ -277,7 +277,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   t.start("solve mg");
   MGSolver<Prol_T, Rest_T> mgSolver{numRefs + 1};
-  for (short_T l = 1; l < numRefs + 1; ++l)
+  for (uint l = 1; l < numRefs + 1; ++l)
   {
     mgSolver.init(l, builders[l].A, prols[l - 1], rests[l - 1]);
   }
@@ -290,7 +290,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   mgSolver.solve(builderTop.b, solMG.data);
 
   // std::array<IterSolver, numRefs + 1> smoothers;
-  // for (short_T level = 1; level < numRefs + 1; ++level)
+  // for (uint level = 1; level < numRefs + 1; ++level)
   // {
   //   smoothers[level].setMaxIterations(smoothIter);
   //   smoothers[level].compute(builders[level].A);
@@ -302,7 +302,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   // std::array<Vec, numRefs + 1> residuals;
   // std::array<Vec, numRefs + 1> errors;
-  // for (short_T level = 0; level < numRefs; ++level)
+  // for (uint level = 0; level < numRefs; ++level)
   // {
   //   // residuals[level] = Vec::Zero(feSpaces[level].dof.size);
   //   errors[level] = Vec::Zero(feSpaces[level].dof.size);
@@ -311,7 +311,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // // set from initial condition
   // errors.back() = solMG.data;
 
-  // for (short_T level = numRefs; level > 0; --level)
+  // for (uint level = numRefs; level > 0; --level)
   // {
   //   Vec const e = smoothers[level].solveWithGuess(residuals[level], errors[level]);
   //   std::cout << "pre-smoother n. iterations: " << smoothers[level].iterations()
@@ -326,7 +326,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // std::cout << "coarse n. iterations: " << smoothers[0].iterations() << std::endl;
   // std::cout << "coarse residual:      " << smoothers[0].error() << std::endl;
 
-  // for (short_T level = 0; level < numRefs; ++level)
+  // for (uint level = 0; level < numRefs; ++level)
   // {
   //   errors[level + 1] = prols[level].mat * errors[level];
   //   Vec const res = builders[level + 1].A * errors[level + 1];

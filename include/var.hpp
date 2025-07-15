@@ -144,7 +144,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         integral += feSpace->curFE.JxW[q] * this->evaluate(q);
       }
@@ -158,7 +158,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluate(q);
         integral += feSpace->curFE.JxW[q] * localValue.dot(localValue);
@@ -173,7 +173,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluate(q);
         auto const exactQ = exact(feSpace->curFE.qpoint[q]);
@@ -195,7 +195,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluate0(q);
         auto const exactQ = exact(feSpace->curFE.qpoint[q]);
@@ -212,7 +212,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localGrad = this->evaluateGrad(q);
         integral += feSpace->curFE.JxW[q] * (localGrad.transpose() * localGrad).trace();
@@ -227,7 +227,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluateDiv(q);
         auto const exactQ = exact(feSpace->curFE.qpoint[q]);
@@ -244,7 +244,7 @@ struct FEVar
     for (auto const & elem: feSpace->mesh->elementList)
     {
       this->reinit(elem);
-      for (uint q = 0; q < FESpace_T::QR_T::numPts; ++q)
+      for (uint q = 0u; q < FESpace_T::QR_T::numPts; ++q)
       {
         auto const localValue = this->evaluateDIV(q);
         auto const exactQ = exact(feSpace->curFE.qpoint[q]);

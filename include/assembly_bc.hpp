@@ -94,7 +94,7 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
 
   AssemblyBCNaturalFE(
       FEVar<FESpaceData_T> & d,
-      std::vector<short_T> const components,
+      std::vector<uint> const components,
       marker_T const m,
       FESpace_T const & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
@@ -174,7 +174,7 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
 
   marker_T const marker;
   FEVar<FESpaceData_T> * data;
-  std::vector<short_T> dataComponents;
+  std::vector<uint> dataComponents;
   FacetCurFE_T mutable facetCurFE;
 };
 

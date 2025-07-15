@@ -236,7 +236,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   for (auto const & facet: mesh.facetList)
   {
     FacetMapKey_T facetIds;
-    for (short_T p = 0; p < Mesh::Facet_T::numPts; ++p)
+    for (uint p = 0; p < Mesh::Facet_T::numPts; ++p)
     {
       facetIds.insert(facet.pts[p]->id);
     }
@@ -249,12 +249,12 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   FacetMap_T facetMap;
   for (auto & e: mesh.elementList)
   {
-    short_T side = 0u;
+    uint side = 0u;
     for (auto const & f: Elem_T::elemToFacet)
     {
       std::vector<Point *> facetPts(Mesh::Facet_T::numPts);
       FacetMapKey_T facetIds;
-      for (short_T p = 0; p < Mesh::Facet_T::numPts; ++p)
+      for (uint p = 0; p < Mesh::Facet_T::numPts; ++p)
       {
         facetPts[p] = e.pts[f[p]];
         facetIds.insert(e.pts[f[p]]->id);
@@ -644,7 +644,7 @@ enum class GMSHElemType : int8_t
   POINT = 15,
 };
 
-template <typename Elem, short_T Order = 1>
+template <typename Elem, uint Order = 1>
 struct ElemToGmsh
 {};
 
@@ -658,7 +658,7 @@ template <>
 struct ElemToGmsh<PointElem, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::POINT;
-  static short_T constexpr connSize = 1U;
+  static uint constexpr connSize = 1U;
 };
 
 template <>
@@ -671,7 +671,7 @@ template <>
 struct ElemToGmsh<Line, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_LINE;
-  static short_T constexpr connSize = 3U;
+  static uint constexpr connSize = 3U;
 };
 
 template <>
@@ -684,7 +684,7 @@ template <>
 struct ElemToGmsh<Triangle, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_TRIANGLE;
-  static short_T constexpr connSize = 6U;
+  static uint constexpr connSize = 6U;
 };
 
 template <>
@@ -697,7 +697,7 @@ template <>
 struct ElemToGmsh<Quad, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_QUAD;
-  static short_T constexpr connSize = 9U;
+  static uint constexpr connSize = 9U;
 };
 
 template <>
@@ -710,7 +710,7 @@ template <>
 struct ElemToGmsh<Tetrahedron, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::QUADRATIC_TET;
-  static short_T constexpr connSize = 10U;
+  static uint constexpr connSize = 10U;
 };
 
 template <>
@@ -723,7 +723,7 @@ template <>
 struct ElemToGmsh<Hexahedron, 2>
 {
   static GMSHElemType constexpr value = GMSHElemType::BIQUADRATIC_HEX;
-  static short_T constexpr connSize = 27U;
+  static uint constexpr connSize = 27U;
 };
 
 template <typename Elem>
@@ -833,11 +833,11 @@ void readGMSH(
   {
     if (buf == "$PhysicalNames")
     {
-      int numNames;
+      uint numNames;
       in >> numNames;
-      for (short_T n = 0; n < numNames; ++n)
+      for (auto n = 0u; n < numNames; ++n)
       {
-        int dim;
+        uint dim;
         marker_T marker;
         std::string name;
         in >> dim >> marker >> name;

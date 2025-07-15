@@ -128,7 +128,7 @@ struct FVSolver
   // using FacetFESpace_T = FESpace<Mesh_T,
   //                                typename FacetRefFE<ElemRefFE_T>::type,
   //                                GaussQR<NullElem, 0>>;
-  static const uint dim = Elem_T::dim;
+  static constexpr uint dim = Elem_T::dim;
 
   FVSolver(FESpace_T const & fe, BCList_T const & bcList, Limiter<L> /*l*/):
       feSpace(fe),

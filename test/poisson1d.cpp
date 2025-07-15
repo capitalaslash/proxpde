@@ -5,6 +5,7 @@
 #include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
+#include "feutils.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "timer.hpp"
@@ -17,8 +18,14 @@ int main(int argc, char * argv[])
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<
       Mesh_T,
-      LagrangeFE<Elem_T, 1>::RefFE_T,
-      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+      LagrangeFE<Elem_T, 1u>::RefFE_T,
+      LagrangeFE<Elem_T, 1u>::RecommendedQR>;
+  using FESpaceGrad_T = FESpace<
+      Mesh_T,
+      LagrangeFE<Elem_T, 0u>::RefFE_T,
+      LagrangeFE<Elem_T, 1u>::RecommendedQR>;
+  using FESpaceSide_T =
+      FESpace<Mesh_T, LagrangeFE<Elem_T, 1u>::RefFE_T, SideGaussQR<Line, 1u>>;
 
   scalarFun_T const rhs = [](Vec3 const & p) { return M_PI * std::sin(M_PI * p(0)); };
 
@@ -27,10 +34,10 @@ int main(int argc, char * argv[])
 
   MilliTimer t;
 
-  uint const numElems = (argc < 2) ? 20 : std::stoi(argv[1]);
+  uint const numElems = (argc < 2) ? 20u : std::stoi(argv[1]);
 
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 0., 0.};
+  auto const origin = Vec3{0.0, 0.0, 0.0};
+  auto const length = Vec3{1.0, 0.0, 0.0};
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
@@ -56,9 +63,9 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bcs");
-  auto bc = BCEss{feSpace, side::LEFT};
-  bc << [](Vec3 const &) { return 0.; };
-  auto const bcs = std::vector{bc};
+  auto const bcs = std::vector{
+      BCEss{feSpace, side::LEFT, [](Vec3 const &) { return 0.; }},
+  };
   t.stop();
 
   t.start("fe build");

@@ -17,8 +17,8 @@ int main(int argc, char * argv[])
   // default configuration
   config["mesh"]["origin"] = Vec3{0., 0., 0.};
   config["mesh"]["length"] = Vec3{1., 10., 0.};
-  config["mesh"]["n"] = std::array{4U, 8U, 0U};
-  config["ntime"] = 50U;
+  config["mesh"]["n"] = std::array{4u, 8u, 0u};
+  config["ntime"] = 50u;
   config["ns"]["dt"] = 0.1;
   config["ns"]["nu"] = 0.1;
   config["ns"]["output_dir"] = "output_ns/monolithic";
@@ -54,8 +54,8 @@ int main(int argc, char * argv[])
   auto const bcsVel = std::vector{
       BCEss{ns.feSpaceVel, side::BOTTOM, inlet},
       BCEss{ns.feSpaceVel, side::RIGHT, zero2d},
-      BCEss{ns.feSpaceVel, side::TOP, zero2d, Comp::u},
-      BCEss{ns.feSpaceVel, side::LEFT, zero2d, Comp::u},
+      BCEss{ns.feSpaceVel, side::TOP, zero2d, Comp::x},
+      BCEss{ns.feSpaceVel, side::LEFT, zero2d, Comp::x},
   };
 
   // auto const bcsP = std::tuple{};

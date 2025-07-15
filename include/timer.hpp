@@ -47,15 +47,15 @@ public:
 
   void print(std::ostream & out = std::cout) const
   {
-    typename TimeUnit::rep totalTime = 0;
-    size_t strLength = 9;
+    int totalTime = 0;
+    int strLength = 9;
     // sort by id
     std::vector<std::pair<std::string, typename TimeUnit::rep>> sortedData(
         _data.size());
     for (auto const & [name, data]: _data)
     {
-      strLength = std::max(strLength, name.length());
-      totalTime += data.time;
+      strLength = std::max(strLength, static_cast<int>(name.length()));
+      totalTime += static_cast<int>(data.time);
       sortedData[data.id] = {name, data.time};
     }
 
@@ -68,7 +68,7 @@ public:
     {
       out << "| " << std::setw(strLength) << name << " | " << std::setw(9) << time
           << " | " << std::fixed << std::setprecision(2) << std::setw(5)
-          << 100. * time / totalTime << " |\n";
+          << 100. * static_cast<double>(time) / totalTime << " |\n";
     }
     out << Utils::separator;
     out << "| " << std::setw(static_cast<int>(strLength)) << "total"

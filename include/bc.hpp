@@ -11,13 +11,13 @@ namespace proxpde
 
 struct Comp
 {
-  static const std::vector<short_T> x;
-  static const std::vector<short_T> y;
-  static const std::vector<short_T> z;
-  static const std::vector<short_T> xy;
-  static const std::vector<short_T> xz;
-  static const std::vector<short_T> yz;
-  static const std::vector<short_T> xyz;
+  static const std::vector<uint> x;
+  static const std::vector<uint> y;
+  static const std::vector<uint> z;
+  static const std::vector<uint> xy;
+  static const std::vector<uint> xz;
+  static const std::vector<uint> yz;
+  static const std::vector<uint> xyz;
 };
 
 using DofSet_T = std::unordered_set<DOFid_T>;
@@ -74,7 +74,7 @@ public:
   BCEss(
       FESpace_T const & fe,
       marker_T const m,
-      std::vector<short_T> const & c = allComp<FESpace>()):
+      std::vector<uint> const & c = allComp<FESpace>()):
       feSpace(&fe),
       marker(m),
       comp(c)
@@ -88,7 +88,7 @@ public:
       FESpace_T const & fe,
       marker_T const m,
       Fun<FESpace::physicalDim(), 3> const & fun,
-      std::vector<short_T> const & c = allComp<FESpace>()):
+      std::vector<uint> const & c = allComp<FESpace>()):
       feSpace(&fe),
       marker(m),
       comp(c)
@@ -103,7 +103,7 @@ public:
       FESpace_T const & fe,
       marker_T const m,
       scalarFun_T const & fun,
-      std::vector<short_T> const & c = allComp<FESpace>()):
+      std::vector<uint> const & c = allComp<FESpace>()):
       feSpace(&fe),
       marker(m),
       comp(c)
@@ -300,7 +300,7 @@ private:
 public:
   FESpace_T const * feSpace;
   marker_T marker = markerNotSet;
-  std::vector<short_T> const comp = allComp<FESpace>();
+  std::vector<uint> const comp = allComp<FESpace>();
   double diag = 1.0;
 
   // protected:
@@ -322,7 +322,7 @@ struct BCNat
   BCNat(
       marker_T const m,
       Fun<FESpace::dim, 3> const & f,
-      std::vector<short_T> const & c = allComp<FESpace>()):
+      std::vector<uint> const & c = allComp<FESpace>()):
       marker(m),
       value(f),
       comp(c)
@@ -330,7 +330,7 @@ struct BCNat
     // TODO: create a list of constrained faces at the beginning?
   }
 
-  BCNat(marker_T const m, scalarFun_T const f, std::vector<short_T> const c):
+  BCNat(marker_T const m, scalarFun_T const f, std::vector<uint> const c):
       BCNat{m, [f](Vec3 const & p) { return Vec1(f(p)); }, c}
   {
     static_assert(
@@ -343,7 +343,7 @@ struct BCNat
   marker_T marker;
   Fun<FESpace::dim, 3> const value;
   // TODO: convert to std::unordered_set
-  std::vector<short_T> const comp = allComp<FESpace>();
+  std::vector<uint> const comp = allComp<FESpace>();
 };
 
 // this class deals only with the matrix part of the mixed bc, the rhs part is
@@ -360,7 +360,7 @@ struct BCMixed
   explicit BCMixed(
       marker_T m,
       Fun<FESpace_T::dim, 3> const f,
-      std::vector<short_T> const c = allComp<FESpace>()):
+      std::vector<uint> const c = allComp<FESpace>()):
       marker(m),
       coef(f),
       comp(c)
@@ -374,7 +374,7 @@ struct BCMixed
   marker_T marker;
   Fun<FESpace_T::dim, 3> const coef;
   // TODO: convert to std::unordered_set
-  std::vector<short_T> const comp = allComp<FESpace>();
+  std::vector<uint> const comp = allComp<FESpace>();
 };
 
 template <typename FESpace>

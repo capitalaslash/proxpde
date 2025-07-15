@@ -2,7 +2,7 @@
 
 #include <fmt/std.h>
 
-#include "assembly.hpp"
+#include "assembly_bc.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
 #include "fe.hpp"
@@ -88,7 +88,7 @@ int test(YAML::Node const & config)
   interpolateAnalyticFunction(exactGrad, feSpaceBC, eGradBC.data);
   auto const rhs = std::tuple{
       AssemblyRhsAnalytic{rhsFun, feSpace},
-      AssemblyBCNaturalFE{eGradBC, side::RIGHT, feSpace, {0u}},
+      AssemblyBCNaturalFE{eGradBC, {0u}, side::RIGHT, feSpace},
   };
   builder.buildRhs(rhs, {bc});
   builder.closeMatrix();

@@ -36,11 +36,10 @@ struct NSSolverMonolithic
 {
   using Mesh_T = Mesh;
   using Elem_T = typename Mesh_T::Elem_T;
-  static int constexpr dim = Elem_T::dim;
-  using QR_T = typename LagrangeFE<Elem_T, 2>::RecommendedQR;
+  using QR_T = typename LagrangeFE<Elem_T, 2u>::RecommendedQR;
   using FESpaceVel_T =
-      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 2>::RefFE_T, QR_T, dim>;
-  using FESpaceP_T = FESpace<Mesh_T, typename LagrangeFE<Elem_T, 1>::RefFE_T, QR_T>;
+      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 2u>::RefFE_T, QR_T, Elem_T::dim>;
+  using FESpaceP_T = FESpace<Mesh_T, typename LagrangeFE<Elem_T, 1u>::RefFE_T, QR_T>;
   using BCVelList_T = std::vector<BCEss<FESpaceVel_T>>;
   using BCPList_T = std::vector<BCEss<FESpaceP_T>>;
 
@@ -92,12 +91,12 @@ struct NSSolverMonolithic
 
   explicit NSSolverMonolithic(Mesh_T const & mesh, ParameterDict const & c):
       feSpaceVel{mesh},
-      feSpaceP{mesh, feSpaceVel.dof.size * dim},
+      feSpaceP{mesh, feSpaceVel.dof.size * Elem_T::dim},
       config{c},
-      builder{feSpaceVel.dof.size * dim + feSpaceP.dof.size},
-      sol{"vel", feSpaceVel.dof.size * dim + feSpaceP.dof.size},
+      builder{feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size},
+      sol{"vel", feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size},
       p{"p", feSpaceP.dof.size},
-      velOld{feSpaceVel.dof.size * dim},
+      velOld{feSpaceVel.dof.size * Elem_T::dim},
       assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel},
       assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel}
   // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0)
@@ -204,7 +203,7 @@ struct NSSolverMonolithic
     sol.data = solver.solve(builder.b);
   }
 
-  void ic(std::function<FVec<dim>(Vec3 const &)> const & f)
+  void ic(std::function<FVec<Elem_T::dim>(Vec3 const &)> const & f)
   {
     interpolateAnalyticFunction(f, feSpaceVel, sol.data);
     velOld = sol.data;
@@ -355,13 +354,13 @@ struct NSSolverSplit
     {
       // solve each component separately
       auto const dofU = feSpaceVel.dof.size;
-      for (short_T d = 0; d < dim; ++d)
+      for (uint d = 0; d < dim; ++d)
       {
         solverVelStar.compute(builderVelStar.A.block(d * dofU, d * dofU, dofU, dofU));
         auto b = builderVelStar.b.segment(d * dofU, dofU);
 
         // subtract all the other variables considering them fixed
-        for (short_T od = 0; od < dim; ++od)
+        for (uint od = 0; od < dim; ++od)
         {
           if (od != d)
           {
@@ -527,10 +526,10 @@ void computeFEWSS(
       auto const side = facet.facingElem[0].side;
       auto const id = feSpaceWSS.dof.getId(elem->id);
       gradFacet.reinit(*elem);
-      for (uint q = 0; q < FacetQR_T::numPts; ++q)
+      for (uint q = 0u; q < FacetQR_T::numPts; ++q)
       {
-        FMat<1, dim * dim> tauVec =
-            nu * gradFacet.evaluate(side * FacetQR_T::numPts + q);
+        auto const qFacet = side * FacetQR_T::numPts + q;
+        FMat<1, dim * dim> tauVec = nu * gradFacet.evaluate(qFacet);
         FMat<3, 3> tau = FMat<3, 3>::Zero();
         for (uint i = 0; i < dim; ++i)
           for (uint j = 0; j < dim; ++j)

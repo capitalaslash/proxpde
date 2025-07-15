@@ -65,8 +65,8 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   Var lambda{"lambda"};
   lambda.data = sol.tail(feSpaceLambda.dof.size);
 
-  double sum = 0.;
-  for (marker_T const marker: {1, 2, 3, 5})
+  double sum = 0.0;
+  for (auto const marker: std::vector<marker_T>{1u, 2u, 3u, 5u})
   {
     auto const flux = integrateOnBoundary(uRT0.data, feSpaceRT0, marker);
     std::cout << "flux on marker " << marker << ": " << flux << std::endl;

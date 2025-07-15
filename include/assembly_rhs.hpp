@@ -76,7 +76,7 @@ struct AssemblyRhsAnalytic: public AssemblyVector<FESpace>
       else if constexpr (
           family_v<typename FESpace_T::RefFE_T> == FamilyType::RAVIART_THOMAS)
       {
-        Vec3 localRhs3 = promote<3>(localRhs);
+        auto const localRhs3 = promote<3u>(localRhs);
         Fe += this->feSpace->curFE.JxW[q] * this->feSpace->curFE.phiVect[q] * localRhs3;
       }
       else

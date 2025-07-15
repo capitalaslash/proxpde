@@ -52,7 +52,7 @@ void adaptiveRefine(
 
   assert(meshCoarse.flags & MeshFlags::INTERNAL_FACETS);
 
-  auto facetWeight = std::vector<int>(meshCoarse.facetList.size());
+  auto facetWeight = std::vector<uint>(meshCoarse.facetList.size());
 
   auto const toRefine = [&toRefineVec](auto const & elem)
   { return toRefineVec[elem.id]; };
@@ -95,7 +95,7 @@ void adaptiveRefine(
     case 0U:
     {
       auto localPts = std::array<id_T, Elem_T::numPts>{};
-      for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+      for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
       {
         Vec3 const newPtCoords = elem.pts[pCoarse]->coord;
         auto const parentIds = std::set<id_T>{elem.pts[pCoarse]->id};
@@ -116,7 +116,7 @@ void adaptiveRefine(
       // add the old element
       elem.children.reserve(1U);
       std::vector<Point *> conn(Elem_T::numPts);
-      for (short_T p = 0; p < Elem_T::numPts; ++p)
+      for (uint p = 0; p < Elem_T::numPts; ++p)
       {
         conn[p] = &meshFine.pointList[localPts[p]];
       }
@@ -132,7 +132,7 @@ void adaptiveRefine(
     {
       // add coarse points
       auto localPts = std::array<id_T, Elem_T::numPts>{};
-      for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+      for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
       {
         Vec3 const newPtCoords = elem.pts[pCoarse]->coord;
         auto const parentIds = std::set<id_T>{elem.pts[pCoarse]->id};
@@ -181,10 +181,10 @@ void adaptiveRefine(
       }
 
       elem.children.reserve(2U);
-      for (short_T c = 0U; c < 2; ++c)
+      for (uint c = 0U; c < 2; ++c)
       {
         std::vector<Point *> conn(Elem_T::numPts);
-        for (short_T p = 0; p < Elem_T::numPts; ++p)
+        for (uint p = 0; p < Elem_T::numPts; ++p)
         {
           conn[p] = &meshFine.pointList[localPtsTotal[c][p]];
         }
@@ -201,7 +201,7 @@ void adaptiveRefine(
     {
       // add coarse points
       auto localPts = std::array<id_T, Elem_T::numPts>{};
-      for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+      for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
       {
         Vec3 const newPtCoords = elem.pts[pCoarse]->coord;
         auto const parentIds = std::set<id_T>{elem.pts[pCoarse]->id};
@@ -257,10 +257,10 @@ void adaptiveRefine(
       }
 
       elem.children.reserve(3U);
-      for (short_T c = 0U; c < 3; ++c)
+      for (uint c = 0U; c < 3; ++c)
       {
         std::vector<Point *> conn(Elem_T::numPts);
-        for (short_T p = 0; p < Elem_T::numPts; ++p)
+        for (uint p = 0; p < Elem_T::numPts; ++p)
         {
           conn[p] = &meshFine.pointList[localPtsTotal[c][p]];
         }
@@ -276,13 +276,13 @@ void adaptiveRefine(
     case 3U:
     {
       auto localPts = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
-      for (short_T c = 0; c < Elem_T::numChildren; ++c)
+      for (uint c = 0; c < Elem_T::numChildren; ++c)
       {
-        for (short_T pFine = 0; pFine < Elem_T::numPts; ++pFine)
+        for (uint pFine = 0; pFine < Elem_T::numPts; ++pFine)
         {
           auto parentIds = std::set<id_T>{};
           Vec3 newPtCoords = Vec3::Zero();
-          for (short_T pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+          for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
           {
             auto const weight = Elem_T::embeddingMatrix[c](pFine, pCoarse);
             newPtCoords += weight * elem.pts[pCoarse]->coord;
@@ -310,10 +310,10 @@ void adaptiveRefine(
 
       // add new elements
       elem.children.reserve(Elem_T::numChildren);
-      for (short_T c = 0; c < Elem_T::numChildren; ++c)
+      for (uint c = 0; c < Elem_T::numChildren; ++c)
       {
         std::vector<Point *> conn(Elem_T::numPts);
-        for (short_T p = 0; p < Elem_T::numPts; ++p)
+        for (uint p = 0; p < Elem_T::numPts; ++p)
         {
           conn[p] = &meshFine.pointList[localPts[Elem_T::elemToChild[c][p]]];
         }

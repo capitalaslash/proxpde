@@ -359,7 +359,7 @@ struct FEVar
     }
     else
     {
-      abort();
+      std::abort();
     }
   }
 

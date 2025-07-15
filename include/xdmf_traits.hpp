@@ -23,7 +23,7 @@ constexpr std::string_view to_string(XDMFGridType const type)
   case XDMFGridType::COLLECTION:
     return "Collection";
   default:
-    abort();
+    std::abort();
   }
 }
 
@@ -43,7 +43,7 @@ constexpr std::string_view to_string(XDMFNumberType const type)
   case XDMFNumberType::FLOAT:
     return "Float";
   default:
-    abort();
+    std::abort();
   }
 }
 
@@ -63,7 +63,7 @@ constexpr std::string_view to_string(XDMFFormat const format)
   case XDMFFormat::INLINE:
     return "XML";
   default:
-    abort();
+    std::abort();
   }
 }
 
@@ -83,7 +83,7 @@ constexpr std::string_view to_string(XDMFCenter const center)
   case XDMFCenter::NODE:
     return "Node";
   default:
-    abort();
+    std::abort();
   }
 }
 
@@ -102,7 +102,7 @@ constexpr std::string_view to_string(XDMFType const type)
   case XDMFType::VECTOR:
     return "Vector";
   default:
-    abort();
+    std::abort();
   }
 }
 

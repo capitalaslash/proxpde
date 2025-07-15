@@ -397,7 +397,7 @@ public:
       {
         std::cerr << "the marker " << bc.marker << " has already been fixed."
                   << std::endl;
-        abort();
+        std::abort();
       }
       fixedMarkers.insert(bc.marker);
     }

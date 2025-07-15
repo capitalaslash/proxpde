@@ -105,7 +105,7 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   }
   else
   {
-    abort();
+    std::abort();
   }
   mesh.buildConnectivity();
   t.stop();
@@ -154,7 +154,7 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
 
       // if (approxInside && iterError > 1.e-12)
       // {
-      //   // abort();
+      //   // std::abort();
       //   fmt::print(
       //       stderr,
       //       "test {} - {} -> {} - distance norm: {} - inside: {}\n",

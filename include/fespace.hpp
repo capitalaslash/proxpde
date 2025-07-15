@@ -150,7 +150,7 @@ struct FESpace
       }
       else
       {
-        abort();
+        std::abort();
       }
       // instead of moving the point back to the ref element, we could
       // move the shape functions to the real element
@@ -163,7 +163,7 @@ struct FESpace
     }
     else
     {
-      abort();
+      std::abort();
     }
     return value;
   }
@@ -182,7 +182,7 @@ struct FESpace
       }
     }
     // we should never reach this point
-    abort();
+    std::abort();
     return Vec3(0., 0., 0.);
   }
 
@@ -389,7 +389,7 @@ void reconstructGradient(
           else if constexpr (
               family_v<typename FESpaceData::RefFE_T> == FamilyType::RAVIART_THOMAS)
           {
-            abort();
+            std::abort();
             // the value of the dof is the flux through the face
             // u_k = u.dot(n_k)
             // v[offset + baseDof + d*size] =

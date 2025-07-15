@@ -327,7 +327,7 @@ void adaptiveRefine(
     }
     default:
       // should never get here
-      abort();
+      std::abort();
     }
   }
 }

@@ -106,7 +106,7 @@ int main()
     break;
   }
   default:
-    abort();
+    std::abort();
   }
   // std::cout<< "sol:\n" << sol << std::endl;
 
@@ -115,7 +115,7 @@ int main()
 
   Var error{"error"};
   error.data = sol.data - exact.data;
-  std::cout << "error: " << error.data.norm() << std::endl;
+  fmt::print("error: {:e}\n", error.data.norm());
 
   IOManager io{feSpace, "output/sol"};
   io.print({sol, exact, error});

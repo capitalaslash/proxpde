@@ -1381,7 +1381,7 @@ static constexpr int feDimValue()
   else if constexpr (fedim_v<RefFE> == FEDimType::VECTOR)
     return RefFE::dim;
   else
-    abort();
+    std::abort();
   return 0;
 }
 

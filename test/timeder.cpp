@@ -27,7 +27,7 @@ std::string_view TIMtoString(TimeIntegrationMethod m)
   case TimeIntegrationMethod::BDF2:
     return "BDF2";
   default:
-    abort();
+    std::abort();
   }
 }
 

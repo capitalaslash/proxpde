@@ -962,7 +962,7 @@ bool inside(Elem const & e, Vec3 const & pt)
   }
   else
   {
-    abort();
+    std::abort();
   }
   return false;
 }

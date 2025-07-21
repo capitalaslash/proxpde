@@ -47,41 +47,42 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bc");
-  auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0) * p(0))}; };
-  // auto const inlet = [] (Vec3 const & p) { return Vec2{0.0, 1.0}; };
   auto const zero2d = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
   auto const zero = [](Vec3 const &) { return 0.0; };
+  auto const inlet = [](Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0) * p(0))}; };
+  // auto const inlet = [](Vec3 const &) { return Vec2{0.0, 1.0}; };
   auto const bcsVel = std::vector{
-      BCEss{ns.feSpaceVel, side::BOTTOM, inlet},
       BCEss{ns.feSpaceVel, side::RIGHT, zero2d},
-      BCEss{ns.feSpaceVel, side::TOP, zero2d, Comp::x},
+      // BCEss{ns.feSpaceVel, side::TOP, zero2d, Comp::x},
       BCEss{ns.feSpaceVel, side::LEFT, zero2d, Comp::x},
+      BCEss{ns.feSpaceVel, side::BOTTOM, inlet},
   };
 
-  // auto const bcsP = std::tuple{};
+  // // select the point(s) on the top boundary in the middle
+  // auto const o = config["mesh"]["origin"].as<Vec3>();
+  // auto const l = config["mesh"]["length"].as<Vec3>();
+  // auto const hx = l[0] / config["mesh"]["n"].as<std::array<uint, 3>>()[0];
+  // auto const xm = o[0] + 0.5 * l[0];
+  // auto const ymax = o[1] + l[1];
+  // DOFCoordSet pinSet{
+  //     ns.feSpaceP,
+  //     [hx, xm, ymax](Vec3 const & p)
+  //     { return std::fabs(p[0] - xm) < hx && std::fabs(p[1] - ymax) < 1.e-12; },
+  // };
+  // auto bcPin = BCEss{ns.feSpaceP, pinSet.ids};
+  // bcPin << [](Vec3 const &) { return 0.; };
+  // auto const bcsP = std::vector{bcPin};
 
-  // select the point(s) on the top boundary in the middle
-  auto const o = config["mesh"]["origin"].as<Vec3>();
-  auto const l = config["mesh"]["length"].as<Vec3>();
-  auto const hx = l[0] / config["mesh"]["n"].as<std::array<uint, 3>>()[0];
-  auto const xm = o[0] + 0.5 * l[0];
-  auto const ymax = o[1] + l[1];
-  DOFCoordSet pinSet{
-      ns.feSpaceP,
-      [hx, xm, ymax](Vec3 const & p)
-      { return std::fabs(p[0] - xm) < hx && std::fabs(p[1] - ymax) < 1.e-12; },
+  auto const bcsPSplit = std::vector{
+      BCEss{split.feSpaceP, side::TOP, zero},
   };
-  auto bcPin = BCEss{ns.feSpaceP, pinSet.ids};
-  bcPin << [](Vec3 const &) { return 0.; };
-  auto const bcsP = std::vector{bcPin};
-
-  auto bcPTop = BCEss{split.feSpaceP, side::TOP};
-  bcPTop << zero;
-  auto const bcsPSplit = std::vector{bcPTop};
   t.stop();
 
   t.start("monolithic init");
-  ns.init(bcsVel, bcsP);
+  ns.init(bcsVel);
+  // when monolithic, fixed pressure values MUST be imposed weakly via Neumann bcs
+  ns.assemblyBCNeumann.marker = side::TOP;
+  ns.assemblyBCNeumann.rhs = [](Vec3 const &) { return -1.0; };
   t.stop();
 
   t.start("split init");
@@ -93,6 +94,8 @@ int main(int argc, char * argv[])
   auto const ic = [](Vec3 const &) { return Vec2{0.0, 1.0}; };
   // auto const ic = [] (Vec3 const & p) { return Vec2{0.0, 1.5 * (1. - p(0)*p(0))}; };
   ns.ic(ic);
+  for (auto k = 0u; k < ns.feSpaceP.dof.size; k++)
+    ns.sol.data[ns.feSpaceVel.dof.size * 2 + k] = 1.0;
   split.ic(ic);
   t.stop();
 

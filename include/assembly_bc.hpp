@@ -191,13 +191,13 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   using FacetCurFE_T = typename CurFETraits<FEFacet_T, QR_T>::type;
 
   AssemblyBCNormal(
-      scalarFun_T const r,
+      scalarFun_T const & r,
       marker_T const m,
       FESpace & fe,
       AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyVector<FESpace>(fe, cmp),
-      rhs(std::move(r)),
-      marker(m)
+      AssemblyVector<FESpace>{fe, cmp},
+      rhs{r},
+      marker{m}
   {}
 
   void build(LVec_T & Fe) const override
@@ -232,8 +232,8 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
     }
   }
 
-  scalarFun_T const rhs;
-  marker_T const marker;
+  scalarFun_T rhs;
+  marker_T marker = markerNotSet;
   FacetCurFE_T mutable facetCurFE;
 };
 

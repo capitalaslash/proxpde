@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assembly_bc.hpp"
 #include "def.hpp"
 
 #include "bc.hpp"
@@ -98,7 +99,8 @@ struct NSSolverMonolithic
       p{"p", feSpaceP.dof.size},
       velOld{feSpaceVel.dof.size * Elem_T::dim},
       assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel},
-      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel}
+      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
+      assemblyBCNeumann{[](Vec3 const &) { return 0.0; }, markerNotSet, feSpaceVel}
   // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0)
   {
     // // set up size and position of pressure dofs
@@ -114,7 +116,7 @@ struct NSSolverMonolithic
     ioP.init(feSpaceP, outDir / "p");
   }
 
-  void init(BCVelList_T const & bcsVel, BCPList_T const & bcsP)
+  void init(BCVelList_T const & bcsVel)
   {
     // TODO: assert that this comes after setting up bcs
     builder.buildLhs(
@@ -122,12 +124,8 @@ struct NSSolverMonolithic
             AssemblyScalarMass{1. / config["dt"].as<double>(), feSpaceVel},
             AssemblyTensorStiffness{config["nu"].as<double>(), feSpaceVel}},
         bcsVel);
-    builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, bcsP);
-    builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, bcsP, bcsVel);
-    if (bcsP.size() > 0)
-    {
-      builder.buildLhs(std::tuple{AssemblyDummy{feSpaceP}}, bcsP);
-    }
+    builder.buildCoupling(AssemblyGrad{-1.0, feSpaceVel, feSpaceP}, bcsVel, {});
+    builder.buildCoupling(AssemblyDiv{-1.0, feSpaceP, feSpaceVel}, {}, bcsVel);
     builder.closeMatrix();
     matFixed = builder.A;
     rhsFixed = builder.b;
@@ -137,7 +135,10 @@ struct NSSolverMonolithic
   {
     velOld = sol.data;
     builder.clear();
-    builder.buildRhs(std::tuple{assemblyRhs}, bcsVel);
+    if (assemblyBCNeumann.marker == markerNotSet)
+      builder.buildRhs(std::tuple{assemblyRhs}, bcsVel);
+    else
+      builder.buildRhs(std::tuple{assemblyRhs, assemblyBCNeumann}, bcsVel);
     builder.buildLhs(std::tuple{assemblyAdvection}, bcsVel);
     builder.closeMatrix();
     builder.A += matFixed;
@@ -225,6 +226,8 @@ struct NSSolverMonolithic
   Vec velOld;
   AssemblyS2SProjection<FESpaceVel_T> assemblyRhs;
   AssemblyAdvection<FESpaceVel_T, FESpaceVel_T> assemblyAdvection;
+  // TODO: support multiple pressure outlet with different fixed values
+  AssemblyBCNormal<FESpaceVel_T> assemblyBCNeumann;
   typename Builder<StorageType::RowMajor>::Mat_T matFixed;
   Vec rhsFixed;
   // std::vector<uint8_t> pMask;

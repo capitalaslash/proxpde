@@ -47,19 +47,19 @@ struct AssemblyBCNaturalAnalytic: public AssemblyVector<FESpace>
 
     auto const & mesh = *this->feSpace->mesh;
     auto const & e = *this->feSpace->curFE.elem;
-    uint facetCounter = 0;
+    auto facetCounter = 0u;
     for (auto const facetId: mesh.elemToFacet[e.id])
     {
       if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
       {
         auto const & facet = mesh.facetList[facetId];
         facetCurFE.reinit(facet);
-        for (uint q = 0; q < QR_T::numPts; ++q)
+        for (auto q = 0u; q < QR_T::numPts; ++q)
         {
           auto const value = rhs(facetCurFE.qpoint[q]);
-          for (uint const d: this->comp)
+          for (auto const d: this->comp)
           {
-            for (uint i = 0; i < FEFacet_T::numDOFs; ++i)
+            for (auto i = 0u; i < FEFacet_T::numDOFs; ++i)
             {
               auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
@@ -153,14 +153,14 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
         auto const [ePtr, side] = facet.facingElem[0];
         assert(ePtr->id == e.id);
         facetCurFE.reinit(facet);
-        for (uint q = 0u; q < QR_T::numPts; ++q)
+        for (auto q = 0u; q < QR_T::numPts; ++q)
         {
           auto const dataQ = data->evaluate(numPtsQR * side + q);
-          for (uint k = 0u; k < this->comp.size(); k++)
+          for (auto k = 0u; k < this->comp.size(); k++)
           {
             auto const comp = this->comp[k];
             auto const dataComp = dataComponents[k];
-            for (uint i = 0u; i < FEFacet_T::numDOFs; ++i)
+            for (auto i = 0u; i < FEFacet_T::numDOFs; ++i)
             {
               auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[f][i] + comp * CurFE_T::numDOFs;
@@ -206,7 +206,7 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
 
     auto const & mesh = *this->feSpace->mesh;
     auto const & e = *this->feSpace->curFE.elem;
-    uint facetCounter = 0;
+    auto facetCounter = 0u;
     for (auto const facetId: mesh.elemToFacet[e.id])
     {
       if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
@@ -214,12 +214,12 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
         auto const & facet = mesh.facetList[facetId];
         auto const normal = facet.normal();
         facetCurFE.reinit(facet);
-        for (uint q = 0; q < QR_T::numPts; ++q)
+        for (auto q = 0u; q < QR_T::numPts; ++q)
         {
+          auto const value = rhs(facetCurFE.qpoint[q]);
           for (auto const d: this->comp)
           {
-            auto const value = rhs(facetCurFE.qpoint[q]);
-            for (uint i = 0; i < FEFacet_T::numDOFs; ++i)
+            for (auto i = 0u; i < FEFacet_T::numDOFs; ++i)
             {
               auto const id =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
@@ -233,6 +233,74 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
   }
 
   scalarFun_T rhs;
+  marker_T marker = markerNotSet;
+  FacetCurFE_T mutable facetCurFE;
+};
+
+template <typename FESpace, typename FESpaceData>
+struct AssemblyBCNormalFE: public AssemblyVector<FESpace>
+{
+  using FESpace_T = FESpace;
+  using FESpaceData_T = FESpaceData;
+  using Super_T = AssemblyVector<FESpace>;
+  using LMat_T = typename Super_T::LMat_T;
+  using LVec_T = typename Super_T::LVec_T;
+
+  using FEFacet_T = typename FESpace::RefFE_T::FEFacet_T;
+  using QR_T = SideQR_T<typename FESpace::QR_T>;
+  using FacetCurFE_T = typename CurFETraits<FEFacet_T, QR_T>::type;
+
+  static constexpr auto numPtsQR = SideQR_T<typename FESpace_T::QR_T>::numPts;
+
+  AssemblyBCNormalFE(
+      FEVar<FESpaceData_T> & d,
+      marker_T const m,
+      FESpace & fe,
+      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
+      AssemblyVector<FESpace>{fe, cmp},
+      data{&d},
+      marker{m}
+  {
+    // // TODO: we should allow different fespaces, as long as they are on sides
+    // static_assert(std::is_same_v<
+    //               typename FESpaceData_T::QR_T,
+    //               SideGaussQR<typename FESpace_T::Mesh_T::Elem_T, numPtsQR>>);
+  }
+
+  void build(LVec_T & Fe) const override
+  {
+    using CurFE_T = typename FESpace_T::CurFE_T;
+
+    auto const & mesh = *this->feSpace->mesh;
+    auto const & elem = *this->feSpace->curFE.elem;
+    for (auto f = 0u; f < FESpace_T::Mesh_T::Elem_T::numFacets; f++)
+    {
+      auto const facetId = mesh.elemToFacet[elem.id][f];
+      if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
+      {
+        data->reinit(elem);
+        auto const & facet = mesh.facetList[facetId];
+        auto const normal = facet.normal();
+        auto const [ePtr, side] = facet.facingElem[0];
+        assert(ePtr->id == elem.id);
+        facetCurFE.reinit(facet);
+        for (auto q = 0u; q < QR_T::numPts; ++q)
+        {
+          auto const dataQ = data->evaluate(numPtsQR * side + q)[0];
+          for (auto const d: this->comp)
+          {
+            for (auto i = 0u; i < FEFacet_T::numDOFs; ++i)
+            {
+              auto const id = CurFE_T::RefFE_T::dofOnFacet[f][i] + d * CurFE_T::numDOFs;
+              Fe(id) += facetCurFE.JxW[q] * facetCurFE.phi[q](i) * normal[d] * dataQ;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  FEVar<FESpaceData_T> * data;
   marker_T marker = markerNotSet;
   FacetCurFE_T mutable facetCurFE;
 };
@@ -264,23 +332,23 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
     using CurFE_T = typename FESpace_T::CurFE_T;
 
     auto const & mesh = *this->feSpace->mesh;
-    uint facetCounter = 0;
+    auto facetCounter = 0u;
     for (auto const facetId: mesh.elemToFacet[this->feSpace->curFE.elem->id])
     {
       if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
       {
         auto const & facet = mesh.facetList[facetId];
         facetCurFE.reinit(facet);
-        for (uint q = 0; q < QR_T::numPts; ++q)
+        for (auto q = 0u; q < QR_T::numPts; ++q)
         {
           auto const localCoef = coef(facetCurFE.qpoint[q]);
-          for (uint const d: this->comp)
+          for (auto const d: this->comp)
           {
-            for (uint i = 0; i < FEFacet_T::numDOFs; ++i)
+            for (auto i = 0u; i < FEFacet_T::numDOFs; ++i)
             {
               auto const idI =
                   CurFE_T::RefFE_T::dofOnFacet[facetCounter][i] + d * CurFE_T::numDOFs;
-              for (uint j = 0; j < FEFacet_T::numDOFs; ++j)
+              for (auto j = 0u; j < FEFacet_T::numDOFs; ++j)
               {
                 auto const idJ = CurFE_T::RefFE_T::dofOnFacet[facetCounter][j] +
                                  d * CurFE_T::numDOFs;

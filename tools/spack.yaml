@@ -4,11 +4,29 @@
 # configuration settings.
 spack:
   # add package specs to the `specs` list
-  specs: [eigen, suite-sparse, pugixml, yaml-cpp@develop, hdf5]
-  config: {}
-  mirrors: {}
-  modules:
-    enable: []
-  packages: {}
-  repos: []
-  upstreams: {}
+  specs:
+  - eigen@3.4.0
+  - fmt@11.2.0
+  - ginkgo@1.9.0~mpi+openmp
+  - hdf5@1.14.6~mpi
+  - pugixml@1.14
+  - suite-sparse@7.8.3
+  - yaml-cpp@0.8.0
+  view:
+    default:
+      root: .spack-env/view
+      exclude: ['gcc-runtime']
+  concretizer:
+    unify: true
+  container:
+    format: docker
+    images:
+      os: almalinux:9
+      spack: v1.0
+    strip: true
+    os_packages:
+      final:
+      - libgomp
+    labels:
+      app: proxpde
+      mpi: no

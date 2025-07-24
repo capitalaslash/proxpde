@@ -137,7 +137,7 @@ target_link_libraries(proxpde
     pugixml::pugixml
     stdc++fs
     UMFPACK::UMFPACK
-    yaml-cpp
+    yaml-cpp::yaml-cpp
 )
 
 target_link_options(proxpde

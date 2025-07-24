@@ -2,7 +2,7 @@
 build*/*
 contrib/*
 postpro/
-spack_env/.spack-env/*
+spack-env/*
 stagit/*
 website/*
 *.gch

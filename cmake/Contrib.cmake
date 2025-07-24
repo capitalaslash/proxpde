@@ -4,7 +4,7 @@ find_package(Eigen3 3.4 REQUIRED)
 # {fmt}
 find_package(fmt REQUIRED)
 
-# HDF5 (does not yet support targets)
+# HDF5
 find_package(HDF5 REQUIRED COMPONENTS C)
 
 # openmp

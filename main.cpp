@@ -84,19 +84,20 @@ int main()
   {
   case SolverType::CHOLESKY:
   {
-    Eigen::SimplicialCholesky<Mat<StorageType::ClmMajor>> solver(builder.A);
+    Eigen::SimplicialCholesky<SparseMatrix<StorageType::ClmMajor>> solver(builder.A);
     sol.data = solver.solve(builder.b);
     break;
   }
   case SolverType::BICGSTAB:
   {
-    Eigen::BiCGSTAB<Mat<StorageType::RowMajor>> solver(builder.A);
+    Eigen::BiCGSTAB<SparseMatrix<StorageType::RowMajor>> solver(builder.A);
     sol.data = solver.solve(builder.b);
     break;
   }
   case SolverType::SPARSELU:
   {
-    Eigen::SparseLU<Mat<StorageType::ClmMajor>, Eigen::COLAMDOrdering<int>> solver;
+    Eigen::SparseLU<SparseMatrix<StorageType::ClmMajor>, Eigen::COLAMDOrdering<int>>
+        solver;
     // Compute the ordering permutation vector from the structural pattern of A
     solver.analyzePattern(builder.A);
     // Compute the numerical factorization

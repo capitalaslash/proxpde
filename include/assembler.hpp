@@ -3,6 +3,7 @@
 #include "def.hpp"
 
 #include "blockmatrix.hpp"
+#include "sparse_matrix.hpp"
 
 namespace proxpde
 {
@@ -100,7 +101,7 @@ struct Assembler
 
   std::tuple<FESpaces...> const & feList;
   uint dofTotalNum;
-  Mat<StorageType::ClmMajor> matrix;
+  SparseMatrix<StorageType::ClmMajor> matrix;
   Vec rhs;
   Vec sol;
   BlockMatrix<FESpaces::RefFE_T::numDOFs...> localMatrix;

@@ -99,6 +99,7 @@ set(HEADERS
     include/qr.hpp
     include/reffe.hpp
     include/solver.hpp
+    include/sparse_matrix.hpp
     include/timer.hpp
     include/var.hpp
     include/xdmf_doc.hpp

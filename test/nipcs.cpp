@@ -119,7 +119,7 @@ int main(int argc, char * argv[])
   builderM.buildCoupling(grad, bcsVel, bcsP);
   builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();
-  Mat<StorageType::RowMajor> const matFixed = builderM.A;
+  SparseMatrix<StorageType::RowMajor> const matFixed = builderM.A;
   Vec const rhsFixed = builderM.b;
   builderM.clear();
 

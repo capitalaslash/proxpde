@@ -4,6 +4,7 @@
 
 #include "assembly.hpp"
 #include "bc.hpp"
+#include "sparse_matrix.hpp"
 
 namespace proxpde
 {
@@ -11,7 +12,7 @@ namespace proxpde
 template <StorageType Storage = StorageType::ClmMajor>
 struct Builder
 {
-  using Mat_T = Mat<Storage>;
+  using Mat_T = SparseMatrix<Storage>;
 
   Builder() = default;
 

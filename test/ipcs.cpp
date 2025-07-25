@@ -117,7 +117,7 @@ int main(int argc, char * argv[])
   builderM.buildCoupling(grad, bcsVel, bcsP);
   builderM.buildCoupling(div, bcsP, bcsVel);
   builderM.closeMatrix();
-  Mat<StorageType::RowMajor> matFixed = builderM.A;
+  SparseMatrix<StorageType::RowMajor> matFixed = builderM.A;
   Vec rhsFixed = builderM.b;
   builderM.clear();
 

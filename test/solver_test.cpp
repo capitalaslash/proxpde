@@ -140,7 +140,7 @@ int main(int argc, char * argv[])
   std::cout << "BiCGSTAB scaling" << std::endl;
   {
     Vec x;
-    Eigen::IterScaling<Mat<StorageType::RowMajor>> scal;
+    Eigen::IterScaling<SparseMatrix<StorageType::RowMajor>> scal;
 
     // Compute the left and right scaling vectors. The matrix is equilibrated at output
     scal.computeRef(builderR.A);
@@ -149,7 +149,7 @@ int main(int argc, char * argv[])
     builderR.b = scal.LeftScaling().cwiseProduct(builderR.b);
 
     // Now, solve the equilibrated linear system with any available solver
-    Eigen::BiCGSTAB<Mat<StorageType::RowMajor>, DiagPrec> solver;
+    Eigen::BiCGSTAB<SparseMatrix<StorageType::RowMajor>, DiagPrec> solver;
     solver.setTolerance(config["solver"]["tolerance"].as<double>());
     solver.setMaxIterations(config["solver"]["max_iters"].as<int>());
     solver.compute(builderR.A);

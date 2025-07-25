@@ -2,6 +2,8 @@
 
 #include "def.hpp"
 
+#include "sparse_matrix.hpp"
+
 namespace proxpde
 {
 
@@ -33,19 +35,13 @@ struct SolverBase
   SolverBase() = default;
   virtual ~SolverBase() = default;
 
-  virtual void setup(ParameterDict const &)
+  virtual void compute(SparseMatrix<StorageType::ClmMajor> const &)
   {
     fmt::print("we should never get here!\n");
     std::abort();
   };
 
-  virtual void compute(Mat<StorageType::ClmMajor> const &)
-  {
-    fmt::print("we should never get here!\n");
-    std::abort();
-  };
-
-  virtual void compute(Mat<StorageType::RowMajor> const &)
+  virtual void compute(SparseMatrix<StorageType::RowMajor> const &)
   {
     fmt::print("we should never get here!\n");
     std::abort();
@@ -72,9 +68,12 @@ struct Solver<SolverPackage::EIGEN, SolverType::DIRECT, P>: public SolverBase
 
   explicit Solver(ParameterDict const & c): config{c} {}
 
-  void compute(Mat<StorageType::ClmMajor> const & m) { eigenSolver.compute(m); }
+  void compute(SparseMatrix<StorageType::ClmMajor> const & m)
+  {
+    eigenSolver.compute(m);
+  }
 
-  void compute(Mat<StorageType::RowMajor> const &)
+  void compute(SparseMatrix<StorageType::RowMajor> const &)
   {
     fmt::print("use a ClmMajor matrix with a direct solver!\n");
     std::abort();
@@ -86,7 +85,7 @@ struct Solver<SolverPackage::EIGEN, SolverType::DIRECT, P>: public SolverBase
     return std::pair{0, 0.};
   }
 
-  Eigen::UmfPackLU<Mat<StorageType::ClmMajor>> eigenSolver;
+  Eigen::UmfPackLU<SparseMatrix<StorageType::ClmMajor>> eigenSolver;
   ParameterDict config;
 };
 
@@ -99,29 +98,31 @@ struct EigenSolverByType;
 template <PreconditionerType P>
 struct EigenSolverByType<SolverType::ITERATIVE, P>
 {
-  using type = Eigen::
-      BiCGSTAB<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
+  using type = Eigen::BiCGSTAB<
+      SparseMatrix<StorageType::RowMajor>,
+      Eigen::DiagonalPreconditioner<double>>;
 };
 
 template <>
 struct EigenSolverByType<SolverType::BICGSTAB, PreconditionerType::DIAG>
 {
-  using type = Eigen::
-      BiCGSTAB<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
+  using type = Eigen::BiCGSTAB<
+      SparseMatrix<StorageType::RowMajor>,
+      Eigen::DiagonalPreconditioner<double>>;
 };
 
 template <>
 struct EigenSolverByType<SolverType::GMRES, PreconditionerType::DIAG>
 {
-  using type =
-      Eigen::GMRES<Mat<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
+  using type = Eigen::
+      GMRES<SparseMatrix<StorageType::RowMajor>, Eigen::DiagonalPreconditioner<double>>;
 };
 
 template <>
 struct EigenSolverByType<SolverType::MINRES, PreconditionerType::DIAG>
 {
   using type = Eigen::MINRES<
-      Mat<StorageType::RowMajor>,
+      SparseMatrix<StorageType::RowMajor>,
       Eigen::Lower,
       Eigen::DiagonalPreconditioner<double>>;
 };
@@ -143,13 +144,16 @@ struct Solver<SolverPackage::EIGEN, S, P>: public SolverBase
     eigenSolver.setTolerance(config["tolerance"].as<double>());
   }
 
-  void compute(Mat<StorageType::ClmMajor> const &)
+  void compute(SparseMatrix<StorageType::ClmMajor> const &)
   {
-    fmt::print("use a RowMajor matrix with an iterative solver!\n");
+    fmt::print("using a RowMajor matrix with an iterative solver!\n");
     std::abort();
   }
 
-  void compute(Mat<StorageType::RowMajor> const & m) { eigenSolver.compute(m); }
+  void compute(SparseMatrix<StorageType::RowMajor> const & m)
+  {
+    eigenSolver.compute(m);
+  }
 
   std::pair<uint, double> solve(Vec const & b, Vec & u)
   {

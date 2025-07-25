@@ -3,6 +3,7 @@
 #include "def.hpp"
 
 #include "reffe.hpp"
+#include "sparse_matrix.hpp"
 
 namespace proxpde
 {
@@ -74,7 +75,7 @@ private:
 
 public:
   // TODO: works only for scalar fields!
-  Mat<StorageType::RowMajor> mat;
+  SparseMatrix<StorageType::RowMajor> mat;
 };
 
 template <typename FESpace, typename BCList>
@@ -185,7 +186,7 @@ private:
   FESpace_T const * feSpaceCoarse;
 
 public:
-  Mat<StorageType::RowMajor> mat;
+  SparseMatrix<StorageType::RowMajor> mat;
 };
 
 } // namespace proxpde

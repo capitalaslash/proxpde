@@ -159,10 +159,10 @@ private:
   FESpace_T feSpaceP1;
   std::vector<BCEss<FESpace_T>> bcs;
   Builder<StorageType::ClmMajor> builder;
-  Mat<StorageType::RowMajor> massMatrix;
-  Mat<StorageType::RowMajor> diffMatrix;
-  Mat<StorageType::RowMajor> advMatrix;
-  Mat<StorageType::ClmMajor> systemMatrix;
+  SparseMatrix<StorageType::RowMajor> massMatrix;
+  SparseMatrix<StorageType::RowMajor> diffMatrix;
+  SparseMatrix<StorageType::RowMajor> advMatrix;
+  SparseMatrix<StorageType::ClmMajor> systemMatrix;
   Vec rhs;
   LUSolver solver;
   IOManager<FESpace_T> io;
@@ -178,9 +178,8 @@ private:
   { return (p - Vec3(0.5, 0.75, 0.0)).squaredNorm() < 0.15 * 0.15 ? 1.0 : 0.0; };
 
   // circle
-  Fun<Elem_T::dim, 3> const velocityField = [](Vec3 const & p) {
-    return Vec2{M_PI * (p(1) - 0.5), -M_PI * (p(0) - 0.5)};
-  };
+  Fun<Elem_T::dim, 3> const velocityField = [](Vec3 const & p)
+  { return Vec2{M_PI * (p(1) - 0.5), -M_PI * (p(0) - 0.5)}; };
 
   // // linear
   // Fun<Elem_T::dim, 3> const velocityField = [](Vec3 const & ) {

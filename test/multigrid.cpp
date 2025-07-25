@@ -39,7 +39,7 @@ struct MGSolver
 
   MGSolver(
       uint const n,
-      std::vector<Mat<StorageType::RowMajor> const *> mats,
+      std::vector<SparseMatrix<StorageType::RowMajor> const *> mats,
       std::vector<Prol_T const *> ps,
       std::vector<Rest_T const *> rs):
       numLevels{n},
@@ -53,7 +53,7 @@ struct MGSolver
 
   void init(
       uint const level,
-      Mat<StorageType::RowMajor> const & mat,
+      SparseMatrix<StorageType::RowMajor> const & mat,
       Prol_T const & p,
       Rest_T const & r)
   {
@@ -108,7 +108,7 @@ struct MGSolver
   }
 
   uint numLevels;
-  std::vector<Mat<StorageType::RowMajor> const *> As;
+  std::vector<SparseMatrix<StorageType::RowMajor> const *> As;
   std::vector<Prol_T const *> prols;
   std::vector<Rest_T const *> rests;
   std::vector<Smoother_T> smoothers;

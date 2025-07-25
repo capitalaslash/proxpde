@@ -1,5 +1,9 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+
+// local
 #include "qr.hpp"
 
 namespace proxpde

@@ -1,8 +1,10 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+
+// local
 #include "fespace.hpp"
-#include "feutils.hpp"
-#include "geo.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "mesh_refine.hpp"
@@ -10,8 +12,6 @@
 #include "reffe.hpp"
 #include "timer.hpp"
 #include "var.hpp"
-
-#include <unsupported/Eigen/SparseExtra>
 
 using namespace proxpde;
 

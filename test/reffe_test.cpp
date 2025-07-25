@@ -1,13 +1,12 @@
 #include "def.hpp"
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
+// stl
+#include <bitset>
+
+// local
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "iomanager.hpp"
 #include "mesh.hpp"
-#include "timer.hpp"
 
 using namespace proxpde;
 

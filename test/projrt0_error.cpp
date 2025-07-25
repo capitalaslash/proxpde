@@ -1,5 +1,10 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+#include <limits>
+
+// local
 #include "bc.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
@@ -7,8 +12,6 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "mesh_refine.hpp"
-
-#include <limits>
 
 using namespace proxpde;
 

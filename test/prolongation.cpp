@@ -1,5 +1,9 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+
+// local
 #include "fespace.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"

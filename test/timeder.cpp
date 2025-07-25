@@ -1,5 +1,9 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+
+// local
 #include "assembly.hpp"
 #include "builder.hpp"
 #include "fe.hpp"

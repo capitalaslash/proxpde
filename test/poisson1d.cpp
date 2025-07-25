@@ -109,8 +109,7 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  double const norm = error.data.norm();
+  fmt::print("the norm of the error is {:.16e}\n", norm);
   return checkError({norm}, {2.87785419773588e-07});
 }

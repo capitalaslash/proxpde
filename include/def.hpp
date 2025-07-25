@@ -3,31 +3,21 @@
 #include "proxpde.h"
 
 // io
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 
 // containers
 #include <array>
-#include <bitset>
-#include <map>
-#include <set>
 #include <tuple>
-#include <unordered_set>
 #include <vector>
 
 // other std
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <functional>
-#include <memory>
 #include <numeric>
-#include <optional>
 
 // eigen
 #include <Eigen/Dense>
-#include <Eigen/Sparse>
 #include <Eigen/UmfPackSupport>
 #include <unsupported/Eigen/IterativeSolvers>
 #include <unsupported/Eigen/SparseExtra>

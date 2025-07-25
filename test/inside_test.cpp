@@ -1,15 +1,13 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+#include <random>
+
+// local
 #include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
 #include "mesh.hpp"
 #include "timer.hpp"
-
-#include <random>
 
 using namespace proxpde;
 

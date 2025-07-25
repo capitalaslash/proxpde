@@ -1,5 +1,9 @@
 #include "def.hpp"
 
+// stl
+#include <bitset>
+
+// local
 #include "mesh.hpp"
 
 using namespace proxpde;

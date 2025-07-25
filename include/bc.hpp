@@ -2,6 +2,10 @@
 
 #include "def.hpp"
 
+// stl
+#include <unordered_set>
+
+// local
 #include "curfe.hpp"
 #include "qr.hpp"
 #include "reffe.hpp"

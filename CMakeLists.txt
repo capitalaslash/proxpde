@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.23...4.0)
 
 project(ProXPDE
   VERSION 0.1
@@ -110,16 +110,15 @@ add_library(proxpde SHARED)
 target_sources(proxpde
   PRIVATE
     ${SOURCES}
+  PUBLIC
+  FILE_SET HEADERS
+  BASE_DIRS
+    include
+    ${PROJECT_BINARY_DIR}
+  FILES
     ${HEADERS}
 )
 add_library(ProXPDE::proxpde ALIAS proxpde)
-
-target_include_directories(proxpde
-  PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> # for generated includes
-    $<INSTALL_INTERFACE:include> # all includes (w/ generated) go to single install folder
-)
 
 target_compile_features(proxpde PUBLIC cxx_std_20)
 
@@ -168,10 +167,9 @@ install(TARGETS proxpde
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  FILE_SET HEADERS DESTINATION include/proxpde
 )
 
-install(FILES ${HEADERS} DESTINATION include/proxpde)
 install(FILES ${PROJECT_BINARY_DIR}/proxpde.h DESTINATION include/proxpde)
 
 install(EXPORT ProXPDETargets

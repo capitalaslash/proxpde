@@ -17,6 +17,6 @@ find_package(pugixml REQUIRED)
 find_package(UMFPack REQUIRED)
 
 # yaml-cpp
-find_package(yaml-cpp REQUIRED)
+find_package(yaml-cpp 0.8.0 REQUIRED)
 
 # find_package(MPI COMPONENTS CXX)

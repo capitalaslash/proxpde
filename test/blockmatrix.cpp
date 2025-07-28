@@ -13,7 +13,7 @@ int main()
   auto block = m.block<1, 2>();
   block << 2, 2, 2, 2, 2, 2;
 
-  std::cout << m << std::endl;
+  fmt::println("{}", m);
 
   return 0;
 }

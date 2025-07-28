@@ -84,3 +84,7 @@ std::ostream & operator<<(std::ostream & out, BlockMatrix<Blocks...> const & m)
 }
 
 } // namespace proxpde
+
+template <uint... Blocks>
+struct fmt::formatter<proxpde::BlockMatrix<Blocks...>>: fmt::ostream_formatter
+{};

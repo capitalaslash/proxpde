@@ -91,7 +91,7 @@ int main(/*int argc, char * argv[]*/)
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << std::endl;
+    fmt::println("solving timestep {}", itime);
 
     t.start("update");
     cOld = c.data;

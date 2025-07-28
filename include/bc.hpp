@@ -48,8 +48,7 @@ public:
       _constrainedDofMap(std::move(dofMap)),
       data{Vec::Zero(_constrainedDofMap.size())}
   {
-    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
-    //           << std::endl;
+    // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
   }
 
   BCEss(
@@ -60,8 +59,7 @@ public:
       _constrainedDofMap(std::move(dofMap)),
       data{Vec::Zero(_constrainedDofMap.size())}
   {
-    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
-    //           << std::endl;
+    // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
     operator<<(fun);
   }
 
@@ -70,8 +68,7 @@ public:
       _constrainedDofMap(std::move(dofMap)),
       data{Vec::Zero(_constrainedDofMap.size())}
   {
-    // std::cout << "new bc on dofset with " << _constrainedDofMap.size() << " dofs"
-    //           << std::endl;
+    // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
     operator<<(fun);
   }
 
@@ -84,8 +81,7 @@ public:
       comp(c)
   {
     setupDofMap();
-    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
-    //           << " dofs" << std::endl;
+    // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
   }
 
   BCEss(
@@ -98,8 +94,7 @@ public:
       comp(c)
   {
     setupDofMap();
-    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
-    //           << " dofs" << std::endl;
+    // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
     operator<<(fun);
   }
 
@@ -113,8 +108,7 @@ public:
       comp(c)
   {
     setupDofMap();
-    // std::cout << "new bc on marker " << m << " with " << _constrainedDofMap.size()
-    //           << " dofs" << std::endl;
+    // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
     operator<<(fun);
   }
 
@@ -124,8 +118,7 @@ public:
     marker = m;
 
     setupDofMap();
-    // std::cout << "bc set on marker " << m << " with " << _constrainedDofMap.size()
-    //           << " dofs" << std::endl;
+    // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
   }
 
   BCEss<FESpace> & operator<<(Fun<FESpace::physicalDim(), 3> const & fun)
@@ -461,7 +454,7 @@ struct DOFCoordSet
         }
       }
     }
-    // std::cout << "new DOFCoordSet with " << ids.size() << " dofs" << std::endl;
+    // fmt::println("new DOFCoordSet with {} dofs", ids.size());
   }
 
   FESpace_T & feSpace;

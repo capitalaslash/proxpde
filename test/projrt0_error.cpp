@@ -211,9 +211,7 @@ int main(int argc, char * argv[])
         InputFun<2>{base2d, base2d, [](Vec3 const &) { return 0.0; }, "2ddiv0"};
 
     auto const fun2d = InputFun<2>{
-        [&base2d](Vec3 const & p) {
-          return Vec2{base2d(p) + Vec2{0.0, -p[1]}};
-        },
+        [&base2d](Vec3 const & p) { return Vec2{base2d(p) + Vec2{0.0, -p[1]}}; },
         base2d,
         [](Vec3 const & p) { return 0.5 * p[1] * p[1]; },
         "2dfull"};
@@ -314,9 +312,7 @@ int main(int argc, char * argv[])
         InputFun<3>{base3d, base3d, [](Vec3 const &) { return 0.0; }, "3ddiv0"};
 
     auto const fun3d = InputFun<3>{
-        [&base3d](Vec3 const & p) {
-          return Vec3{base3d(p) + Vec3{0.0, -p[1], 0.0}};
-        },
+        [&base3d](Vec3 const & p) { return Vec3{base3d(p) + Vec3{0.0, -p[1], 0.0}}; },
         base3d,
         [](Vec3 const & p) { return 0.5 * p[1] * p[1]; },
         "3dfull"};

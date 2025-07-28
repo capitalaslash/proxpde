@@ -66,7 +66,7 @@ static constexpr MeshFlags to_MeshFlags(std::string_view str)
   else if (str == "CHECK_FACET_PLANAR")
     return MeshFlags::CHECK_FACET_PLANAR;
   fmt::print(stderr, "mesh flag not recognized: {}\n", str);
-  abort();
+  std::abort();
   return MeshFlags::NONE;
 }
 

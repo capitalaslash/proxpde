@@ -112,8 +112,7 @@ int main(int argc, char * argv[])
     stepTimer.start();
 
     time += ns.config["dt"].as<double>();
-    std::cout << Utils::separator << "solving timestep " << itime + 1
-              << ", time = " << time << std::endl;
+    fmt::println("{}solving timestep {}, time = {}", Utils::separator, itime + 1, time);
 
     t.start("monolithic assembly");
     ns.assemblyStep(bcsVel);

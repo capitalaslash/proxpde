@@ -76,25 +76,21 @@ compareTriplets(std::vector<Triplet> const & v1, std::vector<Triplet> const & v2
     }
   }
 
-  std::cout << "different values:" << std::endl;
+  fmt::println("different values:");
   for (auto & [key, value]: db)
-  {
-    std::cout << "(" << key.first << ", " << key.second << "): " << value << std::endl;
-  }
+    fmt::println("({}, {}): {}", key.first, key.second, value);
 
-  std::cout << "missing values:" << std::endl;
+  fmt::println("missing values:");
   for (auto & [key, value]: missing)
-  {
-    std::cout << "(" << key.first << ", " << key.second << "): " << value << std::endl;
-  }
+    fmt::println("({}, {}): {}", key.first, key.second, value);
 
   return db.size() + missing.size();
 }
 
 int main(int argc, char * argv[])
 {
-  uint const numElemsX = (argc < 3) ? 3 : std::stoi(argv[1]);
-  uint const numElemsY = (argc < 3) ? 3 : std::stoi(argv[2]);
+  auto const numElemsX = (argc < 3) ? 3u : static_cast<uint>(std::stoul(argv[1]));
+  auto const numElemsY = (argc < 3) ? 3u : static_cast<uint>(std::stoul(argv[2]));
 
   Vec3 const origin{0., 0., 0.};
   Vec3 const length{1., 1., 0.};

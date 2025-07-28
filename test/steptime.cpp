@@ -84,7 +84,7 @@ int main()
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime + 1 << ", time = " << time << std::endl;
+    fmt::println("{}solving timestep {}, time = {}", Utils::separator, itime + 1, time);
 
     velOld = sol.data;
 

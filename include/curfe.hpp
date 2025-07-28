@@ -101,7 +101,7 @@ struct CurFE
     }
     // else
     // {
-    //   std::cout << "warning: no reinit, element coincide" << std::endl;
+    //   fmt::println(stderr, "warning: no reinit, element coincide");
     // }
   }
 
@@ -312,7 +312,7 @@ struct VectorCurFE
     }
     // else
     // {
-    //   std::cout << "warning: no reinit, element coincide" << std::endl;
+    //   fmt::println(stderr, "warning: no reinit, element coincide");
     // }
   }
 

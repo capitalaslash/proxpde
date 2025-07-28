@@ -125,7 +125,6 @@ void interpolateOnFacets(
     if (markers == std::unordered_set<marker_T>({markerNotSet}) ||
         (markers.contains(facet.marker)))
     {
-      // std::cout << "facet " << facet.id << std::endl;
       curFEFacet.reinit(facet);
 
       auto const & elem = *(facet.facingElem[0].ptr);

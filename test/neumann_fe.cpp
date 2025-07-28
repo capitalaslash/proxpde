@@ -18,8 +18,8 @@ template <typename Elem, uint order>
 int test(YAML::Node const & config)
 {
   auto const n = config["n"].as<uint>();
-  fmt::print(
-      "{}test - elem: {}, order: {}, mesh size: {}\n",
+  fmt::println(
+      "{}test - elem: {}, order: {}, mesh size: {}",
       Utils::separator,
       ElemToStr<Elem>::value,
       order,
@@ -157,15 +157,15 @@ int test(YAML::Node const & config)
       auto const fluxBoundary = flux.data[Elem_T::dim * dofId];
       if (std::fabs(fluxBoundary - fluxExact) > 1.e-12)
       {
-        fmt::print(stderr, "the flux on the boundary is not the expected value\n");
-        fmt::print(stderr, "{:.16e} instead of {:.16e}\n", fluxBoundary, fluxExact);
+        fmt::println(stderr, "the flux on the boundary is not the expected value");
+        fmt::println(stderr, "{:.16e} instead of {:.16e}", fluxBoundary, fluxExact);
         return 2;
       }
     }
   }
 
   double norm = error.data.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 
@@ -309,7 +309,7 @@ int main()
   // t.stop();
 
   t.print();
-  fmt::print("test results: {}\n", tests);
+  fmt::println("test results: {}", tests);
 
   return tests.any();
 }

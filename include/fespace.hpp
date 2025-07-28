@@ -499,7 +499,6 @@ double integrateOnBoundary(Vec const & u, FESpaceT const & feSpace, marker_T con
   {
     if (facet.marker == m)
     {
-      // std::cout << "facet " << facet.id << std::endl;
       facetCurFE.reinit(facet);
       auto elem = facet.facingElem[0].ptr;
       auto const side = facet.facingElem[0].side;

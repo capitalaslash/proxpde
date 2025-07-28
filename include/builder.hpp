@@ -18,14 +18,14 @@ struct Builder
 
   explicit Builder(uint const size): A(size, size), b{Vec::Zero(size)}
   {
-    // std::cout << "new builder with " << size << " dofs" << std::endl;
+    // fmt::println( "new builder with {} dofs", size);
   }
 
   void init(uint const size)
   {
     A.resize(size, size);
     b = Vec::Zero(size);
-    std::cout << "builder set with " << size << " dofs" << std::endl;
+    // fmt::println( "builder set with {} dofs", size);
   }
 
   template <typename Assemblies>
@@ -350,13 +350,13 @@ struct Builder
       // Utils::filelog << "Fe:\n" << Fe << std::endl;
 
       // --- store local values in global matrix and rhs ---
-      for (uint i = 0; i < CurFE_T::RefFE_T::numDOFs; ++i)
+      for (uint i = 0; i < CurFE_T::numDOFs; ++i)
       {
         for (uint d = 0; d < FESpace_T::dim; ++d)
         {
           DOFid_T const idI = refAssembly.feSpace->offset +
                               refAssembly.feSpace->dof.getId(elem.id, i, d);
-          b[idI] += Fe[i + d * FESpace_T::CurFE_T::numDOFs];
+          b[idI] += Fe[i + d * CurFE_T::numDOFs];
         }
       }
       // std::cout << "rhs " << elem.id << ":\n" << b << std::endl;

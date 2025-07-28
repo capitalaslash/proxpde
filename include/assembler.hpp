@@ -91,11 +91,11 @@ struct Assembler
       rhs(dofTotalNum),
       sol(dofTotalNum)
   {
-    std::cout << "the total number of dofs is " << dofTotalNum << std::endl;
-    std::cout << "the local number of dofs is " << dofLocalNum << std::endl;
+    fmt::println("the total number of dofs is {}", dofTotalNum);
+    fmt::println("the local number of dofs is {}", dofLocalNum);
     for (auto const & i: blocks)
     {
-      std::cout << i << std::endl;
+      fmt::println("{}", i);
     }
   }
 

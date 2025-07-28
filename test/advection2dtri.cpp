@@ -127,7 +127,7 @@ int main(int argc, char * argv[])
 
   double const dt = config["dt"].as<double>();
   auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
-  std::cout << "max cfl = " << cfl << std::endl;
+  fmt::println("max cfl = {}", cfl);
   t.stop();
 
   t.start("p1 assembly setup");
@@ -171,7 +171,7 @@ int main(int argc, char * argv[])
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << std::endl;
+    fmt::println("solving timestep {}", itime);
 
     // central implicit
     t.start("p1 assemby");
@@ -215,12 +215,10 @@ int main(int argc, char * argv[])
   Vec oneFieldP0;
   interpolateAnalyticFunction(one, feSpaceP0, oneFieldP0);
 
-  double errorNormP1 = (concP1.data - oneFieldP1).norm();
-  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1
-            << std::endl;
-  double errorNormP0 = (concP0.data - oneFieldP0).norm();
-  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0
-            << std::endl;
+  double const errorNormP1 = (concP1.data - oneFieldP1).norm();
+  double const errorNormP0 = (concP0.data - oneFieldP0).norm();
+  fmt::println("the norm of the P1 error is {:.16e}", errorNormP1);
+  fmt::println("the norm of the P0 error is {:.16e}", errorNormP0);
   return checkError(
       {errorNormP1, errorNormP0}, {0.2572474581492306, 0.03789136711107713});
 }

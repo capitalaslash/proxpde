@@ -34,8 +34,8 @@ int test(YAML::Node const & config)
 
   // create mesh
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  Vec3 const origin{0., 0., 0.};
-  Vec3 const length{1., 1., 0.};
+  Vec3 const origin{0.0, 0.0, 0.0};
+  Vec3 const length{1.0, 1.0, 1.0};
   buildHyperCube(
       *mesh,
       origin,
@@ -53,8 +53,9 @@ int test(YAML::Node const & config)
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  auto wExactFun = [g](Vec3 const & p) -> Vec3
-  { return Vec3{2. + g - 2. * p(0), 0.0, 0.0}; };
+  auto wExactFun = [g](Vec3 const & p) -> Vec3 {
+    return Vec3{2. + g - 2. * p(0), 0.0, 0.0};
+  };
   scalarFun_T rhsFun = [](Vec3 const & /*p*/)
   {
     return -2.;
@@ -74,9 +75,8 @@ int test(YAML::Node const & config)
 
   // symmetry
   auto const bcWTop = BCEss{feSpaceW, side::TOP, wExactFun};
-  auto bcWBottom = BCEss{feSpaceW, side::BOTTOM, wExactFun};
+  auto const bcWBottom = BCEss{feSpaceW, side::BOTTOM, wExactFun};
 
-  // auto const bcsW = std::vector{bcWRight, bcWTop};
   auto const bcsW = std::vector{bcWRight, bcWTop, bcWBottom};
 
   FEVar w{"w", feSpaceW};
@@ -117,7 +117,7 @@ int test(YAML::Node const & config)
   w.data = sol.head(sizeW);
   u.data = sol.tail(sizeU);
 
-  // std::cout << "sol: " << sol.transpose() << std::endl;
+  fmt::print("sol:\n{}\n", sol);
 
   Vec exact = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(wExactFun, feSpaceW, exact);
@@ -151,8 +151,7 @@ int test(YAML::Node const & config)
   // fmt::print("l2 error squared of w: {:e}\n", wL2error);
 
   double const norm = uError.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  fmt::print("the norm of the error is {:16.10e}\n", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 

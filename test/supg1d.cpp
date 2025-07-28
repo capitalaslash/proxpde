@@ -446,7 +446,7 @@ int main(int argc, char * argv[])
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
+    fmt::println("{}solving timestep {}, time = {}", Utils::separator, itime + 1, time);
 
     // central implicit
     t.start("p1 assemby");

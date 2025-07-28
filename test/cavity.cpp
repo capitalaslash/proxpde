@@ -17,21 +17,30 @@ int main(int argc, char * argv[])
   using Elem_T = Quad;
   // using Elem_T = Triangle;
   using Mesh_T = Mesh<Elem_T>;
-  // using QuadraticRefFE = LagrangeFE<Elem_T, dim>::RefFE_T;
-  using QuadraticRefFE = RefQuadP2;
+  using QuadraticRefFE = LagrangeFE<Elem_T, 2u>::RefFE_T;
   using LinearRefFE = LagrangeFE<Elem_T, 1u>::RefFE_T;
   using QuadraticQR = LagrangeFE<Elem_T, 2u>::RecommendedQR;
   using FESpaceVel_T = FESpace<Mesh_T, QuadraticRefFE, QuadraticQR, Elem_T::dim>;
   using FESpaceP_T = FESpace<Mesh_T, LinearRefFE, QuadraticQR>;
 
-  auto const numElemsX = (argc < 3) ? 10u : static_cast<uint>(std::stoul(argv[1]));
-  auto const numElemsY = (argc < 3) ? 10u : static_cast<uint>(std::stoul(argv[2]));
+  ParameterDict config;
 
-  Vec3 const origin{0.0, 0.0, 0.0};
-  Vec3 const length{1.0, 1.0, 0.0};
+  // default config
+  config["mesh"]["origin"] = Vec3{0.0, 0.0, 0.0};
+  config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
+  config["mesh"]["n"] = std::array{4u, 4u, 0u};
+  config["mesh"]["flags"] = Bitmask{MeshFlags::BOUNDARY_FACETS};
+  config["nu"] = 0.1;
+
+
+  if (argc > 1)
+  {
+    config.override(argv[1]);
+  }
+  config.validate({"mesh", "nu"});
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, origin, length, {numElemsX, numElemsY, 0u});
+  buildHyperCube(*mesh, ParameterDict{config["mesh"]});
 
   FESpaceVel_T feSpaceVel{*mesh};
   auto const dofVel = Elem_T::dim * feSpaceVel.dof.size;

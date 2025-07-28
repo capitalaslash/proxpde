@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
   FEVar vel{"velocity", feSpaceVel};
   vel << velocity;
   double const cfl = velocity * dt * numElems;
-  std::cout << "cfl = " << cfl << std::endl;
+  fmt::print("cfl = {}\n", cfl);
   assert(cfl < 1. - 1.e-8);
 
   Builder builder{feSpaceP1.dof.size};
@@ -131,7 +131,7 @@ int main(int argc, char * argv[])
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
+    fmt::print("solving timestep {:4d}, time = {:.6e}\n", itime, time);
 
     // central implicit
     t.start("p1 assemby");
@@ -172,12 +172,9 @@ int main(int argc, char * argv[])
   Vec oneFieldP0;
   interpolateAnalyticFunction(one, feSpaceP0, oneFieldP0);
 
-  double errorNormP1 = (concP1.data - oneFieldP1).norm();
-  std::cout << "the norm of the P1 error is " << std::setprecision(16) << errorNormP1
-            << std::endl;
-  double errorNormP0 = (concP0.data - oneFieldP0).norm();
-  std::cout << "the norm of the P0 error is " << std::setprecision(16) << errorNormP0
-            << std::endl;
-  return checkError(
-      {errorNormP1, errorNormP0}, {0.01153555695665251, 0.0003358552892295136});
+  double const errorNormP1 = (concP1.data - oneFieldP1).norm();
+  fmt::print("the norm of the P1 error is {:.16e}\n", errorNormP1);
+  double const errorNormP0 = (concP0.data - oneFieldP0).norm();
+  fmt::print("the norm of the P0 error is {:.16e}\n", errorNormP0);
+  return checkError({errorNormP1, errorNormP0}, {1.15355569566e-02, 3.35855289229e-04});
 }

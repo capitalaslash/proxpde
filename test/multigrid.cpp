@@ -71,16 +71,14 @@ struct MGSolver
   {
     // 1) relax with smoother
     Vec xTilda = smoothers[level - 1].solveWithGuess(b, x);
-    std::cout << "pre-smoother n. iterations: " << smoothers[level - 1].iterations()
-              << std::endl;
-    std::cout << "pre-smoother rel. residual: " << smoothers[level - 1].error()
-              << std::endl;
+    fmt::println("pre-smoother n. iterations: {}", smoothers[level - 1].iterations());
+    fmt::println("pre-smoother rel. residual: {}", smoothers[level - 1].error());
 
     // 2) compute residual
-    Vec rFine = b - (*As[level]) * xTilda;
+    Vec const rFine = b - (*As[level]) * xTilda;
 
     // 3) restrict residual
-    Vec rCoarse = rests[level - 1]->mat * rFine;
+    Vec const rCoarse = rests[level - 1]->mat * rFine;
 
     // 4) coarse grid correction
     Vec error = Vec::Zero(As[level - 1]->rows());

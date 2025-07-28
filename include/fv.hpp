@@ -257,9 +257,9 @@ struct FVSolver
       {
         fluxes[facet.id] = 0.;
       }
-      // std::cout << facet.pointList[0]->id << ", " << facet.pointList[1]->id << " | "
-      //           << facet._normal[0] << ", " << facet._normal[1] << " -> "
-      //           << fluxes[facet.id] << std::endl;
+      // fmt::print("{}, {} | ", facet.pointList[0]->id, facet.pointList[1]->id);
+      // fmt::print("{}, {} -> ", facet._normal[0], facet._normal[1]);
+      // fmt::println("{}", fluxes[facet.id]);
     }
     // // TODO: overwrite the bc fixed fluxes here ?
     // // set flux according to upwind bcs
@@ -277,8 +277,6 @@ struct FVSolver
     //     }
     //   }
     // }
-    // std::cout << fluxes << std::endl;
-    // std::abort();
   }
 
   void advance(Vec & u, double const dt)
@@ -287,7 +285,6 @@ struct FVSolver
     for (auto const & elem: feSpace.mesh->elementList)
     {
       auto const id = feSpace.dof.getId(elem.id);
-      // std::cout << "elem " << id << std::endl;
       double const hinv = 1. / elem.volume();
       auto const & facetIds = feSpace.mesh->elemToFacet[elem.id];
       // fluxes sign must be adjusted wrt the normal pointing outside the element
@@ -295,8 +292,6 @@ struct FVSolver
       {
         auto const facetId = feSpace.mesh->facetList[facetIds[f]].id;
         u[id] += dt * normalSgn(elem.id, f) * fluxes[facetId] * hinv;
-        // std::cout << normalSgn(elem.id, f) << " " <<
-        // fluxes[feSpace.mesh->facetList[facetIds[f]].id] << std::endl;
       }
     }
   }

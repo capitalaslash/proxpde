@@ -31,6 +31,11 @@
 // yaml
 #include <yaml-cpp/yaml.h>
 
+// ----------------------------------------------------------------------------
+template <>
+struct fmt::formatter<YAML::Node>: fmt::ostream_formatter
+{};
+
 namespace proxpde
 {
 
@@ -307,19 +312,18 @@ struct ParameterDict: public YAML::Node
       if (v.Type() == YAML::NodeType::Map)
       {
         // TODO: allow sub-...sub-sections with recursion?
-        for (auto const & kv_nested: v)
+        for (auto const & kvNested: v)
         {
-          auto const & k_nested = kv_nested.first.as<std::string>();
-          auto const & v_nested = kv_nested.second;
-          if (this->operator[](k)[k_nested])
+          auto const & kNested = kvNested.first.as<std::string>();
+          auto const & vNested = kvNested.second;
+          if (this->operator[](k)[kNested])
           {
-            std::cout << k << " -> " << k_nested << ": overriding with " << v_nested
-                      << std::endl;
-            this->operator[](k)[k_nested] = v_nested;
+            fmt::println("{} -> {}: overriding with {}", k, kNested, vNested);
+            this->operator[](k)[kNested] = vNested;
           }
           else
           {
-            std::cout << k << " -> " << k_nested << ": option not defined" << std::endl;
+            fmt::println("{} -> {}: option not defined", k, kNested);
           }
         }
       }
@@ -327,12 +331,12 @@ struct ParameterDict: public YAML::Node
       {
         if (this->operator[](k))
         {
-          std::cout << k << ": overriding with " << v << std::endl;
+          fmt::println("{}: overriding with {}", k, v);
           this->operator[](k) = v;
         }
         else
         {
-          std::cout << k << ": option not defined" << std::endl;
+          fmt::println("{}: option not defined", k);
         }
       }
     }
@@ -347,8 +351,6 @@ inline bool checkError(
 {
   assert(error.size() == ref.size());
 
-  auto const prec = -std::log10(toll);
-
   bool check = true;
   for (uint i = 0; i < error.size(); ++i)
   {
@@ -356,13 +358,17 @@ inline bool checkError(
   }
   if (!check)
   {
-    std::cerr << "the norm of the error is not the prescribed value" << std::endl;
-    std::cerr << "ERROR" << std::string(prec + 2, ' ') << "REF"
-              << std::string(prec + 4, ' ') << "DIFF" << std::endl;
+    fmt::print(stderr, "the norm of the error is not the prescribed value\n");
+    fmt::print(
+        stderr, "ERROR{}REF{}DIFF\n", std::string(18, ' '), std::string(20, ' '));
     for (uint i = 0; i < error.size(); ++i)
     {
-      std::cerr << std::scientific << std::setprecision(prec) << error[i] << " "
-                << ref[i] << " " << std::fabs(error[i] - ref[i]) << std::endl;
+      fmt::print(
+          stderr,
+          "{:.16e} {:.16e} {:.16e}\n",
+          error[i],
+          ref[i],
+          std::fabs(error[i] - ref[i]));
     }
   }
   return !check;
@@ -489,13 +495,13 @@ constexpr std::
 // ----------------------------------------------------------------------------
 template <typename T>
 requires std::is_base_of_v<Eigen::DenseBase<T>, T>
-struct fmt::formatter<T>: ostream_formatter
+struct fmt::formatter<T>: fmt::ostream_formatter
 {};
 
 // ----------------------------------------------------------------------------
 template <typename T, int S>
 requires std::is_floating_point_v<T>
-struct fmt::formatter<Eigen::SparseMatrix<T, S>>: ostream_formatter
+struct fmt::formatter<Eigen::SparseMatrix<T, S>>: fmt::ostream_formatter
 {};
 
 // ----------------------------------------------------------------------------

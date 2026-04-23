@@ -413,16 +413,16 @@ struct FEVar
     return evaluateDivOnRef(pRef);
   }
 
-  template <typename FESpaceVec>
-  void setData(Vec const & v, FESpaceVec const & feSpaceVec, uint component)
+  template <typename FESpaceScalar>
+  void setData(Vec const & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
   {
-    setComponent(data, feSpace, v, feSpaceVec, component);
+    setComponent(data, *feSpace, dataComp, feSpaceScalar, component);
   }
 
-  template <typename FESpaceVec>
-  void setFromComponent(Vec & v, FESpaceVec const & feSpaceVec, uint component)
+  template <typename FESpaceScalar>
+  void setFromComponent(Vec & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
   {
-    getComponent(data, feSpace, v, feSpaceVec, component);
+    getComponent(dataComp, feSpaceScalar, data, *feSpace, component);
   }
 
   std::string name = "none";

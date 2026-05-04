@@ -21,15 +21,17 @@ int main(int argc, char * argv[])
   constexpr uint dim = 2u;
   using Elem_T = Quad;
   using Mesh_T = Mesh<Elem_T>;
-  using QRQuadratic = LagrangeFE<Elem_T, 2u>::RecommendedQR;
-  using QRConstant = LagrangeFE<Elem_T, 2u>::RecommendedQR;
-  using RefFEQuadratic = LagrangeFE<Elem_T, 2u>::RefFE_T;
-  using RefFELinear = LagrangeFE<Elem_T, 1u>::RefFE_T;
-  using RefFEConstant = LagrangeFE<Elem_T, 0u>::RefFE_T;
-  using FESpaceP2V_T = FESpace<Mesh_T, RefFEQuadratic, QRQuadratic, dim>;
-  using FESpaceP2_T = FESpace<Mesh_T, RefFEQuadratic, QRQuadratic>;
-  using FESpaceP1_T = FESpace<Mesh_T, RefFELinear, QRQuadratic>;
-  using FESpaceP0_T = FESpace<Mesh_T, RefFEConstant, QRConstant>;
+  using QRQuadratic_T = LagrangeFE<Elem_T, 2u>::RecommendedQR;
+  using QRConstant_T = LagrangeFE<Elem_T, 2u>::RecommendedQR;
+  using RefFEQuadratic_T = LagrangeFE<Elem_T, 2u>::RefFE_T;
+  using RefFELinear_T = LagrangeFE<Elem_T, 1u>::RefFE_T;
+  using RefFEConstant_T = LagrangeFE<Elem_T, 0u>::RefFE_T;
+  using FESpaceP2V_T = FESpace<Mesh_T, RefFEQuadratic_T, QRQuadratic_T, dim>;
+  using FESpaceP2_T = FESpace<Mesh_T, RefFEQuadratic_T, QRQuadratic_T>;
+  using FESpaceP1_T = FESpace<Mesh_T, RefFELinear_T, QRQuadratic_T>;
+  using FESpaceP0_T = FESpace<Mesh_T, RefFEConstant_T, QRConstant_T>;
+  using QRQuadraticSide_T = SideGaussQR<Elem_T, SideQR<QRQuadratic_T>::type::numPts>;
+  using FESpaceSide_T = FESpace<Mesh_T, RefFEQuadratic_T, QRQuadraticSide_T>;
 
   MilliTimer t;
 
@@ -45,7 +47,9 @@ int main(int argc, char * argv[])
     config["mesh"]["length"] = Vec3{1.0, 1.0, 0.0};
     config["mesh"]["n"] = std::array{10u, 10u, 0u};
     config["mesh"]["flags"] = Bitmask{MeshFlags::BOUNDARY_FACETS};
+    config["nu"] = 0.1;
   }
+  config.validate({"mesh", "nu"});
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -58,6 +62,7 @@ int main(int argc, char * argv[])
   auto const dofU = feSpaceVel.dof.size;
   FESpaceP1_T feSpaceP{*mesh, dim * dofU};
   auto const dofP = feSpaceP.dof.size;
+  FESpaceSide_T feSpaceSide{*mesh};
   t.stop();
 
   t.start("bc");
@@ -70,13 +75,13 @@ int main(int argc, char * argv[])
       BCEss{feSpaceVel, side::LEFT, zero, {0}},
   };
   auto const pOutlet = 1.0;
-  auto pOutletVar = FEVar{"pOutlet", feSpaceP};
-  pOutletVar.data = Vec::Constant(dofP, -pOutlet);
+  auto pOutletVar = FEVar{"pOutlet", feSpaceSide};
+  pOutletVar.data = Vec::Constant(feSpaceSide.dof.size, -pOutlet);
   auto const bcTop = AssemblyBCNormalFE{pOutletVar, side::TOP, feSpaceVel};
   t.stop();
 
   t.start("build");
-  double const nu = 0.1;
+  auto const nu = config["nu"].as<double>();
   auto const diffusion = AssemblyTensorStiffness{nu, feSpaceVel};
   auto const grad = AssemblyGrad{-1.0, feSpaceVel, feSpaceP};
   auto const div = AssemblyDiv{-1.0, feSpaceP, feSpaceVel};
@@ -123,8 +128,10 @@ int main(int argc, char * argv[])
   Var wssCell{"wssCell"};
   computeElemWSS(wssCell.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
+  Eigen::Index wssCellMaxPos;
+  auto const wssCellMaxVal = wssCell.data.maxCoeff(&wssCellMaxPos);
   fmt::println("wssCell min: {:.16e}", wssCell.data.minCoeff());
-  fmt::println("wssCell max: {:.16e}", wssCell.data.maxCoeff());
+  fmt::println("wssCell max: {:.16e}", wssCellMaxVal);
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
@@ -144,23 +151,46 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  auto uError = (u.data - uExact.data).norm();
-  auto vError = (v.data - vExact.data).norm();
-  auto pError = (p.data - pExact.data).norm();
+  auto const uError = (u.data - uExact.data).norm();
+  auto const vError = (v.data - vExact.data).norm();
+  auto const pError = (p.data - pExact.data).norm();
 
-  fmt::println("u error norm: {:.16e}", uError);
-  fmt::println("v error norm: {:.16e}", vError);
-  fmt::println("p error norm: {:.16e}", pError);
+  Var distCell{"distCell"};
+  auto const bigNum = 1e+20;
+  distCell.data = Vec::Ones(feSpaceP0.dof.size) * bigNum;
 
-  auto const numElemsY = config["mesh"]["n"].as<std::array<uint, 3u>>()[1];
-  if (std::fabs(uError) > 1.e-14 || std::fabs(vError) > 2.e-14 ||
-      std::fabs(pError) > 3.e-14 ||
-      std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
-      std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
+  for (auto & e: mesh->elementList)
   {
-    fmt::println(stderr, "one of the norms of the error is not the prescribed value");
-    return 1;
+    auto const elemDof = feSpaceP0.dof.getId(e.id);
+    for (auto s = 0u; s < Elem_T::numFacets; s++)
+    {
+      auto const facetId = mesh->elemToFacet[e.id][s];
+      if (facetId != idNotSet)
+      {
+        auto const & facet = mesh->facetList[facetId];
+        if (facet.onBoundary())
+          distCell.data[elemDof] = std::min(
+              distCell.data[elemDof], (e.midpoint() - facet.midpoint()).norm());
+      }
+    }
+    if (std::fabs(distCell.data[elemDof] - bigNum) < 1e-6)
+      distCell.data[elemDof] = 0.0;
   }
 
-  return 0;
+  return checkError(
+      {
+          uError,
+          vError,
+          pError,
+          wssCellMaxVal,
+          wssFacet.data.maxCoeff(),
+      },
+      {
+          1.2253585539112627e-14,
+          1.7077476426602275e-14,
+          2.5919844141354946e-14,
+          nu * (1.0 - distCell.data[wssCellMaxPos]),
+          nu,
+      },
+      1e-15);
 }

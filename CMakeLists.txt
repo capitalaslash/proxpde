@@ -104,6 +104,7 @@ set(HEADERS
     include/var.hpp
     include/xdmf_doc.hpp
     include/xdmf_traits.hpp
+    ${CMAKE_BINARY_DIR}/proxpde.h
 )
 
 add_library(proxpde SHARED)

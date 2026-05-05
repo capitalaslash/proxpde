@@ -141,7 +141,7 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
         conn[p] = &meshFine.pointList[localPts[Elem_T::elemToChild[c][p]]];
       }
       meshFine.elementList.emplace_back(
-          Elem_T{conn, Elem_T::numChildren * elem.id + c, elem.marker});
+          conn, Elem_T::numChildren * elem.id + c, elem.marker);
       meshFine.elementList.back().parent = ChildElem{&elem, c};
       elem.children.push_back(ChildElem{&meshFine.elementList.back(), c});
     }

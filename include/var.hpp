@@ -414,13 +414,15 @@ struct FEVar
   }
 
   template <typename FESpaceScalar>
-  void setData(Vec const & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
+  void
+  setData(Vec const & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
   {
     setComponent(data, *feSpace, dataComp, feSpaceScalar, component);
   }
 
   template <typename FESpaceScalar>
-  void setFromComponent(Vec & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
+  void
+  fillFromComponent(Vec & dataComp, FESpaceScalar const & feSpaceScalar, uint component)
   {
     getComponent(dataComp, feSpaceScalar, data, *feSpace, component);
   }

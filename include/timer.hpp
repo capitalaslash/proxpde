@@ -45,37 +45,43 @@ public:
     return elapsed;
   }
 
-  void print(std::ostream & out = std::cout) const
+  void print(FILE * out = stdout) const
   {
-    int totalTime = 0;
-    int strLength = 9;
+    uint totalTime = 0u;
+    uint nameLength = 9u;
     // sort by id
     std::vector<std::pair<std::string, typename TimeUnit::rep>> sortedData(
         _data.size());
     for (auto const & [name, data]: _data)
     {
-      strLength = std::max(strLength, static_cast<int>(name.length()));
-      totalTime += static_cast<int>(data.time);
+      nameLength = std::max(nameLength, static_cast<uint>(name.length()));
+      totalTime += static_cast<uint>(data.time);
       sortedData[data.id] = {name, data.time};
     }
 
-    auto const curSettings = out.flags();
-    auto const curPrecision = out.precision();
-    out << Utils::separator << "| " << std::setw(strLength) << "section"
-        << " | time (" << TimerTraits<TimeUnit>::uom << ") |     % |\n"
-        << Utils::separator;
+    fmt::print(out, "{}", Utils::separator);
+    fmt::println(
+        "| section{} | time ({}) |      % |",
+        std::string(nameLength - 7u, ' '),
+        TimerTraits<TimeUnit>::uom);
+    fmt::print(out, "{}", Utils::separator);
     for (auto const & [name, time]: sortedData)
     {
-      out << "| " << std::setw(strLength) << name << " | " << std::setw(9) << time
-          << " | " << std::fixed << std::setprecision(2) << std::setw(5)
-          << 100. * static_cast<double>(time) / totalTime << " |\n";
+      fmt::println(
+          out,
+          "| {:{}s} | {:9d} | {:6.2f} |",
+          name,
+          nameLength,
+          time,
+          100. * static_cast<double>(time) / totalTime);
     }
-    out << Utils::separator;
-    out << "| " << std::setw(static_cast<int>(strLength)) << "total"
-        << " | " << std::setw(9) << totalTime << " |       |\n";
-    out << Utils::separator;
-    out.flags(curSettings);
-    out.precision(curPrecision);
+    fmt::print(out, "{}", Utils::separator);
+    fmt::println(
+        out,
+        "| total{} | {:9d} |        |",
+        std::string(nameLength - 5u, ' '),
+        totalTime);
+    fmt::print(out, "{}", Utils::separator);
   }
 
 private:

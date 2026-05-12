@@ -97,6 +97,6 @@ int main()
   tests[3] = test<Engine_T, Tetrahedron>(gen);
   fmt::print("Hexahedron\n", Utils::separator);
   tests[4] = test<Engine_T, Hexahedron>(gen);
-  fmt::println("test result: {}", tests);
+  fmt::println("test result: {}", tests.to_string());
   return tests.any();
 }

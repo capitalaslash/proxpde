@@ -109,3 +109,12 @@ std::ostream & operator<<(std::ostream & out, Timer<TimeUnit> & timer)
 using MilliTimer = Timer<std::chrono::milliseconds>;
 
 } // namespace proxpde
+
+template <>
+struct fmt::formatter<proxpde::MilliTimer>: fmt::formatter<uint>
+{
+  auto format(proxpde::MilliTimer t, format_context & ctx) const
+  {
+    return formatter<uint>::format(static_cast<uint>(t.elapsed().count()), ctx);
+  }
+};

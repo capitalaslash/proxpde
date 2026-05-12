@@ -108,8 +108,8 @@ int main(int argc, char * argv[])
   double time = 0.0;
   for (uint itime = 0; itime < ntime; ++itime)
   {
-    MilliTimer stepTimer;
-    stepTimer.start();
+    MilliTimer timerStep;
+    timerStep.start();
 
     time += ns.config["dt"].as<double>();
     fmt::println("{}solving timestep {}, time = {}", Utils::separator, itime + 1, time);

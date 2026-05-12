@@ -547,4 +547,31 @@ void computeFEWSS(
   }
 }
 
+template <typename FESpace>
+void computeDistanceCell(Vec & dist, FESpace const & feSpace)
+{
+  using Elem_T = FESpace::Mesh_T::Elem_T;
+
+  auto const bigNum = 1e+20;
+  dist = Vec::Ones(feSpace.dof.size) * bigNum;
+
+  for (auto & e: feSpace.mesh->elementList)
+  {
+    auto const elemDof = feSpace.dof.getId(e.id);
+    for (auto s = 0u; s < Elem_T::numFacets; s++)
+    {
+      auto const facetId = feSpace.mesh->elemToFacet[e.id][s];
+      if (facetId != idNotSet)
+      {
+        auto const & facet = feSpace.mesh->facetList[facetId];
+        if (facet.onBoundary())
+          dist[elemDof] =
+              std::min(dist[elemDof], (e.midpoint() - facet.midpoint()).norm());
+      }
+    }
+    if (std::fabs(dist[elemDof] - bigNum) < 1e-6)
+      dist[elemDof] = 0.0;
+  }
+}
+
 } // namespace proxpde

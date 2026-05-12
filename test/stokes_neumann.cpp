@@ -1,7 +1,10 @@
+// proxpde configuration - always first
 #include "def.hpp"
 
+// external libs
 #include <yaml-cpp/yaml.h>
 
+// proxpde
 #include "assembly_bc.hpp"
 #include "assembly_lhs.hpp"
 #include "bc.hpp"
@@ -18,8 +21,8 @@ int main(int argc, char * argv[])
 {
   using namespace proxpde;
 
-  constexpr uint dim = 2u;
   using Elem_T = Quad;
+  constexpr uint dim = Elem_T::dim;
   using Mesh_T = Mesh<Elem_T>;
   using QRQuadratic_T = LagrangeFE<Elem_T, 2u>::RecommendedQR;
   using QRConstant_T = LagrangeFE<Elem_T, 2u>::RecommendedQR;
@@ -66,13 +69,14 @@ int main(int argc, char * argv[])
   t.stop();
 
   t.start("bc");
-  auto zero = [](Vec3 const &) { return Vec2::Constant(0.0); };
-  auto inlet = [](Vec3 const & p) { return Vec2(0., 0.5 * (1. - p(0) * p(0))); };
+  auto zero = [](Vec3 const &) { return Vec2{0.0, 0.0}; };
+  // fully developed
+  auto inlet = [](Vec3 const & p) { return Vec2{0.0, 0.5 * (1. - p[0] * p[0])}; };
   auto const bcsVel = std::vector{
-      BCEss{feSpaceVel, side::BOTTOM, inlet},
       BCEss{feSpaceVel, side::RIGHT, zero},
-      // BCEss{feSPaceVel, side::TOP, zero, {0}},
+      // BCEss{feSpaceVel, side::TOP, zero, {0}},
       BCEss{feSpaceVel, side::LEFT, zero, {0}},
+      BCEss{feSpaceVel, side::BOTTOM, inlet},
   };
   auto const pOutlet = 1.0;
   auto pOutletVar = FEVar{"pOutlet", feSpaceSide};
@@ -136,9 +140,12 @@ int main(int argc, char * argv[])
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
   computeFEWSS(wssFacet.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
+  Var dist{"distance"};
+  computeDistanceCell(dist.data, feSpaceP0);
   t.stop();
+  auto const wssFacetMaxVal = wssFacet.data.maxCoeff();
   fmt::println("wssFacet min: {:.16e}", wssFacet.data.minCoeff());
-  fmt::println("wssFacet max: {:.16e}", wssFacet.data.maxCoeff());
+  fmt::println("wssFacet max: {:.16e}", wssFacetMaxVal);
 
   t.start("print");
   IOManager ioComponent{feSpaceComponent, "output_stokes_neumann/vel"};
@@ -146,7 +153,7 @@ int main(int argc, char * argv[])
   IOManager ioP{feSpaceP, "output_stokes_neumann/p"};
   ioP.print({p, pExact});
   IOManager ioWSS{feSpaceP0, "output_stokes_neumann/wss"};
-  ioWSS.print({wssCell, wssFacet});
+  ioWSS.print({wssCell, wssFacet, dist});
   t.stop();
 
   t.print();
@@ -155,42 +162,14 @@ int main(int argc, char * argv[])
   auto const vError = (v.data - vExact.data).norm();
   auto const pError = (p.data - pExact.data).norm();
 
-  Var distCell{"distCell"};
-  auto const bigNum = 1e+20;
-  distCell.data = Vec::Ones(feSpaceP0.dof.size) * bigNum;
-
-  for (auto & e: mesh->elementList)
-  {
-    auto const elemDof = feSpaceP0.dof.getId(e.id);
-    for (auto s = 0u; s < Elem_T::numFacets; s++)
-    {
-      auto const facetId = mesh->elemToFacet[e.id][s];
-      if (facetId != idNotSet)
-      {
-        auto const & facet = mesh->facetList[facetId];
-        if (facet.onBoundary())
-          distCell.data[elemDof] = std::min(
-              distCell.data[elemDof], (e.midpoint() - facet.midpoint()).norm());
-      }
-    }
-    if (std::fabs(distCell.data[elemDof] - bigNum) < 1e-6)
-      distCell.data[elemDof] = 0.0;
-  }
+  auto const wssCellExact = nu * (1.0 - dist.data[wssCellMaxPos]);
+  auto const wssFacetExact = nu;
 
   return checkError(
-      {
-          uError,
-          vError,
-          pError,
-          wssCellMaxVal,
-          wssFacet.data.maxCoeff(),
-      },
-      {
-          1.2253585539112627e-14,
-          1.7077476426602275e-14,
-          2.5919844141354946e-14,
-          nu * (1.0 - distCell.data[wssCellMaxPos]),
-          nu,
-      },
-      1e-15);
+      {uError, vError, pError, wssCellMaxVal, wssFacetMaxVal},
+      {1.9959479048884101e-14,
+       2.4288991284336528e-14,
+       2.9029731550698744e-14,
+       wssCellExact,
+       wssFacetExact});
 }

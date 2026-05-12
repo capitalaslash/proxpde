@@ -206,6 +206,12 @@ struct FEVar
     return error;
   }
 
+  template <typename T>
+  auto l2Error(T const & exact)
+  {
+    return std::sqrt(l2ErrorSquared(exact));
+  }
+
   auto h1SemiNormSquared()
   {
     double integral = 0.0;

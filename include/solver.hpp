@@ -37,19 +37,19 @@ struct SolverBase
 
   virtual void compute(SparseMatrix<StorageType::ClmMajor> const &)
   {
-    fmt::print("we should never get here!\n");
+    fmt::println("we should never get here!");
     std::abort();
   };
 
   virtual void compute(SparseMatrix<StorageType::RowMajor> const &)
   {
-    fmt::print("we should never get here!\n");
+    fmt::println("we should never get here!");
     std::abort();
   };
 
   virtual std::pair<uint, double> solve(Vec const &, Vec &)
   {
-    fmt::print("we should never get here!\n");
+    fmt::println("we should never get here!");
     std::abort();
   };
 };
@@ -75,7 +75,7 @@ struct Solver<SolverPackage::EIGEN, SolverType::DIRECT, P>: public SolverBase
 
   void compute(SparseMatrix<StorageType::RowMajor> const &)
   {
-    fmt::print("use a ClmMajor matrix with a direct solver!\n");
+    fmt::println("use a ClmMajor matrix with a direct solver!");
     std::abort();
   }
 
@@ -146,7 +146,7 @@ struct Solver<SolverPackage::EIGEN, S, P>: public SolverBase
 
   void compute(SparseMatrix<StorageType::ClmMajor> const &)
   {
-    fmt::print("using a RowMajor matrix with an iterative solver!\n");
+    fmt::println("using a RowMajor matrix with an iterative solver!");
     std::abort();
   }
 
@@ -180,8 +180,8 @@ SolverBase * buildSolver(ParameterDict const & config)
     {
       if (config["preconditioner"])
       {
-        fmt::print(
-            "Preconditioner type {} ignored when using generic iterative solver.\n",
+        fmt::println(
+            "Preconditioner type {} ignored when using generic iterative solver.",
             config["preconditioner"].as<std::string>());
       }
 
@@ -194,8 +194,8 @@ SolverBase * buildSolver(ParameterDict const & config)
     {
       if (!config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} specified, but no preconditioner given\n",
+        fmt::println(
+            "solver type {} specified, but no preconditioner given",
             config["type"].as<std::string>());
         std::abort();
       }
@@ -209,8 +209,8 @@ SolverBase * buildSolver(ParameterDict const & config)
       }
       else if (config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} and preconditioner {} not compatible\n",
+        fmt::println(
+            "solver type {} and preconditioner {} not compatible",
             config["type"].as<std::string>(),
             config["preconditioner"].as<std::string>());
         std::abort();
@@ -220,8 +220,8 @@ SolverBase * buildSolver(ParameterDict const & config)
     {
       if (!config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} specified, but no preconditioner given\n",
+        fmt::println(
+            "solver type {} specified, but no preconditioner given",
             config["type"].as<std::string>());
         std::abort();
       }
@@ -235,8 +235,8 @@ SolverBase * buildSolver(ParameterDict const & config)
       }
       else if (config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} and preconditioner {} not compatible\n",
+        fmt::println(
+            "solver type {} and preconditioner {} not compatible",
             config["type"].as<std::string>(),
             config["preconditioner"].as<std::string>());
         std::abort();
@@ -246,8 +246,8 @@ SolverBase * buildSolver(ParameterDict const & config)
     {
       if (!config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} specified, but no preconditioner given\n",
+        fmt::println(
+            "solver type {} specified, but no preconditioner given",
             config["type"].as<std::string>());
         std::abort();
       }
@@ -261,8 +261,8 @@ SolverBase * buildSolver(ParameterDict const & config)
       }
       else if (config["preconditioner"])
       {
-        fmt::print(
-            "solver type {} and preconditioner {} not compatible\n",
+        fmt::println(
+            "solver type {} and preconditioner {} not compatible",
             config["type"].as<std::string>(),
             config["preconditioner"].as<std::string>());
         std::abort();
@@ -270,14 +270,14 @@ SolverBase * buildSolver(ParameterDict const & config)
     }
     else
     {
-      fmt::print("solver type {} not recognized\n", config["type"].as<std::string>());
+      fmt::println("solver type {} not recognized", config["type"].as<std::string>());
       std::abort();
     }
   }
   else
   {
-    fmt::print(
-        "solver package {} not recognized\n", config["package"].as<std::string>());
+    fmt::println(
+        "solver package {} not recognized", config["package"].as<std::string>());
     std::abort();
   }
 

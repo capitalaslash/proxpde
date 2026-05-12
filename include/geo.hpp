@@ -597,13 +597,13 @@ struct Tetrahedron: public GeoElem
 
   void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
   {
-    fmt::print(stderr, "trying to build a normal for a tetrahedron!\n");
+    fmt::println(stderr, "trying to build a normal for a tetrahedron!");
     std::abort();
   }
 
   Vec3 normal() const final
   {
-    fmt::print(stderr, "trying to build a normal for a tetrahedron!\n");
+    fmt::println(stderr, "trying to build a normal for a tetrahedron!");
     std::abort();
   }
 
@@ -758,13 +758,13 @@ struct Hexahedron: public GeoElem
 
   void buildNormal(Bitmask<GeoElemFlags> /*flags*/ = GeoElemFlags::NONE) final
   {
-    fmt::print(stderr, "trying to build a normal for a hexahedron!\n");
+    fmt::println(stderr, "trying to build a normal for a hexahedron!");
     std::abort();
   }
 
   Vec3 normal() const final
   {
-    fmt::print(stderr, "trying to build a normal for a hexahedron!\n");
+    fmt::println(stderr, "trying to build a normal for a hexahedron!");
     std::abort();
   }
 

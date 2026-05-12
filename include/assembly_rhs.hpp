@@ -81,8 +81,7 @@ struct AssemblyRhsAnalytic: public AssemblyVector<FESpace>
       }
       else
       {
-        std::cerr << "only Lagrange and Raviart-Thomas are cyrrently implemented."
-                  << std::endl;
+        fmt::println(stderr, "only Lagrange and Raviart-Thomas available");
         std::exit(PROXPDE_NOT_IMPLEMENTED);
       }
     }

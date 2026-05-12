@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
 
   if (!(mesh->flags & MeshFlags::INTERNAL_FACETS))
   {
-    std::cerr << "missing flag INTERNAL_FACETS" << std::endl;
+    fmt::println(stderr, "missing flag INTERNAL_FACETS");
     return 1;
   }
 

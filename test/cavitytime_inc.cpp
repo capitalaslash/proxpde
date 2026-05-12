@@ -176,7 +176,7 @@ int main(int argc, char * argv[])
 
     t.start("update full");
     velOld = vel.data;
-    std::cout << "velOld norm: " << velOld.norm() << std::endl;
+    fmt::println("velOld norm: {:e}", velOld.norm());
     t.stop();
 
     t.start("build full");
@@ -208,7 +208,7 @@ int main(int argc, char * argv[])
     t.start("update inc");
     velOldInc += dVel.data;
     solOldInc += dSol;
-    std::cout << "velOldInc norm: " << velOldInc.norm() << std::endl;
+    fmt::println("velOldInc norm: {:e}", velOldInc.norm());
     t.stop();
 
     t.start("build inc");
@@ -225,7 +225,7 @@ int main(int argc, char * argv[])
     t.start("solve inc");
     solverInc.compute(builderInc.A);
     dSol = solverInc.solve(builderInc.b);
-    std::cout << "dSol norm: " << dSol.norm() << std::endl;
+    fmt::println("dSol norm: {:e}", dSol.norm());
     dVel.data = dSol.head(dofU * dim);
     dP.data = dSol.tail(dofP);
     velInc.data += dVel.data;
@@ -238,13 +238,13 @@ int main(int argc, char * argv[])
     // t.stop();
 
     t.start("check");
-    std::cout << "sol difference: " << (sol - (solOldInc + dSol)).norm() << std::endl;
+    fmt::println("sol difference: {:e}", (sol - (solOldInc + dSol)).norm());
     t.stop();
 
-    // std::cout << "solution difference norm: " << solDiffNorm << std::endl;
+    // fmt::println("solution difference norm: {:e}", solDiffNorm);
     // if (solDiffNorm > toll)
     // {
-    //   std::cerr << "the 2 solutions differ" << std::endl;
+    //   fmt::println(stderr, "the 2 solutions differ");
     //   return 2;
     // }
 
@@ -256,12 +256,12 @@ int main(int argc, char * argv[])
     }
     t.stop();
 
-    std::cout << "time required: " << timerStep << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
 
   t.start("norm");
   auto const solNorm = sol.norm();
-  std::cout << "solution norm: " << std::setprecision(16) << solNorm << std::endl;
+  fmt::println("solution norm: {:.16e}", solNorm);
   t.stop();
 
   t.print();

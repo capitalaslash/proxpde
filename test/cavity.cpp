@@ -94,9 +94,9 @@ int main(int argc, char * argv[])
   auto vNorm = v.data.norm();
   auto pNorm = p.data.norm();
 
-  fmt::print("norm of u: {:.16e}\n", uNorm);
-  fmt::print("norm of v: {:.16e}\n", vNorm);
-  fmt::print("norm of p: {:.16e}\n", pNorm);
+  fmt::println("norm of u: {:.16e}", uNorm);
+  fmt::println("norm of v: {:.16e}", vNorm);
+  fmt::println("norm of p: {:.16e}", pNorm);
 
   IOManager ioVel{feSpaceVel, "output_cavity/vel"};
   ioVel.print({sol});

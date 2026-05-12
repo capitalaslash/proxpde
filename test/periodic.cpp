@@ -38,10 +38,10 @@ struct BCPeriodic
     for (auto const & idDest: bcDest._constrainedDofMap)
     {
       Vec3 const pDest = feSpace.mesh->pointList[invPtMap[idDest.first]].coord;
-      // std::cout << "pDest: " << pDest.transpose() << std::endl;
+      // fmt::println("pDest: {}", pDest.transpose());
 
       Vec3 const pConv = destToOrigFun(pDest);
-      // std::cout << "pConv: " << pConv.transpose() << std::endl;
+      // fmt::println("pConv: {}", pConv.transpose());
 
       for (auto const & idOrig: bcOrig._constrainedDofMap)
       {
@@ -56,7 +56,7 @@ struct BCPeriodic
 
     for (auto const & [k, v]: destToOrig)
     {
-      std::cout << k << " -> " << v << std::endl;
+      fmt::println("{:4d} -> {:4d}", k, v);
     }
   }
 
@@ -126,7 +126,7 @@ int main(int argc, char * argv[])
   FEVar vel{feSpace};
   vel << velocity;
   double const hinv = numElems;
-  std::cout << "cfl = " << velocity * dt * hinv << std::endl;
+  fmt::println("cfl = {}", velocity * dt * hinv);
 
   double const a = 20.;
   scalarFun_T ic = [a](Vec3 const & p)
@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
   double time = 0.0;
   IOManager io{feSpace, "output_periodic/sol"};
   io.print({u});
-  std::cout << "solution integral: " << u.integrate() << std::endl;
+  fmt::println("solution integral: {:e}", u.integrate()[0]);
 
   t.start("solver");
   LUSolver solver;
@@ -173,7 +173,7 @@ int main(int argc, char * argv[])
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << ", time = " << time << std::endl;
+    fmt::println("solving timestep {:6d}, time {:e}", itime, time);
 
     t.start("assembly rhs");
     uOld = u.data;
@@ -186,7 +186,7 @@ int main(int argc, char * argv[])
 
     // print
     io.print({u}, time);
-    std::cout << "solution integral: " << u.integrate() << std::endl;
+    fmt::println("solution integral: {:e}", u.integrate()[0]);
 
     builder.clearRhs();
   }
@@ -194,7 +194,5 @@ int main(int argc, char * argv[])
   t.print();
 
   double const error = std::fabs(u.integrate()[0] - refIntegral);
-  std::cout << "the error in the solution is " << std::setprecision(16) << error
-            << std::endl;
-  return checkError({error}, {0.0005238803728871422});
+  return checkError({error}, {5.2388037288769729e-04});
 }

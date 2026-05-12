@@ -84,12 +84,9 @@ int test(
   }
   if (std::fabs(value - expectedValue) > relativeError)
   {
-    std::cerr.precision(16);
-    std::cerr << "the integral is not the expected value.\n"
-              << "expected: " << expectedValue << "\n"
-              << "computed: " << value << "\n"
-              << "polynomial: (" << Poly::i << " " << Poly::j << " " << Poly::k << ")"
-              << std::endl;
+    fmt::println(stderr, "the integral is not the expected value");
+    fmt::println(stderr, "expected: {:.16e}\ncomputed: {:.16e}", expectedValue, value);
+    fmt::println(stderr, "polynomial: ({}, {}, {})", Poly::i, Poly::j, Poly::k);
     return 1;
   }
   return 0;

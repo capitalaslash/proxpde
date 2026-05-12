@@ -32,37 +32,37 @@ int main(int argc, char * argv[])
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh");
   buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   auto bc = BCEss{feSpace, side::LEFT};
   bc << [](Vec3 const &) { return 0.; };
   auto const bcs = std::vector{bc};
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
   AssemblyStiffness stiffness(1.0, feSpace);
   AssemblyRhsAnalytic f(rhs, feSpace);
 
-  t.start();
+  t.start("fe build");
   Builder builder{feSpace.dof.size};
   builder.buildLhs(std::tuple{stiffness}, bcs);
   builder.buildRhs(std::tuple{f}, bcs);
   builder.closeMatrix();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("solve");
   Var sol{"u"};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
@@ -72,13 +72,14 @@ int main(int argc, char * argv[])
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  t.start();
+  t.start("output");
   IOManager io{feSpace, "output/sol_poisson1d_p2"};
   io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
 
-  double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  t.print();
+
+  double const norm = error.data.norm();
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {3.18934615592152e-07});
 }

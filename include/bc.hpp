@@ -392,8 +392,7 @@ public:
     {
       if (fixedMarkers.contains(bc.marker))
       {
-        std::cerr << "the marker " << bc.marker << " has already been fixed."
-                  << std::endl;
+        fmt::println(stderr, "the marker {} has already been fixed", bc.marker);
         std::abort();
       }
       fixedMarkers.insert(bc.marker);
@@ -406,8 +405,7 @@ public:
     else
     {
       // this should never happen
-      std::cerr << "a BC of type " << typeid(bc).name() << " has been added."
-                << std::endl;
+      fmt::println(stderr, "a BC of type {} has been added", typeid(bc).name());
       std::abort();
     }
   }

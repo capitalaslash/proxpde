@@ -246,9 +246,9 @@ struct Builder
       Fe = -Crow * Ke * h;
       Ke = Crow * Ke * Cclm;
 
-      // fmt::print(Utils::filelog, "\nelement {}\n---------------\n", elem.id);
-      // fmt::print(Utils::filelog, "Ke:\n{}", Ke);
-      // fmt::print(Utils::filelog, "Fe:\n{}", Fe);
+      // fmt::println(Utils::filelog, "\nelement {}\n---------------", elem.id);
+      // fmt::println(Utils::filelog, "Ke:\n{}", Ke);
+      // fmt::println(Utils::filelog, "Fe:\n{}", Fe);
 
       // --- store local values in global matrix and rhs ---
       for (uint i = 0; i < CurFERow_T::RefFE_T::numDOFs; ++i)

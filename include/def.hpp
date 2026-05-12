@@ -293,7 +293,7 @@ struct ParameterDict: public YAML::Node
     {
       if (!(*this)[required])
       {
-        std::cerr << "parameter file is missing option " << required << std::endl;
+        fmt::println(stderr, "parameter file is missing option {}", required);
         std::abort();
         return false;
       }
@@ -358,14 +358,13 @@ inline bool checkError(
   }
   if (!check)
   {
-    fmt::print(stderr, "the norm of the error is not the prescribed value\n");
-    fmt::print(
-        stderr, "ERROR{}REF{}DIFF\n", std::string(18, ' '), std::string(20, ' '));
-    for (uint i = 0; i < error.size(); ++i)
+    fmt::println(stderr, "the norm of the error is not the prescribed value");
+    fmt::println(stderr, "ERROR                  | REF                    | DIFF");
+    for (auto i = 0u; i < error.size(); ++i)
     {
-      fmt::print(
+      fmt::println(
           stderr,
-          "{:.16e} {:.16e} {:.16e}\n",
+          "{:.16e} | {:.16e} | {:.16e}",
           error[i],
           ref[i],
           std::fabs(error[i] - ref[i]));
@@ -502,6 +501,12 @@ struct fmt::formatter<T>: fmt::ostream_formatter
 template <typename T, int S>
 requires std::is_floating_point_v<T>
 struct fmt::formatter<Eigen::SparseMatrix<T, S>>: fmt::ostream_formatter
+{};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct fmt::formatter<proxpde::ParameterDict>: fmt::ostream_formatter
 {};
 
 // ----------------------------------------------------------------------------

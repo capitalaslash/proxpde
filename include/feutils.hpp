@@ -30,8 +30,6 @@ void projectAnalyticFunction(
   builder.buildLhs(std::tuple{massTo});
   builder.buildRhs(std::tuple{projFromTo});
   builder.closeMatrix();
-  // std::cout << "A:\n" << builder.A << std::endl;
-  // std::cout << "b:\n" << builder.b << std::endl;
   Solver solver(builder.A);
   v.segment(offset, size) = solver.solve(builder.b);
 }

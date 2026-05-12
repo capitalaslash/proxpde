@@ -42,9 +42,9 @@ int main(int argc, char * argv[])
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh build");
   buildHyperCube(*mesh, origin, length, {{numElems, 0, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
   //  // rotation matrix
   //  double theta = M_PI / 3.;
@@ -60,11 +60,11 @@ int main(int argc, char * argv[])
   //    p.coord = R * p.coord;
   //  }
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bc");
   auto bcValue = [](Vec3 const &)
   {
     FVec<numVars> vars;
@@ -75,9 +75,9 @@ int main(int argc, char * argv[])
     return vars;
   };
   auto const bc = BCEss{feSpace, side::LEFT, bcValue};
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("assembly");
   auto const size = numVars * feSpace.dof.size;
   auto const stiffness = AssemblyStiffness{1.0, feSpace};
   // auto rotatedRhs = [&Rt] (Vec3 const& p) {return rhs(Rt * p);};
@@ -88,20 +88,20 @@ int main(int argc, char * argv[])
   builder.buildLhs(std::tuple{stiffness}, {bc});
   builder.buildRhs(std::tuple{f, bcNat}, {bc});
   builder.closeMatrix();
-  std::cout << "fe assembly: " << t << " ms" << std::endl;
+  t.stop();
 
-  // filelog << "A:\n" << builder.A << std::endl;
-  // filelog << "b:\n" << builder.b << std::endl;
+  fmt::println(Utils::filelog, "A:\n{}", builder.A);
+  fmt::println(Utils::filelog, "b: {}", builder.b.transpose());
 
-  t.start();
+  t.start("solve");
   Var sol{"sol"};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
-  std::cout << "sol:\n" << sol.data << std::endl;
+  fmt::println(Utils::filelog, "sol: {}", sol.data.transpose());
 
   //  Var exact{"exact"};
   //  // auto rotatedESol = [&Rt] (Vec3 const& p) {return exact_sol(Rt * p);};
@@ -110,11 +110,12 @@ int main(int argc, char * argv[])
   //  Var error{"e"};
   //  error.data = sol.data - exact.data;
 
-  t.start();
+  t.start("output");
   IOManager io{feSpace, "output_vectorfe1d/sol"};
   io.print({sol}); // io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
 
+  t.print();
   //  double norm = error.data.norm();
   //  std::cout << "the norm of the error is " << norm << std::endl;
   //  if(std::fabs(norm - 2.61664e-11) > 1.e-10)

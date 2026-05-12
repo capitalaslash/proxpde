@@ -71,7 +71,7 @@ int main(int argc, char * argv[])
   builderR.buildLhs(std::tuple{AssemblyStiffness{1.0, feSpace}}, bcs);
   builderR.buildRhs(std::tuple{AssemblyRhsAnalytic{rhs, feSpace}}, bcs);
   builderR.closeMatrix();
-  fmt::print("the matrix is compressed? {}\n", builderR.A.isCompressed());
+  fmt::println("the matrix is compressed? {}", builderR.A.isCompressed());
   t.stop();
 
   // filelog << "A:\n" << builder.A << std::endl;
@@ -83,7 +83,7 @@ int main(int argc, char * argv[])
   solver->compute(builderR.A);
   Vec u;
   auto const [iters, err] = solver->solve(builderR.b, u);
-  fmt::print("iterative solver: iterations = {}, error = {}\n", iters, err);
+  fmt::println("iterative solver: iterations = {}, error = {}", iters, err);
   t.stop();
 
   using DiagPrec = Eigen::DiagonalPreconditioner<double>;
@@ -96,7 +96,8 @@ int main(int argc, char * argv[])
   std::unique_ptr<SolverBase> solverCG{buildSolver(ParameterDict{config["solver"]})};
   solverCG->compute(builderR.A);
   auto const [itersCG, errCG] = solverCG->solve(builderR.b, solCG.data);
-  fmt::print("BiCGSTAB DiagPrec\niters: {}\nerror: {}\n", itersCG, errCG);
+  fmt::println("BiCGSTAB DiagPrec");
+  fmt::println("iters: {}\nerror: {}", itersCG, errCG);
   t.stop();
 
   t.start("MINRES DiagPrec");
@@ -137,7 +138,7 @@ int main(int argc, char * argv[])
   // t.stop();
 
   t.start("BiCGSTAB scaling");
-  std::cout << "BiCGSTAB scaling" << std::endl;
+  fmt::println("BiCGSTAB scaling");
   {
     Vec x;
     Eigen::IterScaling<SparseMatrix<StorageType::RowMajor>> scal;
@@ -154,8 +155,8 @@ int main(int argc, char * argv[])
     solver.setMaxIterations(config["solver"]["max_iters"].as<int>());
     solver.compute(builderR.A);
     x = solver.solve(builderR.b);
-    std::cout << "iters: " << solver.iterations() << std::endl;
-    std::cout << "error: " << solver.error() << std::endl;
+    fmt::println("iters: {}", solver.iterations());
+    fmt::println("error: {}", solver.error());
 
     // Scale back the computed solution
     x = scal.RightScaling().cwiseProduct(x);

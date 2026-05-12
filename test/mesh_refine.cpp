@@ -61,6 +61,7 @@ void test()
       }
     }
   }
+  fmt::println("facet checks performed: {}", checked);
   [[maybe_unused]] auto const bdSize = static_cast<std::size_t>(std::count_if(
       meshCoarse->facetList.begin(),
       meshCoarse->facetList.end(),

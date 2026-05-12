@@ -148,7 +148,7 @@ int main()
   vel << Vec2{0.2, 0.0};
   double const dt = 0.1;
   auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
-  std::cout << "max cfl = " << cfl << std::endl;
+  fmt::println("max cfl = {}", cfl);
 
   auto const & sizeP1 = feSpaceP1.dof.size;
   Builder builder{sizeP1};
@@ -179,7 +179,7 @@ int main()
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    std::cout << "solving timestep " << itime << std::endl;
+    fmt::println("solving timestep", itime);
 
     // central implicit
     concP1Old = concP1.data;
@@ -210,12 +210,10 @@ int main()
 
   t.print();
 
-  double normP1 = concP1.data.norm();
-  std::cout << "the norm of the P1 solution is " << std::setprecision(16) << normP1
-            << std::endl;
-  double normP0 = concP0.data.norm();
-  std::cout << "the norm of the P0 solution is " << std::setprecision(16) << normP0
-            << std::endl;
+  double const normP1 = concP1.data.norm();
+  fmt::println("the norm of the P1 solution is {:.16e}", normP1);
+  double const normP0 = concP0.data.norm();
+  fmt::println("the norm of the P0 solution is {:.16e}", normP0);
   // if(std::fabs(normP1 - 10.8594759676) > 1.e-10 || std::fabs(normP0 - 13.7780000857)
   // > 1.e-10)
   // {

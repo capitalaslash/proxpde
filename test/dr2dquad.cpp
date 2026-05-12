@@ -117,8 +117,7 @@ int main(int argc, char * argv[])
   IOManager io{feSpace, "output_dr2dquad/sol"};
   io.print({sol, exact, error});
 
-  double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  double const norm = error.data.norm();
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {0.04331597477422448});
 }

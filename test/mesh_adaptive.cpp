@@ -63,7 +63,7 @@ void adaptiveRefine(
       facetWeight[meshCoarse.elemToFacet[elem.id][f]] = 1;
     }
   }
-  // fmt::print("facetWeight: {}\n", fmt::join(facetWeight, ", "));
+  // fmt::println("facetWeight: {}", fmt::join(facetWeight, ", "));
 
   auto const facetSum = std::accumulate(facetWeight.begin(), facetWeight.end(), 0U);
   meshFine.pointList.reserve(meshCoarse.pointList.size() + facetSum);
@@ -79,7 +79,7 @@ void adaptiveRefine(
       }
     }
   }
-  // fmt::print("elemWeight: {}\n", fmt::join(elemWeight, ", "));
+  // fmt::println("elemWeight: {}", fmt::join(elemWeight, ", "));
 
   auto const elemSum = std::accumulate(elemWeight.begin(), elemWeight.end(), 0U);
   meshFine.elementList.reserve(meshCoarse.elementList.size() + elemSum);
@@ -359,9 +359,9 @@ void test()
       "square_uns.msh",
       MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
 
-  std::cout << Utils::separator << "mesh coarse\n" << *meshCoarse << std::endl;
 
   BoolVec toRefine = BoolVec::Constant(meshCoarse->elementList.size(), false);
+  // std::cout << Utils::separator << "mesh coarse\n" << *meshes.back() << std::endl;
   std::ranges::for_each(
       meshCoarse->elementList,
       [&toRefine](auto const & elem)
@@ -388,8 +388,6 @@ void test()
   meshFine->buildConnectivity();
   buildFacets(*meshFine, MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
   addElemFacetList(*meshFine);
-
-  std::cout << Utils::separator << "mesh fine:\n" << *meshFine << std::endl;
 
   // uint checked = 0;
   // // new internal facets cannot have a parent, so exclude them

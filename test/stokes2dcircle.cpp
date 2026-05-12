@@ -40,7 +40,6 @@ int main(int argc, char * argv[])
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
   buildCircleMesh(*mesh, origin, radius, {{numElemsX, numElemsY, numElemsR}});
   t.stop();
-  // std::cout << *mesh << std::endl;
 
   t.start("feSpace");
   FESpaceU_T feSpaceU{*mesh};
@@ -102,9 +101,8 @@ int main(int argc, char * argv[])
 
   // integral on boundary
   t.start("boundary int");
-  double pIntegral = integrateOnBoundary(p.data, feSpaceP, side::LEFT);
-  std::cout << "integral of pressure on left face: " << std::setprecision(16)
-            << pIntegral << std::endl;
+  double const pIntegral = integrateOnBoundary(p.data, feSpaceP, side::LEFT);
+  fmt::println("integral of pressure on left face: {:.16e}", pIntegral);
   t.stop();
 
   // wall shear stress on circle
@@ -115,8 +113,8 @@ int main(int argc, char * argv[])
   Var wss{"wss"};
   computeElemWSS(wss.data, feSpaceWSS, sol.data, feSpaceU, {side::CIRCLE}, nu);
   t.stop();
-  std::cout << "wss min: " << std::setprecision(16) << wss.data.minCoeff() << std::endl;
-  std::cout << "wss max: " << std::setprecision(16) << wss.data.maxCoeff() << std::endl;
+  fmt::println("wss min: {:.16e}", wss.data.minCoeff());
+  fmt::println("wss max: {:.16e}", wss.data.maxCoeff());
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exact_sol, feSpaceU, exact.data);
@@ -134,9 +132,7 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  // double norm = error.data.norm();
-  // std::cout << "the norm of the error is " << norm << std::endl;
-
+  // double const norm = error.data.norm();
   return checkError(
       {pIntegral, wss.data.maxCoeff()},
       {9.800943987495e-01, 3.068317649010e-01},

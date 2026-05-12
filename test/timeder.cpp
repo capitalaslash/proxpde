@@ -203,13 +203,13 @@ std::tuple<bool, double> test(YAML::Node const & config)
   Vec exactTime{nSteps};
 
   fmt::print("\ntime discretization method: {}, ", TIMtoString(Method));
-  fmt::print("n steps: {}\n", nSteps);
+  fmt::println("n steps: {}", nSteps);
 
   double time = 0.0;
   for (uint itime = 0; itime < nSteps; itime++)
   {
     time += dt;
-    // fmt::print("solving timestep {}, time = {}\n", itime, time);
+    // fmt::println("solving timestep {}, time = {}", itime, time);
 
     timeDer.update(u.data);
     auto const fTime =
@@ -241,11 +241,11 @@ std::tuple<bool, double> test(YAML::Node const & config)
     builder.clear();
   }
 
-  // t.print();
+  t.print();
 
   double norm = error.data.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
-  fmt::print("the norm of the time error is {:.16e}\n", (uTime - exactTime).norm());
+  fmt::println("the norm of the error is {:.16e}", norm);
+  fmt::println("the norm of the time error is {:.16e}", (uTime - exactTime).norm());
   return {checkError({norm}, {config["expected error"].as<double>()}), norm};
 }
 
@@ -255,7 +255,7 @@ int main()
   std::bitset<2 * testSize> tests;
 
   auto fout = std::fopen("timeder.py", "w");
-  fmt::print(fout, "from matplotlib import pyplot\n\n");
+  fmt::println(fout, "from matplotlib import pyplot\n");
 
   double const totalTime = 10.0;
   YAML::Node config;
@@ -301,23 +301,22 @@ int main()
     }
   }
 
-  fmt::print(fout, "dt = {}\n", dts);
-  fmt::print(fout, "bdf1 = {::.12e}\n\n", bdf1Errors);
-  fmt::print(fout, "slope1 = [{:.12e}]\n", bdf1Errors[0] * 0.8);
-  fmt::print(fout, "for i in range({}):\n", testSize - 1);
-  fmt::print(fout, "    slope1.append(0.5 * slope1[i])\n\n");
-  fmt::print(fout, "pyplot.loglog(dt, bdf1, 'o-', label='BDF1')\n");
-  fmt::print(fout, "pyplot.loglog(dt, slope1, 'k-', label='slope1')\n\n");
-  fmt::print(fout, "bdf2 = {::.12e}\n\n", bdf2Errors);
-  fmt::print(fout, "slope2 = [{:.12e}]\n", bdf2Errors[0] * 0.8);
-  fmt::print(fout, "for i in range({}):\n", testSize - 1);
-  fmt::print(fout, "    slope2.append(0.25 * slope2[i])\n\n");
-  fmt::print(fout, "pyplot.loglog(dt, bdf2, '^-', label='BDF2')\n");
-  fmt::print(fout, "pyplot.loglog(dt, slope2, 'k--', label='slope2')\n\n");
-  fmt::print(fout, "pyplot.legend()\n");
-  fmt::print(fout, "pyplot.show()\n");
+  fmt::println(fout, "dt = {}", dts);
+  fmt::println(fout, "bdf1 = {::.12e}\n", bdf1Errors);
+  fmt::println(fout, "slope1 = [{:.12e}]", bdf1Errors[0] * 0.8);
+  fmt::println(fout, "for i in range({}):", testSize - 1);
+  fmt::println(fout, "    slope1.append(0.5 * slope1[i])\n");
+  fmt::println(fout, "pyplot.loglog(dt, bdf1, 'o-', label='BDF1')");
+  fmt::println(fout, "pyplot.loglog(dt, slope1, 'k-', label='slope1')\n");
+  fmt::println(fout, "bdf2 = {::.12e}\n", bdf2Errors);
+  fmt::println(fout, "slope2 = [{:.12e}]", bdf2Errors[0] * 0.8);
+  fmt::println(fout, "for i in range({}):", testSize - 1);
+  fmt::println(fout, "    slope2.append(0.25 * slope2[i])\n");
+  fmt::println(fout, "pyplot.loglog(dt, bdf2, '^-', label='BDF2')");
+  fmt::println(fout, "pyplot.loglog(dt, slope2, 'k--', label='slope2')\n");
+  fmt::println(fout, "pyplot.legend()");
+  fmt::println(fout, "pyplot.show()");
 
-  if (tests.any())
-    fmt::print(std::cerr, "tests: {}\n", tests.to_string());
+  fmt::println(stderr, "tests: {}", tests.to_string());
   return tests.any();
 }

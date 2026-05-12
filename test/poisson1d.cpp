@@ -110,6 +110,6 @@ int main(int argc, char * argv[])
   t.print();
 
   double const norm = error.data.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {2.87785419773588e-07});
 }

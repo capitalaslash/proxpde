@@ -179,7 +179,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     // auto const diffMat = builder.A - builderFixed.A;
-    // std::cout << "diffMat norm: " << diffMat.norm() << std::endl;
+    // fmt::println("diffMat norm: {:e}", diffMat.norm());
 
     t.start("solve");
     solver.compute(builder.A);
@@ -190,7 +190,7 @@ int main(int argc, char * argv[])
 
     t.start("res");
     Vec const res = builder.A * sol - builder.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
+    fmt::println("residual norm: {:e}", res.norm());
     t.stop();
 
     t.start("solve fixed");
@@ -200,17 +200,17 @@ int main(int argc, char * argv[])
 
     t.start("res fixed");
     Vec const resFixed = builderFixed.A * sol - builderFixed.b;
-    std::cout << "residual norm (fixed): " << resFixed.norm() << std::endl;
+    fmt::println("residual norm (fixed): {:e}", resFixed.norm());
     t.stop();
 
     t.start("check");
     auto const solDiffNorm = (sol - solFixed).norm();
     t.stop();
 
-    std::cout << "solution difference norm: " << solDiffNorm << std::endl;
+    fmt::println("solution difference norm: {:e}", solDiffNorm);
     if (solDiffNorm > toll)
     {
-      std::cerr << "the 2 solutions differ" << std::endl;
+      fmt::println(stderr, "the 2 solutions differ");
       return 2;
     }
 
@@ -222,12 +222,12 @@ int main(int argc, char * argv[])
     }
     t.stop();
 
-    std::cout << "time required: " << timerStep << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
 
   t.start("norm");
   auto const solNorm = sol.norm();
-  std::cout << "solution norm: " << std::setprecision(16) << solNorm << std::endl;
+  fmt::println("solution norm: {:.16e}", solNorm);
   t.stop();
 
   t.print();

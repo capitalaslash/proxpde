@@ -62,7 +62,7 @@ public:
     }
     else
     {
-      fmt::print(stderr, "mode {} not recognized, aborting!\n", static_cast<int>(mode));
+      fmt::println(stderr, "mode {} not recognized, aborting!", static_cast<int>(mode));
     }
     assert(fileId != H5I_INVALID_HID);
   }

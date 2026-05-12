@@ -168,7 +168,7 @@ void Quad::buildNormal(Bitmask<GeoElemFlags> flags)
     double const aligned = _normal.dot(normal123);
     if (std::fabs(aligned - 1.0) > Quad::planarToll)
     {
-      fmt::print(stderr, "this element is not planar! error: {:e}\n", aligned - 1.0);
+      fmt::println(stderr, "this element is not planar! error: {:e}", aligned - 1.0);
       std::abort();
     }
   }

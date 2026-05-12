@@ -1,14 +1,11 @@
 #include "def.hpp"
 
-#include "assembler.hpp"
 #include "assembly.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "iomanager.hpp"
 #include "mesh.hpp"
-#include "var.hpp"
 
 using namespace proxpde;
 
@@ -179,7 +176,7 @@ int main(int argc, char * argv[])
 
   if (compareTriplets(builder._triplets, builderS._triplets))
   {
-    std::cerr << "the two matrices do not coincide" << std::endl;
+    fmt::println(stderr, "the two matrices do not coincide");
     return 1;
   }
   return 0;

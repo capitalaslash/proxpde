@@ -141,11 +141,11 @@ int main(int argc, char * argv[])
   for (uint istep = 0; istep < nsteps; ++istep)
   {
     time += dt;
-    fmt::print("{}solving timestep {}, time = {}\n", Utils::separator, istep + 1, time);
+    fmt::println("{}solving timestep {}, time = {}", Utils::separator, istep + 1, time);
 
     t.start("update");
     tempOld = temp.data;
-    fmt::print("tempOld norm: {}\n", tempOld.norm());
+    fmt::println("tempOld norm: {}", tempOld.norm());
     t.stop();
 
     t.start("build");
@@ -163,7 +163,7 @@ int main(int argc, char * argv[])
 
     t.start("update inc");
     tempOldInc += dTemp.data;
-    fmt::print("tempOldInc norm: {}\n", tempOldInc.norm());
+    fmt::println("tempOldInc norm: {}", tempOldInc.norm());
     t.stop();
 
     t.start("build inc");
@@ -181,14 +181,14 @@ int main(int argc, char * argv[])
     tempInc.data += dTemp.data;
     t.stop();
 
-    fmt::print("stationary check - increment norm: {}\n", dTemp.data.norm());
+    fmt::println("stationary check - increment norm: {}", dTemp.data.norm());
 
     t.start("output");
     auto const diffNorm = (temp.data - tempInc.data).norm();
-    fmt::print("diffNorm: {}\n", diffNorm);
+    fmt::println("diffNorm: {}", diffNorm);
     if (diffNorm > toll)
     {
-      fmt::print(stderr, "the norm of the difference is too big, aborting.\n");
+      fmt::println(stderr, "the norm of the difference is too big, aborting");
       return 2;
     }
     io.print({temp, tempInc, dTemp}, time);
@@ -205,6 +205,6 @@ int main(int argc, char * argv[])
   t.print();
 
   double const norm = error.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {2.1386305330546384e-05});
 }

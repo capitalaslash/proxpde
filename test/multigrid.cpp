@@ -85,9 +85,8 @@ struct MGSolver
     if (level == 1)
     {
       error = coarseSolver.solve(rCoarse);
-      // std::cout << "coarse n. iterations: " << coarseSolver.iterations() <<
-      // std::endl; std::cout << "coarse rel. residual: " << coarseSolver.error() <<
-      // std::endl;
+      // fmt::println("coarse n. iterations: {}", coarseSolver.iterations());
+      // fmt::println("coarse rel. residual: {}", coarseSolver.error());
     }
     else
     {
@@ -99,10 +98,8 @@ struct MGSolver
 
     // 6) relax with smoother
     x = smoothers[level - 1].solveWithGuess(b, xTilda);
-    std::cout << "post-smoother n. iterations: " << smoothers[level - 1].iterations()
-              << std::endl;
-    std::cout << "post-smoother rel. residual: " << smoothers[level - 1].error()
-              << std::endl;
+    fmt::println("post-smoother n. iterations: {}", smoothers[level - 1].iterations());
+    fmt::println("post-smoother rel. residual: {}", smoothers[level - 1].error());
   }
 
   uint numLevels;
@@ -269,8 +266,8 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // auto const bNorm = builderTop.b.norm();
   solverTop.setTolerance(relToll);
   sol.data = solverTop.solveWithGuess(builderTop.b, sol.data);
-  std::cout << "solver n. iterations: " << solverTop.iterations() << std::endl;
-  std::cout << "solver rel. residual: " << solverTop.error() << std::endl;
+  fmt::println("solver n. iterations: {}", solverTop.iterations());
+  fmt::println("solver rel. residual: {}", solverTop.error());
   t.stop();
 
   t.start("solve mg");
@@ -312,89 +309,78 @@ int test(Function const & rhs, double const /*expectedNorm*/)
   // for (uint level = numRefs; level > 0; --level)
   // {
   //   Vec const e = smoothers[level].solveWithGuess(residuals[level], errors[level]);
-  //   std::cout << "pre-smoother n. iterations: " << smoothers[level].iterations()
-  //             << std::endl;
-  //   std::cout << "pre-smoother residual:      " << smoothers[level].error()
-  //             << std::endl;
+  //   fmt::println"pre-smoother n. iterations: {}", smoothers[level].iterations());
+  //   fmt::println"pre-smoother residual:      {}", smoothers[level].error());
   //   residuals[level - 1] = rests[level - 1].mat * builders[level].A * e;
   // }
 
   // // bottom
   // errors[0] = smoothers[0].solveWithGuess(residuals[0], errors[0]);
-  // std::cout << "coarse n. iterations: " << smoothers[0].iterations() << std::endl;
-  // std::cout << "coarse residual:      " << smoothers[0].error() << std::endl;
+  // fmt::println("coarse n. iterations: {}", smoothers[0].iterations());
+  // fmt::println("coarse residual:      {}", smoothers[0].error());
 
   // for (uint level = 0; level < numRefs; ++level)
   // {
   //   errors[level + 1] = prols[level].mat * errors[level];
   //   Vec const res = builders[level + 1].A * errors[level + 1];
   //   errors[level + 1] = smoothers[level + 1].solveWithGuess(res, errors[level + 1]);
-  //   std::cout << "post-smoother n. iterations: " << smoothers[level + 1].iterations()
-  //             << std::endl;
-  //   std::cout << "post-smoother residual:      " << smoothers[level + 1].error()
-  //             << std::endl;
+  //   fmt::println("post-smoother n. iterations: {}", smoothers[level +
+  //   1].iterations()); fmt::println("post-smoother residual:      {}", smoothers[level
+  //   + 1].error());
   // }
 
   // solMG.data += errors.back();
 
   // smoothers[2].setTolerance(relToll);
   // errors[2] = smoothers[2].solveWithGuess(residuals[2], errors[2]);
-  // std::cout << "pre-smoother n. iterations: " << smoothers[2].iterations() <<
-  // std::endl; std::cout << "pre-smoother rel. residual: " << smoothers[2].error() <<
-  // std::endl;
+  // fmt::println("pre-smoother n. iterations: {}", smoothers[2].iterations());
+  // fmt::println("pre-smoother rel. residual: {}", smoothers[2].error());
 
   // residuals[2] = builders[2].A * errors[2];
   // residuals[1] = rests[1].mat * residuals[2];
   // errors[1] = smoothers[1].solveWithGuess(residuals[1], errors[1]);
-  // std::cout << "pre-smoother n. iterations: " << smoothers[1].iterations() <<
-  // std::endl; std::cout << "pre-smoother residual:      " << smoothers[1].error()
-  // << std::endl; residuals[1] = builders[1].A * errors[1];
+  // fmt::println("pre-smoother n. iterations: {}", smoothers[1].iterations());
+  // fmt::println("pre-smoother residual:      {}", smoothers[1].error());
+  // residuals[1] = builders[1].A * errors[1];
 
   // residuals[0] = rests[0].mat * residuals[1];
   // errors[0] = smoothers[0].solveWithGuess(residuals[0], errors[0]);
-  // std::cout << "coarse n. iterations: " << smoothers[0].iterations() <<
-  // std::endl; std::cout << "coarse residual:      " << smoothers[0].error() <<
-  // std::endl;
+  // fmt::println("coarse n. iterations: {}", smoothers[0].iterations());
+  // fmt::println("coarse residual:      {}", smoothers[0].error());
 
   // errors[1] = prols[0].mat * errors[0];
   // residuals[1] = builders[1].A * errors[1];
   // errors[1] = smoothers[1].solveWithGuess(residuals[1], errors[1]);
-  // std::cout << "post-smoother n. iterations: " << smoothers[1].iterations()
-  //           << std::endl;
-  // std::cout << "post-smoother residual:      " << smoothers[1].error() <<
-  // std::endl;
+  // fmt::println("post-smoother n. iterations: {}", smoothers[1].iterations);
+  // fmt::println("post-smoother residual:      {}", smoothers[1].error());
 
   // // errors[2] = prols[1].mat * errors[1];
 
   // errors[2] = smoothers[2].solveWithGuess(builders[2].b, errors[2]);
-  // std::cout << "post-smoother n. iterations: " << smoothers[2].iterations()
-  //           << std::endl;
-  // std::cout << "post-smoother residual:      " << smoothers[2].error() <<
-  // std::endl;
+  // fmt::println("post-smoother n. iterations: {}", smoothers[2].iterations());
+  // fmt::println("post-smoother residual:      {}", smoothers[2].error());
 
   // solMG.data += errors[2];
 
   // auto & smootherTop = smoothers.back();
   // smootherTop.setTolerance(relToll);
   // Vec u = smootherTop.solveWithGuess(builderTop.b, Vec::Zero(builderTop.b.size()));
-  // std::cout << "post-smoother n. iterations: " << smootherTop.iterations() <<
-  // std::endl; std::cout << "post-smoother rel. residual: " << smootherTop.error() <<
-  // std::endl;
+  // fmt::println("post-smoother n. iterations: {}", smootherTop.iterations());
+  // fmt::println("post-smoother rel. residual: {}", smootherTop.error());
 
   // Vec const r = builderTop.b - builderTop.A * errors[2];
   // auto const rNorm = r.norm();
   // smootherTop.setTolerance(absToll / rNorm);
   // u = smootherTop.solveWithGuess(builderTop.b, u);
-  // std::cout << "post-smoother n. iterations: " << smootherTop.iterations() <<
-  // std::endl; std::cout << "post-smoother rel. residual: " << smootherTop.error() <<
-  // std::endl;
+  // fmt::println("post-smoother n. iterations: {}", smootherTop.iterations());
+  // fmt::println("post-smoother rel. residual: {}", smootherTop.error());
 
   // solMG.data = errors[2];
 
   t.stop();
 
-  std::cout << "difference between the 2 solutions: " << (sol.data - solMG.data).norm()
-            << std::endl;
+  fmt::println(
+      "difference between the 2 solutions: {:e}", (sol.data - solMG.data).norm());
 
   // Var exact{"exact"};
   // interpolateAnalyticFunction(exactSol, feSpace, exact.data);
@@ -408,9 +394,7 @@ int test(Function const & rhs, double const /*expectedNorm*/)
 
   t.print();
 
-  // double norm = error.data.norm();
-  // std::cout << "the norm of the error is " << std::setprecision(16) << norm
-  //           << std::endl;
+  // double const norm = error.data.norm();
   // return checkError({norm}, {0.02049777877937642});
   return 0;
 }

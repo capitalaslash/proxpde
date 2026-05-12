@@ -32,9 +32,7 @@ int test(YAML::Node const & config)
   auto const hConv = config["hConv"].as<double>();
   auto const tempA = config["tempA"].as<double>();
 
-  std::cout << "test setup:\n"
-            << "  - hConv = " << hConv << "\n"
-            << "  - tempA = " << tempA << std::endl;
+  fmt::println("test setup:\n  - hConv = {}\n  - tempA = ", hConv, tempA);
 
   const scalarFun_T rhs = [](Vec3 const &) { return 2.; };
 
@@ -94,7 +92,7 @@ int test(YAML::Node const & config)
   for (uint itime = 0; itime < steps; ++itime)
   {
     time += dt;
-    std::cout << "solving time " << time << std::endl;
+    fmt::println("solving time {}", time);
 
     solOld = sol.data;
 
@@ -117,11 +115,9 @@ int test(YAML::Node const & config)
     t.start("gradient");
     reconstructGradient(flux.data, feSpaceRec, sol.data, feSpace);
     t.stop();
-    std::cout << "u|1 = " << sol.data[size - 1] << ", exact = " << exact.data[size - 1]
-              << std::endl;
-    std::cout << "du / dx |1 = " << flux.data[size - 1] << std::endl;
-    std::cout << "h (u|1 - temp0)  = " << hConv * (sol.data[size - 1] - tempA)
-              << std::endl;
+    fmt::println("u|1 = {:e}, exact = {:e}", sol.data[size - 1], exact.data[size - 1]);
+    fmt::println("du / dx |1 = {:e}", flux.data[size - 1]);
+    fmt::println("h (u|1 - temp0) = {:e}", hConv * (sol.data[size - 1] - tempA));
 
     t.start("print");
     io.print({sol, flux, exact}, time);
@@ -134,8 +130,7 @@ int test(YAML::Node const & config)
   error.data = sol.data - exact.data;
 
   auto const errorNorm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", errorNorm);
   return checkError({errorNorm}, {config["expected_error"].as<double>()});
 }
 

@@ -34,7 +34,6 @@ int main(int /*argc*/, char * /*argv*/[])
 
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
-  // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::tuple{feSpaceVel, feSpaceP};
   auto assembler = make_assembler(feList);
@@ -78,7 +77,7 @@ int main(int /*argc*/, char * /*argv*/[])
   interpolateAnalyticFunction(
       [](Vec3 const & p) { return 1. - p(1); }, feSpaceP, exact.data);
 
-  std::cout << sol.data.norm() << std::endl;
+  fmt::println("solution norm: {:e}", sol.data.norm());
 
   Var u{"u", sol.data, 0, dofU};
   Var v{"v", sol.data, dofU, dofU};
@@ -92,13 +91,13 @@ int main(int /*argc*/, char * /*argv*/[])
   IOManager ioP{feSpaceP, "output_stokes2dtri/p"};
   ioP.print({p, pe});
 
-  auto uError = (u.data - ue.data).norm();
-  auto vError = (v.data - ve.data).norm();
-  auto pError = (p.data - pe.data).norm();
+  auto const uError = (u.data - ue.data).norm();
+  auto const vError = (v.data - ve.data).norm();
+  auto const pError = (p.data - pe.data).norm();
 
-  std::cout << "u error norm: " << uError << std::endl;
-  std::cout << "v error norm: " << vError << std::endl;
-  std::cout << "p error norm: " << pError << std::endl;
+  fmt::println("u error norm: {:e}", uError);
+  fmt::println("v error norm: {:e}", vError);
+  fmt::println("p error norm: {:e}", pError);
 
   return checkError({uError, vError, pError}, {0., 0., 0.});
 }

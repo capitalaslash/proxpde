@@ -158,9 +158,9 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
       // if (approxInside && iterError > 1.e-12)
       // {
       //   // std::abort();
-      //   fmt::print(
+      //   fmt::println(
       //       stderr,
-      //       "test {} - {} -> {} - distance norm: {} - inside: {}\n",
+      //       "test {} - {} -> {} - distance norm: {} - inside: {}",
       //       n,
       //       pt.transpose(),
       //       approxPtNew.transpose(),
@@ -172,9 +172,9 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
       totalNumIter += numIter;
     }
   }
-  fmt::print("errorApproxMax: {}\n", errorApproxMax);
-  fmt::print("errorIterMax:   {}\n", errorIterMax);
-  fmt::print("meanNumIter:    {}\n", static_cast<double>(totalNumIter) / insideCount);
+  fmt::println("errorApproxMax: {}", errorApproxMax);
+  fmt::println("errorIterMax:   {}", errorIterMax);
+  fmt::println("meanNumIter:    {}", static_cast<double>(totalNumIter) / insideCount);
 
   double bboxVolume = (max[0] - min[0]);
   if constexpr (RefFE_T::dim > 1)
@@ -192,9 +192,9 @@ int test(RandomEngine & gen, int const numTests, double const expectedError)
   double const insideFrac = static_cast<double>(insideCount) / numTests;
   double const error = std::fabs(insideArea - insideFrac);
 
-  fmt::print("inside area: {:.16f}\n", insideArea);
-  fmt::print("inside frac: {:.16f}\n", insideFrac);
-  fmt::print("error:       {:.16f}\n", error);
+  fmt::println("inside area: {:.16e}", insideArea);
+  fmt::println("inside frac: {:.16e}", insideFrac);
+  fmt::println("error:       {:.16e}", error);
 
   return checkError({error}, {expectedError});
 }
@@ -203,7 +203,7 @@ int main(int argc, char * argv[])
 {
   int const exp = (argc > 1) ? std::atoi(argv[1]) : 13;
   int numTests = 1 << exp;
-  fmt::print("running {} tests\n", numTests);
+  fmt::println("running {} tests", numTests);
 
   std::bitset<10> tests;
 
@@ -265,6 +265,6 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  fmt::print("tests: {}\n", tests.to_string());
+  fmt::println("tests: {}", tests.to_string());
   return tests.any();
 }

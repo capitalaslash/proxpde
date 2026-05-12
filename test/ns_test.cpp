@@ -151,7 +151,7 @@ int main(int argc, char * argv[])
     split.print(time);
     t.stop();
 
-    std::cout << "time required: " << stepTimer << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
 
   t.print();
@@ -177,9 +177,9 @@ int main(int argc, char * argv[])
   double const errorNormU = errorU.norm();
   double const errorNormV = errorV.norm();
   double const errorNormP = errorP.data.norm();
-  std::cout << "errorU: " << std::setprecision(16) << errorNormU << std::endl;
-  std::cout << "errorV: " << std::setprecision(16) << errorNormV << std::endl;
-  std::cout << "errorP: " << std::setprecision(16) << errorNormP << std::endl;
+  fmt::println("errorU: {:.16e}", errorNormU);
+  fmt::println("errorV: {:.16e}", errorNormV);
+  fmt::println("errorP: {:.16e}", errorNormP);
 
   return checkError(
       {errorNormU, errorNormV, errorNormP},

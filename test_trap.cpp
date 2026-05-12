@@ -86,7 +86,7 @@ int main()
   IOManager io{feSpace, "output_trap/sol"};
   io.print({sol, exact, error});
 
-  std::cout << "error: " << error.data.norm() << std::endl;
+  fmt::println("error: {:e}", error.data.norm());
 
   return 0;
 }

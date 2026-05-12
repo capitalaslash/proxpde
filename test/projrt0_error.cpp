@@ -43,7 +43,7 @@ int test(
       FESpace<Mesh_T, typename RaviartThomasFE<Elem_T, 0>::RefFE_T, QR>;
   using FESpaceP0_T = FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR>;
 
-  fmt::print("{}test {}\n", Utils::separator, test_id);
+  fmt::println("{}test {}", Utils::separator, test_id);
   test_id++;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T{meshCoarse}};
@@ -53,10 +53,8 @@ int test(
     uniformRefine(*mesh, *newMesh);
     mesh.reset(newMesh.release());
   }
-  fmt::print(
-      "elem_type: {}\nmesh_size: {}\n",
-      XDMFTraits<typename FESpaceP0_T::RefFE_T>::shapeName,
-      mesh->elementList.size());
+  fmt::println("elem_type: {}", XDMFTraits<typename FESpaceP0_T::RefFE_T>::shapeName);
+  fmt::println("mesh_size: {}", mesh->elementList.size());
 
   FESpaceRhs_T feSpaceRhs{*mesh};
   Var uRhs{"uRhs"};
@@ -150,10 +148,8 @@ int test(
   IOManagerFacet ioFacet{feSpaceRT0, "output_projrt0err/flux"};
   ioFacet.print(std::vector{uRT0div, uRT0proj});
 
-  fmt::print("u l2-error: {:.12e}\n", std::sqrt(uRT0div.l2ErrorSquared(uExact3d)));
-
-  fmt::print(
-      "lambda l2-error: {:.12e}\n", std::sqrt(lambda.l2ErrorSquared(fun.lambdaExact)));
+  fmt::println("u l2-error: {:.12e}", uRT0div.l2Error(uExact3d));
+  fmt::println("lambda l2-error: {:.12e}", lambda.l2Error(fun.lambdaExact));
 
   // auto const error = (uRT0div.data - exactRT0.data).norm();
 

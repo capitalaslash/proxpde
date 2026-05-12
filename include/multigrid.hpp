@@ -67,7 +67,6 @@ private:
     }
 
     mat.setFromTriplets(triplets.begin(), triplets.end());
-    // std::cout << mat << std::endl;
   }
 
   FESpace_T const * feSpaceCoarse;
@@ -149,7 +148,6 @@ private:
     }
 
     mat.setFromTriplets(triplets.begin(), triplets.end());
-    // std::cout << "rest:\n" << mat << std::endl;
 
     // rescale each row so that it's weights sum to 1.
     // this ensures that constant solutions are restricted to the same value.
@@ -158,15 +156,9 @@ private:
     {
       auto const start = mat.outerIndexPtr()[row];
       auto const end = mat.outerIndexPtr()[row + 1];
-      // std::cout << "row " << row << " (" << end - start << "): ";
       auto sum = 0.0;
       for (int clm = start; clm < end; ++clm)
-      {
         sum += mat.valuePtr()[clm];
-        // std::cout << rest.valuePtr()[clm] << " (" << rest.innerIndexPtr()[clm] << ")
-        // ";
-      }
-      // std::cout << std::endl;
 
       if constexpr (family_v<RefFE_T> == FamilyType::RAVIART_THOMAS)
       {

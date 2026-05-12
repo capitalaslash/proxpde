@@ -73,10 +73,10 @@ int test(ParameterDict const & config, std::function<Vec3(Vec3 const &)> const &
   for (auto const marker: std::vector<marker_T>{1u, 2u, 3u, 5u})
   {
     auto const flux = integrateOnBoundary(uRT0.data, feSpaceRT0, marker);
-    std::cout << "flux on marker " << marker << ": " << flux << std::endl;
+    fmt::println("flux on marker {}: {}", marker, flux);
     sum += flux;
   }
-  std::cout << "total flux: " << sum << std::endl;
+  fmt::println("total flux: {}", sum);
 
   IOManagerP0 ioRT0{feSpaceRT0, "output_divfree/urt0"};
   ioRT0.print({uRT0});

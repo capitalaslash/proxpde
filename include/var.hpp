@@ -273,7 +273,7 @@ struct FEVar
     }
     else
     {
-      std::cerr << "only Lagrange and Raviart-Thomas implemented." << std::endl;
+      fmt::println(stderr, "only Lagrange and Raviart-Thomas implemented");
       std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }
@@ -289,7 +289,7 @@ struct FEVar
     }
     else
     {
-      std::cerr << "only Raviart-Thomas should require evaluate0()." << std::endl;
+      fmt::println(stderr, "only Raviart-Thomas should require evaluate0()");
       std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }
@@ -298,7 +298,7 @@ struct FEVar
   {
     static_assert(
         family_v<RefFE_T> == FamilyType::LAGRANGE,
-        "gradient is available only for Lagrange elements.");
+        "gradient is available only for Lagrange elements");
     // check that the qr is compatible
     assert(q < FESpace_T::QR_T::numPts);
     return feSpace->curFE.dphi[q].transpose() * dataLocal;
@@ -331,7 +331,7 @@ struct FEVar
     }
     else
     {
-      std::cerr << "only Raviart-Thomas should require evaluateDIV()." << std::endl;
+      fmt::println(stderr, "only Raviart-Thomas should require evaluateDIV()");
       std::exit(PROXPDE_NOT_IMPLEMENTED);
     }
   }

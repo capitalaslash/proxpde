@@ -368,7 +368,7 @@ int main(int argc, char * argv[])
   FEVar vel{feSpaceVel};
   vel << velocity;
   double const cfl = velocity * dt * numElems;
-  std::cout << "cfl = " << cfl << std::endl;
+  fmt::println("cfl = {:e}", cfl);
   assert(cfl < 1. - 1.e-8);
 
   Builder builder{feSpaceCG.dof.size};
@@ -494,21 +494,19 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  std::cout << "maxFV:    " << maxFV << std::endl;
-  std::cout << "maxCG:    " << maxCG << std::endl;
-  std::cout << "maxCGRes: " << maxCGRes << std::endl;
+  fmt::println("maxFV:    {:e}", maxFV);
+  fmt::println("maxCG:    {:e}", maxCG);
+  fmt::println("maxCGRes: {:e}", maxCGRes);
 
   Vec oneFieldCG;
   interpolateAnalyticFunction(one, feSpaceCG, oneFieldCG);
   Vec oneFieldFV;
   interpolateAnalyticFunction(one, feSpaceFV, oneFieldFV);
 
-  double errorNormCG = (uCG.data - oneFieldCG).norm();
-  std::cout << "the norm of the CG error is " << std::setprecision(16) << errorNormCG
-            << std::endl;
-  double errorNormFV = (uFV.data - oneFieldFV).norm();
-  std::cout << "the norm of the FV error is " << std::setprecision(16) << errorNormFV
-            << std::endl;
+  double const errorNormCG = (uCG.data - oneFieldCG).norm();
+  double const errorNormFV = (uFV.data - oneFieldFV).norm();
+  fmt::println("norm of the CG error: {:e}", errorNormCG);
+  fmt::println("norm of the FV error: {:e}", errorNormFV);
   return checkError(
       {errorNormCG, errorNormFV}, {0.0007185655616791794, 2.68467866957268e-06});
 }

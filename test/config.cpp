@@ -13,7 +13,7 @@ int main(int /*argc*/, char * /*argv*/[])
   config["nested"]["c"] = 6;
   config["nested"]["d"] = 8;
 
-  std::cout << "before override:\n" << config << std::endl;
+  fmt::println("before override:\n{}", config);
 
   config.override("config.yaml");
 
@@ -21,7 +21,7 @@ int main(int /*argc*/, char * /*argv*/[])
   assert(config["nested"]["c"].as<int>() == 5);
   assert(config["nested"]["d"].as<int>() == 8);
 
-  std::cout << "after override:\n" << config << std::endl;
+  fmt::println("after override:\n{}", config);
 
   return 0;
 }

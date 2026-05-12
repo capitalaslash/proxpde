@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 
   t.start("check");
   uint const numNonPlanar = checkPlanarFacets(*mesh);
-  fmt::print("non planar facets: {}\n", numNonPlanar);
+  fmt::println("non planar facets: {}", numNonPlanar);
   t.stop();
 
   t.start("print");

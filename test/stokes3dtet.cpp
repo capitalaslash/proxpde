@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
   interpolateAnalyticFunction(
       [ly, nu](Vec3 const & p) { return nu * (ly - p(1)); }, feSpaceP, exact.data);
 
-  fmt::print("solution norm: {:.16e}\n", sol.data.norm());
+  fmt::println("solution norm: {:.16e}", sol.data.norm());
 
   Var u{"u"};
   Var v{"v"};
@@ -118,11 +118,6 @@ int main(int argc, char * argv[])
   auto vError = (v.data - ve.data).norm();
   auto wError = (w.data - we.data).norm();
   auto pError = (p.data - pe.data).norm();
-
-  fmt::print("u error norm: {:.16e}\n", uError);
-  fmt::print("v error norm: {:.16e}\n", vError);
-  fmt::print("w error norm: {:.16e}\n", wError);
-  fmt::print("p error norm: {:.16e}\n", pError);
 
   return checkError(
       {uError, vError, wError, pError},

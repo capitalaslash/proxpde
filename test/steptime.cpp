@@ -28,16 +28,16 @@ int main()
   MilliTimer t;
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh");
   buildHyperCube(*mesh, ParameterDict{config["mesh"]});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpaceVel_T feSpaceVel{*mesh};
   FESpaceP_T feSpaceP{*mesh, feSpaceVel.dof.size * FESpaceVel_T::dim};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("bcs");
   auto zero = [](Vec3 const &) { return Vec2::Constant(0.); };
   auto bcLeft = BCEss{feSpaceVel, side::LEFT};
   bcLeft << [](Vec3 const & p) { return p[1] > .05 ? Vec2(1.0, 0.0) : Vec2(0.0, 0.0); };
@@ -49,7 +49,7 @@ int main()
   // DofSet_T pinSet = {1};
   // auto const bcsP =
   //     std::vector{BCEss{feSpaceP, pinSet, [](Vec3 const &) { return 0.; }}};
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.stop();
 
   // t.start();
   auto const dofU = feSpaceVel.dof.size;
@@ -97,7 +97,7 @@ int main()
     solver.compute(builder.A);
     sol.data = solver.solve(builder.b);
     auto res = builder.A * sol.data - builder.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
+    fmt::println("residual norm: {:e}", res.norm());
 
     builder.clear();
 
@@ -107,10 +107,12 @@ int main()
 
     if ((sol.data - dt * velOld).norm() < 1.e-12)
     {
-      std::cout << "stationary state has been reached" << std::endl;
+      fmt::println("stationary state has been reached");
       break;
     }
   }
+
+  t.print();
 
   return 0;
 }

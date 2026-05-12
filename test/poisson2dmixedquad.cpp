@@ -32,7 +32,7 @@ using FESpaceP0_T = FESpace<Mesh_T, LagrangeFE<Elem_T, 0>::RefFE_T, QR_T>;
 int test(YAML::Node const & config)
 {
   auto const n = config["n"].as<uint>();
-  fmt::print("mesh size: {}\n", n);
+  fmt::println("mesh size: {}", n);
 
   // create mesh
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
@@ -163,8 +163,8 @@ int test(YAML::Node const & config)
   builder.buildRhs(
       std::tuple{AssemblyProjection{1.0, rhs.tail(sizeU), feSpaceU}}, bcsU);
 
-  // fmt::print("A:\n{}\n", builder.A);
-  // fmt::print("b:\n{}\n", builder.b);
+  // fmt::println("A:\n{}", builder.A);
+  // fmt::println("b:\n{}", builder.b);
 
   LUSolver solver;
   solver.analyzePattern(builder.A);
@@ -173,7 +173,7 @@ int test(YAML::Node const & config)
   w.data = sol.head(sizeW);
   u.data = sol.tail(sizeU);
 
-  // fmt::print("sol:\n{}\n", sol);
+  // fmt::println("sol:\n{}", sol);
 
   Vec exact = Vec::Zero(sizeW + sizeU);
   interpolateAnalyticFunction(wExactFun, feSpaceW, exact);

@@ -227,10 +227,9 @@ int main(int argc, char * argv[])
   {
     timerStep.start();
     time += dt;
-    std::cout << "\n"
-              << Utils::separator << "solving timestep " << itime + 1
-              << ", time = " << time << std::endl;
-    // filelog << "\n" << Utils::separator;
+    fmt::print("\n{}", Utils::separator);
+    fmt::println("solving timestep {:6d}, time {:.6e}", itime + 1, time);
+    // fmt::print(filelog, "\n{}", Utils::separator);
 
     t.start("monolithic build");
     velOldM = solM.head(dofU * FESpaceVel_T::dim);
@@ -246,7 +245,7 @@ int main(int argc, char * argv[])
     solverM.compute(builderM.A);
     solM = solverM.solve(builderM.b);
     auto res = builderM.A * solM - builderM.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
+    fmt::println("residual norm: {:e}", res.norm());
     t.stop();
 
     t.start("ustar build");
@@ -259,10 +258,10 @@ int main(int argc, char * argv[])
     t.start("ustar solve");
     eqnUstar.compute();
     eqnUstar.solve();
-    std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+    fmt::println("eqnUstar residual norm: {:e}", eqnUstar.residualNorm());
     eqnVstar.compute();
     eqnVstar.solve();
-    std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+    fmt::println("eqnVstar residual norm: {:e}", eqnVstar.residualNorm());
     t.stop();
 
     t.start("p build");
@@ -273,7 +272,7 @@ int main(int argc, char * argv[])
 
     t.start("p solve");
     eqnP.solve();
-    std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
+    fmt::println("eqnP residual norm: {:e}", eqnP.residualNorm());
     t.stop();
 
     t.start("u build");
@@ -283,9 +282,9 @@ int main(int argc, char * argv[])
 
     t.start("u solve");
     eqnU.solve();
-    std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
+    fmt::println("eqnU residual norm: {:e}", eqnU.residualNorm());
     eqnV.solve();
-    std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
+    fmt::println("eqnV residual norm: {:e}", eqnV.residualNorm());
     t.stop();
 
     t.start("monolithic clear");

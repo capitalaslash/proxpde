@@ -230,10 +230,9 @@ int main(int argc, char * argv[])
   {
     timerStep.start();
     time += dt;
-    std::cout << "\n"
-              << Utils::separator << "solving timestep " << itime + 1
-              << ", time = " << time << std::endl;
-    // filelog << "\n" << Utils::separator;
+    fmt::print("\n{}", Utils::separator);
+    fmt::println("solving timestep {:6d}, time {:.6e}", itime + 1, time);
+    // fmt::print(filelog, "\n{}", Utils::separator);
 
     t.start("monolithic build");
     velOldMonolithic = velM.data;
@@ -250,7 +249,7 @@ int main(int argc, char * argv[])
     solverM.compute(builderM.A);
     velM.data = solverM.solve(builderM.b);
     auto res = builderM.A * velM.data - builderM.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
+    fmt::println("residual norm: {:e}", res.norm());
     t.stop();
 
     t.start("ustar build");
@@ -264,10 +263,10 @@ int main(int argc, char * argv[])
     t.start("ustar solve");
     eqnUstar.compute();
     eqnUstar.solve();
-    std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+    fmt::println("eqnUstar residual norm: {:e}", eqnUstar.residualNorm());
     eqnVstar.compute();
     eqnVstar.solve();
-    std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+    fmt::println("eqnVstar residual norm: {:e}", eqnVstar.residualNorm());
     t.stop();
 
     t.start("p build");
@@ -278,7 +277,7 @@ int main(int argc, char * argv[])
 
     t.start("p solve");
     eqnP.solve();
-    std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
+    fmt::println("eqnP residual norm: {:e}", eqnP.residualNorm());
     t.stop();
 
     t.start("u build");
@@ -288,9 +287,9 @@ int main(int argc, char * argv[])
 
     t.start("u solve");
     eqnU.solve();
-    std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
+    fmt::println("eqnU residual norm: {:e}", eqnU.residualNorm());
     eqnV.solve();
-    std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
+    fmt::println("eqnV residual norm: {:e}", eqnV.residualNorm());
     t.stop();
 
     t.start("monolithic clear");
@@ -309,7 +308,7 @@ int main(int argc, char * argv[])
     pSplit.data += eqnP.sol.data;
     if ((itime + 1) % printStep == 0)
     {
-      std::cout << "printing" << std::endl;
+      fmt::println("printing");
       getComponent(uM.data, feSpaceU, velM.data, feSpaceVel, 0);
       getComponent(vM.data, feSpaceU, velM.data, feSpaceVel, 1);
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
@@ -319,7 +318,7 @@ int main(int argc, char * argv[])
     }
     t.stop();
 
-    std::cout << "time required: " << timerStep << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
   t.print();
 
@@ -333,9 +332,9 @@ int main(int argc, char * argv[])
   double const errorNormU = errorU.data.norm();
   double const errorNormV = errorV.data.norm();
   double const errorNormP = errorP.data.norm();
-  std::cout << "errorU: " << std::setprecision(16) << errorNormU << std::endl;
-  std::cout << "errorV: " << std::setprecision(16) << errorNormV << std::endl;
-  std::cout << "errorP: " << std::setprecision(16) << errorNormP << std::endl;
+  fmt::println("errorU: {:.16e}", errorNormU);
+  fmt::println("errorV: {:.16e}", errorNormV);
+  fmt::println("errorP: {:.16e}", errorNormP);
 
   return checkError(
       {errorNormU, errorNormV, errorNormP},

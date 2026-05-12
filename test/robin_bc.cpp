@@ -30,10 +30,8 @@ int test(YAML::Node const & config)
   auto const temp0 = config["temp0"].as<double>();
   auto const tempA = config["tempA"].as<double>();
 
-  std::cout << "test setup:\n"
-            << "  - hConv = " << hConv << "\n"
-            << "  - temp0 = " << temp0 << "\n"
-            << "  - tempA = " << tempA << std::endl;
+  fmt::println("test setup:\n");
+  fmt::println("  - hConv = \n  - temp0 = \n  - tempA = ", hConv, temp0, tempA);
 
   const scalarFun_T rhsFun = [](Vec3 const & p)
   { return M_PI * std::sin(M_PI * p(0)); };

@@ -44,7 +44,6 @@ int main(int argc, char * argv[])
   FESpaceP_T feSpaceP{*mesh, FESpaceVel_T::dim * dofU};
   auto const dofP = feSpaceP.dof.size;
   t.stop();
-  // std::cout << feSpaceVel.dof << std::endl;
 
   auto feList = std::tuple{feSpaceVel, feSpaceP};
   auto assembler = make_assembler(feList);
@@ -115,19 +114,15 @@ int main(int argc, char * argv[])
   Var wssCell{"wssCell"};
   computeElemWSS(wssCell.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
-  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff()
-            << std::endl;
-  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff()
-            << std::endl;
+  fmt::println("wssCell min: {:.16e}", wssCell.data.minCoeff());
+  fmt::println("wssCell max: {:.16e}", wssCell.data.maxCoeff());
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
   computeFEWSS(wssFacet.data, feSpaceP0, sol, feSpaceVel, {side::RIGHT}, nu);
   t.stop();
-  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
-            << std::endl;
-  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
-            << std::endl;
+  fmt::println("wssFacet min: {:.16e}", wssFacet.data.minCoeff());
+  fmt::println("wssFacet max: {:.16e}", wssFacet.data.maxCoeff());
 
   t.start("print");
   IOManager ioComponent{feSpaceComponent, "output_stokes2dquad/vel"};
@@ -144,17 +139,16 @@ int main(int argc, char * argv[])
   auto vError = (v.data - vExact.data).norm();
   auto pError = (p.data - p_exact.data).norm();
 
-  std::cout << "u error norm: " << uError << std::endl;
-  std::cout << "v error norm: " << vError << std::endl;
-  std::cout << "p error norm: " << pError << std::endl;
+  fmt::println("u error norm: {:e}", uError);
+  fmt::println("v error norm: {:e}", vError);
+  fmt::println("p error norm: {:e}", pError);
 
   if (std::fabs(uError) > 1.e-14 || std::fabs(vError) > 2.e-14 ||
       std::fabs(pError) > 3.e-14 ||
       std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
       std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
   {
-    std::cerr << "one of the norms of the error is not the prescribed value"
-              << std::endl;
+    fmt::println(stderr, "one of the norms of the error is not the prescribed value");
     return 1;
   }
 

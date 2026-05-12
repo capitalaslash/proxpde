@@ -43,11 +43,15 @@ int test()
   // std::cout << matDPhi << std::endl;
 
   auto const normPhi = (matPhi - FMat<size, size>::Identity()).norm();
-  auto const normDPhi = matDPhi.norm();
-  if (std::fabs(normPhi - 0.) > 1.e-16 || std::fabs(normDPhi - 0.) > 1.e-16)
+  if (std::fabs(normPhi - 0.) > 1.e-16)
   {
-    std::cerr << "the norm of the error is not the prescribed value: " << normPhi << " "
-              << normDPhi << std::endl;
+    fmt::println(stderr, "the error on phi is not the prescribed value: ", normPhi);
+    return 1;
+  }
+  auto const normDPhi = matDPhi.norm();
+  if (std::fabs(normDPhi - 0.) > 1.e-16)
+  {
+    fmt::println(stderr, "the error on dphi is not the prescribed value: ", normDPhi);
     return 1;
   }
 

@@ -13,8 +13,12 @@ int vectorTest(Vec3 const & v, Vec3 const & e)
   auto const norm = (v - e).norm();
   if (norm > 1e-8)
   {
-    std::cerr << "the normal " << v.transpose() << " does not correspond to "
-              << v.transpose() << " with an error of " << norm << std::endl;
+    fmt::println(
+        stderr,
+        "the normal {} does not correspond to {} with an error of {:e}",
+        v.transpose(),
+        e.transpose(),
+        norm);
     return 1;
   }
   return 0;

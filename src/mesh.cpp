@@ -935,7 +935,7 @@ void hexagonMesh(Mesh<Triangle> & mesh)
     }
   }
   buildNormals(mesh, MeshFlags::NONE);
-  // std::cout << mesh << std::endl;
+  // fmt::println("{}", mesh);
 }
 
 void hexagonSquare(Mesh<Triangle> & mesh, MeshFlags flags)
@@ -1109,7 +1109,7 @@ uint checkPlanarFacets(Mesh<Hexahedron> const & mesh)
         if (std::fabs(normal012.dot(facet.pts[3]->coord) - d) > 1e-12)
         {
           nonPlanarCount++;
-          fmt::print(stderr, "facet not planar along diagonal 0-2!\n");
+          fmt::println(stderr, "facet not planar along diagonal 0-2!");
           return;
         }
 
@@ -1127,7 +1127,7 @@ uint checkPlanarFacets(Mesh<Hexahedron> const & mesh)
         if (std::fabs(normal013.dot(facet.pts[3]->coord) - d013) > 1e-12)
         {
           nonPlanarCount++;
-          fmt::print(stderr, "facet not planar along diagonal 1-3!\n");
+          fmt::println(stderr, "facet not planar along diagonal 1-3!");
         }
       });
   return nonPlanarCount;

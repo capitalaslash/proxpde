@@ -246,20 +246,16 @@ int main(int argc, char * argv[])
   computeElemWSS(
       wssCell.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
   t.stop();
-  std::cout << "wssCell min: " << std::setprecision(16) << wssCell.data.minCoeff()
-            << std::endl;
-  std::cout << "wssCell max: " << std::setprecision(16) << wssCell.data.maxCoeff()
-            << std::endl;
+  fmt::println("wssCell min: {:.16e}", wssCell.data.minCoeff());
+  fmt::println("wssCell max: {:.16e}", wssCell.data.maxCoeff());
 
   t.start("wssFacet");
   Var wssFacet{"wssFacet"};
   computeFEWSS(
       wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
   t.stop();
-  std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
-            << std::endl;
-  std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
-            << std::endl;
+  fmt::println("wssFacet min: {:.16e}", wssFacet.data.minCoeff());
+  fmt::println("wssFacet max: {:.16e}", wssFacet.data.maxCoeff());
 
   t.start("print");
   IOManager ioVel{feSpaceVel, "output_slip/vel"};
@@ -275,12 +271,12 @@ int main(int argc, char * argv[])
   double normOld = 0.;
   for (uint k = 0; k < 20; ++k)
   {
-    std::cout << Utils::separator << "iteration " << k << std::endl;
+    fmt::println("{}iteration {:2d}", Utils::separator, k + 1);
 
     t.start("tangent");
     bcLeft << sol.data;
     bcLeft.makeTangent();
-    // std::cout << "bcLeft: " << bcLeft.data.transpose() << std::endl;
+    // fmt::println("bcLeft: {}", bcLeft.data.transpose());
     bcRight << sol.data;
     bcRight.makeTangent();
     auto bcsVelNew = bcsVel;
@@ -303,24 +299,20 @@ int main(int argc, char * argv[])
     solver.compute(builder.A);
     sol.data = solver.solve(builder.b);
     auto const res = builder.A * sol.data - builder.b;
-    std::cout << "residual norm: " << res.norm() << std::endl;
+    fmt::println("residual norm: {:e}", res.norm());
     p.data = sol.data.tail(dofP);
     t.stop();
 
     t.start("integral");
     double pIntegral = integrateOnBoundary(p.data, feSpaceP, side::TOP);
     t.stop();
-    std::cout << "integral of pressure on top face: " << std::setprecision(16)
-              << pIntegral << std::endl;
+    fmt::println("integral of pressure on top face: {:.16e}", pIntegral);
 
     t.start("wss");
     computeFEWSS(
         wssFacet.data, feSpaceP0, sol.data, feSpaceVel, {side::RIGHT, side::LEFT}, nu);
     t.stop();
-    std::cout << "wssFacet min: " << std::setprecision(16) << wssFacet.data.minCoeff()
-              << std::endl;
-    std::cout << "wssFacet max: " << std::setprecision(16) << wssFacet.data.maxCoeff()
-              << std::endl;
+    fmt::println("wssFacet min: {:.16e}", wssFacet.data.maxCoeff());
 
     t.start("print");
     ioVel.print({sol}, k + 1);
@@ -329,7 +321,7 @@ int main(int argc, char * argv[])
     t.stop();
 
     double const norm = sol.data.norm();
-    std::cout << "solution norm: " << norm << std::endl;
+    fmt::println("solution norm: {:e}", norm);
     if (std::fabs(norm - normOld) < 1.e-5)
     {
       break;
@@ -343,18 +335,14 @@ int main(int argc, char * argv[])
   // auto vError = (v.data - ve.data).norm();
   // auto pError = (p.data - pe.data).norm();
   //
-  // std::cout << "u error norm: " << uError << std::endl;
-  // std::cout << "v error norm: " << vError << std::endl;
-  // std::cout << "p error norm: " << pError << std::endl;
-  //
   // if (std::fabs(uError) > 1.e-14 ||
   //     std::fabs(vError) > 2.e-14 ||
   //     std::fabs(pError) > 3.e-14 ||
   //     std::fabs(wssCell.data.maxCoeff() - (nu * (1. - .5 / numElemsY))) > 1.e-12 ||
   //     std::fabs(wssFacet.data.maxCoeff() - nu) > 1.e-12)
   // {
-  //   std::cerr << "one of the norms of the error is not the prescribed value" <<
-  //   std::endl; return 1;
+  //   fmt::println(stderr, "one of the norms of the error is not the prescribed
+  //   value"); return 1;
   // }
 
   return 0;

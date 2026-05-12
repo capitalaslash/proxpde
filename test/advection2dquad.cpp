@@ -72,7 +72,7 @@ int main(/*int argc, char * argv[]*/)
 
   double const dt = 0.1;
   auto const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
-  std::cout << "max cfl = " << cfl << std::endl;
+  fmt::println("max cfl = {}", cfl);
   t.stop();
 
   t.start("init");

@@ -102,7 +102,7 @@ int main(int argc, char * argv[])
 
     t.start("update");
     tempOld = temp.data;
-    std::cout << "tempOld norm: " << tempOld.norm() << std::endl;
+    fmt::println("tempOld norm: {:e}", tempOld.norm());
     t.stop();
 
     t.start("build");
@@ -120,7 +120,7 @@ int main(int argc, char * argv[])
 
     t.start("update inc");
     tempOldInc += dTemp.data;
-    std::cout << "tempOldInc norm: " << tempOldInc.norm() << std::endl;
+    fmt::println("tempOldInc norm: {:e}", tempOldInc.norm());
     t.stop();
 
     t.start("build inc");
@@ -138,21 +138,20 @@ int main(int argc, char * argv[])
     tempInc.data += dTemp.data;
     t.stop();
 
-    std::cout << "stationary check - increment norm: " << dTemp.data.norm()
-              << std::endl;
+    fmt::println("stationary check - increment norm: {:e}", dTemp.data.norm());
     t.start("output");
     auto const diffNorm = (temp.data - tempInc.data).norm();
-    std::cout << "diffNorm: " << diffNorm << std::endl;
+    fmt::println("diffNorm: {:e}", diffNorm);
     if (diffNorm > toll)
     {
-      fmt::print(stderr, "the norm of the difference is too big, aborting.\n");
+      fmt::println(stderr, "the norm of the difference is too big, aborting");
       return 2;
     }
     io.print({temp, tempInc, dTemp}, time);
     t.stop();
   }
 
-  // std::cout << "temp:\n" << temp.data << std::endl;
+  // fmt::println("temp:\n{}", temp.data);
 
   Vec exact;
   interpolateAnalyticFunction(exactSol, feSpace, exact);
@@ -161,8 +160,7 @@ int main(int argc, char * argv[])
 
   t.print();
 
-  double norm = error.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  double const norm = error.norm();
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {2.196219431925e-06});
 }

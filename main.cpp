@@ -116,7 +116,7 @@ int main()
 
   Var error{"error"};
   error.data = sol.data - exact.data;
-  fmt::print("error: {:e}\n", error.data.norm());
+  fmt::println("error: {:e}", error.data.norm());
 
   IOManager io{feSpace, "output/sol"};
   io.print({sol, exact, error});

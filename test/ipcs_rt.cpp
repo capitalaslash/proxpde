@@ -453,10 +453,9 @@ int main(int argc, char * argv[])
   {
     timerStep.start();
     time += dt;
-    std::cout << "\n"
-              << Utils::separator << "solving timestep " << itime + 1
-              << ", time = " << time << std::endl;
-    // filelog << "\n" << Utils::separator;
+    fmt::print("\n{}", Utils::separator);
+    fmt::println("solving timestep {:6d}, time {:.6e}", itime + 1, time);
+    // fmt::print(filelog, "\n{}", Utils::separator);
 
     if (config["monolithic"].as<bool>())
     {
@@ -474,7 +473,7 @@ int main(int argc, char * argv[])
       solverM.compute(builderM.A);
       solM = solverM.solve(builderM.b);
       auto const res = builderM.A * solM - builderM.b;
-      std::cout << "residual norm: " << res.norm() << std::endl;
+      fmt::println("residual norm: {:e}", res.norm());
       t.stop();
 
       t.start("clear monolithic");
@@ -495,10 +494,10 @@ int main(int argc, char * argv[])
       t.start("solve ustar");
       eqnUstar.compute();
       eqnUstar.solve();
-      std::cout << "eqnUstar residual norm: " << eqnUstar.residualNorm() << std::endl;
+      fmt::println("eqnUstar residual norm: {:e}", eqnUstar.residualNorm());
       eqnVstar.compute();
       eqnVstar.solve();
-      std::cout << "eqnVstar residual norm: " << eqnVstar.residualNorm() << std::endl;
+      fmt::println("eqnVstar residual norm: {:e}", eqnVstar.residualNorm());
       t.stop();
 
       t.start("build p");
@@ -509,7 +508,7 @@ int main(int argc, char * argv[])
 
       t.start("solve p");
       eqnP.solve();
-      std::cout << "eqnP residual norm: " << eqnP.residualNorm() << std::endl;
+      fmt::println("eqnP residual norm: {:e}", eqnP.residualNorm());
       t.stop();
 
       t.start("build u");
@@ -519,9 +518,9 @@ int main(int argc, char * argv[])
 
       t.start("solve u");
       eqnU.solve();
-      std::cout << "eqnU residual norm: " << eqnU.residualNorm() << std::endl;
+      fmt::println("eqnU residual norm: {:e}", eqnU.residualNorm());
       eqnV.solve();
-      std::cout << "eqnV residual norm: " << eqnV.residualNorm() << std::endl;
+      fmt::println("eqnV residual norm: {:e}", eqnV.residualNorm());
       t.stop();
 
       t.start("clear split");
@@ -544,10 +543,10 @@ int main(int argc, char * argv[])
       t.start("solve ustarRT");
       eqnUstarRT.compute();
       eqnUstarRT.solve();
-      std::cout << "eqnUstarRT residual norm: " << eqnUstar.residualNorm() << std::endl;
+      fmt::println("eqnUstarRT residual norm: {:e}", eqnUstar.residualNorm());
       eqnVstarRT.compute();
       eqnVstarRT.solve();
-      std::cout << "eqnVstarRT residual norm: " << eqnVstar.residualNorm() << std::endl;
+      fmt::println("eqnVstarRT residual norm: {:e}", eqnVstar.residualNorm());
       t.stop();
 
       t.start("build proj RT");
@@ -555,14 +554,14 @@ int main(int argc, char * argv[])
       setComponent(velStarRT, feSpaceVelStarRT, vStarRT.data, feSpaceUStarRT, 1);
       builderRT.buildRhs(velRTRhs, bcsVelRT);
       builderRT.b += velRTRhsFixed;
-      std::cout << "RT rhs norm: " << builderRT.b.norm() << std::endl;
+      fmt::println("RT rhs norm: {:e}", builderRT.b.norm());
       t.stop();
 
       t.start("solve RT");
-      // std::cout << "ART:\n" << builderRT.A << std::endl;
+      // fmt::println("ART:\n" << builderRT.A << std::endl;
       auto const solRT = solverRT.solve(builderRT.b);
-      std::cout << "RT residual norm: " << (builderRT.A * solRT - builderRT.b).norm()
-                << std::endl;
+      fmt::println(
+          "RT residual norm: {:e}", (builderRT.A * solRT - builderRT.b).norm());
       velRT.data = solRT.head(feSpaceVelRT.dof.size);
       dLambda = solRT.tail(feSpaceLambda.dof.size);
       t.stop();
@@ -585,7 +584,7 @@ int main(int argc, char * argv[])
     }
     if ((itime + 1) % printStep == 0)
     {
-      std::cout << "printing" << std::endl;
+      fmt::println("printing");
       if (config["monolithic"].as<bool>())
       {
         velM.data = solM.head(dofU * FESpaceVel_T::dim);
@@ -610,7 +609,7 @@ int main(int argc, char * argv[])
     }
     t.stop();
 
-    std::cout << "time required: " << timerStep << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
 
   t.start("boundary postpro");
@@ -627,7 +626,7 @@ int main(int argc, char * argv[])
   interpolateOnFacets<Component::TANGENTIAL>(
       bd.data, feSpaceBd, velRT.data, feSpaceVelRT);
   if (bd.data.size() < 100)
-    std::cout << bd.data.transpose() << std::endl;
+    fmt::println("bd data:\n{}", bd.data.transpose());
   t.stop();
 
   t.print();

@@ -70,8 +70,8 @@ int test(RandomEngine & gen)
 
   auto const volumeFraction = elem.volume() / bboxVolume;
   auto const insideFraction = static_cast<double>(insideCount) / numTests;
-  std::cout << "inside volume:   " << volumeFraction << std::endl
-            << "inside fraction: " << insideFraction << std::endl;
+  fmt::println("inside volume:   {:e}", volumeFraction);
+  fmt::println("inside fraction: {:e}", insideFraction);
 
   t.print();
 
@@ -87,16 +87,16 @@ int main()
   // Engine_T gen(rd());
   Engine_T gen(20240117);
 
-  std::cout << "Line\n" << Utils::separator;
+  fmt::print("Line\n{}", Utils::separator);
   tests[0] = test<Engine_T, Line>(gen);
-  std::cout << "Triangle\n" << Utils::separator;
+  fmt::print("Triangle\n", Utils::separator);
   tests[1] = test<Engine_T, Triangle>(gen);
-  std::cout << "Quad\n" << Utils::separator;
+  fmt::print("Quad\n", Utils::separator);
   tests[2] = test<Engine_T, Quad>(gen);
-  std::cout << "Tetrahedron\n" << Utils::separator;
+  fmt::print("Tetrahedron\n", Utils::separator);
   tests[3] = test<Engine_T, Tetrahedron>(gen);
-  std::cout << "Hexahedron\n" << Utils::separator;
+  fmt::print("Hexahedron\n", Utils::separator);
   tests[4] = test<Engine_T, Hexahedron>(gen);
-  std::cout << tests << std::endl;
+  fmt::println("test result: {}", tests);
   return tests.any();
 }

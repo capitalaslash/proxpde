@@ -13,9 +13,11 @@
 namespace proxpde
 {
 
+#ifdef PROXPDE_ENABLE_SECONDDERIV
 // int constexpr sigma = +1; // MS
 int constexpr sigma = 0; // SUPG
 // int constexpr sigma = -1; // GLS
+#endif // PROXPDE_ENABLE_SECONDDERIV
 
 int constexpr orderCG = 1;
 

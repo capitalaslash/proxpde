@@ -216,7 +216,7 @@ void DAEqn<ElemType>::setupSystem()
   interpolateAnalyticFunction(velocityField, *vel.feSpace, vel.data);
 
   double const cfl = computeMaxCFL(feSpaceVel, vel.data, dt);
-  fmt::println(Utils::filelog, "cfl max: {}", cfl);
+  // fmt::println(Utils::filelog, "cfl max: {}", cfl);
   t.stop();
 
   t.start("io");
@@ -262,7 +262,7 @@ void DAEqn<ElemType>::solveTimeStep()
 {
   t.start("solve");
   c.data = solver.solve(rhs);
-  fmt::println(Utils::filelog, "c max value: {:8.6f}", c.data.maxCoeff());
+  // fmt::println(Utils::filelog, "c max value: {:8.6f}", c.data.maxCoeff());
   t.stop();
 }
 
@@ -307,7 +307,7 @@ void DAEqn<ElemType>::run()
   for (uint itime = 0; itime < ntime; itime++)
   {
     time += dt;
-    fmt::println(Utils::filelog, "solving timestep {:6d}", itime + 1);
+    // fmt::println(Utils::filelog, "solving timestep {:6d}", itime + 1);
 
     t.start("update");
     cOld = c.data;
@@ -329,7 +329,7 @@ void DAEqn<ElemType>::run()
       outputResults();
   }
 
-  t.print(Utils::filelog);
+  // t.print(Utils::filelog);
 }
 
 } // namespace proxpde

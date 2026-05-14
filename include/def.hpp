@@ -281,6 +281,16 @@ constexpr T cepow(T const & base, uint const exponent)
 }
 
 // ----------------------------------------------------------------------------
+template <typename T, typename U>
+bool valueInMap(std::unordered_map<T, U> const & m, U const & value)
+{
+  return std::find_if(
+             m.begin(),
+             m.end(),
+             [value](auto const & pair) { return pair.second == value; }) != m.end();
+}
+
+// ----------------------------------------------------------------------------
 struct ParameterDict: public YAML::Node
 {
   ParameterDict() = default;

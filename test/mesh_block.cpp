@@ -8,7 +8,7 @@
 using namespace proxpde;
 
 template <typename Elem>
-void test(uint expectedElems, uint expectedPts)
+int test(uint expectedElems, uint expectedPts)
 {
   using Elem_T = Elem;
   // using Facet_T = typename Elem_T::Facet_T;
@@ -67,16 +67,22 @@ void test(uint expectedElems, uint expectedPts)
   IOManager ioBlock{feSpaceBlock, "output_block/block"};
   ioBlock.print({idBlock, volumeBlock});
 
-  assert(block->elementList.size() == expectedElems);
-  assert(block->pointList.size() == expectedPts);
+  if (block->elementList.size() != expectedElems)
+    return 1;
+  if (block->pointList.size() != expectedPts)
+    return 1;
+
+  return 0;
 }
 
 int main()
 {
-  test<Triangle>(4U, 6U);
-  test<Quad>(4U, 9U);
-  test<Tetrahedron>(52U, 33U);
-  test<Hexahedron>(16U, 45U);
+  auto ret = 0;
 
-  return 0;
+  ret += test<Triangle>(4U, 6U);
+  ret += test<Quad>(4U, 9U);
+  ret += test<Tetrahedron>(52U, 33U);
+  ret += test<Hexahedron>(16U, 45U);
+
+  return ret;
 }

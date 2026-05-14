@@ -10,7 +10,6 @@
 #include "iomanager.hpp"
 #include "mesh.hpp"
 
-
 int main()
 {
   using namespace proxpde;

@@ -53,9 +53,8 @@ int test(YAML::Node const & config)
     return p(0) * (2. + g - p(0));
     // return std::sin(0.5*M_PI*p(0))*std::sin(1.5*M_PI*p(1));
   };
-  auto wExactFun = [g](Vec3 const & p) -> Vec3 {
-    return Vec3{2. + g - 2. * p(0), 0.0, 0.0};
-  };
+  auto wExactFun = [g](Vec3 const & p) -> Vec3
+  { return Vec3{2. + g - 2. * p(0), 0.0, 0.0}; };
   scalarFun_T rhsFun = [](Vec3 const & /*p*/)
   {
     return -2.;

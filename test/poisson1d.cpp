@@ -1,11 +1,11 @@
 #include "def.hpp"
 
-#include "assembly.hpp"
+#include "assembly_lhs.hpp"
+#include "assembly_rhs.hpp"
 #include "bc.hpp"
 #include "builder.hpp"
 #include "fe.hpp"
 #include "fespace.hpp"
-#include "feutils.hpp"
 #include "iomanager.hpp"
 #include "mesh.hpp"
 #include "timer.hpp"
@@ -20,12 +20,12 @@ int main(int argc, char * argv[])
       Mesh_T,
       LagrangeFE<Elem_T, 1u>::RefFE_T,
       LagrangeFE<Elem_T, 1u>::RecommendedQR>;
-  using FESpaceGrad_T = FESpace<
-      Mesh_T,
-      LagrangeFE<Elem_T, 0u>::RefFE_T,
-      LagrangeFE<Elem_T, 1u>::RecommendedQR>;
-  using FESpaceSide_T =
-      FESpace<Mesh_T, LagrangeFE<Elem_T, 1u>::RefFE_T, SideGaussQR<Line, 1u>>;
+  // using FESpaceGrad_T = FESpace<
+  //     Mesh_T,
+  //     LagrangeFE<Elem_T, 0u>::RefFE_T,
+  //     LagrangeFE<Elem_T, 1u>::RecommendedQR>;
+  // using FESpaceSide_T =
+  //     FESpace<Mesh_T, LagrangeFE<Elem_T, 1u>::RefFE_T, SideGaussQR<Line, 1u>>;
 
   scalarFun_T const rhs = [](Vec3 const & p) { return M_PI * std::sin(M_PI * p(0)); };
 

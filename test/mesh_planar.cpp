@@ -77,7 +77,8 @@ int main(int argc, char * argv[])
   // with MeshFlags::CHECK_FACET_PLANAR buildNormals() correctly aborts
   buildNormals(*mesh, MeshFlags::NONE);
   uint const numNonPlanarRef = checkPlanarFacets(*mesh);
-  assert(numNonPlanarRef == 3);
+  if (numNonPlanarRef != 3)
+    return 1;
 
   return 0;
 }

@@ -27,7 +27,7 @@ struct BCPeriodic
     // this works only for translated meshes
     assert(bcOrig._constrainedDofMap.size() == bcDest._constrainedDofMap.size());
 
-    std::map<id_T, id_T> invPtMap;
+    std::unordered_map<id_T, id_T> invPtMap;
     id_T counter = 0;
     for (auto const id: feSpace.dof.ptMap)
     {
@@ -113,10 +113,8 @@ int main(int argc, char * argv[])
   bcLeft << [](Vec3 const &) { return 0.; };
   auto bcRight = BCEss{feSpace, side::RIGHT};
   bcRight << [](Vec3 const &) { return 0.; };
-  auto const bcPeriodic =
-      BCPeriodic{feSpace, side::LEFT, side::RIGHT, [](Vec3 const &) {
-                   return Vec3{1.0, 0., 0.};
-                 }};
+  auto const bcPeriodic = BCPeriodic{
+      feSpace, side::LEFT, side::RIGHT, [](Vec3 const &) { return Vec3{1.0, 0., 0.}; }};
   auto const bcs = std::vector<BCEss<FESpaceP1_T>>{/*bcLeft, bcRight*/};
   t.stop();
 

@@ -32,7 +32,6 @@ int main(int argc, char * argv[])
   config["mesh"]["flags"] = Bitmask{MeshFlags::BOUNDARY_FACETS};
   config["nu"] = 0.1;
 
-
   if (argc > 1)
   {
     config.override(argv[1]);

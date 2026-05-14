@@ -261,16 +261,20 @@ std::array<scalarTwodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::phiFun = {
      [](Vec_T const & p) { return funQ1[0](p(0)) * funQ1[1](p(1)); }}};
 
 std::array<twodFun_T, RefQuadQ1::numDOFs> const RefQuadQ1::dphiFun = {
-    {[](Vec_T const & p) {
+    {[](Vec_T const & p)
+     {
        return Vec_T(dfunQ1[0](p(0)) * funQ1[0](p(1)), funQ1[0](p(0)) * dfunQ1[0](p(1)));
      },
-     [](Vec_T const & p) {
+     [](Vec_T const & p)
+     {
        return Vec_T(dfunQ1[1](p(0)) * funQ1[0](p(1)), funQ1[1](p(0)) * dfunQ1[0](p(1)));
      },
-     [](Vec_T const & p) {
+     [](Vec_T const & p)
+     {
        return Vec_T(dfunQ1[1](p(0)) * funQ1[1](p(1)), funQ1[1](p(0)) * dfunQ1[1](p(1)));
      },
-     [](Vec_T const & p) {
+     [](Vec_T const & p)
+     {
        return Vec_T(dfunQ1[0](p(0)) * funQ1[1](p(1)), funQ1[0](p(0)) * dfunQ1[1](p(1)));
      }}};
 
@@ -392,31 +396,40 @@ std::array<scalarTwodFun_T, RefQuadQ2::numDOFs> const RefQuadQ2::phiFun = {
      [](Vec_T const & p) { return funQ2[2](p[0]) * funQ2[2](p[1]); }}};
 
 std::array<twodFun_T, RefQuadQ2::numDOFs> const RefQuadQ2::dphiFun = {{
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[0](p[0]) * funQ2[0](p[1]), funQ2[0](p[0]) * dfunQ2[0](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[1](p[0]) * funQ2[0](p[1]), funQ2[1](p[0]) * dfunQ2[0](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[1](p[0]) * funQ2[1](p[1]), funQ2[1](p[0]) * dfunQ2[1](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[0](p[0]) * funQ2[1](p[1]), funQ2[0](p[0]) * dfunQ2[1](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[2](p[0]) * funQ2[0](p[1]), funQ2[2](p[0]) * dfunQ2[0](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[1](p[0]) * funQ2[2](p[1]), funQ2[1](p[0]) * dfunQ2[2](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[2](p[0]) * funQ2[1](p[1]), funQ2[2](p[0]) * dfunQ2[1](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[0](p[0]) * funQ2[2](p[1]), funQ2[0](p[0]) * dfunQ2[2](p[1]));
     },
-    [](Vec_T const & p) {
+    [](Vec_T const & p)
+    {
       return Vec_T(dfunQ2[2](p[0]) * funQ2[2](p[1]), funQ2[2](p[0]) * dfunQ2[2](p[1]));
     },
 }};

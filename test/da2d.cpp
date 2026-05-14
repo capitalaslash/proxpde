@@ -60,11 +60,10 @@ struct AssemblyMassSUPG: public Diagonal<FESpace>
     for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
       Vec3 const velQPoint = promote<3>(vel->evaluate(q));
-      auto const phiiSUPG =
+      FVec<CurFE_T::numDOFs> const phiiSUPG =
           curFE.phi[q] + enableSUPG * addSUPG(h, eps, velQPoint, curFE.dphi[q]);
 
-      Ke += coef * this->feSpace->curFE.JxW[q] * phiiSUPG *
-            this->feSpace->curFE.phi[q].transpose();
+      Ke += coef * curFE.JxW[q] * phiiSUPG * curFE.phi[q].transpose();
     }
   }
 
@@ -106,8 +105,8 @@ struct AssemblyAdvectionSUPG: public Diagonal<FESpace>
 
     for (uint q = 0u; q < CurFE_T::QR_T::numPts; ++q)
     {
-      auto const velQPoint = promote<3>(vel->evaluate(q));
-      auto const phiiSUPG =
+      Vec3 const velQPoint = promote<3>(vel->evaluate(q));
+      FVec<CurFE_T::numDOFs> const phiiSUPG =
           curFE.phi[q] + enableSUPG * addSUPG(h, eps, velQPoint, curFE.dphi[q]);
 
       Ke += coef * this->feSpace->curFE.JxW[q] * phiiSUPG *

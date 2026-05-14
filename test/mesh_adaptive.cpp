@@ -359,7 +359,6 @@ void test()
       "square_uns.msh",
       MeshFlags::INTERNAL_FACETS | MeshFlags::FACET_PTRS);
 
-
   BoolVec toRefine = BoolVec::Constant(meshCoarse->elementList.size(), false);
   // std::cout << Utils::separator << "mesh coarse\n" << *meshes.back() << std::endl;
   std::ranges::for_each(

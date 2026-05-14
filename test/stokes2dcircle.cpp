@@ -52,10 +52,10 @@ int main(int argc, char * argv[])
       BCEss{feSpaceU, side::CIRCLE, zeroFun},
       BCEss{feSpaceU, side::TOP, zeroFun, {0}},
       BCEss{feSpaceU, side::LEFT, zeroFun, {1}}};
-  DOFCoordSet pinSet{feSpaceP, [](Vec3 const & p) {
-                       return std::fabs(p[0] - 1.0) < 1.e-6 &&
-                              std::fabs(p[1] - 0.0) < 1.e-6;
-                     }};
+  DOFCoordSet pinSet{
+      feSpaceP,
+      [](Vec3 const & p)
+      { return std::fabs(p[0] - 1.0) < 1.e-6 && std::fabs(p[1] - 0.0) < 1.e-6; }};
   auto const bcPin = BCEss{feSpaceP, pinSet.ids, [](Vec3 const &) { return 0.; }};
   auto const bcsP = std::vector{bcPin};
   t.stop();
@@ -76,11 +76,7 @@ int main(int argc, char * argv[])
   builder.buildCoupling(div, bcsP, bcsU);
   builder.buildRhs(
       std::tuple{AssemblyBCNaturalAnalytic{
-          [](Vec3 const &) {
-            return Vec2{1., 0.};
-          },
-          side::LEFT,
-          feSpaceU}},
+          [](Vec3 const &) { return Vec2{1., 0.}; }, side::LEFT, feSpaceU}},
       bcsU);
   builder.closeMatrix();
   t.stop();

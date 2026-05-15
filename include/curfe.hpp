@@ -49,60 +49,57 @@ struct CurFE
 
   void reinit(GeoElem const & e)
   {
+    // TODO: assert the GeoElem argument is of the correct derived class
     // no need to recompute everything if the element is the same
-    // TODO: watch out for GeoElems from different classes
-    if (!elem || elem->id != e.id)
+    if (elem && elem->id == e.id)
     {
-      elem = &e;
-      dofPts = RefFE::dofPts(*elem);
+      // fmt::println(stderr, "warning: no reinit, element coincide");
+      return;
+    }
 
-      auto const mappingPts = RefFE::mappingPts(*elem);
+    elem = &e;
+    dofPts = RefFE::dofPts(*elem);
+    auto const mappingPts = RefFE::mappingPts(*elem);
 
-      for (uint q = 0; q < QR_T::numPts; ++q)
+    for (uint q = 0; q < QR_T::numPts; ++q)
+    {
+      jac[q] = JacMat_T::Zero();
+      for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
       {
-        jac[q] = JacMat_T::Zero();
-        for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
-        {
-          jac[q] += mappingPts[n] * mapping[q].row(n);
-        }
+        jac[q] += mappingPts[n] * mapping[q].row(n);
+      }
 
-        // J^+ = (J^T J)^-1 J^T
-        auto const jTj = jac[q].transpose() * jac[q];
-        auto const jTjI = jTj.inverse();
-        detJ[q] = std::sqrt(jTj.determinant());
-        jacPlus[q] = jTjI * jac[q].transpose();
+      // J^+ = (J^T J)^-1 J^T
+      auto const jTj = jac[q].transpose() * jac[q];
+      auto const jTjI = jTj.inverse();
+      detJ[q] = std::sqrt(jTj.determinant());
+      jacPlus[q] = jTjI * jac[q].transpose();
 
-        JxW[q] = detJ[q] * QR_T::weight[q];
-        // forward mapping on qpoint
-        qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
+      JxW[q] = detJ[q] * QR_T::weight[q];
+      // forward mapping on qpoint
+      qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
 
-        // TODO: phi values on qpoints are unaffected by the change of coords
-        // this update can potentially be done in the constructor
-        phi[q] = phiRef[q];
-        dphi[q] = dphiRef[q] * jacPlus[q];
+      // TODO: phi values on qpoints are unaffected by the change of coords
+      // this update can potentially be done in the constructor
+      phi[q] = phiRef[q];
+      dphi[q] = dphiRef[q] * jacPlus[q];
 
 #ifdef PROXPDE_ENABLE_SECONDDERIV
-        if constexpr (enableSecondDeriv_v<RefFE_T>)
+      if constexpr (enableSecondDeriv_v<RefFE_T>)
+      {
+        d2phi[q] = FMat<numDOFs * 3, 3>::Zero();
+        for (uint d1 = 0; d1 < 3; ++d1)
         {
-          d2phi[q] = FMat<numDOFs * 3, 3>::Zero();
-          for (uint d1 = 0; d1 < 3; ++d1)
+          for (uint d2 = 0; d2 < dim; ++d2)
           {
-            for (uint d2 = 0; d2 < dim; ++d2)
-            {
-              d2phi[q].template block<numDOFs, 3>(d1 * numDOFs, 0) +=
-                  jacPlus[q](d2, d1) *
-                  d2phiRef[q].template block<numDOFs, dim>(d2 * numDOFs, 0) *
-                  jacPlus[q];
-            }
+            d2phi[q].template block<numDOFs, 3>(d1 * numDOFs, 0) +=
+                jacPlus[q](d2, d1) *
+                d2phiRef[q].template block<numDOFs, dim>(d2 * numDOFs, 0) * jacPlus[q];
           }
         }
-#endif
       }
+#endif
     }
-    // else
-    // {
-    //   fmt::println(stderr, "warning: no reinit, element coincide");
-    // }
   }
 
   Vec3 approxMap(FVec<dim> const & pt)
@@ -242,78 +239,75 @@ struct VectorCurFE
 
   void reinit(GeoElem const & e)
   {
+    // TODO: assert the GeoElem argument is of the correct derived class
     // no need to recompute everything if the element is the same
-    // TODO: watch out for GeoElems from different classes
-    if (!elem || elem->id != e.id)
+    if (elem && elem->id == e.id)
     {
-      elem = &e;
+      // fmt::println(stderr, "warning: no reinit, element coincide");
+      return;
+    }
 
-      for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
+    elem = &e;
+    dofPts = RefFE::dofPts(*elem);
+    auto const mappingPts = RefFE::mappingPts(*elem);
+
+    for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
+    {
+      // check if the internal element is the master one for the facet
+      if (elem->facets[f]->facingElem[0].ptr->id == elem->id)
       {
-        // check if the internal element is the master one for the facet
-        if (elem->facets[f]->facingElem[0].ptr->id == elem->id)
-        {
-          facetSign[f] = 1;
-        }
-        else
-        {
-          facetSign[f] = -1;
-        }
+        facetSign[f] = 1;
       }
-
-      dofPts = RefFE::dofPts(*elem);
-
-      auto const mappingPts = RefFE::mappingPts(*elem);
-
-      jac0 = JacMat_T::Zero();
-      for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
+      else
       {
-        jac0 += mappingPts[n] * mapping0.row(n);
-      }
-      // J^+ = (J^T J)^-1 J^T
-      auto const jTj0 = jac0.transpose() * jac0;
-      detJ0 = std::sqrt(jTj0.determinant());
-      double const detJ0Inv = 1. / detJ0;
-
-      for (uint q = 0; q < QR_T::numPts; ++q)
-      {
-        jac[q] = JacMat_T::Zero();
-        for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
-        {
-          jac[q] += mappingPts[n] * mapping[q].row(n);
-        }
-
-        // J^+ = (J^T J)^-1 J^T
-        auto const jTj = jac[q].transpose() * jac[q];
-        detJ[q] = std::sqrt(jTj.determinant());
-        auto const jTjI = jTj.inverse();
-        jacPlus[q] = jTjI * jac[q].transpose();
-
-        JxW[q] = detJ[q] * QR_T::weight[q];
-        JxW0[q] = detJ0 * QR_T::weight[q];
-        // forward mapping on qpoint
-        qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
-
-        // Piola transformation
-        double const detJInv = 1. / detJ[q];
-        phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
-        phiVect0[q] = detJ0Inv * phiVectRef[q] * jac0.transpose();
-        divphi[q] = detJInv * divphiRef[q];
-        divphi0[q] = detJ0Inv * divphiRef[q];
-        // adjust signs based on normal going from lower to higher id
-        for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
-        {
-          phiVect[q].row(f) *= facetSign[f];
-          phiVect0[q].row(f) *= facetSign[f];
-          divphi[q](f) *= facetSign[f];
-          divphi0[q](f) *= facetSign[f];
-        }
+        facetSign[f] = -1;
       }
     }
-    // else
-    // {
-    //   fmt::println(stderr, "warning: no reinit, element coincide");
-    // }
+
+    jac0 = JacMat_T::Zero();
+    for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
+    {
+      jac0 += mappingPts[n] * mapping0.row(n);
+    }
+    // J^+ = (J^T J)^-1 J^T
+    auto const jTj0 = jac0.transpose() * jac0;
+    detJ0 = std::sqrt(jTj0.determinant());
+    double const detJ0Inv = 1. / detJ0;
+
+    for (uint q = 0; q < QR_T::numPts; ++q)
+    {
+      jac[q] = JacMat_T::Zero();
+      for (uint n = 0; n < RefFE::numGeoDOFs; ++n)
+      {
+        jac[q] += mappingPts[n] * mapping[q].row(n);
+      }
+
+      // J^+ = (J^T J)^-1 J^T
+      auto const jTj = jac[q].transpose() * jac[q];
+      detJ[q] = std::sqrt(jTj.determinant());
+      auto const jTjI = jTj.inverse();
+      jacPlus[q] = jTjI * jac[q].transpose();
+
+      JxW[q] = detJ[q] * QR_T::weight[q];
+      JxW0[q] = detJ0 * QR_T::weight[q];
+      // forward mapping on qpoint
+      qpoint[q] = elem->origin() + jac[q] * QR_T::node[q];
+
+      // Piola transformation
+      double const detJInv = 1. / detJ[q];
+      phiVect[q] = detJInv * phiVectRef[q] * jac[q].transpose();
+      phiVect0[q] = detJ0Inv * phiVectRef[q] * jac0.transpose();
+      divphi[q] = detJInv * divphiRef[q];
+      divphi0[q] = detJ0Inv * divphiRef[q];
+      // adjust signs based on normal going from lower to higher id
+      for (uint f = 0; f < RefFE_T::GeoElem_T::numFacets; ++f)
+      {
+        phiVect[q].row(f) *= facetSign[f];
+        phiVect0[q].row(f) *= facetSign[f];
+        divphi[q](f) *= facetSign[f];
+        divphi0[q](f) *= facetSign[f];
+      }
+    }
   }
 
   Vec3 approxMap(FVec<dim> const & pt)

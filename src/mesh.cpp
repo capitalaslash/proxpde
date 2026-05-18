@@ -27,13 +27,14 @@ void buildLine(
   mesh.pointList.reserve(numElems + 1);
   for (uint p = 0; p < numElems + 1; ++p)
   {
-    mesh.pointList.emplace_back(origin + p * h, p);
+    auto const pt = origin + p * h;
+    mesh.pointList.emplace_back(pt, p);
   }
 
   mesh.elementList.reserve(numElems);
   for (uint e = 0; e < numElems; ++e)
   {
-    Line line({&mesh.pointList[e], &mesh.pointList[e + 1]}, e);
+    auto const line = Line{{&mesh.pointList[e], &mesh.pointList[e + 1]}, e};
     mesh.elementList.push_back(std::move(line));
   }
 
@@ -62,8 +63,8 @@ void buildSquare(
   {
     for (uint i = 0; i < numPts[0]; ++i)
     {
-      Vec3 p(i * h(0), j * h(1), 0.0);
-      mesh.pointList.emplace_back(origin + p, i + numPts[0] * j);
+      Vec3 const p = origin + Vec3{i * h(0), j * h(1), 0.0};
+      mesh.pointList.emplace_back(Point{p, i + numPts[0] * j});
     }
   }
 
@@ -108,12 +109,14 @@ void buildSquare(
         flip = true;
       }
       for (uint e = 0; e < 2U; ++e)
-        mesh.elementList.emplace_back(
-            std::vector{
-                {&mesh.pointList[triplets[e][0]],
-                 &mesh.pointList[triplets[e][1]],
-                 &mesh.pointList[triplets[e][2]]}},
-            counter++);
+      {
+        auto const pts = std::vector{{
+            &mesh.pointList[triplets[e][0]],
+            &mesh.pointList[triplets[e][1]],
+            &mesh.pointList[triplets[e][2]],
+        }};
+        mesh.elementList.emplace_back(Triangle{pts, counter++});
+      }
     }
   }
   mesh.buildConnectivity();
@@ -136,13 +139,11 @@ void buildSquare(
 
   mesh.pointList.reserve(numPts[0] * numPts[1]);
   for (uint j = 0; j < numPts[1]; ++j)
-  {
     for (uint i = 0; i < numPts[0]; ++i)
     {
-      Vec3 p(i * h(0), j * h(1), 0.0);
-      mesh.pointList.emplace_back(origin + p, i + numPts[0] * j);
+      Vec3 const pt = origin + Vec3{i * h[0], j * h[1], 0.0};
+      mesh.pointList.emplace_back(pt, i + j * numPts[0]);
     }
-  }
 
   for (uint s = 0; s < numPts[0]; s++)
   {
@@ -161,20 +162,20 @@ void buildSquare(
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      mesh.elementList.emplace_back(
-          std::vector{
-              {&mesh.pointList[base],
-               &mesh.pointList[base + 1],
-               &mesh.pointList[base + numPts[0] + 1],
-               &mesh.pointList[base + numPts[0]]}},
-          counter++);
+      auto const pts = std::vector{{
+          &mesh.pointList[base],
+          &mesh.pointList[base + 1],
+          &mesh.pointList[base + numPts[0] + 1],
+          &mesh.pointList[base + numPts[0]],
+      }};
+      mesh.elementList.emplace_back(Quad{pts, counter++});
     }
   mesh.buildConnectivity();
   buildFacets(mesh, flags);
   markFacetsCube(mesh, origin, length);
 }
 
-void buildCircleMesh(
+void buildQuarterCircle(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     double const & radius,
@@ -272,57 +273,56 @@ void buildCircleMesh(
     for (uint i = 0; i < numElems[0]; ++i)
     {
       id_T const base = i + j * numPts[0];
-      mesh.elementList.emplace_back(
-          std::vector{
-              {&mesh.pointList[base],
-               &mesh.pointList[base + 1],
-               &mesh.pointList[base + numPts[0] + 1],
-               &mesh.pointList[base + numPts[0]]}},
-          counter++);
+      auto const pts = std::vector{{
+          &mesh.pointList[base],
+          &mesh.pointList[base + 1],
+          &mesh.pointList[base + numPts[0] + 1],
+          &mesh.pointList[base + numPts[0]],
+      }};
+      mesh.elementList.emplace_back(Quad{pts, counter++});
     }
 
   uint blockOffset = numPts[0] * numPts[1] + numPts[0] * (numPts[2] - 1);
   for (uint j = 0; j < numElems[1] - 1; ++j)
   {
     id_T const base = numPts[0] - 1 + j * numPts[0];
-    mesh.elementList.emplace_back(
-        std::vector{
-            {&mesh.pointList[base],
-             &mesh.pointList[blockOffset + j * (numPts[2] - 1)],
-             &mesh.pointList[blockOffset + (j + 1) * (numPts[2] - 1)],
-             &mesh.pointList[base + numPts[0]]}},
-        counter++);
+    auto const pts = std::vector{{
+        &mesh.pointList[base],
+        &mesh.pointList[blockOffset + j * (numPts[2] - 1)],
+        &mesh.pointList[blockOffset + (j + 1) * (numPts[2] - 1)],
+        &mesh.pointList[base + numPts[0]],
+    }};
+    mesh.elementList.emplace_back(Quad{pts, counter++});
   }
-  mesh.elementList.emplace_back(
-      std::vector{
-          {&mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0]],
-           &mesh.pointList[blockOffset + (numPts[1] - 2) * (numPts[2] - 1)],
-           &mesh.pointList
-                [numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0] + numPts[0]],
-           &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0]]}},
-      counter++);
+  auto const pts = std::vector{{
+      &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0]],
+      &mesh.pointList[blockOffset + (numPts[1] - 2) * (numPts[2] - 1)],
+      &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + 2 * numPts[0]],
+      &mesh.pointList[numPts[0] - 1 + (numPts[1] - 2) * numPts[0] + numPts[0]],
+  }};
+  mesh.elementList.emplace_back(Quad{pts, counter++});
 
   for (uint i = 1; i < numElems[2]; ++i)
   {
     for (uint j = 0; j < numElems[1] - 1; ++j)
     {
       id_T const base = blockOffset + i - 1 + j * (numPts[2] - 1);
-      mesh.elementList.emplace_back(
-          std::vector{
-              {&mesh.pointList[base],
-               &mesh.pointList[base + 1],
-               &mesh.pointList[base + numPts[2] - 1 + 1],
-               &mesh.pointList[base + numPts[2] - 1]}},
-          counter++);
+      auto const pts = std::vector{{
+          &mesh.pointList[base],
+          &mesh.pointList[base + 1],
+          &mesh.pointList[base + numPts[2] - 1 + 1],
+          &mesh.pointList[base + numPts[2] - 1],
+      }};
+      mesh.elementList.emplace_back(Quad{pts, counter++});
     }
     id_T const base = blockOffset + i - 1 + (numPts[1] - 2) * (numPts[2] - 1);
-    mesh.elementList.emplace_back(
-        std::vector{
-            {&mesh.pointList[base],
-             &mesh.pointList[base + 1],
-             &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * (i + 1)],
-             &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * i]}},
-        counter++);
+    auto const pts = std::vector{{
+        &mesh.pointList[base],
+        &mesh.pointList[base + 1],
+        &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * (i + 1)],
+        &mesh.pointList[numPts[0] * numPts[1] - 1 + numPts[0] * i],
+    }};
+    mesh.elementList.emplace_back(Quad{pts, counter++});
   }
 
   mesh.buildConnectivity();
@@ -356,62 +356,62 @@ void buildCube(
     Mesh<Tetrahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    std::array<uint, 3> const numElems,
+    std::array<uint, 3u> const numElems,
     Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
-  Vec3 const h = {
-      length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  std::array<uint, 3> const numPts = {
-      numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
-  mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
-  for (uint k = 0; k < numPts[2]; ++k)
-  {
-    for (uint j = 0; j < numPts[1]; ++j)
-    {
-      for (uint i = 0; i < numPts[0]; ++i)
-      {
-        Vec3 p(i * h(0), j * h(1), k * h(2));
-        auto const id = i + numPts[0] * j + numPts[0] * numPts[1] * k;
-        mesh.pointList.emplace_back(origin + p, id);
-      }
-    }
-  }
+  auto const h =
+      Vec3{length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
 
-  for (uint si = 0; si < numPts[0]; si++)
-    for (uint sj = 0; sj < numPts[1]; sj++)
+  auto const numPts = std::array{numElems[0] + 1u, numElems[1] + 1u, numElems[2] + 1u};
+  mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
+  for (auto k = 0u; k < numPts[2]; ++k)
+    for (auto j = 0u; j < numPts[1]; ++j)
+      for (auto i = 0u; i < numPts[0]; ++i)
+      {
+        auto const p =
+            Vec3{origin[0] + i * h[0], origin[1] + j * h[1], origin[2] + k * h[2]};
+        auto const id = i + numPts[0] * j + numPts[0] * numPts[1] * k;
+        mesh.pointList.emplace_back(p, id);
+      }
+
+  auto const dx = 1u;
+  auto const dy = numPts[0];
+  auto const dz = numPts[1] * numPts[0];
+
+  // set point markers
+  // set point markers
+  for (auto sj = 0u; sj < numPts[1]; sj++)
+    for (auto si = 0u; si < numPts[0]; si++)
     {
-      auto const sb = si + numPts[0] * sj;
+      auto const sb = si * dx + sj * dy + 0u * dz;
       mesh.pointList[sb].marker = side::BACK;
-      auto const sf = si + numPts[0] * sj + numPts[1] * numPts[0] * (numPts[2] - 1);
+      auto const sf = si * dx + sj * dy + (numPts[2] - 1) * dz;
       mesh.pointList[sf].marker = side::FRONT;
     }
-  for (uint si = 0; si < numPts[0]; si++)
-    for (uint sk = 0; sk < numPts[2]; sk++)
+  for (auto sk = 0u; sk < numPts[2]; sk++)
+    for (auto si = 0u; si < numPts[0]; si++)
     {
-      auto const sb = si + numPts[1] * numPts[0] * sk;
+      auto const sb = si * dx + 0u * dy + sk * dz;
       mesh.pointList[sb].marker = side::BOTTOM;
-      auto const st = si + numPts[0] * (numPts[1] - 1) + numPts[1] * numPts[0] * sk;
+      auto const st = si * dx + (numPts[1] - 1) * dy + sk * dz;
       mesh.pointList[st].marker = side::TOP;
     }
-  for (uint sj = 0; sj < numPts[1]; sj++)
-    for (uint sk = 0; sk < numPts[2]; sk++)
+  for (auto sk = 0u; sk < numPts[2]; sk++)
+    for (auto sj = 0u; sj < numPts[1]; sj++)
     {
-      auto const sl = numPts[0] * sj + numPts[1] * numPts[0] * sk;
+      auto const sl = 0u * dx + sj * dy + sk * dz;
       mesh.pointList[sl].marker = side::LEFT;
-      auto const sr = numPts[0] - 1 + numPts[0] * sj + numPts[1] * numPts[0] * sk;
+      auto const sr = (numPts[0] - 1) * dx + sj * dy + sk * dz;
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  mesh.elementList.reserve(5U * numElems[0] * numElems[1] * numElems[2]);
-  id_T counter = 0;
-  auto const dx = 1;
-  auto const dy = numPts[0];
-  auto const dz = numPts[1] * numPts[0];
-  for (uint k = 0; k < numElems[2]; ++k)
-    for (uint j = 0; j < numElems[1]; ++j)
-      for (uint i = 0; i < numElems[0]; ++i)
+  mesh.elementList.reserve(5u * numElems[0] * numElems[1] * numElems[2]);
+  id_T counter = 0u;
+  for (auto k = 0u; k < numElems[2]; ++k)
+    for (auto j = 0u; j < numElems[1]; ++j)
+      for (auto i = 0u; i < numElems[0]; ++i)
       {
         id_T const base = i + j * numPts[0] + k * numPts[1] * numPts[0];
         Eigen::Matrix<id_T, 5, 4> idTable;
@@ -437,15 +437,15 @@ void buildCube(
               base + dx + dy, base + dx + dz, base + dx + dy + dz, base + dy + dz; // 2, 5, 6, 7
           // clang-format on
         }
-        for (uint r = 0; r < 5; ++r)
+        for (auto r = 0u; r < 5u; ++r)
         {
-          mesh.elementList.emplace_back(
-              std::vector{
-                  {&mesh.pointList[idTable(r, 0)],
-                   &mesh.pointList[idTable(r, 1)],
-                   &mesh.pointList[idTable(r, 2)],
-                   &mesh.pointList[idTable(r, 3)]}},
-              counter++);
+          auto const pts = std::vector{{
+              &mesh.pointList[idTable(r, 0)],
+              &mesh.pointList[idTable(r, 1)],
+              &mesh.pointList[idTable(r, 2)],
+              &mesh.pointList[idTable(r, 3)],
+          }};
+          mesh.elementList.emplace_back(Tetrahedron{pts, counter++});
         }
       }
   mesh.buildConnectivity();
@@ -457,75 +457,78 @@ void buildCube(
     Mesh<Hexahedron> & mesh,
     Vec3 const & origin,
     Vec3 const & length,
-    std::array<uint, 3> const numElems,
+    std::array<uint, 3u> const numElems,
     Bitmask<MeshFlags> flags)
 {
   assert(numElems[0] > 0 && numElems[1] > 0 && numElems[2] > 0);
   assert(length[0] > 0. && length[1] > 0. && length[2] > 0.);
-  Vec3 const h = {
-      length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
-  std::array<uint, 3> const numPts = {
-      numElems[0] + 1, numElems[1] + 1, numElems[2] + 1};
-  mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
-  for (uint k = 0; k < numPts[2]; ++k)
-  {
-    for (uint j = 0; j < numPts[1]; ++j)
-    {
-      for (uint i = 0; i < numPts[0]; ++i)
-      {
-        Vec3 p(i * h(0), j * h(1), k * h(2));
-        auto const id = i + numPts[0] * j + numPts[0] * numPts[1] * k;
-        mesh.pointList.emplace_back(origin + p, id);
-      }
-    }
-  }
+  auto const h =
+      Vec3{length[0] / numElems[0], length[1] / numElems[1], length[2] / numElems[2]};
 
-  for (uint si = 0; si < numPts[0]; si++)
-    for (uint sj = 0; sj < numPts[1]; sj++)
+  auto const numPts = std::array{numElems[0] + 1u, numElems[1] + 1u, numElems[2] + 1u};
+  mesh.pointList.reserve(numPts[0] * numPts[1] * numPts[2]);
+  for (auto k = 0u; k < numPts[2]; ++k)
+    for (auto j = 0u; j < numPts[1]; ++j)
+      for (auto i = 0u; i < numPts[0]; ++i)
+      {
+        auto const p =
+            Vec3{origin[0] + i * h[0], origin[1] + j * h[1], origin[2] + k * h[2]};
+        auto const id = i + numPts[0] * j + numPts[0] * numPts[1] * k;
+        mesh.pointList.emplace_back(p, id);
+      }
+
+  auto const dx = 1u;
+  auto const dy = numPts[0];
+  auto const dz = numPts[1] * numPts[0];
+
+  // set point markers
+  for (auto sj = 0u; sj < numPts[1]; sj++)
+    for (auto si = 0u; si < numPts[0]; si++)
     {
-      auto const sb = si + numPts[0] * sj;
+      auto const sb = si * dx + sj * dy + 0u * dz;
       mesh.pointList[sb].marker = side::BACK;
-      auto const sf = si + numPts[0] * sj + numPts[1] * numPts[0] * (numPts[2] - 1);
+      auto const sf = si * dx + sj * dy + (numPts[2] - 1) * dz;
       mesh.pointList[sf].marker = side::FRONT;
     }
-  for (uint si = 0; si < numPts[0]; si++)
-    for (uint sk = 0; sk < numPts[2]; sk++)
+  for (auto sk = 0u; sk < numPts[2]; sk++)
+    for (auto si = 0u; si < numPts[0]; si++)
     {
-      auto const sb = si + numPts[1] * numPts[0] * sk;
+      auto const sb = si * dx + 0u * dy + sk * dz;
       mesh.pointList[sb].marker = side::BOTTOM;
-      auto const st = si + numPts[0] * (numPts[1] - 1) + numPts[1] * numPts[0] * sk;
+      auto const st = si * dx + (numPts[1] - 1) * dy + sk * dz;
       mesh.pointList[st].marker = side::TOP;
     }
-  for (uint sj = 0; sj < numPts[1]; sj++)
-    for (uint sk = 0; sk < numPts[2]; sk++)
+  for (auto sk = 0u; sk < numPts[2]; sk++)
+    for (auto sj = 0u; sj < numPts[1]; sj++)
     {
-      auto const sl = numPts[0] * sj + numPts[1] * numPts[0] * sk;
+      auto const sl = 0u * dx + sj * dy + sk * dz;
       mesh.pointList[sl].marker = side::LEFT;
-      auto const sr = numPts[0] - 1 + numPts[0] * sj + numPts[1] * numPts[0] * sk;
+      auto const sr = (numPts[0] - 1) * dx + sj * dy + sk * dz;
       mesh.pointList[sr].marker = side::RIGHT;
     }
 
-  mesh.elementList.reserve(numElems[0] * numElems[1] * numElems[2]);
-  id_T counter = 0;
-  auto const dx = 1;
-  auto const dy = numPts[0];
-  auto const dz = numPts[1] * numPts[0];
-  for (uint k = 0; k < numElems[2]; ++k)
-    for (uint j = 0; j < numElems[1]; ++j)
-      for (uint i = 0; i < numElems[0]; ++i)
+  auto const numElemsTot = numElems[0] * numElems[1] * numElems[2];
+  mesh.elementList.reserve(numElemsTot);
+  // mesh.elementList.resize(numElemsTot);
+  id_T counter = 0u;
+  for (auto k = 0u; k < numElems[2]; ++k)
+    for (auto j = 0u; j < numElems[1]; ++j)
+      for (auto i = 0u; i < numElems[0]; ++i)
       {
-        id_T const base = i + j * numPts[0] + k * numPts[1] * numPts[0];
-        mesh.elementList.emplace_back(
-            std::vector{
-                {&mesh.pointList[base],                // 0
-                 &mesh.pointList[base + dx],           // 1
-                 &mesh.pointList[base + dx + dy],      // 2
-                 &mesh.pointList[base + dy],           // 3
-                 &mesh.pointList[base + dz],           // 4
-                 &mesh.pointList[base + dx + dz],      // 5
-                 &mesh.pointList[base + dx + dy + dz], // 6
-                 &mesh.pointList[base + dy + dz]}},    // 7
-            counter++);
+        auto const base = i * dx + j * dy + k * dz;
+        auto const pts = std::vector{{
+            &mesh.pointList[base],                // 0
+            &mesh.pointList[base + dx],           // 1
+            &mesh.pointList[base + dx + dy],      // 2
+            &mesh.pointList[base + dy],           // 3
+            &mesh.pointList[base + dz],           // 4
+            &mesh.pointList[base + dx + dz],      // 5
+            &mesh.pointList[base + dx + dy + dz], // 6
+            &mesh.pointList[base + dy + dz],      // 7
+        }};
+        // AddressSanitizer does not like the construction of an Hexedron directly
+        mesh.elementList.emplace_back(Hexahedron{pts, counter});
+        counter++;
       }
 
   mesh.buildConnectivity();

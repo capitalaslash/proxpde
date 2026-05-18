@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
   double const radius = 1.;
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildCircleMesh(*mesh, origin, radius, {{numElemsX, numElemsY, numElemsR}});
+  buildQuarterCircle(*mesh, origin, radius, {{numElemsX, numElemsY, numElemsR}});
   t.stop();
 
   t.start("feSpace");

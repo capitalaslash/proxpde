@@ -65,7 +65,7 @@ static constexpr MeshFlags to_MeshFlags(std::string_view str)
     return MeshFlags::FACET_PTRS;
   else if (str == "CHECK_FACET_PLANAR")
     return MeshFlags::CHECK_FACET_PLANAR;
-  fmt::print(stderr, "mesh flag not recognized: {}\n", str);
+  fmt::println(stderr, "mesh flag not recognized: {}", str);
   std::abort();
   return MeshFlags::NONE;
 }
@@ -236,7 +236,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
   for (auto const & facet: mesh.facetList)
   {
     FacetMapKey_T facetIds;
-    for (uint p = 0; p < Mesh::Facet_T::numPts; ++p)
+    for (auto p = 0u; p < Mesh::Facet_T::numPts; ++p)
     {
       facetIds.insert(facet.pts[p]->id);
     }
@@ -271,7 +271,7 @@ void buildFacets(Mesh & mesh, Bitmask<MeshFlags> flags = MeshFlags::NONE)
         facet.pts = facetPts;
         facet.id = facetCount;
       }
-      auto && [it, inserted] = facetMap.insert(std::pair(facetIds, facet));
+      auto && [it, inserted] = facetMap.insert(std::pair{facetIds, facet});
       if (inserted)
       {
         // we are the first element to cross this facet
@@ -362,7 +362,7 @@ void buildSquare(
     std::array<uint, 2> const numElems,
     Bitmask<MeshFlags> flags);
 
-void buildCircleMesh(
+void buildQuarterCircle(
     Mesh<Quad> & mesh,
     Vec3 const & origin,
     double const & radius,

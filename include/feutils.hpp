@@ -101,6 +101,15 @@ void interpolateOnFacets(
         std::unordered_set<marker_T>({markerNotSet}), // {markerNotSet} means all facets
     double const coef = 1.0)
 {
+  // works only for P0 FE spaces on mesh facets
+  static_assert(FESpaceOut::dim == 1u, "the out feSpace is not scalar");
+  static_assert(
+      order_v<typename FESpaceOut::RefFE_T> == 0u,
+      "the out feSpace is not piecewise constant");
+  static_assert(
+      Comp != Component::SCALAR || FESpaceIn::dim == 1u,
+      "for SCALAR interpolation, the in feSpace must be scalar");
+
   uint constexpr dim = FESpaceIn::dim;
   using FEFacet_T = typename FESpaceIn::RefFE_T::FEFacet_T;
   using QRFacet_T = SideQR_T<typename FESpaceIn::QR_T>;
@@ -110,7 +119,6 @@ void interpolateOnFacets(
       typename FESpaceIn::RefFE_T,
       SideGaussQR<typename FESpaceIn::Mesh_T::Elem_T, QRFacet_T::numPts>,
       dim>;
-
   out = Vec::Zero(feSpaceOut.dof.size);
   CurFEFacet_T curFEFacet;
 
@@ -129,29 +137,46 @@ void interpolateOnFacets(
       auto const side = facet.facingElem[0].side;
       inFacet.reinit(elem);
 
-      FVec<3> comp;
+      auto const outDof = feSpaceOut.dof.getId(facet.id);
+
       if constexpr (Comp == Component::SCALAR)
       {
-        comp = Vec3{1.0, 0.0, 0.0};
+        // set out dof to in mean value
+        double vol = 0.0;
+        for (auto q = 0u; q < QRFacet_T::numPts; ++q)
+        {
+          double const inQ = coef * inFacet.evaluate(side * QRFacet_T::numPts + q)[0];
+          out[outDof] += curFEFacet.JxW[q] * inQ;
+          vol += curFEFacet.JxW[q];
+        }
+        out[outDof] /= vol;
       }
       if constexpr (Comp == Component::NORMAL)
       {
-        comp = facet.normal();
+        // set out dof to in normal inetgral
+        for (auto q = 0u; q < QRFacet_T::numPts; ++q)
+        {
+          FVec<FESpaceIn::physicalDim()> const inLocal =
+              coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
+          Vec3 const inLocal3 = promote<3>(inLocal);
+          // entering fluxes should be positive
+          out[outDof] += curFEFacet.JxW[q] * (inLocal3.dot(facet.normal()));
+        }
       }
       else if constexpr (Comp == Component::TANGENTIAL)
       {
+        // set out dof to in tangential inetgral
         // TODO: make the tangent a class method and extend to 3d
         static_assert(FESpaceIn::Mesh_T::Elem_T::dim == 2);
-        comp = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
-      }
-
-      for (auto q = 0u; q < QRFacet_T::numPts; ++q)
-      {
-        FVec<FESpaceIn::physicalDim()> const inLocal =
-            coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
-        Vec3 const inLocal3 = promote<3>(inLocal);
-        // entering fluxes should be positive
-        out[facet.id] += curFEFacet.JxW[q] * (inLocal3.dot(comp));
+        Vec3 const tang = (facet.pts[1]->coord - facet.pts[0]->coord).normalized();
+        for (auto q = 0u; q < QRFacet_T::numPts; ++q)
+        {
+          FVec<FESpaceIn::physicalDim()> const inLocal =
+              coef * inFacet.evaluate(side * QRFacet_T::numPts + q);
+          Vec3 const inLocal3 = promote<3>(inLocal);
+          // entering fluxes should be positive
+          out[outDof] += curFEFacet.JxW[q] * (inLocal3.dot(tang));
+        }
       }
     }
   }

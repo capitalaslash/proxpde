@@ -459,12 +459,12 @@ std::array<SideGaussQR<Tetrahedron, 3U>::Vec_T, 3U * 4U> const
 template <>
 SideGaussQR<Hexahedron, 4U>::Weights_T const SideGaussQR<Hexahedron, 4U>::weight =
     (SideGaussQR<Hexahedron, 4U>::Weights_T{} <<
-     0.5L, 0.5L, 0.5L, 0.5L,
-     0.5L, 0.5L, 0.5L, 0.5L,
-     0.5L, 0.5L, 0.5L, 0.5L,
-     0.5L, 0.5L, 0.5L, 0.5L,
-     0.5L, 0.5L, 0.5L, 0.5L,
-     0.5L, 0.5L, 0.5L, 0.5L)
+     1.0L, 1.0L, 1.0L, 1.0L,
+     1.0L, 1.0L, 1.0L, 1.0L,
+     1.0L, 1.0L, 1.0L, 1.0L,
+     1.0L, 1.0L, 1.0L, 1.0L,
+     1.0L, 1.0L, 1.0L, 1.0L,
+     1.0L, 1.0L, 1.0L, 1.0L)
         .finished();
 template <>
 std::array<SideGaussQR<Hexahedron, 4U>::Vec_T, 4U * 6U> const

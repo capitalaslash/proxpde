@@ -17,65 +17,67 @@ int main(int argc, char * argv[])
   using Mesh_T = Mesh<Elem_T>;
   using FESpace_T = FESpace<
       Mesh_T,
-      LagrangeFE<Elem_T, 1>::RefFE_T,
-      LagrangeFE<Elem_T, 1>::RecommendedQR>;
+      LagrangeFE<Elem_T, 1u>::RefFE_T,
+      LagrangeFE<Elem_T, 1u>::RecommendedQR>;
 
-  scalarFun_T const qiii = [](Vec3 const &) { return 10.; };
-  const double k = 1.0;
-  // double const qiiLeft = 1.;
-  double const tLeft = 1.;
-  // double const qiiRight = 0.; // equivalent to no bc
-  double const tRight = 0.;
-  double const dt = 0.1;
-  uint const ntime = 20U;
-  double const toll = 1.e-13;
+  scalarFun_T const qiii = [](Vec3 const &) { return 10.0; };
+  double const k = 1.0;
+  // double const qiiLeft = 1.0;
+  double const tLeft = 1.0;
+  // double const qiiRight = 0.0; // equivalent to no bc
+  double const tRight = 0.0;
+  double const dt = 1e-01;
+  uint const ntime = 20u;
+  double const toll = 1e-12;
 
   scalarFun_T const exactSol = [](Vec3 const & p)
-  { return -5. * p[0] * p[0] + 4. * p[0] + 1; };
+  { return -5.0 * p[0] * p[0] + 4.0 * p[0] + 1.0; };
 
   MilliTimer t;
 
-  uint const numElems = (argc < 2) ? 20U : std::stoi(argv[1]);
+  uint const numElems = (argc < 2) ? 20u : std::stoi(argv[1]);
 
   t.start("mesh");
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
-  buildHyperCube(*mesh, Vec3{0., 0., 0.}, Vec3{1., 0., 0.}, {{numElems, 0, 0}});
+  buildHyperCube(*mesh, Vec3{0.0, 0.0, 0.0}, Vec3{1.0, 0.0, 0.0}, {numElems, 0u, 0u});
   t.stop();
 
   t.start("fespace");
   FESpace_T feSpace{*mesh};
   t.stop();
 
+  Var exact{"tempExact"};
+  interpolateAnalyticFunction(exactSol, feSpace, exact.data);
+
   t.start("bcs");
-  auto bcLeft = BCEss{feSpace, side::LEFT};
-  bcLeft << [tLeft](Vec3 const &) { return tLeft; };
-  auto bcRight = BCEss{feSpace, side::RIGHT};
-  bcRight << [tRight](Vec3 const &) { return tRight; };
-  auto const bcs = std::vector{bcLeft, bcRight};
+  auto const bcs = std::vector{
+      BCEss{feSpace, side::LEFT, [tLeft](Vec3 const &) { return tLeft; }},
+      BCEss{feSpace, side::RIGHT, [tRight](Vec3 const &) { return tRight; }},
+  };
   t.stop();
 
   t.start("assembly def");
   Var temp{"temp"};
   // tempOld can be removed using temp in its place
   Vec tempOld = Vec::Zero(feSpace.dof.size);
-  AssemblyMass mass{1. / dt, feSpace};
+  AssemblyMass mass{1.0 / dt, feSpace};
   AssemblyStiffness diffusion{k, feSpace};
   // the lhs terms are the same for full and incremental versions
   auto const lhs = std::tuple{mass, diffusion};
   AssemblyRhsAnalytic heatGeneration{qiii, feSpace};
-  AssemblyProjection massOld{1. / dt, tempOld, feSpace};
+  AssemblyProjection massOld{1.0 / dt, tempOld, feSpace};
   auto const rhs = std::tuple{massOld, heatGeneration};
 
   Var tempInc{"tempInc"};
   Var dTemp{"dTemp"};
   // tempOldInc can be removed using temp in its place
   Vec tempOldInc = Vec::Zero(feSpace.dof.size);
-  AssemblyProjection massOldInc{1. / dt, tempOldInc, feSpace};
+  AssemblyProjection massOldInc{1.0 / dt, tempOldInc, feSpace};
   auto const rhsInc = std::tuple{massOldInc, heatGeneration};
   t.stop();
 
   t.start("ic");
-  auto const ic = [](Vec3 const &) { return 1.; };
+  auto const ic = [](Vec3 const &) { return 1.0; };
   interpolateAnalyticFunction(ic, feSpace, temp.data);
   // the ic must be compatible with the original bcs for the incremental solution!
   interpolateAnalyticFunction(ic, feSpace, tempInc.data);
@@ -90,12 +92,12 @@ int main(int argc, char * argv[])
   LUSolver solverInc;
 
   t.start("print");
-  double time = 0.;
+  double time = 0.0;
   IOManager io{feSpace, "output_heat1d/temp"};
-  io.print({temp, tempInc, dTemp}, time);
+  io.print({temp, tempInc, dTemp, exact}, time);
   t.stop();
 
-  for (uint itime = 0; itime < ntime; ++itime)
+  for (auto itime = 0u; itime < ntime; ++itime)
   {
     time += dt;
     fmt::println("{}solving timestep {}, time = {}", Utils::separator, itime + 1, time);
@@ -147,20 +149,18 @@ int main(int argc, char * argv[])
       fmt::println(stderr, "the norm of the difference is too big, aborting");
       return 2;
     }
-    io.print({temp, tempInc, dTemp}, time);
+    io.print({temp, tempInc, dTemp, exact}, time);
     t.stop();
   }
 
   // fmt::println("temp:\n{}", temp.data);
 
-  Vec exact;
-  interpolateAnalyticFunction(exactSol, feSpace, exact);
-  Vec error;
-  error = temp.data - exact;
+  Var error{"tempError"};
+  error.data = temp.data - exact.data;
 
   t.print();
 
-  double const norm = error.norm();
-  fmt::println("the norm of the error is {:.16e}", norm);
-  return checkError({norm}, {2.196219431925e-06});
+  auto const errorNorm = error.data.norm();
+  fmt::println("the norm of the error is {:.16e}", errorNorm);
+  return checkError({errorNorm}, {2.196219431925e-06});
 }

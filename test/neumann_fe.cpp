@@ -37,12 +37,12 @@ int test(YAML::Node const & config)
 
   auto const rhsFun = [](Vec3 const & p) -> double
   {
-    return M_PI * M_PI * std::sin(M_PI * p(0));
+    return M_PI * M_PI * std::sin(M_PI * p[0]);
     // return 6. * p(0);
   };
   auto const exactSol = [](Vec3 const & p) -> double
   {
-    return std::sin(M_PI * p(0));
+    return std::sin(M_PI * p[0]);
     // return 4. * p(0) - cepow(p(0), 3);
   };
   auto const exactGrad = [](Vec3 const & p) -> FVec<Elem_T::dim>
@@ -57,15 +57,15 @@ int test(YAML::Node const & config)
   auto mesh = std::unique_ptr<Mesh_T>{new Mesh_T};
   auto const origin = Vec3{0.0, 0.0, 0.0};
   auto length = Vec3{1.0, 0.0, 0.0};
-  auto numElems = std::array<uint, 3>{n, 0, 0};
+  auto numElems = std::array{n, 0u, 0u};
   if constexpr (Elem_T::dim > 1)
   {
-    length[1] = 1.;
+    length[1] = 1.0;
     numElems[1] = n;
   }
   if constexpr (Elem_T::dim > 2)
   {
-    length[2] = 1.;
+    length[2] = 1.0;
     numElems[2] = n;
   }
   buildHyperCube(*mesh, origin, length, numElems);
@@ -164,7 +164,7 @@ int test(YAML::Node const & config)
     }
   }
 
-  double norm = error.data.norm();
+  double const norm = error.data.norm();
   fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
@@ -175,7 +175,7 @@ int main()
 
   MilliTimer t;
 
-  t.start("Line - 1 - 10");
+  t.start("Line - order 1 - 10 elems");
   {
     YAML::Node config;
     config["n"] = 10u;
@@ -186,7 +186,7 @@ int main()
   }
   t.stop();
 
-  t.start("Line - 1 - 20");
+  t.start("Line - order 1 - 20 elems");
   {
     YAML::Node config;
     config["n"] = 20u;
@@ -197,7 +197,7 @@ int main()
   }
   t.stop();
 
-  t.start("Line - 2 - 10");
+  t.start("Line - order 2 - 10 elems");
   {
     YAML::Node config;
     config["n"] = 10u;
@@ -208,7 +208,7 @@ int main()
   }
   t.stop();
 
-  t.start("Line - 2 - 20");
+  t.start("Line - order 2 - 20 elems");
   {
     YAML::Node config;
     config["n"] = 20u;
@@ -219,7 +219,7 @@ int main()
   }
   t.stop();
 
-  t.start("Quad - 1 - 10");
+  t.start("Quad - order 1 - 10 elems");
   {
     YAML::Node config;
     config["n"] = 10u;
@@ -230,7 +230,7 @@ int main()
   }
   t.stop();
 
-  t.start("Quad - 1 - 20");
+  t.start("Quad - order 1 - 20 elems");
   {
     YAML::Node config;
     config["n"] = 20u;
@@ -241,7 +241,7 @@ int main()
   }
   t.stop();
 
-  t.start("Quad - 2 - 10");
+  t.start("Quad - order 2 - 10 elems");
   {
     YAML::Node config;
     config["n"] = 10u;
@@ -252,7 +252,7 @@ int main()
   }
   t.stop();
 
-  t.start("Quad - 2 - 20");
+  t.start("Quad - order 2 - 20 elems");
   {
     YAML::Node config;
     config["n"] = 20u;
@@ -263,7 +263,7 @@ int main()
   }
   t.stop();
 
-  t.start("Hex  - 1 -  4");
+  t.start("Hex  - order 1 -  4 elems");
   {
     YAML::Node config;
     config["n"] = 4u;
@@ -274,7 +274,7 @@ int main()
   }
   t.stop();
 
-  t.start("Hex  - 1 -  8");
+  t.start("Hex  - order 1 -  8 elems");
   {
     YAML::Node config;
     config["n"] = 8u;
@@ -286,7 +286,7 @@ int main()
   t.stop();
 
   // // TODO: missing SideGaussQRs
-  // t.start("Hex  - 2 -  2");
+  // t.start("Hex  - order 2 -  2 elems");
   // {
   //   YAML::Node config;
   //   config["n"] = 2u;
@@ -297,7 +297,7 @@ int main()
   // }
   // t.stop();
 
-  // t.start("Hex  - 2 -  4");
+  // t.start("Hex  - order 2 -  4 elems");
   // {
   //   YAML::Node config;
   //   config["n"] = 4u;

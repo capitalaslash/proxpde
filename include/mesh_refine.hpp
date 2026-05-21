@@ -68,153 +68,152 @@ void uniformRefine(Mesh & meshCoarse, Mesh & meshFine)
 {
   using Elem_T = typename Mesh::Elem_T;
   using Facet_T = typename Elem_T::Facet_T;
+  constexpr auto np = Elem_T::numPts;
+  constexpr auto nf = Elem_T::numFacets;
+  constexpr auto nc = Elem_T::numChildren;
+  constexpr auto ncf = Facet_T::numChildren;
 
-  auto const numRidges = meshCoarse.countRidges();
+  auto const numElemsCoarse = meshCoarse.elementList.size();
+  auto const numFacetsCoarse = meshCoarse.facetList.size();
+  auto const numRidgesCoarse = meshCoarse.countRidges();
+  auto const numPtsCoarse = meshCoarse.pointList.size();
 
-  // the number of facets is equal to the size of the list when the internal are stored
-  // or to the sum of all the facets counted 2 times and then divided by 2
-  auto const numFacets = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS)
-                             ? meshCoarse.facetList.size()
-                             : (Elem_T::numFacets * meshCoarse.elementList.size() +
-                                meshCoarse.facetList.size()) /
-                                   2;
+  // the number of facets is equal to the size of the coarse mesh facet list when the
+  // internal facets are stored or to the sum of all the facets counted 2 times and then
+  // divided by 2
+  auto const numFacetsTotalCoarse = (meshCoarse.flags & MeshFlags::INTERNAL_FACETS)
+                                        ? numFacetsCoarse
+                                        : (nf * numElemsCoarse + numFacetsCoarse) / 2;
 
-  auto const predPts = RefineHelper<Elem_T>::totalPts(
-      static_cast<uint>(meshCoarse.pointList.size()),
-      numRidges,
-      static_cast<uint>(numFacets),
-      static_cast<uint>(meshCoarse.elementList.size()));
-  meshFine.pointList.reserve(predPts);
+  auto const numPtsFine = RefineHelper<Elem_T>::totalPts(
+      numPtsCoarse, numRidgesCoarse, numFacetsTotalCoarse, numElemsCoarse);
+  meshFine.pointList.reserve(numPtsFine);
 
-  meshFine.elementList.reserve(Elem_T::numChildren * meshCoarse.elementList.size());
+  meshFine.elementList.reserve(nc * numElemsCoarse);
   // if (newMesh.flags::INTERNAL_FACETS)
-  meshFine.facetList.resize(Facet_T::numChildren * meshCoarse.facetList.size());
-  meshFine.elemToFacet.resize(
-      Elem_T::numChildren * meshCoarse.elementList.size(),
-      fillArray<Elem_T::numFacets>(dofIdNotSet));
+  meshFine.facetList.resize(ncf * numFacetsCoarse);
+  meshFine.elemToFacet.resize(nc * numElemsCoarse, fillArray<nf>(dofIdNotSet));
 
   auto newPtsMap = std::map<std::set<id_T>, id_T>{};
-  uint ptCounter = 0;
-  auto localPts = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
+  auto ptsLocal = std::array<id_T, RefineHelper<Elem_T>::numPts>{};
+  auto ptCounter = 0u;
 
-  for (auto & elem: meshCoarse.elementList)
+  for (auto & elemCoarse: meshCoarse.elementList)
   {
-    for (uint c = 0; c < Elem_T::numChildren; ++c)
+    for (uint c = 0; c < nc; ++c)
     {
-      for (uint pFine = 0; pFine < Elem_T::numPts; ++pFine)
+      for (uint pFine = 0; pFine < np; ++pFine)
       {
         auto parentIds = std::set<id_T>{};
         Vec3 newPtCoords = Vec3::Zero();
-        for (uint pCoarse = 0; pCoarse < Elem_T::numPts; ++pCoarse)
+        for (uint pCoarse = 0; pCoarse < np; ++pCoarse)
         {
           auto const weight = Elem_T::embeddingMatrix[c](pFine, pCoarse);
-          newPtCoords += weight * elem.pts[pCoarse]->coord;
+          newPtCoords += weight * elemCoarse.pts[pCoarse]->coord;
           // TODO: this is a bit shady, it can be improved using a bool indicator in the
           // RefFE that tells if the value is meaningful
           if (std::fabs(weight) > 1.e-12)
           {
-            parentIds.insert(elem.pts[pCoarse]->id);
+            parentIds.insert(elemCoarse.pts[pCoarse]->id);
           }
         }
         if (newPtsMap.contains(parentIds))
         {
           // the new point has already been added, reuse its id
-          localPts[Elem_T::elemToChild[c][pFine]] = newPtsMap[parentIds];
+          ptsLocal[Elem_T::elemToChild[c][pFine]] = newPtsMap[parentIds];
         }
         else
         {
           // the point is new
           meshFine.pointList.emplace_back(Point{newPtCoords, ptCounter});
           newPtsMap.insert(std::pair{parentIds, ptCounter});
-          localPts[Elem_T::elemToChild[c][pFine]] = ptCounter++;
+          ptsLocal[Elem_T::elemToChild[c][pFine]] = ptCounter++;
         }
       }
     }
 
     // add new elements
-    elem.children.reserve(Elem_T::numChildren);
-    for (uint c = 0; c < Elem_T::numChildren; ++c)
+    elemCoarse.children.reserve(nc);
+    for (uint c = 0; c < nc; ++c)
     {
-      std::vector<Point *> conn(Elem_T::numPts);
-      for (uint p = 0; p < Elem_T::numPts; ++p)
+      std::vector<Point *> connFine(np);
+      for (uint p = 0; p < np; ++p)
       {
-        conn[p] = &meshFine.pointList[localPts[Elem_T::elemToChild[c][p]]];
+        connFine[p] = &meshFine.pointList[ptsLocal[Elem_T::elemToChild[c][p]]];
       }
       meshFine.elementList.emplace_back(
-          conn, Elem_T::numChildren * elem.id + c, elem.marker);
-      meshFine.elementList.back().parent = ChildElem{&elem, c};
-      elem.children.push_back(ChildElem{&meshFine.elementList.back(), c});
+          connFine, nc * elemCoarse.id + c, elemCoarse.marker);
+      meshFine.elementList.back().parent = ChildElem{&elemCoarse, c};
+      elemCoarse.children.push_back(ChildElem{&meshFine.elementList.back(), c});
     }
 
     // add new facets
     // TODO: this works only for boundary facets, internal facets require
     // additional care since they are crossed twice
-    for (uint f = 0; f < Elem_T::numFacets; ++f)
+    for (uint f = 0; f < nf; ++f)
     {
-      auto const facetId = meshCoarse.elemToFacet[elem.id][f];
+      auto const facetCoarseId = meshCoarse.elemToFacet[elemCoarse.id][f];
 
-      // refine only facets coming from the coarse mesh
-      if (facetId != idNotSet)
+      if (facetCoarseId != idNotSet)
       {
-        auto & facet = meshCoarse.facetList[facetId];
-        facet.children.reserve(Facet_T::numChildren);
-        // create facet only when we are the first facing element
-        if (facet.facingElem[0].ptr->id == elem.id)
+        auto & facetCoarse = meshCoarse.facetList[facetCoarseId];
+        facetCoarse.children.reserve(ncf);
+        // create fine facets only when we are the first facing element
+        if (facetCoarse.facingElem[0].ptr->id == elemCoarse.id)
         {
-          for (uint fc = 0; fc < Facet_T::numChildren; ++fc)
+          for (uint fc = 0; fc < ncf; ++fc)
           {
             std::vector<Point *> conn(Facet_T::numPts);
             for (uint p = 0; p < Facet_T::numPts; ++p)
             {
               conn[p] =
-                  &meshFine.pointList[localPts[Elem_T::elemToFacetChild[f][fc][p]]];
+                  &meshFine.pointList[ptsLocal[Elem_T::elemToFacetChild[f][fc][p]]];
             }
-            auto const newFacetId = Facet_T::numChildren * facetId + fc;
-            meshFine.facetList[newFacetId] = Facet_T{conn, newFacetId, facet.marker};
+            auto const facetFineId = ncf * facetCoarseId + fc;
+            meshFine.facetList[facetFineId] =
+                Facet_T{conn, facetFineId, facetCoarse.marker};
 
-            meshFine.facetList[newFacetId].parent = ChildElem{&facet, fc};
-            facet.children.push_back(ChildElem{&meshFine.facetList[newFacetId], fc});
+            meshFine.facetList[facetFineId].parent = ChildElem{&facetCoarse, fc};
+            facetCoarse.children.push_back(
+                ChildElem{&meshFine.facetList[facetFineId], fc});
 
             // keep the same convention for new facet and new element
-            meshFine.facetList[newFacetId].facingElem[0] = FacingElem{
-                &meshFine.elementList
-                     [Elem_T::numChildren * elem.id +
-                      Elem_T::elemToFacetChildFacing[f][fc][0]],
-                Elem_T::elemToFacetChildFacing[f][fc][1]};
-
-            // TODO: the elem child id works only in 2D!!!
-            meshFine.elemToFacet
-                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numFacets]
-                [(f + fc) % Elem_T::numFacets] = newFacetId;
+            auto const elemCoarseInId =
+                nc * elemCoarse.id + Elem_T::elemToFacetChildFacing[f][fc][0];
+            auto const elemCoarseInSide = Elem_T::elemToFacetChildFacing[f][fc][1];
+            meshFine.facetList[facetFineId].facingElem[0] =
+                FacingElem{&meshFine.elementList[elemCoarseInId], elemCoarseInSide};
+            meshFine.elemToFacet[elemCoarseInId][elemCoarseInSide] = facetFineId;
           }
         }
         else
         {
-          for (uint fc = 0; fc < Facet_T::numChildren; ++fc)
+          for (uint fc = 0; fc < ncf; ++fc)
           {
             // loop backwards on facets since an internal facet is crossed alternatively
             // from the two sides
             // TODO: this is true in 2D, but 3D should be checked!!
-            auto const newFacetId =
-                Facet_T::numChildren * facetId + (Facet_T::numChildren - 1 - fc);
-            meshFine.facetList[newFacetId].facingElem[1] = FacingElem{
-                &meshFine.elementList
-                     [Elem_T::numChildren * elem.id +
-                      Elem_T::elemToFacetChildFacing[f][fc][0]],
-                Elem_T::elemToFacetChildFacing[f][fc][1]};
-
-            meshFine.elemToFacet
-                [Elem_T::numChildren * elem.id + (f + fc) % Elem_T::numFacets]
-                [(f + fc) % Elem_T::numFacets] = newFacetId;
+            auto const facetFineId = ncf * facetCoarseId + (ncf - 1 - fc);
+            auto const elemCoarseInId =
+                nc * elemCoarse.id + Elem_T::elemToFacetChildFacing[f][fc][0];
+            auto const elemCoarseInSide = Elem_T::elemToFacetChildFacing[f][fc][1];
+            meshFine.facetList[facetFineId].facingElem[1] =
+                FacingElem{&meshFine.elementList[elemCoarseInId], elemCoarseInSide};
+            meshFine.elemToFacet[elemCoarseInId][elemCoarseInSide] = facetFineId;
           }
         }
       }
     }
   }
 
-  // the prediction must be correct otherwise the pointList vector is resized
-  // and all pointers are invalidated
-  assert(predPts == meshFine.pointList.size());
+  if (numPtsFine != meshFine.pointList.size())
+  {
+    fmt::println(
+        stderr,
+        "the number of refined points does not correspond to the predicted value, "
+        "aborting");
+    std::abort();
+  }
 
   meshFine.buildConnectivity();
 

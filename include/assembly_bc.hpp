@@ -278,11 +278,11 @@ struct AssemblyBCNormalFE: public AssemblyVector<FESpace>
       auto const facetId = mesh.elemToFacet[elem.id][f];
       if (facetId != dofIdNotSet && mesh.facetList[facetId].marker == marker)
       {
-        data->reinit(elem);
         auto const & facet = mesh.facetList[facetId];
         auto const normal = facet.normal();
         auto const [ePtr, side] = facet.facingElem[0];
         assert(ePtr->id == elem.id);
+        data->reinit(elem);
         facetCurFE.reinit(facet);
         for (auto q = 0u; q < QR_T::numPts; ++q)
         {

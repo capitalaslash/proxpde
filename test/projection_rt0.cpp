@@ -24,24 +24,23 @@ int test(
 {
   using Elem_T = Elem;
   using Mesh_T = Mesh<Elem_T>;
-  using QR = typename LagrangeFE<Elem_T, 1>::RecommendedQR;
+  using QR = typename LagrangeFE<Elem_T, 1u>::RecommendedQR;
   using FESpaceP0_T =
-      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR, Elem_T::dim>;
+      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0u>::RefFE_T, QR, Elem_T::dim>;
   using FESpaceP0Scalar_T =
-      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0>::RefFE_T, QR>;
+      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 0u>::RefFE_T, QR>;
   using FESpaceP1_T =
-      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 1>::RefFE_T, QR, Elem_T::dim>;
+      FESpace<Mesh_T, typename LagrangeFE<Elem_T, 1u>::RefFE_T, QR, Elem_T::dim>;
   using FESpaceRT0_T =
-      FESpace<Mesh_T, typename RaviartThomasFE<Elem_T, 0>::RefFE_T, QR>;
+      FESpace<Mesh_T, typename RaviartThomasFE<Elem_T, 0u>::RefFE_T, QR>;
 
   // flux feSpace
   using Facet_T = typename Elem_T::Facet_T;
   using MeshFacet_T = Mesh<Facet_T>;
   using FESpaceFacet_T = FESpace<
       MeshFacet_T,
-      typename LagrangeFE<Facet_T, 1>::RefFE_T,
-      typename LagrangeFE<Facet_T, 1>::RecommendedQR,
-      2>;
+      typename LagrangeFE<Facet_T, 0u>::RefFE_T,
+      typename LagrangeFE<Facet_T, 0u>::RecommendedQR>;
 
   std::cout << Utils::separator << "test " << test_id << std::endl;
   test_id++;

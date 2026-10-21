@@ -1,21 +1,33 @@
-#include "def.hpp"
+#include <cmath>         // for sqrt
+#include <cstdlib>       // for uint
+#include <filesystem>    // for path, operator/
+#include <memory>        // for unique_ptr, construct_at
+#include <optional>      // for optional
+#include <string>        // for basic_string
+#include <tuple>         // for tuple, get
+#include <type_traits>   // for is_base_of_v
+#include <unordered_set> // for unordered_set
+#include <vector>        // for vector
 
-#include <filesystem>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
 
-#include <yaml-cpp/yaml.h>
-
-#include "assembler.hpp"
-#include "assembly_bc.hpp"
-#include "assembly_lhs.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "ns.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <proxpde/assembler.hpp>         // for make_assembler
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, AssemblyGrad
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyTensorStiffness
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict, Vec2
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for FESpace, interpolateAnalyti...
+#include <proxpde/geo.hpp>               // for Triangle
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for Mesh, side, MeshType, readMesh
+#include <proxpde/ns.hpp>                // for computeElemWSS
+#include <proxpde/reffe.hpp>             // for RefTriangleP1, RefTriangleP2
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/timer.hpp>             // for MilliTimer
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {

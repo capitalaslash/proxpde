@@ -1,15 +1,29 @@
-#include "def.hpp"
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <string>      // for stoi, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembler.hpp"
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, Ass...
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyTensorSt...
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, checkError
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for getComponent
+#include <proxpde/geo.hpp>               // for Tetrahedron
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for side, Mesh, buil...
+#include <proxpde/reffe.hpp>             // for RefTetrahedronP2
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/timer.hpp>             // for MilliTimer
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {

@@ -1,4 +1,4 @@
-#include "def.hpp"
+#include "proxpde/def.hpp"
 
 namespace proxpde
 {

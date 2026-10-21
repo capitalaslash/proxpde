@@ -1,16 +1,29 @@
-#include "def.hpp"
+#include <cmath>  // for sqrt
+#include <memory> // for unique_ptr, construct_at
+#include <tuple>  // for tuple, get
+#include <vector> // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "solver.hpp"
-#include "timer.hpp"
-
+#include <Eigen/Core>                         // for DenseBase::row, DenseB...
+#include <Eigen/Householder>                  // for MatrixBase::applyHouse...
+#include <Eigen/IterativeLinearSolvers>       // for IterativeSolverBase<>:...
+#include <Eigen/Jacobi>                       // for MatrixBase::applyOnThe...
+#include <Eigen/LU>                           // for MatrixBase::determinant
+#include <Eigen/SparseCore>                   // for traits<>::Flags, trait...
+#include <fmt/base.h>                         // for println
+#include <unsupported/Eigen/IterativeSolvers> // for GMRES
 #include <unsupported/Eigen/src/IterativeSolvers/Scaling.h>
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, AssemblyGrad
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyAdvection, Ass...
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/feutils.hpp>           // for LagrangeFE
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/reffe.hpp>             // for RefQuadQ2, RefQuadQ1
+#include <proxpde/solver.hpp>            // for SolverBase
+#include <proxpde/sparse_matrix.hpp>     // for IterSolver
+#include <proxpde/timer.hpp>             // for MilliTimer
 
 int main(int argc, char * argv[])
 {
@@ -210,7 +223,6 @@ int main(int argc, char * argv[])
   t.print(/*filelog*/);
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(15) << norm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {6.579883739106e-04});
 }

@@ -1,12 +1,29 @@
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "def.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <cmath>       // for sin, sqrt, M_PI
+#include <filesystem>  // for path
+#include <memory>      // for construct_at, destroy_at, uniqu...
+#include <optional>    // for optional
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
+
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, checkError, scalarFun_T, Vec
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/feutils.hpp>       // for projectAnalyticFunction
+#include <proxpde/geo.hpp>           // for Triangle
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/l2projection.hpp>  // for l2Projection
+#include <proxpde/mesh.hpp>          // for side, Mesh, readGMSH
+#include <proxpde/reffe.hpp>         // for RefTriangleCR1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/var.hpp>           // for Var
 
 int main(/*int argc, char * argv[]*/)
 {
@@ -77,7 +94,6 @@ int main(/*int argc, char * argv[]*/)
   io.print({solPP, exactPP});
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {0.05950336122297865});
 }

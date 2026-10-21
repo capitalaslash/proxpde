@@ -1,18 +1,35 @@
-#include "def.hpp"
+#include <bitset>      // for bitset
+#include <cmath>       // for exp, sqrt
+#include <cstdint>     // for uint8_t
+#include <cstdio>      // for fopen
+#include <cstdlib>     // for uint, abort
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <string_view> // for basic_string_view, string_view
+#include <tuple>       // for tuple, tuple_cat, get
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector, stderr
 
-// stl
-#include <bitset>
+#include <fmt/base.h>      // for println, print
+#include <fmt/ranges.h>    // for vector formatter
+#include <yaml-cpp/yaml.h> // for Node, convert
 
-// local
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
-
-#include <fmt/ranges.h>
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection, AssemblyRhs...
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec, Vec3, checkError
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for interpolateAnalyticFunction
+#include <proxpde/geo.hpp>           // for Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefQuadP0
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 using namespace proxpde;
 

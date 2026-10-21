@@ -1,17 +1,31 @@
-#include "def.hpp"
+#include <bitset>      // for bitset
+#include <cmath>       // for sin, M_PI, sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for char_traits, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
 
-// local
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, checkError, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Hexahedron
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefHexahedronQ2
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 using namespace proxpde;
 
@@ -99,8 +113,7 @@ int test(YAML::Node const & config)
   t.print();
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 

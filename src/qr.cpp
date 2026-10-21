@@ -1,4 +1,9 @@
-#include "qr.hpp"
+#include "proxpde/qr.hpp"
+
+#include <cmath> // for sqrt
+
+#include "proxpde/def.hpp" // for cepow, FVec
+#include "proxpde/geo.hpp" // for Hexahedron, Quad, Triangle, Tetrahedron
 
 namespace proxpde
 {

@@ -1,10 +1,23 @@
-#include "def.hpp"
+#include <algorithm> // for count_if
+#include <cassert>   // for assert
+#include <cmath>     // for fabs
+#include <cstddef>   // for size_t
+#include <iostream>  // for basic_ostream, operator<<, cout
+#include <memory>    // for unique_ptr
+#include <string>    // for char_traits, operator+, operator<<
+#include <vector>    // for vector
 
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
+#include <Eigen/Core> // for DenseBase::row, DenseBase<>::IsVe...
+#include <fmt/base.h> // for println
+
+#include <proxpde/def.hpp>         // for operator==, Utils
+#include <proxpde/fe.hpp>          // for LagrangeFE
+#include <proxpde/fespace.hpp>     // for FESpace
+#include <proxpde/geo.hpp>         // for Hexahedron, Quad, Tetrahedron
+#include <proxpde/iomanager.hpp>   // for IOManager
+#include <proxpde/mesh.hpp>        // for operator<<, buildHyperCube, Mesh
+#include <proxpde/mesh_refine.hpp> // for uniformRefine
+#include <proxpde/var.hpp>         // for FEVar
 
 using namespace proxpde;
 
@@ -70,7 +83,7 @@ void test()
   // facets on the fine mesh
   // bd + 2 * (total - bd) = 2 * total - bd
   assert(checked == Facet_T::numChildren * (2 * meshCoarse->facetList.size() - bdSize));
-  std::cout << "facet checks performed: " << checked << std::endl;
+  fmt::println("facet checks performed: {}", checked);
 
   FESpace_T feSpace{*meshFine};
   FEVar id{"id", feSpace};

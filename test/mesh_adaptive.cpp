@@ -1,13 +1,26 @@
-#include "def.hpp"
+#include <algorithm> // for for_each
+#include <array>     // for array
+#include <cassert>   // for assert
+#include <cmath>     // for fabs
+#include <cstdlib>   // for uint, abort
+#include <map>       // for map
+#include <memory>    // for unique_ptr
+#include <numeric>   // for accumulate
+#include <ranges>    // for views, _Filter, _Partial, _Iota
+#include <set>       // for set
+#include <utility>   // for pair
+#include <vector>    // for vector
 
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
+#include <Eigen/Core> // for CwiseBinaryOp, DenseBase<>::IsVec...
 
-#include <algorithm>
-#include <ranges>
+#include <proxpde/def.hpp>         // for id_T, Vec3, operator|, Bitmask
+#include <proxpde/fe.hpp>          // for LagrangeFE
+#include <proxpde/fespace.hpp>     // for FESpace
+#include <proxpde/geo.hpp>         // for Triangle, ChildElem, Point, GeoElem
+#include <proxpde/iomanager.hpp>   // for IOManager
+#include <proxpde/mesh.hpp>        // for Mesh, MeshFlags, operator<, addEl...
+#include <proxpde/mesh_refine.hpp> // for RefineHelper
+#include <proxpde/var.hpp>         // for FEVar
 
 using namespace proxpde;
 

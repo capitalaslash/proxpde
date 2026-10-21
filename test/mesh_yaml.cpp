@@ -1,8 +1,14 @@
-#include "def.hpp"
+#include <memory> // for unique_ptr
+#include <string> // for basic_string
+#include <vector> // for stderr
 
-#include "geo.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, Load, LoadFile
+
+#include <proxpde/def.hpp>   // for ParameterDict, Bitmask, Enumerator, ope...
+#include <proxpde/geo.hpp>   // for Quad
+#include <proxpde/mesh.hpp>  // for Mesh, MeshFlags, buildHyperCube
+#include <proxpde/timer.hpp> // for MilliTimer
 
 int main(int argc, char * argv[])
 {

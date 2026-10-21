@@ -1,12 +1,12 @@
-#include "def.hpp"
-
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/assembly_lhs.hpp>
+#include <proxpde/assembly_rhs.hpp>
+#include <proxpde/bc.hpp>
+#include <proxpde/builder.hpp>
+#include <proxpde/def.hpp>
+#include <proxpde/fe.hpp>
+#include <proxpde/fespace.hpp>
+#include <proxpde/iomanager.hpp>
+#include <proxpde/mesh.hpp>
 
 enum class SolverType : uint8_t
 {

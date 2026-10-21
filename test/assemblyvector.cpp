@@ -1,11 +1,25 @@
-#include "def.hpp"
+#include <cmath>       // for sqrt, fabs
+#include <cstdlib>     // for uint
+#include <map>         // for map
+#include <memory>      // for unique_ptr
+#include <string>      // for stoul, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for pair
+#include <vector>      // for vector, stderr
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "mesh.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, AssemblyGrad
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyStiffness
+#include <proxpde/bc.hpp>                // for BCEss, DofSet_T
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, Vec2, Triplet
+#include <proxpde/dof.hpp>               // for DofOrdering
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for FESpace
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/mesh.hpp>              // for side, Mesh, buildHyperCube
 
 using namespace proxpde;
 

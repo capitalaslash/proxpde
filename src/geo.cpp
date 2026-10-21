@@ -1,4 +1,6 @@
-#include "geo.hpp"
+#include "proxpde/geo.hpp"
+
+#include <proxpde/def.hpp> // for FMat, Bitmask, Enumerator, id_T, operator&
 
 namespace proxpde
 {

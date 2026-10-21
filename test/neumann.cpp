@@ -1,16 +1,33 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset
+#include <cmath>       // for sqrt, M_PI, sin
+#include <cstdlib>     // for uint
+#include <memory>      // for construct_at
+#include <string>      // for basic_string
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector, stderr
 
-#include <fmt/std.h>
+#include <fmt/base.h>      // for println, print
+#include <yaml-cpp/yaml.h> // for Node
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCNatura...
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss, DOFCoordSet
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, FVec, Vec
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for interpolateAnaly...
+#include <proxpde/feutils.hpp>       // for computeGradient
+#include <proxpde/geo.hpp>           // for Hexahedron, Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for buildHyperCube
+#include <proxpde/reffe.hpp>         // for order_v
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var, FEVar
 
 using namespace proxpde;
 
@@ -299,7 +316,7 @@ int main()
   t.stop();
 
   t.print();
-  fmt::println("test results: {}", tests);
+  fmt::println("test results: {}", tests.to_string());
 
   return tests.any();
 }

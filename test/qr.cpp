@@ -1,10 +1,15 @@
-#include "def.hpp"
+#include <array>   // for array
+#include <bitset>  // for bitset, operator<<
+#include <cmath>   // for fabs
+#include <cstdlib> // for uint
+#include <locale>  // for use_facet
+#include <vector>  // for stderr
 
-// stl
-#include <bitset>
+#include <Eigen/Core> // for DenseBase<>::IsVectorAtCompileTime, Dense...
+#include <fmt/base.h> // for println
 
-// local
-#include "qr.hpp"
+#include <proxpde/geo.hpp> // for Triangle, Hexahedron, Quad, Line, Tetrahe...
+#include <proxpde/qr.hpp>  // for GaussQR
 
 namespace proxpde
 {
@@ -116,7 +121,7 @@ int main()
   lineTests[17] = test(GaussQR<Line,4>{}, Polynomial<5>{},   0.L, 1e-15L);
   lineTests[18] = test(GaussQR<Line,4>{}, Polynomial<6>{}, 2.L/7, 1e-15L);
   lineTests[19] = test(GaussQR<Line,4>{}, Polynomial<7>{},   0.L, 1e-15L);
-  std::cout << "line: " << lineTests << std::endl;
+  fmt::println("line: {}", lineTests.to_string());
 
   std::bitset<55> triangleTests;
   triangleTests[ 0] = test(GaussQR<Triangle,1>{}, Polynomial<0,0>{}, 1.L/2,   1e-15L);
@@ -174,7 +179,7 @@ int main()
   triangleTests[52] = test(GaussQR<Triangle,7>{}, Polynomial<1,4>{}, 1.L/210, 1e-15L);
   triangleTests[53] = test(GaussQR<Triangle,7>{}, Polynomial<3,2>{}, 1.L/420, 1e-15L);
   triangleTests[54] = test(GaussQR<Triangle,7>{}, Polynomial<2,3>{}, 1.L/420, 1e-15L);
-  std::cout << "triangle: " << triangleTests << std::endl;
+  fmt::println("triangle: {}", triangleTests.to_string());
 
   std::bitset<34> quadTests;
   quadTests[ 0] = test(GaussQR<Quad,1>{}, Polynomial<0,0>{},   4.L, 1e-15L);
@@ -211,7 +216,7 @@ int main()
   quadTests[31] = test(GaussQR<Quad,9>{}, Polynomial<1,4>{},   0.L, 1e-16L);
   quadTests[32] = test(GaussQR<Quad,9>{}, Polynomial<3,2>{},   0.L, 1e-16L);
   quadTests[33] = test(GaussQR<Quad,9>{}, Polynomial<2,3>{},   0.L, 1e-16L);
-  std::cout << "quad: " << quadTests << std::endl;
+  fmt::println("quad: {}", quadTests.to_string());
 
   std::bitset<18> tetrahedronTests;
   tetrahedronTests[ 0] = test(GaussQR<Tetrahedron, 1>{}, Polynomial<0,0,0>{}, 1.L/6,   1e-15L);
@@ -232,7 +237,7 @@ int main()
   tetrahedronTests[15] = test(GaussQR<Tetrahedron,11>{}, Polynomial<3,1,0>{}, 1.L/840,  1e-15L);
   tetrahedronTests[16] = test(GaussQR<Tetrahedron,11>{}, Polynomial<2,2,0>{}, 1.L/1260, 1e-15L);
   tetrahedronTests[17] = test(GaussQR<Tetrahedron,11>{}, Polynomial<2,1,1>{}, 1.L/2520, 1e-15L);
-  std::cout << "tetrahedron: " << tetrahedronTests << std::endl;
+  fmt::println("tetrahedron: {}", tetrahedronTests.to_string());
 
   std::bitset<53> hexahedronTests;
   hexahedronTests[ 0] = test(GaussQR<Hexahedron, 1>{}, Polynomial<0,0,0>{},   8.L, 1e-15L);
@@ -288,7 +293,7 @@ int main()
   hexahedronTests[50] = test(GaussQR<Hexahedron,27>{}, Polynomial<3,1,0>{},   0.L, 1e-15L);
   hexahedronTests[51] = test(GaussQR<Hexahedron,27>{}, Polynomial<2,2,0>{}, 8.L/9, 1e-14L);
   hexahedronTests[52] = test(GaussQR<Hexahedron,27>{}, Polynomial<2,1,1>{},   0.L, 1e-15L);
-  std::cout << "hexahedron: " << hexahedronTests << std::endl;
+  fmt::println("hexahedron: {}", hexahedronTests.to_string());
   // clang-format on
 
   return lineTests.any() || triangleTests.any() || quadTests.any() ||

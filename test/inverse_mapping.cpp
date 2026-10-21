@@ -1,14 +1,21 @@
-#include "def.hpp"
+#include <algorithm>   // for max
+#include <bitset>      // for bitset
+#include <cmath>       // for sqrt, fabs
+#include <cstdlib>     // for abort, atoi, uint
+#include <random>      // for mt19937, uniform_real_distribution
+#include <string>      // for basic_string
+#include <tuple>       // for tie
+#include <type_traits> // for is_same_v
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
-#include <random>
+#include <fmt/base.h> // for print, println
 
-// local
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/def.hpp>     // for Vec3, Utils, checkError
+#include <proxpde/fe.hpp>      // for LagrangeFE
+#include <proxpde/fespace.hpp> // for FESpace
+#include <proxpde/geo.hpp>     // for Hexahedron, Quad, Tetrahedron, Triangle
+#include <proxpde/mesh.hpp>    // for Mesh
+#include <proxpde/timer.hpp>   // for MilliTimer
 
 using namespace proxpde;
 

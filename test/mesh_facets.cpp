@@ -1,11 +1,24 @@
-#include "def.hpp"
+#include <cassert>    // for assert
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <iostream>   // for basic_ostream
+#include <memory>     // for unique_ptr
+#include <string>     // for char_traits, ope...
+#include <vector>     // for vector
 
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
-#include "xdmf_traits.hpp"
+#include <fmt/format.h> // for format
+
+#include <proxpde/def.hpp>         // for operator==, Utils
+#include <proxpde/dof.hpp>         // for DofOrdering
+#include <proxpde/fe.hpp>          // for LagrangeFE
+#include <proxpde/fespace.hpp>     // for FESpace
+#include <proxpde/geo.hpp>         // for Hexahedron, Quad
+#include <proxpde/hdf5.hpp>        // for HDF5, HDF5FileMode
+#include <proxpde/iomanager.hpp>   // for IOManager
+#include <proxpde/mesh.hpp>        // for operator<<, buil...
+#include <proxpde/var.hpp>         // for FEVar
+#include <proxpde/xdmf_doc.hpp>    // for XDMFDoc
+#include <proxpde/xdmf_traits.hpp> // for XDMFTraits, XDMF...
 
 using namespace proxpde;
 
@@ -35,11 +48,13 @@ void test()
   }
   typename Mesh_T::FacetList_T facetsOrig = mesh->facetList;
 
-  std::cout << Utils::separator << "mesh before\n" << *mesh << std::endl;
+  fmt::println("{}mesh before", Utils::separator);
+  std::cout << *mesh << std::endl;
 
   buildFacets(*mesh, MeshFlags::INTERNAL_FACETS);
 
-  std::cout << Utils::separator << "mesh after\n" << *mesh << std::endl;
+  fmt::println("{}mesh after", Utils::separator);
+  std::cout << *mesh << std::endl;
 
   // check that buildFacets() has preserved an internal facet
   for ([[maybe_unused]] auto const & facet: mesh->facetList)

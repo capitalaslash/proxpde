@@ -1,16 +1,34 @@
-#include "def.hpp"
+#include <array>         // for array
+#include <cassert>       // for assert
+#include <cmath>         // for M_PI, cos, sin, pow, sqrt
+#include <cstdlib>       // for uint
+#include <filesystem>    // for path
+#include <memory>        // for unique_ptr, construct_at, destr...
+#include <optional>      // for optional
+#include <string>        // for stoul, basic_string
+#include <tuple>         // for tuple, get
+#include <type_traits>   // for is_base_of_v
+#include <unordered_set> // for unordered_set
+#include <vector>        // for vector
 
-#include "assembly_lhs.hpp"
-#include "assembly_rhs.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "qr.hpp"
-#include "timer.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffnessFE
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, cepow, checkError, idNotSet
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/feutils.hpp>       // for Component, interpolateOnFacets
+#include <proxpde/geo.hpp>           // for Line, Triangle, FacingElem, Point
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for Mesh, side, buildFacetMesh, bui...
+#include <proxpde/qr.hpp>            // for GaussQR, SideGaussQR
+#include <proxpde/reffe.hpp>         // for RefLineP1, RefTriangleP1, RefLi...
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for FEVar
 
 int main(int argc, char * argv[])
 {

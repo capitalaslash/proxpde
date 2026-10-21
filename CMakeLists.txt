@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23...4.0)
+cmake_minimum_required(VERSION 3.24...4.0)
 
 project(ProXPDE
   VERSION 0.1
@@ -57,54 +57,53 @@ configure_file(
 )
 
 set(SOURCES
-    src/bc.cpp
-    src/def.cpp
-    src/fespace.cpp
-    src/geo.cpp
-    src/iomanager.cpp
-    src/mesh.cpp
-    src/qr.cpp
-    src/reffe.cpp
-    src/var.cpp
-    src/xdmf_doc.cpp
+  src/bc.cpp
+  src/def.cpp
+  src/fespace.cpp
+  src/geo.cpp
+  src/iomanager.cpp
+  src/mesh.cpp
+  src/qr.cpp
+  src/reffe.cpp
+  src/var.cpp
+  src/xdmf_doc.cpp
 )
 
 set(HEADERS
-    include/assembler.hpp
-    include/assembly.hpp
-    include/assembly_base.hpp
-    include/assembly_bc.hpp
-    include/assembly_coupling.hpp
-    include/assembly_lhs.hpp
-    include/assembly_rhs.hpp
-    include/bc.hpp
-    include/blockmatrix.hpp
-    include/builder.hpp
-    include/curfe.hpp
-    include/def.hpp
-    include/dof.hpp
-    include/eqn.hpp
-    include/fe.hpp
-    include/fespace.hpp
-    include/feutils.hpp
-    include/fv.hpp
-    include/geo.hpp
-    include/hdf5.hpp
-    include/iomanager.hpp
-    include/l2projection.hpp
-    include/mesh.hpp
-    include/mesh_refine.hpp
-    include/multigrid.hpp
-    include/ns.hpp
-    include/qr.hpp
-    include/reffe.hpp
-    include/solver.hpp
-    include/sparse_matrix.hpp
-    include/timer.hpp
-    include/var.hpp
-    include/xdmf_doc.hpp
-    include/xdmf_traits.hpp
-    ${CMAKE_BINARY_DIR}/proxpde.h
+  include/proxpde/assembler.hpp
+  include/proxpde/assembly_base.hpp
+  include/proxpde/assembly_bc.hpp
+  include/proxpde/assembly_coupling.hpp
+  include/proxpde/assembly_lhs.hpp
+  include/proxpde/assembly_rhs.hpp
+  include/proxpde/bc.hpp
+  include/proxpde/blockmatrix.hpp
+  include/proxpde/builder.hpp
+  include/proxpde/curfe.hpp
+  include/proxpde/def.hpp
+  include/proxpde/dof.hpp
+  include/proxpde/eqn.hpp
+  include/proxpde/fe.hpp
+  include/proxpde/fespace.hpp
+  include/proxpde/feutils.hpp
+  include/proxpde/fv.hpp
+  include/proxpde/geo.hpp
+  include/proxpde/hdf5.hpp
+  include/proxpde/iomanager.hpp
+  include/proxpde/l2projection.hpp
+  include/proxpde/mesh.hpp
+  include/proxpde/mesh_refine.hpp
+  include/proxpde/multigrid.hpp
+  include/proxpde/ns.hpp
+  include/proxpde/qr.hpp
+  include/proxpde/reffe.hpp
+  include/proxpde/solver.hpp
+  include/proxpde/sparse_matrix.hpp
+  include/proxpde/timer.hpp
+  include/proxpde/var.hpp
+  include/proxpde/xdmf_doc.hpp
+  include/proxpde/xdmf_traits.hpp
+  ${CMAKE_BINARY_DIR}/proxpde.h
 )
 
 add_library(proxpde SHARED)
@@ -145,6 +144,8 @@ target_link_options(proxpde
   PRIVATE ${PROXPDE_LINK_FLAGS}
 )
 
+set_property(TARGET proxpde PROPERTY VERIFY_INTERFACE_HEADER_SETS ON)
+
 set(TEST_SOURCES "")
 add_executable(test_base main.cpp)
 target_link_libraries(test_base PUBLIC ProXPDE::proxpde)
@@ -168,10 +169,8 @@ install(TARGETS proxpde
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  FILE_SET HEADERS DESTINATION include/proxpde
+  FILE_SET HEADERS DESTINATION include
 )
-
-install(FILES ${PROJECT_BINARY_DIR}/proxpde.h DESTINATION include/proxpde)
 
 install(EXPORT ProXPDETargets
   FILE ProXPDETargets.cmake

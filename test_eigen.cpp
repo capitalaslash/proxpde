@@ -1,6 +1,5 @@
 #include <Eigen/Dense>
-
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 int main()
 {

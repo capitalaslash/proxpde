@@ -1,6 +1,4 @@
-#include "fespace.hpp"
-
-#include "qr.hpp"
+#include "proxpde/fespace.hpp"
 
 namespace proxpde
 {

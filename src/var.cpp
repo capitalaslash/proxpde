@@ -1,4 +1,4 @@
-#include "var.hpp"
+#include "proxpde/var.hpp"
 
 std::vector<uint> offsetInit(std::vector<uint> blocks)
 {

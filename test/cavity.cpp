@@ -1,14 +1,30 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <cmath>       // for sqrt
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembler.hpp"
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "var.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node
+
+#include <proxpde/assembler.hpp>
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, Ass...
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyDummy
+#include <proxpde/bc.hpp>                // for BCEss, DOFCoordSet
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for FESpace, getComp...
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for side, Mesh, Mesh...
+#include <proxpde/reffe.hpp>             // for RefQuadQ1, RefQu...
+#include <proxpde/sparse_matrix.hpp>     // for StorageType, Ite...
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {

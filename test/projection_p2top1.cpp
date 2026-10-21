@@ -1,10 +1,24 @@
-#include "def.hpp"
+#include <cmath>       // for sqrt
+#include <filesystem>  // for path
+#include <iostream>    // for operator<<, basic_ostream, basi...
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefQuadQ1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/var.hpp>           // for Var
 
 int main()
 {

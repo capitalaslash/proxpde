@@ -1,12 +1,26 @@
-#include "def.hpp"
+#include <cmath>       // for sin, M_PI, sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for char_traits, stoi, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, checkError, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefQuadQ2
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/var.hpp>           // for Var
 
 int main(int argc, char * argv[])
 {
@@ -64,7 +78,6 @@ int main(int argc, char * argv[])
   io.print({sol, exact, error});
 
   double norm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << norm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {0.0001435848348336241});
 }

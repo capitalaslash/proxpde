@@ -1,14 +1,26 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <cmath>       // for sin, M_PI, cos
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <random>      // for uniform_real_dis...
+#include <tuple>       // for get
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// stl
-#include <random>
+#include <fmt/base.h>   // for print
+#include <fmt/format.h> // for native_formatter...
 
-// local
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/def.hpp>       // for Vec3, Vec2, FMat
+#include <proxpde/fe.hpp>        // for LagrangeFE, Ravi...
+#include <proxpde/fespace.hpp>   // for FESpace
+#include <proxpde/feutils.hpp>   // for projectAnalyticF...
+#include <proxpde/geo.hpp>       // for Quad, Point
+#include <proxpde/iomanager.hpp> // for IOManager, IOMan...
+#include <proxpde/mesh.hpp>      // for MeshFlags, Mesh
+#include <proxpde/var.hpp>       // for FEVar
 
 int main()
 {

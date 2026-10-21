@@ -1,10 +1,14 @@
-#include "def.hpp"
+#include <bitset> // for bitset
+#include <cmath>  // for sqrt
+#include <memory> // for shared_ptr, __shared_ptr_access
+#include <vector> // for stderr
 
-// stl
-#include <bitset>
+#include <fmt/base.h>   // for println
+#include <fmt/format.h> // for native_formatter::format
 
-// local
-#include "mesh.hpp"
+#include <proxpde/def.hpp>  // for Vec3
+#include <proxpde/geo.hpp>  // for Triangle, Line
+#include <proxpde/mesh.hpp> // for Mesh, MeshFlags, buildNormals, refTriang...
 
 using namespace proxpde;
 

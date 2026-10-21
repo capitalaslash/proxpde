@@ -1,12 +1,22 @@
-#include "def.hpp"
+#include <array>      // for array
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <memory>     // for unique_ptr
+#include <optional>   // for optional
+#include <string>     // for basic_string
+#include <vector>     // for vector
 
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/def.hpp>       // for ParameterDict, cepow, Vec3, Bitmask
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace
+#include <proxpde/geo.hpp>       // for Hexahedron, Point
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for Mesh, MeshFlags, checkPlanarFacets
+#include <proxpde/timer.hpp>     // for MilliTimer
+#include <proxpde/var.hpp>       // for FEVar
 
 using namespace proxpde;
 

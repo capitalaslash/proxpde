@@ -1,4 +1,8 @@
-#include "reffe.hpp"
+#include "proxpde/reffe.hpp"
+
+#include <functional> // for function
+
+#include <proxpde/def.hpp> // for FMat, Vec2, twodFun_T, Vec3, threedFun_T
 
 namespace proxpde
 {

@@ -1,10 +1,18 @@
-#include "def.hpp"
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <memory>     // for unique_ptr
+#include <optional>   // for optional
+#include <string>     // for stoi, basic_string
+#include <vector>     // for vector
 
-#include "iomanager.hpp"
-
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "mesh.hpp"
+#include <proxpde/def.hpp>       // for Vec3, Vec
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace
+#include <proxpde/geo.hpp>       // for Line
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>     // for RefLineP1
+#include <proxpde/var.hpp>       // for Var
 
 int main(int argc, char * argv[])
 {

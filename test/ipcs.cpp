@@ -1,14 +1,33 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "eqn.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println, print
+#include <yaml-cpp/yaml.h> // for Node
+
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, Ass...
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyScalarMass
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict
+#include <proxpde/eqn.hpp>               // for Eqn, EqnSolver
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for getComponent
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for side, Mesh, buil...
+#include <proxpde/reffe.hpp>             // for RefQuadQ2, RefQu...
+#include <proxpde/sparse_matrix.hpp>     // for StorageType, Ite...
+#include <proxpde/timer.hpp>             // for Timer, MilliTimer
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {

@@ -1,17 +1,37 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset, operator<<
+#include <cmath>       // for sqrt, fabs
+#include <cstdlib>     // for uint
+#include <iostream>    // for basic_ostream
+#include <limits>      // for numeric_limits
+#include <locale>      // for use_facet
+#include <memory>      // for unique_ptr, make...
+#include <string>      // for char_traits, bas...
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
-#include <limits>
+#include <fmt/base.h>      // for println, print
+#include <yaml-cpp/yaml.h> // for Node
 
-// local
-#include "bc.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
+#include <proxpde/assembly_coupling.hpp> // for AssemblyVectorDiv
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyDummy
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict
+#include <proxpde/fe.hpp>                // for LagrangeFE, Ravi...
+#include <proxpde/fespace.hpp>           // for interpolateAnaly...
+#include <proxpde/feutils.hpp>           // for projectAnalyticF...
+#include <proxpde/geo.hpp>               // for Hexahedron, Quad
+#include <proxpde/iomanager.hpp>         // for IOManager, IOMan...
+#include <proxpde/l2projection.hpp>      // for l2Projection
+#include <proxpde/mesh.hpp>              // for Mesh, MeshFlags
+#include <proxpde/mesh_refine.hpp>       // for uniformRefine
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/var.hpp>               // for FEVar, Var
+#include <proxpde/xdmf_traits.hpp>       // for XDMFTraits
 
 using namespace proxpde;
 
@@ -190,7 +210,7 @@ int main(int argc, char * argv[])
     config.override(argv[1]);
   }
 
-  // fmt::print("configuration: {}", config);
+  // fmt::println("configuration: {}", config);
 
   uint const refinements = config["refinements"].as<uint>();
 
@@ -223,10 +243,10 @@ int main(int argc, char * argv[])
 
     for (auto const & fun: std::array{funDivZero2d, fun2d})
     {
-      fmt::print("function: {}\n", fun.name);
+      fmt::println("function: {}", fun.name);
       if (config["triangle"]["structured"].as<bool>())
       {
-        fmt::print("mesh_type: structured\n");
+        fmt::println("mesh_type: structured");
 
         std::unique_ptr<Mesh<Triangle>> mesh{new Mesh<Triangle>};
         buildHyperCube(*mesh, config["mesh"]);
@@ -239,7 +259,7 @@ int main(int argc, char * argv[])
 
       if (config["triangle"]["gmsh"].as<bool>())
       {
-        fmt::print("mesh_type: unstructured\n");
+        fmt::println("mesh_type: unstructured");
 
         std::unique_ptr<Mesh<Triangle>> mesh{new Mesh<Triangle>};
         readGMSH(
@@ -261,7 +281,7 @@ int main(int argc, char * argv[])
 
       if (config["quad"]["structured"].as<bool>())
       {
-        fmt::print("mesh_type: structured\n");
+        fmt::println("mesh_type: structured");
 
         std::unique_ptr<Mesh<Quad>> mesh{new Mesh<Quad>};
         buildHyperCube(*mesh, config["mesh"]);
@@ -274,7 +294,7 @@ int main(int argc, char * argv[])
 
       if (config["quad"]["gmsh"].as<bool>())
       {
-        fmt::print("mesh_type: unstructured\n");
+        fmt::println("mesh_type: unstructured");
 
         std::unique_ptr<Mesh<Quad>> mesh{new Mesh<Quad>};
         readGMSH(
@@ -324,11 +344,11 @@ int main(int argc, char * argv[])
 
     for (auto const & fun: std::array{funDivZero3d, fun3d})
     {
-      fmt::print("function: {}\n", fun.name);
+      fmt::println("function: {}", fun.name);
 
       if (config["tetrahedron"]["structured"].as<bool>())
       {
-        fmt::print("mesh_type: structured\n");
+        fmt::println("mesh_type: structured");
 
         std::unique_ptr<Mesh<Tetrahedron>> mesh{new Mesh<Tetrahedron>};
         buildHyperCube(*mesh, config["mesh"]);
@@ -341,7 +361,7 @@ int main(int argc, char * argv[])
 
       if (config["tetrahedron"]["gmsh"].as<bool>())
       {
-        fmt::print("mesh_type: unstructured\n");
+        fmt::println("mesh_type: unstructured");
 
         std::unique_ptr<Mesh<Tetrahedron>> mesh{new Mesh<Tetrahedron>};
         readGMSH(
@@ -363,7 +383,7 @@ int main(int argc, char * argv[])
 
       if (config["hexahedron"]["structured"].as<bool>())
       {
-        fmt::print("mesh_type: structured\n");
+        fmt::println("mesh_type: structured");
 
         std::unique_ptr<Mesh<Hexahedron>> mesh{new Mesh<Hexahedron>};
         buildHyperCube(*mesh, config["mesh"]);
@@ -376,7 +396,7 @@ int main(int argc, char * argv[])
 
       if (config["hexahedron"]["gmsh"].as<bool>())
       {
-        fmt::print("mesh_type: unstructured\n");
+        fmt::println("mesh_type: unstructured");
 
         std::unique_ptr<Mesh<Hexahedron>> mesh{new Mesh<Hexahedron>};
         readGMSH(
@@ -394,6 +414,6 @@ int main(int argc, char * argv[])
     }
   }
 
-  std::cout << "test results: " << tests << std::endl;
+  fmt::println("test results: {}", tests.to_string());
   return tests.any();
 }

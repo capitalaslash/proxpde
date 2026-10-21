@@ -1,4 +1,10 @@
-#include "xdmf_doc.hpp"
+#include "proxpde/xdmf_doc.hpp"
+
+#include <utility> // for pair
+
+#include <fmt/format.h> // for format
+
+#include <proxpde/xdmf_traits.hpp> // for XDMFVar, to_string, XDMFFormat
 
 namespace proxpde
 {

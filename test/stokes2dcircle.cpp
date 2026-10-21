@@ -1,15 +1,32 @@
-#include "def.hpp"
+#include <cmath>         // for sqrt, fabs
+#include <cstdlib>       // for uint
+#include <filesystem>    // for path
+#include <memory>        // for unique_ptr, construct_at
+#include <optional>      // for optional
+#include <string>        // for stoi, basic_string
+#include <tuple>         // for tuple, get
+#include <type_traits>   // for is_base_of_v
+#include <unordered_set> // for unordered_set
+#include <vector>        // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "ns.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_bc.hpp>       // for AssemblyBCNaturalAnalytic
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, AssemblyGrad
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyDummy, AssemblyStif...
+#include <proxpde/bc.hpp>                // for BCEss, DOFCoordSet
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, Vec2, checkError
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for FESpace, integrateOnBoundary
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for side, Mesh, buildQuarterCircle
+#include <proxpde/ns.hpp>                // for computeElemWSS
+#include <proxpde/reffe.hpp>             // for RefQuadQ2, RefQuadQ1
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/timer.hpp>             // for MilliTimer
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {

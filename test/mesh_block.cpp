@@ -1,9 +1,14 @@
-#include "def.hpp"
+#include <algorithm> // for for_each
+#include <cstdlib>   // for uint
+#include <memory>    // for unique_ptr
 
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/def.hpp>       // for operator==, operator|
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace
+#include <proxpde/geo.hpp>       // for Hexahedron, Quad, Tetrahedron, Tria...
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for buildHyperCube, extractBlock, MeshF...
+#include <proxpde/var.hpp>       // for FEVar
 
 using namespace proxpde;
 

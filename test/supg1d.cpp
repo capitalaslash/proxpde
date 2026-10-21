@@ -1,14 +1,35 @@
-#include "def.hpp"
+#include <algorithm>   // for max, min_element
+#include <cassert>     // for assert
+#include <cmath>       // for sqrt, nearbyint
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_same_v, is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/assembly_base.hpp> // for AssemblyBase
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyMass, AssemblyAdvection
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection, AssemblyVector
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for promote, Vec3, FVec, allComp, Vec
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/fv.hpp>            // for FVSolver, MinModLimiter
+#include <proxpde/geo.hpp>           // for GeoElem, Line
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for operator<, side, MeshFlags, Mesh
+#include <proxpde/qr.hpp>            // for MiniQR
+#include <proxpde/reffe.hpp>         // for RefLineP0, RefLineP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for FEVar, Var
 
 namespace proxpde
 {

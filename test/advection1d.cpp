@@ -1,14 +1,31 @@
-#include "def.hpp"
+#include <array>    // for array
+#include <cmath>    // for sqrt, nearbyint
+#include <cstdlib>  // for uint
+#include <memory>   // for unique_ptr, construct_at, destr...
+#include <optional> // for optional
+#include <string>   // for basic_string
+#include <tuple>    // for tuple, get
+#include <vector>   // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass, AssemblyAdv...
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for ParameterDict, Vec3, Bitmask
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/fv.hpp>            // for FVSolver
+#include <proxpde/geo.hpp>           // for Line
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for MeshFlags, side, Mesh, buildHyp...
+#include <proxpde/qr.hpp>            // for MiniQR
+#include <proxpde/reffe.hpp>         // for RefLineP0, RefLineP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for FEVar
 
 int main(int argc, char * argv[])
 {
@@ -86,8 +103,13 @@ int main(int argc, char * argv[])
   FEVar vel{"velocity", feSpaceVel};
   vel << velocity;
   double const cfl = velocity * dt * numElems;
-  fmt::println("cfl = {}", cfl);
-  assert(cfl < 1. - 1.e-8);
+  fmt::println("CFL = {}", cfl);
+
+  if (cfl > 1.0 - 1.0e-08)
+  {
+    fmt::println("CFL too high, aborting");
+    std::abort();
+  }
 
   Builder builder{feSpaceP1.dof.size};
   LUSolver solver;

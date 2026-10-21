@@ -1,22 +1,37 @@
-// proxpde configuration - always first
-#include "def.hpp"
+#include <algorithm>     // for min
+#include <cmath>         // for sqrt, fabs
+#include <cstdlib>       // for uint
+#include <filesystem>    // for path, operator/
+#include <memory>        // for unique_ptr, cons...
+#include <optional>      // for optional
+#include <string>        // for basic_string
+#include <tuple>         // for get, tuple
+#include <type_traits>   // for is_base_of_v
+#include <unordered_set> // for unordered_set
+#include <vector>        // for vector
 
-// external libs
-#include <yaml-cpp/yaml.h>
+#include <Eigen/Core>      // for DenseBase::row
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
 
-// proxpde
-#include "assembly_bc.hpp"
-#include "assembly_lhs.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
-#include "ns.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <proxpde/assembly_bc.hpp>       // for AssemblyBCNormalFE
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, Ass...
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyTensorSt...
+#include <proxpde/bc.hpp>                // for BCEss, Comp
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for ParameterDict, Vec3
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for FESpace, getComp...
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for Mesh, side, Mesh...
+#include <proxpde/mesh_refine.hpp>       // for uniformRefine
+#include <proxpde/ns.hpp>                // for computeDistanceCell
+#include <proxpde/qr.hpp>                // for SideGaussQR, SideQR
+#include <proxpde/reffe.hpp>             // for RefQuadQ2, RefQu...
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/timer.hpp>             // for MilliTimer
+#include <proxpde/var.hpp>               // for Var, FEVar
 
 int main(int argc, char * argv[])
 {

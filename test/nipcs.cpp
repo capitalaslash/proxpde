@@ -1,14 +1,32 @@
-#include "def.hpp"
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "eqn.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println, print
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/assembly_coupling.hpp> // for AssemblyDiv, Ass...
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyScalarMass
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict
+#include <proxpde/eqn.hpp>               // for Eqn, EqnSolver
+#include <proxpde/fe.hpp>                // for LagrangeFE
+#include <proxpde/fespace.hpp>           // for getComponent
+#include <proxpde/geo.hpp>               // for Quad
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/mesh.hpp>              // for side, Mesh, buil...
+#include <proxpde/reffe.hpp>             // for RefQuadQ2, RefQu...
+#include <proxpde/sparse_matrix.hpp>     // for StorageType, Ite...
+#include <proxpde/timer.hpp>             // for MilliTimer, oper...
+#include <proxpde/var.hpp>               // for Var
 
 int main(int argc, char * argv[])
 {
@@ -302,7 +320,7 @@ int main(int argc, char * argv[])
     t.start("print");
     if ((itime + 1) % printStep == 0)
     {
-      std::cout << "printing" << std::endl;
+      fmt::println("printing");
       getComponent(uM.data, feSpaceU, solM, feSpaceVel, 0);
       getComponent(vM.data, feSpaceU, solM, feSpaceVel, 1);
       ioV.print({uM, vM, eqnUstar.sol, eqnVstar.sol, eqnU.sol, eqnV.sol}, time);
@@ -312,7 +330,7 @@ int main(int argc, char * argv[])
     }
     t.stop();
 
-    std::cout << "time required: " << timerStep << " ms" << std::endl;
+    fmt::println("time required: {} ms", timerStep);
   }
   t.print();
 
@@ -326,9 +344,9 @@ int main(int argc, char * argv[])
   double const errorNormU = errorU.data.norm();
   double const errorNormV = errorV.data.norm();
   double const errorNormP = errorP.data.norm();
-  std::cout << "errorU: " << std::setprecision(16) << errorNormU << std::endl;
-  std::cout << "errorV: " << std::setprecision(16) << errorNormV << std::endl;
-  std::cout << "errorP: " << std::setprecision(16) << errorNormP << std::endl;
+  fmt::println("errorU: {:.16e}", errorNormU);
+  fmt::println("errorV: {:.16e}", errorNormV);
+  fmt::println("errorP: {:.16e}", errorNormP);
 
   return checkError(
       {errorNormU, errorNormV, errorNormP},

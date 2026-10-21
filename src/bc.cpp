@@ -1,4 +1,6 @@
-#include "bc.hpp"
+#include "proxpde/bc.hpp"
+
+#include <vector>
 
 namespace proxpde
 {

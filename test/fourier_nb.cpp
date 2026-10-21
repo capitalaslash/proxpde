@@ -1,16 +1,31 @@
-#include "def.hpp"
+#include <bitset>      // for bitset
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path, operator/
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for basic_string, string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node
 
-// local
-#include "assembly.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCMixed, AssemblyBCNatu...
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass, AssemblySti...
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection, AssemblyRhs...
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, scalarFun_T, checkError, Vec
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Line
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefLineP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 int test(YAML::Node const & config)
 {

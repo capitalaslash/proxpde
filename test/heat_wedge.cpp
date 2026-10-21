@@ -1,13 +1,30 @@
-#include "def.hpp"
+#include <cmath>       // for sqrt, M_PI
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for stoi, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector, stderr
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCNaturalAnalytic
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyMass, AssemblyAdvectionFE
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection, AssemblyRhs...
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, Vec, scalarFun_T, checkError
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Triangle, Tetrahedron
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildWedge, extrude
+#include <proxpde/reffe.hpp>         // for RefTetrahedronP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for FEVar, Var
 
 int main(int argc, char * argv[])
 {

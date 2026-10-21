@@ -1,18 +1,31 @@
-// solve
-// (w, t) + (u, \nabla /cdot t) = 0
-// (\nabla /cdot w, v) = (f, v)
-// w, t \in RT_0
-// u, v \in P_0
+#include <array>       // for array
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, cons...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "def.hpp"
+#include <fmt/base.h>      // for print, println
+#include <yaml-cpp/yaml.h> // for Node, iterator_v...
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/assembly_coupling.hpp> // for AssemblyVectorDiv
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyVectorMass
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for ParameterDict, Vec3
+#include <proxpde/fe.hpp>                // for RaviartThomasFE
+#include <proxpde/fespace.hpp>           // for FESpace, interpo...
+#include <proxpde/geo.hpp>               // for FacingElem, Line
+#include <proxpde/iomanager.hpp>         // for IOManager, IOMan...
+#include <proxpde/mesh.hpp>              // for MeshFlags, side
+#include <proxpde/reffe.hpp>             // for RefQuadRT0, RefQ...
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/var.hpp>               // for FEVar
 
 using namespace proxpde;
 

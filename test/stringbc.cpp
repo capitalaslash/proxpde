@@ -1,17 +1,16 @@
-#include "def.hpp"
-
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
-#include "var.hpp"
-
 #include <yaml-cpp/yaml.h>
+
+#include <proxpde/assembly.hpp>
+#include <proxpde/bc.hpp>
+#include <proxpde/builder.hpp>
+#include <proxpde/def.hpp>
+#include <proxpde/fe.hpp>
+#include <proxpde/fespace.hpp>
+#include <proxpde/geo.hpp>
+#include <proxpde/iomanager.hpp>
+#include <proxpde/mesh.hpp>
+#include <proxpde/timer.hpp>
+#include <proxpde/var.hpp>
 
 static constexpr uint dim = 3;
 using Elem_T = Tetrahedron;

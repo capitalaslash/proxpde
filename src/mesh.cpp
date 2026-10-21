@@ -1,6 +1,9 @@
-#include "mesh.hpp"
+#include "proxpde/mesh.hpp"
 
-#include "geo.hpp"
+#include <Eigen/Geometry> // for MatrixBase::cross
+
+#include <proxpde/def.hpp> // for Vec3, id_T, Bitmask, idNotSet, Enumerator
+#include <proxpde/geo.hpp> // for Triangle, Tetrahedron, Quad, Hexahedron
 
 namespace proxpde
 {

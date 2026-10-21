@@ -1,9 +1,21 @@
-#include "builder.hpp"
-#include "def.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <array>      // for array
+#include <cmath>      // for sqrt
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <memory>     // for unique_ptr
+#include <optional>   // for optional
+#include <string>     // for stoul, basic_string
+#include <vector>     // for vector
+
+#include <proxpde/def.hpp>       // for Vec3
+#include <proxpde/dof.hpp>       // for DofType
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace, interpolateAnalyticFunction
+#include <proxpde/geo.hpp>       // for Quad
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for Mesh, buildHyperCube
+#include <proxpde/qr.hpp>        // for GaussQR
+#include <proxpde/var.hpp>       // for Var
 
 int main(int argc, char * argv[])
 {

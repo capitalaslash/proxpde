@@ -1,16 +1,20 @@
-#include "def.hpp"
+#include <bitset> // for bitset
+#include <cmath>  // for sqrt, fabs, pow
+#include <memory> // for unique_ptr
+#include <string> // for basic_string
+#include <vector> // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h> // for print
 
-// local
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
-#include "multigrid.hpp"
-#include "reffe.hpp"
-#include "var.hpp"
+#include <proxpde/def.hpp>         // for Vec3, Bitmask
+#include <proxpde/fe.hpp>          // for LagrangeFE
+#include <proxpde/fespace.hpp>     // for interpolateAnaly...
+#include <proxpde/iomanager.hpp>   // for IOManager, IOMan...
+#include <proxpde/mesh.hpp>        // for MeshFlags, build...
+#include <proxpde/mesh_refine.hpp> // for uniformRefine
+#include <proxpde/multigrid.hpp>   // for Prolongator
+#include <proxpde/reffe.hpp>       // for RefQuadRT0, RefT...
+#include <proxpde/var.hpp>         // for FEVar
 
 using namespace proxpde;
 

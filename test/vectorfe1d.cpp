@@ -1,13 +1,33 @@
-#include "def.hpp"
+#include <cmath>       // for sin, M_PI, sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <fstream>     // for operator<<, basic_ios::copyfmt
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for stoi, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>    // for vformat_to
+#include <fmt/format.h>  // for format, native_formatter::format
+#include <fmt/ostream.h> // for println
+
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCNaturalAnalytic
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, FVec, Utils, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace
+#include <proxpde/geo.hpp>           // for Line
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefLineP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 int main(int argc, char * argv[])
 {

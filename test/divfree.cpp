@@ -1,19 +1,30 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <functional>  // for function
+#include <memory>      // for construct_at
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node
 
-// local
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
-#include "var.hpp"
+#include <proxpde/assembly_coupling.hpp> // for AssemblyVectorDiv
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyMass
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, ParameterDict
+#include <proxpde/fe.hpp>                // for RaviartThomasFE
+#include <proxpde/fespace.hpp>           // for FESpace, integra...
+#include <proxpde/geo.hpp>               // for Quad, Triangle
+#include <proxpde/iomanager.hpp>         // for IOManager, IOMan...
+#include <proxpde/mesh.hpp>              // for MeshFlags, MeshType
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/var.hpp>               // for Var
 
 using namespace proxpde;
 

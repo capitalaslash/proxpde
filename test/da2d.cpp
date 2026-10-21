@@ -1,18 +1,31 @@
-#include "def.hpp"
+#include <algorithm>        // for max
+#include <bitset>           // for bitset
+#include <cmath>            // for tanh, M_PI, sqrt
+#include <cstdlib>          // for uint
+#include <initializer_list> // for initializer_list
+#include <memory>           // for construct_at, destroy_at, make_...
+#include <string>           // for basic_string
+#include <tuple>            // for get, tuple
+#include <type_traits>      // for is_base_of_v
+#include <vector>           // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h> // for println
 
-// local
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_base.hpp> // for AssemblyBase
+#include <proxpde/assembly_lhs.hpp>  // for Diagonal, AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/bc.hpp>            // for BCEss, operator<<
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, allComp, promote, checkError
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for interpolateAnalyticFunction
+#include <proxpde/fv.hpp>            // for computeMaxCFL
+#include <proxpde/geo.hpp>           // for Quad, Triangle
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for buildHyperCube, AllSides, Mesh
+#include <proxpde/sparse_matrix.hpp> // for StorageType, SparseMatrix, LUSo...
+#include <proxpde/timer.hpp>         // for MilliTimer, operator<<
+#include <proxpde/var.hpp>           // for FEVar
 
 namespace proxpde
 {
@@ -370,6 +383,6 @@ int main(/*int argc, char * argv[]*/)
       testCounter++;
     }
 
-  fmt::print("tests: {}\n", tests.to_string());
+  fmt::println("tests: {}", tests.to_string());
   return tests.any();
 }

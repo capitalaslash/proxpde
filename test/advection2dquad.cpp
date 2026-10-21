@@ -1,14 +1,25 @@
-#include "def.hpp"
+#include <algorithm>  // for max, min_element
+#include <cmath>      // for sqrt
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <memory>     // for unique_ptr
+#include <optional>   // for optional
+#include <vector>     // for vector
 
-#include <yaml-cpp/yaml.h>
+#include <fmt/base.h> // for println
 
-#include "bc.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/bc.hpp>        // for BCEss
+#include <proxpde/def.hpp>       // for Vec3, Vec, checkError, operator|, Vec2
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace, integrateAnalyticFunction
+#include <proxpde/fv.hpp>        // for FVSolver, computeMaxCFL, SuperBEELi...
+#include <proxpde/geo.hpp>       // for Quad
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for MeshFlags, Mesh, readGMSH, side
+#include <proxpde/qr.hpp>        // for MiniQR
+#include <proxpde/reffe.hpp>     // for RefQuadP0
+#include <proxpde/timer.hpp>     // for MilliTimer
+#include <proxpde/var.hpp>       // for FEVar
 
 int main(/*int argc, char * argv[]*/)
 {
@@ -112,7 +123,6 @@ int main(/*int argc, char * argv[]*/)
   interpolateAnalyticFunction(one, feSpace, oneField);
 
   double errorNorm = (c.data - oneField).norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", errorNorm);
   return checkError({errorNorm}, {6.389801046171856e-05});
 }

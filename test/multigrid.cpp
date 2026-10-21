@@ -1,17 +1,31 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset
+#include <cassert>     // for assert
+#include <cmath>       // for sin, M_PI, fabs, sqrt
+#include <cstdlib>     // for uint, size_t
+#include <memory>      // for construct_at, destroy_at
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h> // for println
 
-// local
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "mesh_refine.hpp"
-#include "multigrid.hpp"
-#include "reffe.hpp"
-#include "timer.hpp"
-#include "var.hpp"
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, Vec, Bitmask
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for MeshFlags, side, Mesh
+#include <proxpde/mesh_refine.hpp>   // for uniformRefine
+#include <proxpde/multigrid.hpp>     // for Prolongator, Restrictor
+#include <proxpde/reffe.hpp>         // for RefQuadQ1
+#include <proxpde/sparse_matrix.hpp> // for StorageType, SparseMatrix
+#include <proxpde/timer.hpp>         // for MilliTimer, operator<<
+#include <proxpde/var.hpp>           // for Var
 
 using namespace proxpde;
 

@@ -1,11 +1,10 @@
-#include "def.hpp"
-
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
+#include <proxpde/assembly.hpp>
+#include <proxpde/bc.hpp>
+#include <proxpde/builder.hpp>
+#include <proxpde/def.hpp>
+#include <proxpde/fe.hpp>
+#include <proxpde/geo.hpp>
+#include <proxpde/iomanager.hpp>
 
 int main()
 {

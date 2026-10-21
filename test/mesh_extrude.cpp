@@ -1,11 +1,15 @@
-#include "def.hpp"
+#include <filesystem> // for path
+#include <optional>   // for optional
+#include <vector>     // for vector
 
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "geo.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/def.hpp>       // for Vec3
+#include <proxpde/fe.hpp>        // for LagrangeFE
+#include <proxpde/fespace.hpp>   // for FESpace
+#include <proxpde/geo.hpp>       // for Tetrahedron, Triangle
+#include <proxpde/iomanager.hpp> // for IOManager
+#include <proxpde/mesh.hpp>      // for Mesh, buildHyperCube, extrude
+#include <proxpde/timer.hpp>     // for MilliTimer
+#include <proxpde/var.hpp>       // for FEVar
 
 int main(int /*argc*/, char * /*argv*/[])
 {

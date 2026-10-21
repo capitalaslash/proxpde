@@ -1,13 +1,15 @@
-#include "def.hpp"
+#include <bitset>  // for bitset
+#include <cmath>   // for fabs
+#include <cstdlib> // for uint
+#include <random>  // for uniform_real_distribution, mt19937
+#include <string>  // for basic_string
 
-// stl
-#include <bitset>
-#include <random>
+#include <fmt/base.h> // for print, println
 
-// local
-#include "assembly.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/def.hpp>   // for Utils, Vec3
+#include <proxpde/geo.hpp>   // for Hexahedron, Line, Quad, Tetrahedron
+#include <proxpde/mesh.hpp>  // for referenceMesh, Mesh
+#include <proxpde/timer.hpp> // for MilliTimer
 
 using namespace proxpde;
 

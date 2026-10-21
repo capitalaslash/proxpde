@@ -1,17 +1,32 @@
-#include "def.hpp"
+#include <bitset>      // for bitset
+#include <cmath>       // for sin, M_PI, sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path, operator/
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for char_traits, basic_string, string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node
 
-// local
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCMixed, AssemblyBCNatu...
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, checkError, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Line
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefLineP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for operator<<, MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 int test(YAML::Node const & config)
 {
@@ -46,21 +61,21 @@ int test(YAML::Node const & config)
 
   std::unique_ptr<Mesh_T> mesh{new Mesh_T};
 
-  t.start();
+  t.start("mesh");
   buildHyperCube(*mesh, {0., 0., 0.}, {1., 0., 0.}, {{numElems, 0, 0}});
-  std::cout << "mesh build: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
+  t.start("fespace");
   FESpace_T feSpace{*mesh};
-  std::cout << "fespace: " << t << " ms" << std::endl;
+  t.stop();
 
-  t.start();
-  auto bc = BCEss{feSpace, side::LEFT};
-  bc << [temp0](Vec3 const &) { return temp0; };
-  auto const bcs = std::vector{bc};
-  std::cout << "bcs: " << t << " ms" << std::endl;
+  t.start("bcs");
+  auto const bcs = std::vector{
+      BCEss{feSpace, side::LEFT, [temp0](Vec3 const &) { return temp0; }},
+  };
+  t.stop();
 
-  t.start();
+  t.start("fe build");
   AssemblyStiffness stiffness{1.0, feSpace};
   AssemblyRhsAnalytic rhsAssembly{rhsFun, feSpace};
   Builder builder{feSpace.dof.size};
@@ -88,18 +103,18 @@ int test(YAML::Node const & config)
           feSpace}};
   builder.buildRhs(rhs, bcs);
   builder.closeMatrix();
-  std::cout << "fe build: " << t << " ms" << std::endl;
+  t.stop();
 
   // std::cout << "A:\n" << builder.A << std::endl;
   // std::cout << "b:\n" << builder.b << std::endl;
 
-  t.start();
+  t.start("solve");
   Var sol{"u"};
   LUSolver solver;
   solver.analyzePattern(builder.A);
   solver.factorize(builder.A);
   sol.data = solver.solve(builder.b);
-  std::cout << "solve: " << t << " ms" << std::endl;
+  t.stop();
 
   // std::cout << "u:\n" << sol.data << std::endl;
 
@@ -108,15 +123,16 @@ int test(YAML::Node const & config)
   Var error{"e"};
   error.data = sol.data - exact.data;
 
-  t.start();
+  t.start("output");
   IOManager io{
       feSpace, std::filesystem::path{"output"} / config["filename"].as<std::string>()};
   io.print({sol, exact, error});
-  std::cout << "output: " << t << " ms" << std::endl;
+  t.stop();
+
+  t.print();
 
   auto const errorNorm = error.data.norm();
-  std::cout << "the norm of the error is " << std::setprecision(16) << errorNorm
-            << std::endl;
+  fmt::println("the norm of the error is {:.16e}", errorNorm);
   return checkError({errorNorm}, {config["expected_error"].as<double>()});
 }
 

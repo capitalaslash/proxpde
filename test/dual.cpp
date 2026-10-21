@@ -1,14 +1,33 @@
-#include "def.hpp"
+#include <algorithm>   // for max, min_element
+#include <array>       // for array
+#include <cassert>     // for assert
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <numeric>     // for accumulate
+#include <optional>    // for optional
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass, AssemblyAdv...
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, Vec2, Fun, Vec, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/fv.hpp>            // for FVSolver, computeMaxCFL, SuperB...
+#include <proxpde/geo.hpp>           // for Line, Point, FacingElem, Triangle
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for Mesh, side, MeshFlags, addElemF...
+#include <proxpde/reffe.hpp>         // for RefTriangleP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var, FEVar
 
 using namespace proxpde;
 

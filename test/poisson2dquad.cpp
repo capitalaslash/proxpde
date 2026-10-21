@@ -1,16 +1,30 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset
+#include <cmath>       // for sin, sqrt, M_PI
+#include <cstdlib>     // for uint
+#include <memory>      // for construct_at, destroy_at, uniqu...
+#include <string>      // for basic_string
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// libfmt
-#include <fmt/std.h>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyStiffness
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for ParameterDict, Vec3, Vec2, FVec
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for interpolateAnalyticFunction
+#include <proxpde/geo.hpp>           // for Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for Mesh, MeshType, side, readMesh
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 using namespace proxpde;
 
@@ -105,7 +119,7 @@ int test(ParameterDict const & config)
   t.print();
 
   double norm = error.data.norm();
-  fmt::print("the norm of the error is {:.16e}\n", norm);
+  fmt::println("the norm of the error is {:.16e}", norm);
   return checkError({norm}, {config["expected_error"].as<double>()});
 }
 
@@ -178,7 +192,7 @@ int main(int argc, char * argv[])
       tests[5] = test<TestQR>(config);
     }
 
-    fmt::print("tests: {}\n", tests);
+    fmt::println("tests: {}", tests.to_string());
     return tests.any();
   }
 }

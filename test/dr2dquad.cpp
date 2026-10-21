@@ -1,12 +1,29 @@
-#include "def.hpp"
+#include <cmath>       // for sin, M_PI, sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <functional>  // for function
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for stoi, basic_string
+#include <tuple>       // for tuple, get
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <fmt/base.h> // for println
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyScalarMass, AssemblySti...
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyRhsAnalytic
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for Vec3, vectorFun_T, scalarFun_T
+#include <proxpde/fe.hpp>            // for LagrangeFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/geo.hpp>           // for Point, Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buildHyperCube
+#include <proxpde/reffe.hpp>         // for RefQuadQ1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/var.hpp>           // for Var
 
 int main(int argc, char * argv[])
 {

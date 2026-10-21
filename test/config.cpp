@@ -1,6 +1,9 @@
-#include "def.hpp"
+#include <cassert> // for assert
 
-#include <yaml-cpp/yaml.h>
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, operator<<
+
+#include <proxpde/def.hpp> // for ParameterDict
 
 int main(int /*argc*/, char * /*argv*/[])
 {

@@ -1,7 +1,28 @@
-#include "def.hpp"
+#include <array>      // for array
+#include <cmath>      // for sqrt
+#include <cstdlib>    // for uint
+#include <filesystem> // for path
+#include <functional> // for function
+#include <memory>     // for unique_ptr
+#include <optional>   // for optional
+#include <string>     // for basic_string
+#include <vector>     // for vector
 
-#include "ns.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node
+
+#include <proxpde/assembly_bc.hpp>   // for AssemblyBCNormal
+#include <proxpde/bc.hpp>            // for BCEss, Comp
+#include <proxpde/def.hpp>           // for ParameterDict, Vec3
+#include <proxpde/fespace.hpp>       // for getComponent
+#include <proxpde/geo.hpp>           // for Quad
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/mesh.hpp>          // for side, Mesh, buil...
+#include <proxpde/ns.hpp>            // for NSSolverMonolithic
+#include <proxpde/reffe.hpp>         // for RefQuadQ2, RefQu...
+#include <proxpde/sparse_matrix.hpp> // for StorageType
+#include <proxpde/timer.hpp>         // for Timer, MilliTimer
+#include <proxpde/var.hpp>           // for Var
 
 int main(int argc, char * argv[])
 {

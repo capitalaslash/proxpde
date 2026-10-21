@@ -1,15 +1,34 @@
-#include "def.hpp"
+#include <algorithm>   // for max, min_element
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr, construct_at, destr...
+#include <optional>    // for optional
+#include <string>      // for basic_string
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <vector>      // for vector
 
-#include "assembly.hpp"
-#include "bc.hpp"
-#include "builder.hpp"
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "fv.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
-#include "timer.hpp"
+#include <fmt/base.h>      // for println
+#include <yaml-cpp/yaml.h> // for Node, LoadFile
+
+#include <proxpde/assembly_lhs.hpp>  // for AssemblyAdvectionFE, AssemblySc...
+#include <proxpde/assembly_rhs.hpp>  // for AssemblyProjection
+#include <proxpde/bc.hpp>            // for BCEss
+#include <proxpde/builder.hpp>       // for Builder
+#include <proxpde/def.hpp>           // for ParameterDict, Vec3, Bitmask, Vec
+#include <proxpde/fe.hpp>            // for LagrangeFE, RaviartThomasFE
+#include <proxpde/fespace.hpp>       // for FESpace, interpolateAnalyticFun...
+#include <proxpde/fv.hpp>            // for FVSolver, computeMaxCFL, SuperB...
+#include <proxpde/geo.hpp>           // for Line, Triangle
+#include <proxpde/iomanager.hpp>     // for IOManager
+#include <proxpde/l2projection.hpp>  // for l2Projection
+#include <proxpde/mesh.hpp>          // for MeshFlags, Mesh, side, buildFac...
+#include <proxpde/qr.hpp>            // for MiniQR, GaussQR
+#include <proxpde/reffe.hpp>         // for RefTriangleP0, RefTriangleP1
+#include <proxpde/sparse_matrix.hpp> // for LUSolver
+#include <proxpde/timer.hpp>         // for MilliTimer
+#include <proxpde/var.hpp>           // for FEVar, Var
 
 int main(int argc, char * argv[])
 {

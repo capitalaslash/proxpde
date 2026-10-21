@@ -1,12 +1,17 @@
-#include "def.hpp"
+#include <bitset>  // for bitset, operator<<
+#include <cmath>   // for fabs, sqrt
+#include <cstdlib> // for uint
+#include <locale>  // for use_facet
+#include <memory>  // for unique_ptr
+#include <vector>  // for stderr
 
-// stl
-#include <bitset>
+#include <fmt/base.h> // for println
 
-// local
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "mesh.hpp"
+#include <proxpde/def.hpp>     // for narrow, FMat
+#include <proxpde/fe.hpp>      // for LagrangeFE
+#include <proxpde/fespace.hpp> // for FESpace
+#include <proxpde/geo.hpp>     // for Hexahedron, Quad, Line, Tetrahedron
+#include <proxpde/mesh.hpp>    // for referenceMesh, operator<, Mesh
 
 using namespace proxpde;
 
@@ -71,6 +76,6 @@ int main()
   tests[7] = test<Tetrahedron, 2>();
   tests[8] = test<Hexahedron, 1>();
   tests[9] = test<Hexahedron, 2>();
-  std::cout << tests << std::endl;
+  fmt::println("tests: {}", tests.to_string());
   return tests.any();
 }

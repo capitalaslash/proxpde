@@ -1,15 +1,34 @@
-#include "def.hpp"
+#include <array>       // for array
+#include <bitset>      // for bitset, operator<<
+#include <cmath>       // for sqrt
+#include <cstdlib>     // for uint
+#include <functional>  // for function
+#include <iostream>    // for basic_ostream
+#include <limits>      // for numeric_limits
+#include <memory>      // for make_shared, con...
+#include <string>      // for char_traits, ope...
+#include <tuple>       // for get, tuple
+#include <type_traits> // for is_base_of_v
+#include <utility>     // for move
+#include <vector>      // for vector
 
-// stl
-#include <bitset>
-#include <limits>
+#include <fmt/base.h> // for println
 
-// local
-#include "fe.hpp"
-#include "fespace.hpp"
-#include "feutils.hpp"
-#include "iomanager.hpp"
-#include "mesh.hpp"
+#include <proxpde/assembly_coupling.hpp> // for AssemblyVectorDiv
+#include <proxpde/assembly_lhs.hpp>      // for AssemblyVectorMass
+#include <proxpde/assembly_rhs.hpp>      // for AssemblyProjection
+#include <proxpde/bc.hpp>                // for BCEss
+#include <proxpde/builder.hpp>           // for Builder
+#include <proxpde/def.hpp>               // for Vec3, narrow
+#include <proxpde/fe.hpp>                // for LagrangeFE, Ravi...
+#include <proxpde/fespace.hpp>           // for FESpace, integra...
+#include <proxpde/feutils.hpp>           // for projectAnalyticF...
+#include <proxpde/geo.hpp>               // for Quad, Triangle
+#include <proxpde/iomanager.hpp>         // for IOManager
+#include <proxpde/l2projection.hpp>      // for l2Projection
+#include <proxpde/mesh.hpp>              // for buildFacetMesh
+#include <proxpde/sparse_matrix.hpp>     // for LUSolver
+#include <proxpde/var.hpp>               // for Var
 
 using namespace proxpde;
 
@@ -42,7 +61,7 @@ int test(
       typename LagrangeFE<Facet_T, 0u>::RefFE_T,
       typename LagrangeFE<Facet_T, 0u>::RecommendedQR>;
 
-  std::cout << Utils::separator << "test " << test_id << std::endl;
+  fmt::println("{}test {}", Utils::separator, test_id);
   test_id++;
 
   std::unique_ptr<Mesh_T> oneElemMesh{new Mesh_T};
@@ -360,6 +379,6 @@ int main()
   //                               2.159947638851983e-01,
   //                               eps);
 
-  std::cout << "test results: " << tests << std::endl;
+  fmt::println("test results: {}", tests.to_string());
   return tests.any();
 }

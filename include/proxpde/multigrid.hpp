@@ -15,10 +15,10 @@ public:
 
   Prolongator() = default;
 
-  Prolongator(FESpace_T const & feCoarse, FESpace_T const & feFine):
-      feSpaceCoarse{&feCoarse},
-      feSpaceFine{&feFine},
-      mat{feFine.dof.size, feCoarse.dof.size}
+  Prolongator(FESpace_T const & feCoarse, FESpace_T const & feFine)
+      : feSpaceCoarse{&feCoarse}
+      , feSpaceFine{&feFine}
+      , mat{feFine.dof.size, feCoarse.dof.size}
   {
     fillMatrix();
   }
@@ -85,11 +85,10 @@ public:
 
   Restrictor() = default;
 
-  Restrictor(
-      FESpace_T const & feFine, FESpace_T const & feCoarse, BCList_T const & bcs):
-      feSpaceFine{&feFine},
-      feSpaceCoarse{&feCoarse},
-      mat{feCoarse.dof.size, feFine.dof.size}
+  Restrictor(FESpace_T const & feFine, FESpace_T const & feCoarse, BCList_T const & bcs)
+      : feSpaceFine{&feFine}
+      , feSpaceCoarse{&feCoarse}
+      , mat{feCoarse.dof.size, feFine.dof.size}
   {
     fillMatrix(bcs);
   }

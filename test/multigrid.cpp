@@ -43,24 +43,24 @@ struct MGSolver
 
   MGSolver() = delete;
 
-  MGSolver(uint const n):
-      numLevels{n},
-      As{static_cast<size_t>(n)},
-      prols{static_cast<size_t>(n) - 1},
-      rests{static_cast<size_t>(n) - 1},
-      smoothers{static_cast<size_t>(n) - 1}
+  MGSolver(uint const n)
+      : numLevels{n}
+      , As{static_cast<size_t>(n)}
+      , prols{static_cast<size_t>(n) - 1}
+      , rests{static_cast<size_t>(n) - 1}
+      , smoothers{static_cast<size_t>(n) - 1}
   {}
 
   MGSolver(
       uint const n,
       std::vector<SparseMatrix<StorageType::RowMajor> const *> mats,
       std::vector<Prol_T const *> ps,
-      std::vector<Rest_T const *> rs):
-      numLevels{n},
-      As{mats},
-      prols{ps},
-      rests{rs},
-      smoothers{static_cast<size_t>(n) - 1}
+      std::vector<Rest_T const *> rs)
+      : numLevels{n}
+      , As{mats}
+      , prols{ps}
+      , rests{rs}
+      , smoothers{static_cast<size_t>(n) - 1}
   {
     init(mats);
   }

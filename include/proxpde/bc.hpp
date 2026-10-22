@@ -53,10 +53,10 @@ public:
 
   // use manual-provided set of DOFs
   // TODO: pass in a dofset anyway, the map is only needed internally
-  BCEss(FESpace_T const & fe, DofMap_T const dofMap):
-      feSpace(&fe),
-      _constrainedDofMap(std::move(dofMap)),
-      data{Vec::Zero(_constrainedDofMap.size())}
+  BCEss(FESpace_T const & fe, DofMap_T const dofMap)
+      : feSpace(&fe)
+      , _constrainedDofMap(std::move(dofMap))
+      , data{Vec::Zero(_constrainedDofMap.size())}
   {
     // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
   }
@@ -64,19 +64,19 @@ public:
   BCEss(
       FESpace_T const & fe,
       DofMap_T const dofMap,
-      Fun<FESpace::physicalDim(), 3> const & fun):
-      feSpace(&fe),
-      _constrainedDofMap(std::move(dofMap)),
-      data{Vec::Zero(_constrainedDofMap.size())}
+      Fun<FESpace::physicalDim(), 3> const & fun)
+      : feSpace(&fe)
+      , _constrainedDofMap(std::move(dofMap))
+      , data{Vec::Zero(_constrainedDofMap.size())}
   {
     // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
     operator<<(fun);
   }
 
-  BCEss(FESpace_T const & fe, DofMap_T const dofMap, scalarFun_T const & fun):
-      feSpace(&fe),
-      _constrainedDofMap(std::move(dofMap)),
-      data{Vec::Zero(_constrainedDofMap.size())}
+  BCEss(FESpace_T const & fe, DofMap_T const dofMap, scalarFun_T const & fun)
+      : feSpace(&fe)
+      , _constrainedDofMap(std::move(dofMap))
+      , data{Vec::Zero(_constrainedDofMap.size())}
   {
     // fmt::println("new bc on dofset with {} dofs", _constrainedDofMap.size());
     operator<<(fun);
@@ -85,10 +85,10 @@ public:
   BCEss(
       FESpace_T const & fe,
       marker_T const m,
-      std::vector<uint> const & c = allComp<FESpace>()):
-      feSpace(&fe),
-      marker(m),
-      comp(c)
+      std::vector<uint> const & c = allComp<FESpace>())
+      : feSpace(&fe)
+      , marker(m)
+      , comp(c)
   {
     setupDofMap();
     // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
@@ -98,10 +98,10 @@ public:
       FESpace_T const & fe,
       marker_T const m,
       Fun<FESpace::physicalDim(), 3> const & fun,
-      std::vector<uint> const & c = allComp<FESpace>()):
-      feSpace(&fe),
-      marker(m),
-      comp(c)
+      std::vector<uint> const & c = allComp<FESpace>())
+      : feSpace(&fe)
+      , marker(m)
+      , comp(c)
   {
     setupDofMap();
     // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
@@ -112,10 +112,10 @@ public:
       FESpace_T const & fe,
       marker_T const m,
       scalarFun_T const & fun,
-      std::vector<uint> const & c = allComp<FESpace>()):
-      feSpace(&fe),
-      marker(m),
-      comp(c)
+      std::vector<uint> const & c = allComp<FESpace>())
+      : feSpace(&fe)
+      , marker(m)
+      , comp(c)
   {
     setupDofMap();
     // fmt::println("new bc on marker {} with {} dofs", m, _constrainedDofMap.size());
@@ -329,16 +329,16 @@ struct BCNat
   BCNat(
       marker_T const m,
       Fun<FESpace::dim, 3> const & f,
-      std::vector<uint> const & c = allComp<FESpace>()):
-      marker(m),
-      value(f),
-      comp(c)
+      std::vector<uint> const & c = allComp<FESpace>())
+      : marker(m)
+      , value(f)
+      , comp(c)
   {
     // TODO: create a list of constrained faces at the beginning?
   }
 
-  BCNat(marker_T const m, scalarFun_T const f, std::vector<uint> const c):
-      BCNat{m, [f](Vec3 const & p) { return Vec1(f(p)); }, c}
+  BCNat(marker_T const m, scalarFun_T const f, std::vector<uint> const c)
+      : BCNat{m, [f](Vec3 const & p) { return Vec1(f(p)); }, c}
   {
     static_assert(
         FESpace::dim == 1, "this BC constructor cannot be used on vectorial FESpaces.");
@@ -367,10 +367,10 @@ struct BCMixed
   explicit BCMixed(
       marker_T m,
       Fun<FESpace_T::dim, 3> const f,
-      std::vector<uint> const c = allComp<FESpace>()):
-      marker(m),
-      coef(f),
-      comp(c)
+      std::vector<uint> const c = allComp<FESpace>())
+      : marker(m)
+      , coef(f)
+      , comp(c)
   {
     // TODO: create a list of constrained faces at the beginning?
   }

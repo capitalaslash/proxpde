@@ -129,12 +129,13 @@ struct FVSolver
   //                                GaussQR<NullElem, 0>>;
   static constexpr uint dim = Elem_T::dim;
 
-  FVSolver(FESpace_T const & fe, BCList_T const & bcList, Limiter<L> /*l*/):
-      feSpace(fe),
-      bcs(bcList),
-      uOld(fe.dof.size),
-      uJump{fe.mesh->facetList.size()},
-      fluxes(Vec::Zero(fe.mesh->facetList.size())),
+  FVSolver(FESpace_T const & fe, BCList_T const & bcList, Limiter<L> /*l*/)
+      : feSpace(fe)
+      , bcs(bcList)
+      , uOld(fe.dof.size)
+      , uJump{fe.mesh->facetList.size()}
+      , fluxes(Vec::Zero(fe.mesh->facetList.size()))
+      ,
       // uFacet(Vec::Zero(fe.mesh->facetList.size())),
       normalSgn(fe.mesh->elementList.size(), Elem_T::numFacets)
   {

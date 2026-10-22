@@ -26,12 +26,12 @@ struct Eqn
       LhsTup const & lhs,
       RhsTup const & rhs,
       BCList_T const & bcs = BCList_T{},
-      EqnSolver<Storage> /*solver*/ = EqnSolver<Storage>{}):
-      lhsAssemblies{lhs},
-      rhsAssemblies{rhs},
-      bcList{bcs},
-      sol{s},
-      builder{static_cast<uint>(s.data.size())}
+      EqnSolver<Storage> /*solver*/ = EqnSolver<Storage>{})
+      : lhsAssemblies{lhs}
+      , rhsAssemblies{rhs}
+      , bcList{bcs}
+      , sol{s}
+      , builder{static_cast<uint>(s.data.size())}
   {}
 
   void buildLhs()

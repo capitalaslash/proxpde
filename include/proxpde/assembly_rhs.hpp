@@ -16,9 +16,9 @@ struct AssemblyVector: public AssemblyBase
       FMat<FESpace_T::dim * CurFE_T::numDOFs, FESpace_T::dim * CurFE_T::numDOFs>;
   using LVec_T = FVec<FESpace_T::dim * CurFE_T::numDOFs>;
 
-  AssemblyVector(FESpace_T const & fe, CompList const & cmp):
-      AssemblyBase{cmp},
-      feSpace{&fe}
+  AssemblyVector(FESpace_T const & fe, CompList const & cmp)
+      : AssemblyBase{cmp}
+      , feSpace{&fe}
   {}
 
   virtual ~AssemblyVector() = default;
@@ -41,17 +41,17 @@ struct AssemblyRhsAnalytic: public AssemblyVector<FESpace>
   AssemblyRhsAnalytic(
       Fun<FESpace::physicalDim(), 3> const r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      rhs(std::move(r))
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , rhs(std::move(r))
   {}
 
   AssemblyRhsAnalytic(
       scalarFun_T const r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyRhsAnalytic<FESpace_T>(
-          [r](Vec3 const & p) { return Vec1(r(p)); }, fe, cmp)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyRhsAnalytic<FESpace_T>(
+            [r](Vec3 const & p) { return Vec1(r(p)); }, fe, cmp)
   {
     static_assert(
         FESpace_T::dim == 1, "this ctor is available only for scalar fe spaces.");
@@ -101,11 +101,11 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
       double const c,
       Vec const & r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      rhs(&r),
-      feSpaceRhs(&fe)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , rhs(&r)
+      , feSpaceRhs(&fe)
   {}
 
   AssemblyS2SProjection(
@@ -113,11 +113,11 @@ struct AssemblyS2SProjection: public AssemblyVector<FESpace>
       Vec const & r,
       FESpaceRhs_T const & feRhs,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      rhs(&r),
-      feSpaceRhs(&feRhs)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , rhs(&r)
+      , feSpaceRhs(&feRhs)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -170,11 +170,11 @@ struct AssemblyS2VProjection: public AssemblyVector<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   AssemblyS2VProjection(
-      double const c, Vec const & r, FESpaceRhs_T const & feRhs, FESpace_T const & fe):
-      AssemblyVector<FESpace_T>(fe, {0}),
-      coef(c),
-      rhs(&r),
-      feSpaceRhs(&feRhs)
+      double const c, Vec const & r, FESpaceRhs_T const & feRhs, FESpace_T const & fe)
+      : AssemblyVector<FESpace_T>(fe, {0})
+      , coef(c)
+      , rhs(&r)
+      , feSpaceRhs(&feRhs)
   {
     static_assert(
         FESpace_T::RefFE_T::dim == FESpaceRhs_T::dim,
@@ -228,11 +228,11 @@ struct AssemblyV2SProjection: public AssemblyVector<FESpace>
       Vec const & r,
       FESpaceRhs_T const & feRhs,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      rhs(&r),
-      feSpaceRhs(&feRhs)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , rhs(&r)
+      , feSpaceRhs(&feRhs)
   {
     // TODO: when comp is specified, this is not guaranteed anymore
     // static_assert(FESpace_T::dim == FESpaceRhs_T::RefFE_T::dim,
@@ -292,8 +292,8 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
       double const c,
       Vec const & r,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
   {
     if constexpr (fedim_v<typename FESpace_T::RefFE_T> == FEDimType::SCALAR)
     {
@@ -314,8 +314,8 @@ struct AssemblyProjection: public AssemblyVector<FESpace>
       Vec const & r,
       FESpaceRhs_T const & feRhs,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -385,11 +385,11 @@ struct AssemblyDivRhs: public AssemblyVector<FESpace>
       Vec const & vec,
       FESpaceData_T const & feData,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = {}):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      data(&vec),
-      feSpaceData(&feData)
+      AssemblyBase::CompList const & cmp = {})
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , data(&vec)
+      , feSpaceData(&feData)
   {
     static_assert(FESpace_T::dim == 1, "this assembly wors only on scalar fe spaces");
   }
@@ -450,11 +450,11 @@ struct AssemblyGradRhs: public AssemblyVector<FESpace>
       Vec const & vec,
       FESpaceData_T const & feData,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      data(&vec),
-      feSpaceData(&feData)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , data(&vec)
+      , feSpaceData(&feData)
   {}
 
   void reinit(GeoElem const & elem) const override { feSpaceData->curFE.reinit(elem); }
@@ -530,11 +530,11 @@ struct AssemblyGradRhs2: public AssemblyVector<FESpace>
       Vec const & vec,
       FESpaceData_T const & feData,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      feSpaceData(&feData),
-      data(&vec)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , feSpaceData(&feData)
+      , data(&vec)
   {}
 
   void reinit(GeoElem const & elem) const override { feSpaceData->curFE.reinit(elem); }
@@ -609,11 +609,11 @@ struct AssemblyStiffnessRhs: public AssemblyVector<FESpace>
       Vec const & vec,
       FESpaceData_T & feData,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      data(&vec),
-      feSpaceData(&feData)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , data(&vec)
+      , feSpaceData(&feData)
   {}
 
   void reinit(GeoElem const & elem) const override { feSpaceData->curFE.reinit(elem); }
@@ -676,10 +676,10 @@ struct AssemblyTensorStiffnessRhs: public AssemblyVector<FESpace>
       double const c,
       Vec const & uOld,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Super_T{fe, cmp},
-      coef{c},
-      velOld{&uOld}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Super_T{fe, cmp}
+      , coef{c}
+      , velOld{&uOld}
   {}
 
   void build(LVec_T & /*Fe*/) const override
@@ -739,13 +739,13 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
       Vec const & d,
       FESpaceData_T const & feData,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      vel(&u),
-      feSpaceVel(&feVel),
-      data(&d),
-      feSpaceData(&feData)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , vel(&u)
+      , feSpaceVel(&feVel)
+      , data(&d)
+      , feSpaceData(&feData)
   {}
 
   AssemblyAdvectionRhs(
@@ -754,13 +754,13 @@ struct AssemblyAdvectionRhs: public AssemblyVector<FESpace>
       FESpaceVel_T const & feVel,
       Vec const & vec,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      coef(c),
-      vel(&u),
-      feSpaceVel(&feVel),
-      data(&vec),
-      feSpaceData(&fe)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , coef(c)
+      , vel(&u)
+      , feSpaceVel(&feVel)
+      , data(&vec)
+      , feSpaceData(&fe)
   {}
 
   void reinit(GeoElem const & elem) const override

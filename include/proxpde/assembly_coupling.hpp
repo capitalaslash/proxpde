@@ -17,10 +17,10 @@ struct Coupling: public AssemblyBase
       FMat<FESpace1_T::dim * CurFE1_T::numDOFs, FESpace2_T::dim * CurFE2_T::numDOFs>;
   using LVec_T = FVec<FESpace1_T::dim * CurFE1_T::numDOFs>;
 
-  Coupling(FESpace1_T const & fe1, FESpace2_T const & fe2, CompList const & cmp):
-      AssemblyBase{cmp},
-      feSpace1{&fe1},
-      feSpace2{&fe2}
+  Coupling(FESpace1_T const & fe1, FESpace2_T const & fe2, CompList const & cmp)
+      : AssemblyBase{cmp}
+      , feSpace1{&fe1}
+      , feSpace2{&fe2}
   {}
 
   virtual ~Coupling() = default;
@@ -50,9 +50,9 @@ struct AssemblyGrad: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -97,9 +97,9 @@ struct AssemblyDiv: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -143,9 +143,9 @@ struct AssemblyVectorGrad: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -180,9 +180,9 @@ struct AssemblyVectorGRAD: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace1_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -217,9 +217,9 @@ struct AssemblyVectorDiv: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(
@@ -254,9 +254,9 @@ struct AssemblyVectorDIV: public Coupling<FESpace1, FESpace2>
       double const c,
       FESpace1_T & fe1,
       FESpace2_T & fe2,
-      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>()):
-      Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace2_T>())
+      : Coupling<FESpace1_T, FESpace2_T>(fe1, fe2, cmp)
+      , coef(c)
   {
     // this works only if the same quad rule is defined on both CurFE
     static_assert(

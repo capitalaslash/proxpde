@@ -87,10 +87,10 @@ struct TimeDer<FESpace, TimeIntegrationMethod::BDF1>
 {
   static TimeIntegrationMethod constexpr method = TimeIntegrationMethod::BDF1;
 
-  TimeDer(double idt, FESpace const & feSpace):
-      lhs{AssemblyScalarMass{idt, feSpace}},
-      rhs{AssemblyProjection{idt, uOld, feSpace},
-          AssemblyProjection{0.0, uOld, feSpace}}
+  TimeDer(double idt, FESpace const & feSpace)
+      : lhs{AssemblyScalarMass{idt, feSpace}}
+      , rhs{AssemblyProjection{idt, uOld, feSpace},
+            AssemblyProjection{0.0, uOld, feSpace}}
   {}
 
   void update(Vec const & data) { uOld = data; }
@@ -111,14 +111,14 @@ struct TimeDer<FESpace, TimeIntegrationMethod::BDF2>
 {
   static TimeIntegrationMethod constexpr method = TimeIntegrationMethod::BDF2;
 
-  TimeDer(double idt, FESpace const & feSpace):
-      lhs{AssemblyScalarMass{1.5 * idt, feSpace}},
-      rhs{AssemblyProjection{2.0 * idt, uOld, feSpace},
-          AssemblyProjection{-0.5 * idt, uOldOld, feSpace}},
-      lhsBdf1{AssemblyScalarMass{idt, feSpace}},
-      rhsBdf1{
-          AssemblyProjection{idt, uOld, feSpace},
-          AssemblyProjection{0.0, uOldOld, feSpace}}
+  TimeDer(double idt, FESpace const & feSpace)
+      : lhs{AssemblyScalarMass{1.5 * idt, feSpace}}
+      , rhs{AssemblyProjection{2.0 * idt, uOld, feSpace},
+            AssemblyProjection{-0.5 * idt, uOldOld, feSpace}}
+      , lhsBdf1{AssemblyScalarMass{idt, feSpace}}
+      , rhsBdf1{
+            AssemblyProjection{idt, uOld, feSpace},
+            AssemblyProjection{0.0, uOldOld, feSpace}}
   {}
 
   void update(Vec const & data)

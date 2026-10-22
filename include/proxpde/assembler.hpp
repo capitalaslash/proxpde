@@ -82,12 +82,12 @@ struct Assembler
   static std::array<uint, sizeof...(FESpaces)> constexpr blocks{
       utility::getBlockStructure<std::tuple<FESpaces...>>()};
 
-  Assembler(std::tuple<FESpaces...> const & list):
-      feList(list),
-      dofTotalNum(computeDOFTotalNum(list)),
-      matrix(dofTotalNum, dofTotalNum),
-      rhs(dofTotalNum),
-      sol(dofTotalNum)
+  Assembler(std::tuple<FESpaces...> const & list)
+      : feList(list)
+      , dofTotalNum(computeDOFTotalNum(list))
+      , matrix(dofTotalNum, dofTotalNum)
+      , rhs(dofTotalNum)
+      , sol(dofTotalNum)
   {
     fmt::println("the total number of dofs is {}", dofTotalNum);
     fmt::println("the local number of dofs is {}", dofLocalNum);

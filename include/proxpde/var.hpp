@@ -28,16 +28,16 @@ struct IOManager;
 // ---------------------------------------------------------------------
 struct Var
 {
-  explicit Var(std::string_view const n = "none", unsigned long const size = 0):
-      name{n},
-      data(size)
+  explicit Var(std::string_view const n = "none", unsigned long const size = 0)
+      : name{n}
+      , data(size)
   {}
 
   Var(std::string_view const n, Vec const vec): name{n}, data(std::move(vec)) {}
 
-  Var(std::string_view const n, Vec const & vec, uint offset, uint size):
-      name{n},
-      data(vec.segment(offset, size))
+  Var(std::string_view const n, Vec const & vec, uint offset, uint size)
+      : name{n}
+      , data(vec.segment(offset, size))
   {}
 
   std::string name;
@@ -49,10 +49,10 @@ std::vector<uint> offsetInit(std::vector<uint> blocks);
 // ---------------------------------------------------------------------
 struct BlockVar: public Var
 {
-  BlockVar(std::string_view const n, std::vector<uint> const & bs):
-      Var{n, std::accumulate(bs.begin(), bs.end(), 0U)},
-      offsets{offsetInit(bs)},
-      blocks{bs}
+  BlockVar(std::string_view const n, std::vector<uint> const & bs)
+      : Var{n, std::accumulate(bs.begin(), bs.end(), 0U)}
+      , offsets{offsetInit(bs)}
+      , blocks{bs}
   {}
 
   auto block(uint i) { return this->data.segment(offsets[i], blocks[i]); }
@@ -69,10 +69,10 @@ struct FEVar
   using RefFE_T = typename FESpace_T::RefFE_T;
   using Vec_T = FVec<FESpace_T::physicalDim()>;
 
-  FEVar(std::string_view n, FESpace_T const & fe):
-      name{n},
-      feSpace{&fe},
-      data{fe.dof.size * FESpace_T::dim}
+  FEVar(std::string_view n, FESpace_T const & fe)
+      : name{n}
+      , feSpace{&fe}
+      , data{fe.dof.size * FESpace_T::dim}
   {}
 
   explicit FEVar(FESpace_T const & fe): FEVar("none", fe) {}

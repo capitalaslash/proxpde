@@ -41,12 +41,12 @@ struct PolyVec
 
   explicit PolyVec(Vec1_T const & v): data{{static_cast<T>(v[0]), 0.L, 0.L}} {}
 
-  explicit PolyVec(Vec2_T const & v):
-      data{{static_cast<T>(v[0]), static_cast<T>(v[1]), 0.L}}
+  explicit PolyVec(Vec2_T const & v)
+      : data{{static_cast<T>(v[0]), static_cast<T>(v[1]), 0.L}}
   {}
 
-  explicit PolyVec(Vec3_T const & v):
-      data{{static_cast<T>(v[0]), static_cast<T>(v[1]), static_cast<T>(v[2])}}
+  explicit PolyVec(Vec3_T const & v)
+      : data{{static_cast<T>(v[0]), static_cast<T>(v[1]), static_cast<T>(v[2])}}
   {}
 
   T operator()(uint const i) const { return data[i]; }

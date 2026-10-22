@@ -54,12 +54,12 @@ struct AssemblyMassSUPG: public Diagonal<FESpace>
       double const e,
       FESpace_T const & fe,
       bool supg,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>{fe, cmp},
-      coef{c},
-      vel{&u},
-      eps{e},
-      enableSUPG{supg}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>{fe, cmp}
+      , coef{c}
+      , vel{&u}
+      , eps{e}
+      , enableSUPG{supg}
   {}
 
   void build(LMat_T & Ke) const override
@@ -100,12 +100,12 @@ struct AssemblyAdvectionSUPG: public Diagonal<FESpace>
       double const e,
       FESpace_T const & fe,
       bool supg,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>{fe, cmp},
-      coef{c},
-      vel{&u},
-      eps{e},
-      enableSUPG{supg}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>{fe, cmp}
+      , coef{c}
+      , vel{&u}
+      , eps{e}
+      , enableSUPG{supg}
   {}
 
   void build(LMat_T & Ke) const override

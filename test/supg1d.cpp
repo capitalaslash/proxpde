@@ -53,10 +53,10 @@ struct AssemblyLhsSUPG: public Diagonal<FESpace>
       double const c,
       Vel & u,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      idt(c),
-      vel(u)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , idt(c)
+      , vel(u)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
@@ -114,11 +114,11 @@ struct AssemblyRhsSUPG: public AssemblyVector<FESpace>
       Rhs & u,
       Vel & v,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      idt(c),
-      uOld(u),
-      vel(v)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , idt(c)
+      , uOld(u)
+      , vel(v)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
@@ -179,11 +179,11 @@ struct AssemblyLhsSUPGRes: public Diagonal<FESpace>
       Vel & u,
       double const e,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      idt(c),
-      vel(u),
-      eps(e)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , idt(c)
+      , vel(u)
+      , eps(e)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(
@@ -254,12 +254,12 @@ struct AssemblyRhsSUPGRes: public AssemblyVector<FESpace>
       Vel & v,
       double const e,
       FESpace_T & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      idt(c),
-      uOld(u),
-      vel(v),
-      eps(e)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , idt(c)
+      , uOld(u)
+      , vel(v)
+      , eps(e)
   {
     // this works only if the same quad rule is defined on all fe spaces
     static_assert(

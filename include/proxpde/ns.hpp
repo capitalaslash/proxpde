@@ -89,17 +89,17 @@ struct NSSolverMonolithic
   // using SolverParams = boost::property_tree::ptree;
   using SchurSolver = IterSolver;
 
-  explicit NSSolverMonolithic(Mesh_T const & mesh, ParameterDict const & c):
-      feSpaceVel{mesh},
-      feSpaceP{mesh, feSpaceVel.dof.size * Elem_T::dim},
-      config{c},
-      builder{feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size},
-      sol{"vel", feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size},
-      p{"p", feSpaceP.dof.size},
-      velOld{feSpaceVel.dof.size * Elem_T::dim},
-      assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel},
-      assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel},
-      assemblyBCNeumann{[](Vec3 const &) { return 0.0; }, markerNotSet, feSpaceVel}
+  explicit NSSolverMonolithic(Mesh_T const & mesh, ParameterDict const & c)
+      : feSpaceVel{mesh}
+      , feSpaceP{mesh, feSpaceVel.dof.size * Elem_T::dim}
+      , config{c}
+      , builder{feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size}
+      , sol{"vel", feSpaceVel.dof.size * Elem_T::dim + feSpaceP.dof.size}
+      , p{"p", feSpaceP.dof.size}
+      , velOld{feSpaceVel.dof.size * Elem_T::dim}
+      , assemblyRhs{1. / c["dt"].as<double>(), velOld, feSpaceVel}
+      , assemblyAdvection{1.0, velOld, feSpaceVel, feSpaceVel}
+      , assemblyBCNeumann{[](Vec3 const &) { return 0.0; }, markerNotSet, feSpaceVel}
   // pMask(feSpaceVel.dof.size * dim + feSpaceP.dof.size, 0)
   {
     // // set up size and position of pressure dofs
@@ -276,27 +276,27 @@ struct NSSolverSplit
   // >;
   using Solver = IterSolver;
 
-  explicit NSSolverSplit(Mesh_T const & mesh, ParameterDict const & c):
-      feSpaceVel{mesh},
-      feSpaceP{mesh},
-      config{c},
-      builderVelStar{feSpaceVel.dof.size * dim},
-      builderP{feSpaceP.dof.size},
-      builderVel{feSpaceVel.dof.size * dim},
-      velStar{"velStar", feSpaceVel.dof.size * dim},
-      velStarOld{feSpaceVel.dof.size * dim},
-      p{"p", feSpaceP.dof.size},
-      vel{"vel", feSpaceVel.dof.size * dim},
-      pOld{feSpaceP.dof.size},
-      dp{feSpaceP.dof.size},
-      assemblyMassVelStar{1. / c["dt"].as<double>(), feSpaceVel},
-      assemblyStiffness{c["nu"].as<double>(), feSpaceVel},
-      assemblyVelRhs{1. / c["dt"].as<double>(), vel.data, feSpaceVel},
-      assemblyAdvection{1.0, vel.data, feSpaceVel, feSpaceVel},
-      assemblyPOld{1.0, pOld, feSpaceP, feSpaceVel},
-      assemblyDivVelStar{-1.0, velStar.data, feSpaceVel, feSpaceP},
-      assemblyVelStarRhs{1.0, velStar.data, feSpaceVel},
-      assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel}
+  explicit NSSolverSplit(Mesh_T const & mesh, ParameterDict const & c)
+      : feSpaceVel{mesh}
+      , feSpaceP{mesh}
+      , config{c}
+      , builderVelStar{feSpaceVel.dof.size * dim}
+      , builderP{feSpaceP.dof.size}
+      , builderVel{feSpaceVel.dof.size * dim}
+      , velStar{"velStar", feSpaceVel.dof.size * dim}
+      , velStarOld{feSpaceVel.dof.size * dim}
+      , p{"p", feSpaceP.dof.size}
+      , vel{"vel", feSpaceVel.dof.size * dim}
+      , pOld{feSpaceP.dof.size}
+      , dp{feSpaceP.dof.size}
+      , assemblyMassVelStar{1. / c["dt"].as<double>(), feSpaceVel}
+      , assemblyStiffness{c["nu"].as<double>(), feSpaceVel}
+      , assemblyVelRhs{1. / c["dt"].as<double>(), vel.data, feSpaceVel}
+      , assemblyAdvection{1.0, vel.data, feSpaceVel, feSpaceVel}
+      , assemblyPOld{1.0, pOld, feSpaceP, feSpaceVel}
+      , assemblyDivVelStar{-1.0, velStar.data, feSpaceVel, feSpaceP}
+      , assemblyVelStarRhs{1.0, velStar.data, feSpaceVel}
+      , assemblyGradPRhs{-c["dt"].as<double>(), dp, feSpaceP, feSpaceVel}
   {
     config.validate({"nu", "dt", "output_dir"});
     auto const outDir = std::filesystem::path{config["output_dir"].as<std::string>()};

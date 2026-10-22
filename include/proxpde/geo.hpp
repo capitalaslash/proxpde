@@ -80,16 +80,16 @@ struct GeoElem
 {
   using Pts_T = std::vector<Point *>;
   using Facets_T = std::vector<GeoElem *>;
-  GeoElem(std::initializer_list<Point *> const & pList, id_T const i, marker_T const m):
-      pts{pList},
-      id{i},
-      marker{m}
+  GeoElem(std::initializer_list<Point *> const & pList, id_T const i, marker_T const m)
+      : pts{pList}
+      , id{i}
+      , marker{m}
   {}
 
-  GeoElem(Pts_T const pList, id_T const i, marker_T const m):
-      pts{std::move(pList)},
-      id{i},
-      marker{m}
+  GeoElem(Pts_T const pList, id_T const i, marker_T const m)
+      : pts{std::move(pList)}
+      , id{i}
+      , marker{m}
   {}
 
   GeoElem() = default;
@@ -173,12 +173,12 @@ struct PointElem: public GeoElem
   PointElem(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  PointElem(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  PointElem(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   PointElem() = default;
@@ -234,12 +234,12 @@ struct Line: public GeoElem
   explicit Line(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  Line(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  Line(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   Line() = default;
@@ -326,12 +326,12 @@ struct Triangle: public GeoElem
   Triangle(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  Triangle(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  Triangle(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   Triangle() = default;
@@ -454,12 +454,12 @@ struct Quad: public GeoElem
   Quad(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  Quad(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  Quad(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   Quad() = default;
@@ -587,12 +587,12 @@ struct Tetrahedron: public GeoElem
   Tetrahedron(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  Tetrahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  Tetrahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   Tetrahedron() = default;
@@ -725,12 +725,12 @@ struct Hexahedron: public GeoElem
   Hexahedron(
       std::initializer_list<Point *> const & pList,
       id_T const i,
-      marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+      marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
-  Hexahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet):
-      GeoElem{pList, i, m}
+  Hexahedron(Pts_T const & pList, id_T const i, marker_T const m = markerNotSet)
+      : GeoElem{pList, i, m}
   {}
 
   Hexahedron() = default;

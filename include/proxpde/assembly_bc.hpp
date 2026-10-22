@@ -23,19 +23,19 @@ struct AssemblyBCNaturalAnalytic: public AssemblyVector<FESpace>
       Fun<FESpace_T::dim, 3> const r,
       marker_T const m,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>(fe, cmp),
-      rhs(std::move(r)),
-      marker(m)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>(fe, cmp)
+      , rhs(std::move(r))
+      , marker(m)
   {}
 
   AssemblyBCNaturalAnalytic(
       scalarFun_T const r,
       marker_T const m,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyBCNaturalAnalytic<FESpace_T>(
-          [r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyBCNaturalAnalytic<FESpace_T>(
+            [r](Vec3 const & p) { return Vec1::Constant(r(p)); }, m, fe, cmp)
   {
     static_assert(FESpace_T::dim == 1);
   }
@@ -96,11 +96,11 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
       std::vector<uint> const components,
       marker_T const m,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace_T>()):
-      AssemblyVector<FESpace_T>{fe, cmp},
-      marker{m},
-      data{&d},
-      dataComponents{components}
+      AssemblyBase::CompList const & cmp = allComp<FESpace_T>())
+      : AssemblyVector<FESpace_T>{fe, cmp}
+      , marker{m}
+      , data{&d}
+      , dataComponents{components}
   {
     assert(dataComponents.size() == cmp.size());
     // TODO: we should allow different fespaces, as long as they are on sides
@@ -116,11 +116,11 @@ struct AssemblyBCNaturalFE: public AssemblyVector<FESpace>
     // assert(data->data.size() == count);
   }
 
-  AssemblyBCNaturalFE(FEVar<FESpaceData_T> & d, marker_T const m, FESpace_T const & fe):
-      AssemblyVector<FESpace_T>{fe, allComp<FESpace_T>()},
-      marker{m},
-      data{&d},
-      dataComponents(allComp<FESpaceData_T>())
+  AssemblyBCNaturalFE(FEVar<FESpaceData_T> & d, marker_T const m, FESpace_T const & fe)
+      : AssemblyVector<FESpace_T>{fe, allComp<FESpace_T>()}
+      , marker{m}
+      , data{&d}
+      , dataComponents(allComp<FESpaceData_T>())
   {
     static_assert(FESpaceData_T::dim == FESpace_T::dim);
     // TODO: we should allow different fespaces, as long as they are on sides
@@ -193,10 +193,10 @@ struct AssemblyBCNormal: public AssemblyVector<FESpace>
       scalarFun_T const & r,
       marker_T const m,
       FESpace & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyVector<FESpace>{fe, cmp},
-      rhs{r},
-      marker{m}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyVector<FESpace>{fe, cmp}
+      , rhs{r}
+      , marker{m}
   {}
 
   void build(LVec_T & Fe) const override
@@ -255,10 +255,10 @@ struct AssemblyBCNormalFE: public AssemblyVector<FESpace>
       FEVar<FESpaceData_T> & d,
       marker_T const m,
       FESpace & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyVector<FESpace>{fe, cmp},
-      data{&d},
-      marker{m}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyVector<FESpace>{fe, cmp}
+      , data{&d}
+      , marker{m}
   {
     // // TODO: we should allow different fespaces, as long as they are on sides
     // static_assert(std::is_same_v<
@@ -320,10 +320,10 @@ struct AssemblyBCMixed: public Diagonal<FESpace>
       scalarFun_T const c,
       marker_T const m,
       FESpace & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef(std::move(c)),
-      marker(m)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef(std::move(c))
+      , marker(m)
   {}
 
   void build(LMat_T & Ke) const override

@@ -14,11 +14,11 @@ struct L2Projector
   L2Projector() = default;
   ~L2Projector() = default;
 
-  L2Projector(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom):
-      dummy{feSpaceTo.dof.size * FESpaceTo::dim},
-      massTo{new AssemblyMass{1.0, feSpaceTo}},
-      projFromTo{new AssemblyProjection{1.0, dummy, feSpaceFrom, feSpaceTo}},
-      builder{feSpaceTo.dof.size * FESpaceTo::dim}
+  L2Projector(FESpaceTo const & feSpaceTo, FESpaceFrom const & feSpaceFrom)
+      : dummy{feSpaceTo.dof.size * FESpaceTo::dim}
+      , massTo{new AssemblyMass{1.0, feSpaceTo}}
+      , projFromTo{new AssemblyProjection{1.0, dummy, feSpaceFrom, feSpaceTo}}
+      , builder{feSpaceTo.dof.size * FESpaceTo::dim}
   {
     build();
   }

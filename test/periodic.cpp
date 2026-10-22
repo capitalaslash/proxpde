@@ -39,9 +39,9 @@ struct BCPeriodic
       FESpace_T const & feSpace,
       marker_T const mDest,
       marker_T const mOrig,
-      Fun<3, 3> const destToOrigFun):
-      bcDest{feSpace, mDest},
-      bcOrig{feSpace, mOrig}
+      Fun<3, 3> const destToOrigFun)
+      : bcDest{feSpace, mDest}
+      , bcOrig{feSpace, mOrig}
   {
     // this works only for translated meshes
     assert(bcOrig._constrainedDofMap.size() == bcDest._constrainedDofMap.size());

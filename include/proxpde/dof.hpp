@@ -44,11 +44,11 @@ struct DOF
 
   DOF() = default;
 
-  explicit DOF(Mesh const & mesh):
-      rows{mesh.elementList.size()},
-      elemMap(rows, clms * dim),
-      ptMap(mesh.pointList.size(), dofIdNotSet),
-      geoMap(rows, RefFE::numGeoDOFs)
+  explicit DOF(Mesh const & mesh)
+      : rows{mesh.elementList.size()}
+      , elemMap(rows, clms * dim)
+      , ptMap(mesh.pointList.size(), dofIdNotSet)
+      , geoMap(rows, RefFE::numGeoDOFs)
   {
     setupElemMap(mesh);
     setupGeoMap(mesh);

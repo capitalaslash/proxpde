@@ -42,9 +42,10 @@ struct IOManager
   explicit IOManager(
       FESpace_T const & fe,
       std::optional<std::filesystem::path> const fp = std::nullopt,
-      uint const it = 0):
-      feSpace{&fe},
-      feSpaceScalar{*fe.mesh},
+      uint const it = 0)
+      : feSpace{&fe}
+      , feSpaceScalar{*fe.mesh}
+      ,
       // h5Time{fs::path{filepath} += ".time.h5"},
       iter(it)
   {
@@ -446,11 +447,11 @@ struct IOManagerP0
   ~IOManagerP0() = default;
 
   IOManagerP0(
-      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
-      feSpaceOrig{&fe},
-      feSpaceP0{*fe.mesh},
-      io{feSpaceP0, fp, it},
-      l2Projector{feSpaceP0, *feSpaceOrig}
+      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0)
+      : feSpaceOrig{&fe}
+      , feSpaceP0{*fe.mesh}
+      , io{feSpaceP0, fp, it}
+      , l2Projector{feSpaceP0, *feSpaceOrig}
   {}
 
   void init(FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0)
@@ -520,9 +521,9 @@ struct IOManagerFacet
   ~IOManagerFacet() = default;
 
   IOManagerFacet(
-      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0):
-      feSpaceOrig{&fe},
-      meshFacet{new MeshFacet_T}
+      FESpaceOrig_T const & fe, std::filesystem::path const fp, uint const it = 0)
+      : feSpaceOrig{&fe}
+      , meshFacet{new MeshFacet_T}
   {
     buildFacetMesh(*meshFacet, *fe.mesh);
     feSpaceFacet.init(*meshFacet);

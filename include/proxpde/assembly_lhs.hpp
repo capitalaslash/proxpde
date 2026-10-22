@@ -43,9 +43,9 @@ struct AssemblyStiffness: public Diagonal<FESpace>
   AssemblyStiffness(
       double const c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace_T>(fe, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace_T>(fe, cmp)
+      , coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -84,9 +84,9 @@ struct AssemblyStiffnessFE: public Diagonal<FESpace>
   AssemblyStiffnessFE(
       Coef & c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace_T>(fe, cmp),
-      coef(&c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace_T>(fe, cmp)
+      , coef(&c)
   {}
 
   void reinit(GeoElem const & elem) const override { coef->reinit(elem); }
@@ -122,9 +122,9 @@ struct AssemblyTensorStiffness: public Diagonal<FESpace>
   AssemblyTensorStiffness(
       double const c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace_T>(fe, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace_T>(fe, cmp)
+      , coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -180,8 +180,8 @@ struct AssemblyDummy: public Diagonal<FESpace>
   using LVec_T = typename Super_T::LVec_T;
 
   explicit AssemblyDummy(
-      FESpace_T const & fe, AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp)
+      FESpace_T const & fe, AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
   {}
 
   void build(LMat_T &) const override {}
@@ -198,9 +198,9 @@ struct AssemblyScalarMass: public Diagonal<FESpace>
   AssemblyScalarMass(
       double const & c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace_T>(fe, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace_T>(fe, cmp)
+      , coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -241,19 +241,19 @@ struct AssemblyMassFE: public Diagonal<FESpace>
       double const c,
       Coef & cFE,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef{c},
-      coefFE{&cFE}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef{c}
+      , coefFE{&cFE}
   {}
 
   AssemblyMassFE(
       Coef & cFE,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef{1.0},
-      coefFE{&cFE}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef{1.0}
+      , coefFE{&cFE}
   {}
 
   void reinit(GeoElem const & elem) const override { coefFE->reinit(elem); }
@@ -292,9 +292,9 @@ struct AssemblyVectorMass: public Diagonal<FESpace>
   AssemblyVectorMass(
       double const & c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef(c)
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef(c)
   {}
 
   void build(LMat_T & Ke) const override
@@ -353,9 +353,9 @@ struct AssemblyMass: public Diagonal<FESpace>
   AssemblyMass(
       double const & c,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      assembly{c, fe, cmp}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , assembly{c, fe, cmp}
   {}
 
   void build(LMat_T & Ke) const { assembly.build(Ke); }
@@ -380,41 +380,41 @@ struct AssemblyAdvection: public Diagonal<FESpace>
       Vec const & u,
       FESpaceVel_T const & feVel,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>{fe, cmp},
-      coef{c},
-      vel{&u},
-      feSpaceVel{&feVel}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>{fe, cmp}
+      , coef{c}
+      , vel{&u}
+      , feSpaceVel{&feVel}
   {}
 
   AssemblyAdvection(
       double const c,
       FEVar<FESpaceVel_T> const & velFE,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyAdvection{c, velFE.data, *velFE.feSpace, fe, cmp}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyAdvection{c, velFE.data, *velFE.feSpace, fe, cmp}
   {}
 
   AssemblyAdvection(
       Vec const & u,
       FESpaceVel_T const & feVel,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyAdvection{1.0, u, feVel, fe, cmp}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyAdvection{1.0, u, feVel, fe, cmp}
   {}
 
   AssemblyAdvection(
       FEVar<FESpaceVel_T> const & velFE,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyAdvection{1.0, velFE.data, *velFE.feSpace, fe, cmp}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyAdvection{1.0, velFE.data, *velFE.feSpace, fe, cmp}
   {}
 
   AssemblyAdvection(
       FESpaceVel_T const & feVel,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      AssemblyAdvection{1.0, nullptr, feVel, fe, cmp}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : AssemblyAdvection{1.0, nullptr, feVel, fe, cmp}
   {}
 
   void reinit(GeoElem const & elem) const override { feSpaceVel->curFE.reinit(elem); }
@@ -489,19 +489,19 @@ struct AssemblyAdvectionFE: public Diagonal<FESpace>
       double const c,
       Vel & u,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef{c},
-      vel{&u}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef{c}
+      , vel{&u}
   {}
 
   AssemblyAdvectionFE(
       Vel & u,
       FESpace_T const & fe,
-      AssemblyBase::CompList const & cmp = allComp<FESpace>()):
-      Diagonal<FESpace>(fe, cmp),
-      coef{1.0},
-      vel{&u}
+      AssemblyBase::CompList const & cmp = allComp<FESpace>())
+      : Diagonal<FESpace>(fe, cmp)
+      , coef{1.0}
+      , vel{&u}
   {}
 
   void reinit(GeoElem const & elem) const override { vel->reinit(elem); }
